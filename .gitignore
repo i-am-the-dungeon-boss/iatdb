@@ -23,3 +23,9 @@ local.properties
 .metals/
 .bloop/
 .bsp/
+
+# Eclipse / Java language server (auto-generated; use .vscode/java.prefs instead)
+.classpath
+.project
+.factorypath
+.settings/
