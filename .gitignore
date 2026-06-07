@@ -18,3 +18,8 @@ local.properties
 #intellij project files
 *.iml
 *.idea
+
+# Metals (Scala/Java language server)
+.metals/
+.bloop/
+.bsp/
