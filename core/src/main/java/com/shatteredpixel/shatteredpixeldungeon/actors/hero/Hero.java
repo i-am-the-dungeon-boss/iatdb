@@ -75,6 +75,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HallowedGroun
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
@@ -706,6 +707,19 @@ public class Hero extends Char {
 	
 	@Override
 	public float speed() {
+		Momentum momentum = buff(Momentum.class);
+		if (sprite != null) {
+			if (momentum != null) {
+				((HeroSprite) sprite).sprint(momentum.freerunning() ? 1.5f : 1f);
+			} else {
+				((HeroSprite) sprite).sprint(1f);
+			}
+		}
+		return combatSpeed();
+	}
+
+	/** Speed stat without sprite or audio side effects. Safe for headless hero snapshots. */
+	public float combatSpeed() {
 
 		float speed = super.speed();
 
@@ -717,10 +731,7 @@ public class Hero extends Char {
 		
 		Momentum momentum = buff(Momentum.class);
 		if (momentum != null){
-			((HeroSprite)sprite).sprint( momentum.freerunning() ? 1.5f : 1f );
 			speed *= momentum.speedMultiplier();
-		} else {
-			((HeroSprite)sprite).sprint( 1f );
 		}
 
 		NaturesPower.naturesPowerTracker natStrength = buff(NaturesPower.naturesPowerTracker.class);
@@ -1963,6 +1974,18 @@ public class Hero extends Char {
 
 		return true;
 	}
+
+	/** Sets level and combat stats directly; used by debug start shortcuts only. */
+	public void debugSetLevel( int target ) {
+		if (target <= lvl) return;
+		int levelsGained = target - lvl;
+		lvl = target;
+		attackSkill += levelsGained;
+		defenseSkill += levelsGained;
+		exp = 0;
+		updateHT( true );
+		HP = HT;
+	}
 	
 	public void earnExp( int exp, Class source ) {
 
@@ -2196,6 +2219,8 @@ public class Hero extends Char {
 	}
 	
 	public static void reallyDie( Object cause ) {
+
+		EchoBoss.onHeroDeath();
 		
 		int length = Dungeon.level.length();
 		int[] map = Dungeon.level.map;

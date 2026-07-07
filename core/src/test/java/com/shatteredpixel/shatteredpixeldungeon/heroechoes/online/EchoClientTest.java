@@ -1,0 +1,177 @@
+package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+class EchoClientTest {
+
+	@AfterEach
+	void cleanup() {
+		EchoOnlineSettings.resetForTests();
+	}
+
+	@Test
+	@DisplayName("fetchEcho returns decoded echo and policy on 200")
+	void fetchEchoReturnsResult() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "{"
+				+ "\"echo_id\":\"5-99\","
+				+ "\"depth\":5,"
+				+ "\"game_version\":846,"
+				+ "\"hero_class\":\"WARRIOR\","
+				+ "\"lvl\":6,"
+				+ "\"hp\":20,"
+				+ "\"ht\":30,"
+				+ "\"timestamp\":1,"
+				+ "\"game_seed\":9,"
+				+ "\"echo_data_base64\":\"dGVzdA==\","
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":1,"
+				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
+				+ "}"
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		Optional<EchoFetchResult> result = client.fetchEcho(5, 846);
+
+		Assertions.assertThat(result).isPresent();
+		Assertions.assertThat(result.get().echo.echoId).isEqualTo("5-99");
+		Assertions.assertThat(result.get().policy.rules).isNotEmpty();
+		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/echoes/5?game_version=846");
+	}
+
+	@Test
+	@DisplayName("checkHealth returns true when health endpoint responds ok")
+	void checkHealthReturnsTrueOnOk() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "{\"status\":\"ok\"}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		Assertions.assertThat(client.checkHealth()).isTrue();
+		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/health");
+	}
+
+	@Test
+	@DisplayName("checkHealth returns false when health endpoint is down")
+	void checkHealthReturnsFalseOnFailure() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(503, "{\"status\":\"down\"}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		Assertions.assertThat(client.checkHealth()).isFalse();
+	}
+
+	@Test
+	@DisplayName("fetchEcho returns empty on 404")
+	void fetchEchoReturnsEmptyOn404() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(404, "{\"error\":\"missing\"}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		Assertions.assertThat(client.fetchEcho(5, 846)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("uploadEcho fails on unauthorized responses")
+	void uploadEchoFailsOnUnauthorized() {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(401, "{\"detail\":\"Unauthorized\"}");
+		Echo echo = EchoTestSupport.warriorEcho(5);
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+
+		Assertions.assertThatThrownBy(() -> client.uploadEcho(echo))
+				.isInstanceOf(EchoHttpException.class)
+				.hasMessageContaining("401");
+	}
+
+	@Test
+	@DisplayName("uploadEcho posts JSON with API key header")
+	void uploadEchoPostsWithApiKey() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{}");
+		Echo echo = EchoTestSupport.warriorEcho(5);
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		client.uploadEcho(echo);
+
+		EchoHttpRequest request = transport.requests.get(0);
+		Assertions.assertThat(request.method).isEqualTo("POST");
+		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes");
+		Assertions.assertThat(request.headers.get("X-API-Key")).isEqualTo("secret-key");
+		Assertions.assertThat(request.body).contains(echo.echoId);
+	}
+
+	@Test
+	@DisplayName("postLeaderboardResult posts fight outcome JSON")
+	void postsLeaderboardResult() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+		client.postLeaderboardResult(new EchoFightResult(
+				"5-1", true, 5, 1L, 846, "MAGE", 30, 10, 12
+		));
+
+		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/leaderboard/results");
+		Assertions.assertThat(transport.requests.get(0).body).contains("\"boss_win\":true");
+	}
+
+	@Test
+	@DisplayName("fetchLeaderboard returns decoded entries on 200")
+	void fetchLeaderboardReturnsEntries() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "[{"
+				+ "\"rank\":1,"
+				+ "\"echo_id\":\"5-9\","
+				+ "\"boss_win\":true,"
+				+ "\"depth\":5,"
+				+ "\"player_class\":\"ROGUE\","
+				+ "\"damage_dealt\":55,"
+				+ "\"damage_taken\":8,"
+				+ "\"turns\":14,"
+				+ "\"win_rate_proxy\":1"
+				+ "}]");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		var entries = client.fetchLeaderboard(5, 10);
+
+		Assertions.assertThat(entries).hasSize(1);
+		Assertions.assertThat(entries.get(0).echoId).isEqualTo("5-9");
+		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/leaderboard/5?limit=10");
+	}
+
+	static final class FakeEchoHttpTransport implements EchoHttpTransport {
+
+		final List<EchoHttpRequest> requests = new CopyOnWriteArrayList<>();
+		final List<EchoHttpResponse> responses = new CopyOnWriteArrayList<>();
+
+		void enqueue(int status, String body) {
+			responses.add(new EchoHttpResponse(status, body));
+		}
+
+		@Override
+		public EchoHttpResponse send(EchoHttpRequest request) {
+			requests.add(request);
+			if (responses.isEmpty()) {
+				return new EchoHttpResponse(500, "");
+			}
+			return responses.remove(0);
+		}
+	}
+}

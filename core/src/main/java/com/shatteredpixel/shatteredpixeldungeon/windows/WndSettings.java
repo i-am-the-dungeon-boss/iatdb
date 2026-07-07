@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
@@ -32,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -368,6 +370,8 @@ public class WndSettings extends WndTabbed {
 		ColorBlock sep2;
 		CheckBox chkFont;
 		CheckBox chkVibrate;
+		CheckBox chkDebugStart;
+		CheckBox chkWeakEchoSnapshots;
 
 		@Override
 		protected void createChildren() {
@@ -601,6 +605,28 @@ public class WndSettings extends WndTabbed {
 				chkVibrate.checked(SPDSettings.vibration());
 			}
 			add(chkVibrate);
+
+			if (DeviceCompat.isDebug()) {
+				chkDebugStart = new CheckBox(Messages.get(this, "debug_start")) {
+					@Override
+					protected void onClick() {
+						super.onClick();
+						DebugSettings.setDebugStart(checked());
+					}
+				};
+				chkDebugStart.checked(DebugSettings.debugStart());
+				add(chkDebugStart);
+
+				chkWeakEchoSnapshots = new CheckBox(Messages.get(this, "debug_weak_echo_snapshots")) {
+					@Override
+					protected void onClick() {
+						super.onClick();
+						DebugSettings.setWeakEchoSnapshots(checked());
+					}
+				};
+				chkWeakEchoSnapshots.checked(DebugSettings.weakEchoSnapshots());
+				add(chkWeakEchoSnapshots);
+			}
 		}
 
 		@Override
@@ -647,6 +673,14 @@ public class WndSettings extends WndTabbed {
 				chkFont.setRect(0, sep2.y + 1 + GAP, width, BTN_HEIGHT);
 				chkVibrate.setRect(0, chkFont.bottom() + GAP, width, BTN_HEIGHT);
 				height = chkVibrate.bottom();
+			}
+
+			if (DeviceCompat.isDebug()) {
+				chkDebugStart.setRect(0, height + GAP, width, BTN_HEIGHT);
+				height = chkDebugStart.bottom();
+
+				chkWeakEchoSnapshots.setRect(0, height + GAP, width, BTN_HEIGHT);
+				height = chkWeakEchoSnapshots.bottom();
 			}
 		}
 

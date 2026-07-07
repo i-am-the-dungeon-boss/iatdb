@@ -21,22 +21,31 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import java.io.IOException;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoSnapshotDebug;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.RankingsScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
-
-import java.io.IOException;
+import com.watabou.utils.FileUtils;
 
 public class WndGame extends Window {
 
@@ -98,6 +107,49 @@ public class WndGame extends Window {
 		}
 
 		// Main menu
+		RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
+			@Override
+			protected void onClick() {
+				try {
+					String timestamp = String.format("%d", System.currentTimeMillis());
+					Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.versionCode, Dungeon.seed);
+					EchoSnapshotDebug.applyIfEnabled(echo);
+					echo.echoId = "manual-" + timestamp;
+					if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
+						EchoOnlineSync.instance().uploadEchoAsync(echo);
+					} else {
+						String echoFolder = EchoPlayModePaths.echoesDir();
+						if (!FileUtils.dirExists(echoFolder)) {
+							FileUtils.getFileHandle(echoFolder).mkdirs();
+						}
+						FileUtils.bundleToFile(echoFolder + "/echo_" + timestamp + ".dat", echo.toFileBundle());
+						EchoOnlineSync.instance().uploadEchoAsync(echo);
+					}
+					GLog.p(Messages.get(WndGame.class, "echo_saved"));
+				} catch (IOException e) {
+					GLog.n(Messages.get(WndGame.class, "echo_failed"));
+				}
+			}
+		};
+		addButton(saveEcho);
+		saveEcho.icon(Icons.get(Icons.ENTER));
+
+		addButton(curBtn = new RedButton(Messages.get(this, "view_echoes")) {
+			@Override
+			protected void onClick() {
+				WndEchoes.show();
+			}
+		});
+		curBtn.icon(Icons.get(Icons.ENTER));
+
+		addButton(curBtn = new RedButton(Messages.get(this, "view_leaderboard")) {
+			@Override
+			protected void onClick() {
+				WndLeaderboard.show();
+			}
+		});
+		curBtn.icon(Icons.get(Icons.ENTER));
+
 		addButton(curBtn = new RedButton(Messages.get(this, "menu")) {
 			@Override
 			protected void onClick() {

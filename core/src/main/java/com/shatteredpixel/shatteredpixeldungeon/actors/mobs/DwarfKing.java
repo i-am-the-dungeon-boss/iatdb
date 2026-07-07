@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoCaptureTrigger;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -570,6 +571,8 @@ public class DwarfKing extends Mob {
 			Badges.validateBossChallengeCompleted();
 		}
 		Statistics.bossScores[3] += 4000;
+
+		EchoCaptureTrigger.onBossDefeated();
 
 		Dungeon.level.unseal();
 

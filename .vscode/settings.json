@@ -1,7 +1,7 @@
 {
   "files.watcherExclude": {
-    "**/target": true,
-    "**/build": true
+    "**/build": true,
+    "**/target/**": true
   },
   "java.settings.url": ".vscode/java.prefs",
   "java.import.exclusions": ["**/ios/**", "**/android/**"],

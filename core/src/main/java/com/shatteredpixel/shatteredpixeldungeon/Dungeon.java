@@ -61,6 +61,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.EchoBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
@@ -69,10 +70,16 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineService;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
@@ -85,6 +92,7 @@ import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
 import com.watabou.utils.PathFinder;
+import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Random;
 import com.watabou.utils.SparseArray;
 
@@ -209,6 +217,7 @@ public class Dungeon {
 
 	public static boolean daily;
 	public static boolean dailyReplay;
+	public static EchoPlayMode echoPlayMode = EchoPlayMode.NONE;
 	public static String customSeedText = "";
 	public static long seed;
 	public static long lastPlayed;
@@ -284,6 +293,12 @@ public class Dungeon {
 		Badges.reset();
 		
 		GamesInProgress.selectedClass.initHero( hero );
+
+		applyDebugStartIfNeeded();
+	}
+
+	private static void applyDebugStartIfNeeded() {
+		DebugSettings.applyDebugStart();
 	}
 
 	public static boolean isChallenged( int mask ) {
@@ -300,77 +315,10 @@ public class Dungeon {
 		Actor.clear();
 		
 		Level level;
-		if (branch == 0) {
-			switch (depth) {
-				case 1:
-				case 2:
-				case 3:
-				case 4:
-					level = new SewerLevel();
-					break;
-				case 5:
-					level = new SewerBossLevel();
-					break;
-				case 6:
-				case 7:
-				case 8:
-				case 9:
-					level = new PrisonLevel();
-					break;
-				case 10:
-					level = new PrisonBossLevel();
-					break;
-				case 11:
-				case 12:
-				case 13:
-				case 14:
-					level = new CavesLevel();
-					break;
-				case 15:
-					level = new CavesBossLevel();
-					break;
-				case 16:
-				case 17:
-				case 18:
-				case 19:
-					level = new CityLevel();
-					break;
-				case 20:
-					level = new CityBossLevel();
-					break;
-				case 21:
-				case 22:
-				case 23:
-				case 24:
-					level = new HallsLevel();
-					break;
-				case 25:
-					level = new HallsBossLevel();
-					break;
-				case 26:
-					level = new LastLevel();
-					break;
-				default:
-					level = new DeadEndLevel();
-			}
-		} else if (branch == 1) {
-			switch (depth) {
-				case 11:
-				case 12:
-				case 13:
-				case 14:
-					level = new MiningLevel();
-					break;
-				case 16:
-				case 17:
-				case 18:
-				case 19:
-					level = new VaultLevel();
-					break;
-				default:
-					level = new DeadEndLevel();
-			}
-		} else {
+		Class<? extends Level> clazz = levelClassForDepth(depth, branch);
+		try {
+			level = clazz.getDeclaredConstructor().newInstance();
+		} catch (Exception reflectionError) {
 			level = new DeadEndLevel();
 		}
 
@@ -402,7 +350,203 @@ public class Dungeon {
 		
 		return level;
 	}
-	
+
+	// Pure helper for routing, to enable test coverage
+    public static Class<? extends Level> levelClassForDepth(int depth, int branch) {
+		if (branch == 0) {
+			switch (depth) {
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+					return SewerLevel.class;
+				case 5:
+                    if (prepareEchoBossForDepth(5)) {
+                        return EchoBossLevel.class;
+                    }
+                    return SewerBossLevel.class;
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+					return PrisonLevel.class;
+				case 10:
+                    prepareEchoBossForDepth(10);
+					return PrisonBossLevel.class;
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+					return CavesLevel.class;
+				case 15:
+                    prepareEchoBossForDepth(15);
+					return CavesBossLevel.class;
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+					return CityLevel.class;
+				case 20:
+                    prepareEchoBossForDepth(20);
+					return CityBossLevel.class;
+				case 21:
+				case 22:
+				case 23:
+				case 24:
+					return HallsLevel.class;
+				case 25:
+                    prepareEchoBossForDepth(25);
+					return HallsBossLevel.class;
+				case 26:
+					return LastLevel.class;
+				default:
+					return DeadEndLevel.class;
+			}
+		} else if (branch == 1) {
+			switch (depth) {
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+					return MiningLevel.class;
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+					return VaultLevel.class;
+				default:
+					return DeadEndLevel.class;
+			}
+		} else {
+			return DeadEndLevel.class;
+		}
+	}
+
+    private static boolean echoBossActive;
+    private static Echo pendingEcho;
+    private static EchoPolicy pendingEchoPolicy;
+
+    public static EchoReplacementDecider.EchoLookup echoLookup;
+
+    public static void setEchoLookup(EchoReplacementDecider.EchoLookup lookup){
+        echoLookup = lookup;
+    }
+
+    public static Echo getPendingEcho() {
+        return pendingEcho;
+    }
+
+    public static EchoPolicy getPendingEchoPolicy() {
+        return pendingEchoPolicy;
+    }
+
+    public static void clearPendingEcho() {
+        pendingEcho = null;
+        pendingEchoPolicy = null;
+    }
+
+    public static boolean isEchoBossActive() {
+        return echoBossActive;
+    }
+
+    public static Echo resolveEcho(int depth) {
+        clearPendingEcho();
+        if (!EchoReplacementDecider.isBossDepth(depth)) {
+            return null;
+        }
+        try {
+            EchoReplacementDecider.EchoLookup lookup = activeEchoLookup();
+            return lookup.findEchoForDepth(depth)
+                    .filter(Echo::hasCombatData)
+                    .map(echo -> {
+                        pendingEcho = echo;
+                        if (lookup instanceof CompositeEchoLookup) {
+                            ((CompositeEchoLookup) lookup).getLastFetchedPolicy()
+                                    .ifPresent(policy -> pendingEchoPolicy = policy);
+                        }
+                        return echo;
+                    })
+                    .orElse(null);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    public static void resetEchoStateForTests() {
+        echoBossActive = false;
+        clearPendingEcho();
+        echoLookup = null;
+        echoPlayMode = EchoPlayMode.NONE;
+        EchoOnlineService.resetForTests();
+    }
+
+    private static EchoPlayMode readEchoPlayMode(Bundle bundle) {
+        String raw = bundle.getString(ECHO_PLAY_MODE);
+        if (raw == null) {
+            return EchoPlayMode.SOLO;
+        }
+        try {
+            EchoPlayMode mode = EchoPlayMode.valueOf(raw);
+            return mode == EchoPlayMode.NONE ? EchoPlayMode.SOLO : mode;
+        } catch (IllegalArgumentException ignored) {
+            return EchoPlayMode.SOLO;
+        }
+    }
+
+    private static EchoReplacementDecider.EchoLookup activeEchoLookup() {
+        return echoLookup != null ? echoLookup : EchoOnlineService.echoLookup();
+    }
+
+    private static boolean prepareEchoBossForDepth(int depth) {
+        if (echoBossActive && pendingEcho != null) {
+            return true;
+        }
+        if (!EchoReplacementDecider.shouldUseEchoBoss(depth, activeEchoLookup())) {
+            echoBossActive = false;
+            clearPendingEcho();
+            return false;
+        }
+        resolveEcho(depth);
+        echoBossActive = pendingEcho != null;
+        return echoBossActive;
+    }
+
+    /**
+     * Resolves echo boss data before level generation (InterlevelScene prefetch).
+     */
+    public static boolean prefetchEchoBossForDepth(int depth) {
+        if (!EchoReplacementDecider.isBossDepth(depth)) {
+            echoBossActive = false;
+            clearPendingEcho();
+            return false;
+        }
+        return prepareEchoBossForDepth(depth);
+    }
+
+    public static void storeEchoChoiceInBundle(Bundle bundle) {
+        bundle.put("echo_boss_active", echoBossActive);
+        if (pendingEcho != null) {
+            bundle.put("pending_echo", pendingEcho.toBundle());
+        }
+        if (pendingEchoPolicy != null) {
+            bundle.put("pending_echo_policy", pendingEchoPolicy.toBundle());
+        }
+    }
+
+    public static void restoreEchoChoiceFromBundle(Bundle bundle) {
+        echoBossActive = bundle.getBoolean("echo_boss_active");
+        if (bundle.contains("pending_echo")) {
+            pendingEcho = Echo.fromBundle(bundle.getBundle("pending_echo"));
+        } else {
+            pendingEcho = null;
+        }
+        if (bundle.contains("pending_echo_policy")) {
+            pendingEchoPolicy = EchoPolicy.fromBundle(bundle.getBundle("pending_echo_policy"));
+        } else {
+            pendingEchoPolicy = null;
+        }
+    }
+
 	public static void resetLevel() {
 		
 		Actor.clear();
@@ -604,6 +748,7 @@ public class Dungeon {
 	private static final String CUSTOM_SEED	= "custom_seed";
 	private static final String DAILY	    = "daily";
 	private static final String DAILY_REPLAY= "daily_replay";
+	private static final String ECHO_PLAY_MODE = "echo_play_mode";
 	private static final String LAST_PLAYED = "last_played";
 	private static final String CHALLENGES	= "challenges";
 	private static final String MOBS_TO_CHAMPION	= "mobs_to_champion";
@@ -631,6 +776,7 @@ public class Dungeon {
 			bundle.put( CUSTOM_SEED, customSeedText );
 			bundle.put( DAILY, daily );
 			bundle.put( DAILY_REPLAY, dailyReplay );
+			bundle.put( ECHO_PLAY_MODE, echoPlayMode.name() );
 			bundle.put( LAST_PLAYED, lastPlayed = Game.realTime);
 			bundle.put( CHALLENGES, challenges );
 			bundle.put( MOBS_TO_CHAMPION, mobsToChampion );
@@ -671,6 +817,7 @@ public class Dungeon {
 			Statistics.storeInBundle( bundle );
 			Notes.storeInBundle( bundle );
 			Generator.storeInBundle( bundle );
+			storeEchoChoiceInBundle( bundle );
 
 			int[] bundleArr = new int[generatedLevels.size()];
 			for (int i = 0; i < generatedLevels.size(); i++){
@@ -731,6 +878,7 @@ public class Dungeon {
 		customSeedText = bundle.getString( CUSTOM_SEED );
 		daily = bundle.getBoolean( DAILY );
 		dailyReplay = bundle.getBoolean( DAILY_REPLAY );
+		echoPlayMode = readEchoPlayMode(bundle);
 
 		Actor.clear();
 		Actor.restoreNextID( bundle );
@@ -815,6 +963,8 @@ public class Dungeon {
 		depth = bundle.getInt( DEPTH );
 		branch = bundle.getInt( BRANCH );
 
+		restoreEchoChoiceFromBundle( bundle );
+
 		gold = bundle.getInt( GOLD );
 		energy = bundle.getInt( ENERGY );
 
@@ -863,6 +1013,7 @@ public class Dungeon {
 		info.customSeed = bundle.getString( CUSTOM_SEED );
 		info.daily = bundle.getBoolean( DAILY );
 		info.dailyReplay = bundle.getBoolean( DAILY_REPLAY );
+		info.echoPlayMode = readEchoPlayMode(bundle);
 		info.lastPlayed = bundle.getLong( LAST_PLAYED );
 
 		Hero.preview( info, bundle.getBundle( HERO ) );

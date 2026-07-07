@@ -31,6 +31,7 @@ import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineEnv;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.UpdateImpl;
@@ -52,6 +53,8 @@ public class DesktopLauncher {
 		if (!DesktopLaunchValidator.verifyValidJVMState(args)){
 			return;
 		}
+
+		EchoOnlineEnv.loadDefaultDotEnv();
 
 		//detection for FreeBSD (which is equivalent to linux for us)
 		//TODO might want to merge request this to libGDX

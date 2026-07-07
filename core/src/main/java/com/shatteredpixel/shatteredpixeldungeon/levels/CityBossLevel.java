@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -325,7 +326,7 @@ public class CityBossLevel extends Level {
 		Mob.holdAllies(this, doorPos);
 		Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
 
-		DwarfKing boss = new DwarfKing();
+		DwarfKing boss = (DwarfKing) EchoBossSpawner.createRegionalBoss(new DwarfKing());
 		boss.state = boss.WANDERING;
 		boss.pos = pointToCell(arena.center());
 		GameScene.add( boss );
@@ -336,6 +337,8 @@ public class CityBossLevel extends Level {
 			boss.sprite.alpha( 0 );
 			boss.sprite.parent.add( new AlphaTweener( boss.sprite, 1, 0.1f ) );
 		}
+
+		EchoBossSpawner.announceIntroIfNeeded();
 
 		set( bottomDoor, Terrain.LOCKED_DOOR );
 		GameScene.updateMap( bottomDoor );

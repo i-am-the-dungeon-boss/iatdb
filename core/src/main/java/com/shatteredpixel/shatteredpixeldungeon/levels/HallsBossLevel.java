@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -260,7 +261,7 @@ public class HallsBossLevel extends Level {
 
 		Dungeon.observe();
 
-		YogDzewa boss = new YogDzewa();
+		YogDzewa boss = (YogDzewa) EchoBossSpawner.createRegionalBoss(new YogDzewa());
 		boss.pos = exit() + width*3;
 
 		//push any char that is already here away
@@ -281,6 +282,7 @@ public class HallsBossLevel extends Level {
 		}
 
 		GameScene.add( boss );
+		EchoBossSpawner.announceIntroIfNeeded();
 	}
 
 	@Override

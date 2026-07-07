@@ -224,9 +224,37 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_LAST_DAILY	= "last_daily";
 	public static final String KEY_INTRO		= "intro";
 
+	public static final String KEY_HERO_ECHOES_WEAK_SNAPSHOTS = "hero_echoes_weak_snapshots";
+	public static final String KEY_PLAYER_NAME = "player_name";
+	public static final String KEY_DEBUG_START = "debug_start";
+
 	public static final String KEY_SUPPORT_NAGGED= "support_nagged";
 	public static final String KEY_VICTORY_NAGGED= "victory_nagged";
 	
+	public static void echoesWeakSnapshots( boolean value ) {
+		put( KEY_HERO_ECHOES_WEAK_SNAPSHOTS, value );
+	}
+
+	public static boolean echoesWeakSnapshots() {
+		return getBoolean( KEY_HERO_ECHOES_WEAK_SNAPSHOTS, false );
+	}
+
+	public static void playerName( String value ) {
+		put( KEY_PLAYER_NAME, value != null ? value.trim() : "" );
+	}
+
+	public static String playerName() {
+		return getString( KEY_PLAYER_NAME, "" );
+	}
+
+	public static void debugStart( boolean value ) {
+		put( KEY_DEBUG_START, value );
+	}
+
+	public static boolean debugStart() {
+		return getBoolean( KEY_DEBUG_START, false );
+	}
+
 	public static void intro( boolean value ) {
 		put( KEY_INTRO, value );
 	}

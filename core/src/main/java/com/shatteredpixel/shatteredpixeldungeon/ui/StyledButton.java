@@ -30,13 +30,16 @@ import com.watabou.noosa.audio.Sample;
 
 //simple button which support a background chrome, text, and an icon.
 public class StyledButton extends Button {
-	
+
+	private static final float DISABLED_ALPHA = 0.3f;
+
 	protected NinePatch bg;
 	protected RenderedTextBlock text;
 	protected Image icon;
 	public boolean leftJustify = false;
 
 	public boolean multiline;
+	private float fadeAlpha = 1f;
 	
 	public StyledButton(Chrome.Type type, String label ) {
 		this(type, label, 9);
@@ -112,8 +115,7 @@ public class StyledButton extends Button {
 	
 	public void enable( boolean value ) {
 		active = value;
-		text.alpha( value ? 1.0f : 0.3f );
-		if (icon != null) icon.alpha( value ? 1.0f : 0.3f );
+		updateVisualAlpha();
 	}
 	
 	public void text( String value ) {
@@ -145,14 +147,20 @@ public class StyledButton extends Button {
 	}
 
 	public void alpha(float value){
-		if (icon != null)   icon.alpha(value);
-		if (bg != null)     bg.alpha(value);
-		if (text != null)   text.alpha(value);
+		fadeAlpha = value;
+		updateVisualAlpha();
 	}
 
 	public float alpha(){
-		if (icon != null)   return icon.alpha();
-		else                return bg.alpha();
+		if (bg != null)     return bg.alpha();
+		return fadeAlpha * (active ? 1f : DISABLED_ALPHA);
+	}
+
+	private void updateVisualAlpha() {
+		float value = fadeAlpha * (active ? 1f : DISABLED_ALPHA);
+		if (bg != null)     bg.alpha(value);
+		if (text != null)   text.alpha(value);
+		if (icon != null)   icon.alpha(value);
 	}
 	
 	public float reqWidth() {

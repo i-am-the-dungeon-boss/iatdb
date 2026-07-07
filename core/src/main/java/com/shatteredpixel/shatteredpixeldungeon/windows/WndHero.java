@@ -57,19 +57,23 @@ public class WndHero extends WndTabbed {
 	private static final int WIDTH		= 120;
 	private static final int HEIGHT		= 120;
 	
+	private final Hero hero;
+	
 	private StatsTab stats;
 	private TalentsTab talents;
 	private BuffsTab buffs;
 
 	public static int lastIdx = 0;
 
-	public WndHero() {
+	public WndHero(Hero hero) {
 		
 		super();
 		
+		this.hero = hero;
+		
 		resize( WIDTH, HEIGHT );
 		
-		stats = new StatsTab();
+		stats = new StatsTab(this.hero);
 		add( stats );
 
 		talents = new TalentsTab();
@@ -87,7 +91,7 @@ public class WndHero extends WndTabbed {
 				if (selected) {
 					lastIdx = 0;
 					if (!stats.visible) {
-						stats.initialize();
+						stats.initialize(hero);
 					}
 				}
 				stats.visible = stats.active = selected;
@@ -118,6 +122,10 @@ public class WndHero extends WndTabbed {
 		select( lastIdx );
 	}
 
+	public WndHero() {
+		this(Dungeon.hero);
+	}
+
 	@Override
 	public boolean onSignal(KeyEvent event) {
 		if (event.pressed && KeyBindings.getActionForKey( event ) == SPDAction.HERO_INFO) {
@@ -141,19 +149,17 @@ public class WndHero extends WndTabbed {
 		
 		private float pos;
 		
-		public StatsTab() {
-			initialize();
+		public StatsTab(Hero hero) {
+			initialize(hero);
 		}
 
-		public void initialize(){
+		public void initialize(Hero hero){
 
 			for (Gizmo g : members){
 				if (g != null) g.destroy();
 			}
 			clear();
 			
-			Hero hero = Dungeon.hero;
-
 			IconTitle title = new IconTitle();
 			title.icon( HeroSprite.avatar(hero) );
 			if (hero.name().equals(hero.className()))
@@ -300,7 +306,7 @@ public class WndHero extends WndTabbed {
 		
 		private void setupList() {
 			Component content = buffList.content();
-			for (Buff buff : Dungeon.hero.buffs()) {
+			for (Buff buff : hero.buffs()) {
 				if (buff.icon() != BuffIndicator.NONE) {
 					BuffSlot slot = new BuffSlot(buff);
 					slot.setRect(0, pos, WIDTH, slot.icon.height());

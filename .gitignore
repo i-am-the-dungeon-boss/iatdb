@@ -29,3 +29,11 @@ local.properties
 .project
 .factorypath
 .settings/
+
+# Runtime game data (generated locally)
+desktop/leaderboard.json
+leaderboard-solo.json
+echoes-solo/
+
+# Local secrets (copy from .env.example)
+.env

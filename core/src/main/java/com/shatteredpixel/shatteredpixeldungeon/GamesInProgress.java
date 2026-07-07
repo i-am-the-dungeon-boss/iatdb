@@ -22,6 +22,8 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.utils.Bundle;
@@ -38,13 +40,24 @@ public class GamesInProgress {
 	public static final int MAX_SLOTS = HeroClass.values().length;
 	
 	//null means we have loaded info and it is empty, no entry means unknown.
-	private static HashMap<Integer, Info> slotStates = new HashMap<>();
+	private static HashMap<String, Info> slotStates = new HashMap<>();
 	public static int curSlot;
 	
 	public static HeroClass selectedClass;
 	public static boolean randomizedClass = false;
+	public static EchoPlayMode selectedEchoPlayMode = EchoPlayMode.NONE;
+
+	public static void applySelectedEchoPlayMode() {
+		if (selectedEchoPlayMode != EchoPlayMode.NONE) {
+			Dungeon.echoPlayMode = selectedEchoPlayMode;
+		}
+	}
+
+	public static void clearSlotCache() {
+		slotStates.clear();
+	}
 	
-	private static final String GAME_FOLDER = "game%d";
+	private static final String GAME_FOLDER = "game%d%s";
 	private static final String GAME_FILE	= "game.dat";
 	private static final String DEPTH_FILE	= "depth%d.dat";
 	private static final String DEPTH_BRANCH_FILE	= "depth%d-branch%d.dat";
@@ -55,7 +68,7 @@ public class GamesInProgress {
 	}
 	
 	public static String gameFolder( int slot ){
-		return Messages.format(GAME_FOLDER, slot);
+		return Messages.format(GAME_FOLDER, slot, EchoPlayModePaths.gameFolderSuffix());
 	}
 	
 	public static String gameFile( int slot ){
@@ -97,13 +110,14 @@ public class GamesInProgress {
 	
 	public static Info check( int slot ) {
 		
-		if (slotStates.containsKey( slot )) {
+		String cacheKey = slotCacheKey(slot);
+		if (slotStates.containsKey( cacheKey )) {
 			
-			return slotStates.get( slot );
+			return slotStates.get( cacheKey );
 			
 		} else if (!gameExists( slot )) {
 			
-			slotStates.put(slot, null);
+			slotStates.put(cacheKey, null);
 			return null;
 			
 		} else {
@@ -129,10 +143,14 @@ public class GamesInProgress {
 				info = null;
 			}
 			
-			slotStates.put( slot, info );
+			slotStates.put( cacheKey, info );
 			return info;
 			
 		}
+	}
+
+	private static String slotCacheKey(int slot) {
+		return EchoPlayModePaths.gameFolderSuffix() + ":" + slot;
 	}
 
 	public static void set(int slot) {
@@ -148,6 +166,7 @@ public class GamesInProgress {
 		info.customSeed = Dungeon.customSeedText;
 		info.daily = Dungeon.daily;
 		info.dailyReplay = Dungeon.dailyReplay;
+		info.echoPlayMode = Dungeon.echoPlayMode;
 		
 		info.level = Dungeon.hero.lvl;
 		info.str = Dungeon.hero.STR;
@@ -163,15 +182,15 @@ public class GamesInProgress {
 		info.goldCollected = Statistics.goldCollected;
 		info.maxDepth = Statistics.deepestFloor;
 
-		slotStates.put( slot, info );
+		slotStates.put( slotCacheKey(slot), info );
 	}
 	
 	public static void setUnknown( int slot ) {
-		slotStates.remove( slot );
+		slotStates.remove( slotCacheKey(slot) );
 	}
 	
 	public static void delete( int slot ) {
-		slotStates.put( slot, null );
+		slotStates.put( slotCacheKey(slot), null );
 	}
 	
 	public static class Info {
@@ -185,6 +204,7 @@ public class GamesInProgress {
 		public String customSeed;
 		public boolean daily;
 		public boolean dailyReplay;
+		public EchoPlayMode echoPlayMode = EchoPlayMode.SOLO;
 		public long lastPlayed;
 
 		public int level;

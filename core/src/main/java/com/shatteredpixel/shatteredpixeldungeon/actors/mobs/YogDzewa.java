@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoCaptureTrigger;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -537,6 +538,8 @@ public class YogDzewa extends Mob {
 			Statistics.qualifiedForBossChallengeBadge = false;
 		}
 		Statistics.bossScores[4] += 5000 + 1250*Statistics.spawnersAlive;
+
+		EchoCaptureTrigger.onBossDefeated();
 
 		Badges.validateTakingTheMick(cause);
 

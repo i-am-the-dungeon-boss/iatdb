@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossPrefetch;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -108,6 +109,9 @@ public class InterlevelScene extends PixelScene {
 	private static Thread thread;
 	private static Exception error = null;
 	private float waitingTime;
+
+	/** Set on the loading thread while echo boss lookup/fetch runs. */
+	public static volatile boolean loadingEchoBoss = false;
 
 	public static int lastRegion = -1;
 
@@ -473,7 +477,9 @@ public class InterlevelScene extends PixelScene {
 		}
 
 		if (mode != Mode.FALL && dots != Math.ceil(waitingTime / ((2*fadeTime)/3f))) {
-			String text = Messages.get(Mode.class, mode.name());
+			String text = loadingEchoBoss
+					? Messages.get(InterlevelScene.class, "loading_echo_boss")
+					: Messages.get(Mode.class, mode.name());
 			dots = (int)Math.ceil(waitingTime / ((2*fadeTime)/3f))%3;
 			switch (dots){
 				case 1: default:
@@ -619,11 +625,32 @@ public class InterlevelScene extends PixelScene {
 
 	}
 
+	private void prefetchEchoBossIfNeeded(int depth, int branch) {
+		if (Dungeon.levelHasBeenGenerated(depth, branch)) {
+			return;
+		}
+		if (!EchoBossPrefetch.shouldPrefetch(depth, branch)) {
+			return;
+		}
+		loadingEchoBoss = true;
+		try {
+			EchoBossPrefetch.prefetch(depth);
+		} finally {
+			loadingEchoBoss = false;
+		}
+	}
+
+	private Level newLevelWithEchoPrefetch(int depth, int branch) {
+		prefetchEchoBossIfNeeded(depth, branch);
+		return Dungeon.newLevel();
+	}
+
 	private void descend() throws IOException {
 
 		if (Dungeon.hero == null) {
 			Mob.clearHeldAllies();
 			Dungeon.init();
+			GamesInProgress.applySelectedEchoPlayMode();
 			GameLog.wipe();
 
 			//When debugging, we may start a game at a later depth to quickly test something
@@ -636,7 +663,7 @@ public class InterlevelScene extends PixelScene {
 					if (!Dungeon.levelHasBeenGenerated(i, 0)){
 						Dungeon.depth = i;
 						Dungeon.branch = 0;
-						Dungeon.level = Dungeon.newLevel();
+						Dungeon.level = newLevelWithEchoPrefetch(i, 0);
 						Dungeon.saveLevel(GamesInProgress.curSlot);
 					}
 				}
@@ -644,7 +671,7 @@ public class InterlevelScene extends PixelScene {
 				Dungeon.branch = trueBranch;
 			}
 
-			Level level = Dungeon.newLevel();
+			Level level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 			Dungeon.switchLevel( level, -1 );
 		} else {
 			if (curTransition.destBranch != Dungeon.branch && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
@@ -662,7 +689,7 @@ public class InterlevelScene extends PixelScene {
 			if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
 				level = Dungeon.loadLevel( GamesInProgress.curSlot );
 			} else {
-				level = Dungeon.newLevel();
+				level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 			}
 
 			LevelTransition destTransition = level.getTransition(curTransition.destType);
@@ -685,7 +712,7 @@ public class InterlevelScene extends PixelScene {
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
 			level = Dungeon.loadLevel( GamesInProgress.curSlot );
 		} else {
-			level = Dungeon.newLevel();
+			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
 		Dungeon.switchLevel( level, level.fallCell( fallIntoPit ));
 	}
@@ -706,7 +733,7 @@ public class InterlevelScene extends PixelScene {
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
 			level = Dungeon.loadLevel( GamesInProgress.curSlot );
 		} else {
-			level = Dungeon.newLevel();
+			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
 
 		LevelTransition destTransition = level.getTransition(curTransition.destType);
@@ -724,7 +751,7 @@ public class InterlevelScene extends PixelScene {
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
 			level = Dungeon.loadLevel( GamesInProgress.curSlot );
 		} else {
-			level = Dungeon.newLevel();
+			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
 
 		Dungeon.switchLevel( level, returnPos );
@@ -737,6 +764,7 @@ public class InterlevelScene extends PixelScene {
 		GameLog.wipe();
 
 		Dungeon.loadGame( GamesInProgress.curSlot );
+		GamesInProgress.applySelectedEchoPlayMode();
 		if (Dungeon.depth == -1) {
 			Dungeon.depth = Statistics.deepestFloor;
 			Dungeon.switchLevel( Dungeon.loadLevel( GamesInProgress.curSlot ), -1 );
@@ -755,7 +783,7 @@ public class InterlevelScene extends PixelScene {
 			ArrayList<Item> preservedItems = Dungeon.level.getItemsToPreserveFromSealedResurrect();
 
 			Dungeon.hero.resurrect();
-			level = Dungeon.newLevel();
+			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 			Dungeon.hero.pos = level.randomRespawnCell(Dungeon.hero);
 			if (Dungeon.hero.pos == -1) Dungeon.hero.pos = level.entrance();
 
@@ -808,7 +836,7 @@ public class InterlevelScene extends PixelScene {
 
 		SpecialRoom.resetPitRoom(Dungeon.depth+1);
 
-		Level level = Dungeon.newLevel();
+		Level level = newLevelWithEchoPrefetch(Dungeon.depth + 1, Dungeon.branch);
 		Dungeon.switchLevel( level, level.entrance() );
 	}
 	

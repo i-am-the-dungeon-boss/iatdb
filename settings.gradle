@@ -2,9 +2,46 @@
 include ':SPD-classes'
 include ':core'
 
+def localProps = new Properties()
+def localPropsFile = new File(rootDir, 'local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+
+def resolveSdkDir = {
+    def fromFile = localProps.getProperty('sdk.dir')
+    if (fromFile != null) {
+        fromFile = fromFile.replace('%USERNAME%', System.getProperty('user.name'))
+        if (!new File(fromFile).exists()) {
+            logger.lifecycle("Ignoring sdk.dir in local.properties — directory does not exist: ${fromFile}")
+            fromFile = null
+        }
+    }
+    if (fromFile != null) {
+        return fromFile
+    }
+    def fromEnv = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT')
+    if (fromEnv != null && new File(fromEnv).exists()) {
+        return fromEnv
+    }
+    return null
+}
+
+def androidSdkDir = resolveSdkDir()
+if (androidSdkDir != null) {
+    include ':android'
+} else {
+    logger.lifecycle('Skipping :android — Android SDK not found (set sdk.dir in local.properties or ANDROID_HOME).')
+}
+
+def isMacOs = System.getProperty('os.name').toLowerCase(Locale.US).contains('mac')
+if (isMacOs) {
+    include ':ios'
+} else {
+    logger.lifecycle('Skipping :ios — RoboVM iOS builds are only configured on macOS.')
+}
+
 //platform modules
-include ':android'
-include ':ios'
 include ':desktop'
 
 //service modules

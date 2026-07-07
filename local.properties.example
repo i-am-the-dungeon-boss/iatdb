@@ -1,0 +1,4 @@
+# Copy to local.properties and adjust if you build the Android app.
+# Gradle also accepts ANDROID_HOME / ANDROID_SDK_ROOT when the directory exists.
+# If sdk.dir points to a missing folder, :android is skipped and desktop/core builds still work.
+sdk.dir=C\:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk

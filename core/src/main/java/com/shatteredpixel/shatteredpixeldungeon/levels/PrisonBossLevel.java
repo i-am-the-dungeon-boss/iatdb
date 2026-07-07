@@ -32,8 +32,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Regrowth;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StormCloud;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
@@ -83,6 +85,7 @@ public class PrisonBossLevel extends Level {
 		FIGHT_START,
 		FIGHT_PAUSE,
 		FIGHT_ARENA,
+		ECHO_BOSS,
 		WON
 	}
 	
@@ -427,6 +430,38 @@ public class PrisonBossLevel extends Level {
 						return;
 					}
 				}
+
+				if (EchoBossSpawner.shouldSpawn()) {
+					seal();
+					Statistics.qualifiedForBossChallengeBadge = true;
+					set(pointToCell(tenguCellDoor), Terrain.LOCKED_DOOR);
+					GameScene.updateMap(pointToCell(tenguCellDoor));
+
+					int doorPos = pointToCell(tenguCellDoor);
+					Mob.holdAllies(this, doorPos);
+					Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
+
+					EchoBoss echoBoss = EchoBossSpawner.create(Dungeon.depth);
+					echoBoss.state = echoBoss.HUNTING;
+					echoBoss.pos = tenguPos;
+					GameScene.add(echoBoss, 1);
+					echoBoss.notice();
+
+					EchoBossSpawner.announceIntroIfNeeded();
+
+					CellEmitter.get(echoBoss.pos).burst(Speck.factory(Speck.WOOL), 6);
+					Sample.INSTANCE.play(Assets.Sounds.PUFF);
+
+					state = State.ECHO_BOSS;
+
+					Game.runOnRenderThread(new Callback() {
+						@Override
+						public void call() {
+							Music.INSTANCE.play(Assets.Music.PRISON_BOSS, true);
+						}
+					});
+					break;
+				}
 				
 				seal();
 				Statistics.qualifiedForBossChallengeBadge = true;
@@ -559,7 +594,34 @@ public class PrisonBossLevel extends Level {
 					}
 				});
 				break;
+
+			case ECHO_BOSS:
+				break;
 		}
+	}
+
+	public void completeEchoBossVictory() {
+		if (state != State.ECHO_BOSS) {
+			return;
+		}
+
+		unseal();
+		set(pointToCell(tenguCellDoor), Terrain.DOOR);
+		GameScene.updateMap(pointToCell(tenguCellDoor));
+
+		state = State.WON;
+
+		Game.runOnRenderThread(new Callback() {
+			@Override
+			public void call() {
+				Music.INSTANCE.fadeOut(5f, new Callback() {
+					@Override
+					public void call() {
+						Music.INSTANCE.end();
+					}
+				});
+			}
+		});
 	}
 	
 	private boolean[] triggered = new boolean[]{false, false, false, false};

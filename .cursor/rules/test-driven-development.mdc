@@ -1,0 +1,65 @@
+---
+description: Test-Driven Development — write failing tests first, then minimal implementation
+alwaysApply: true
+---
+
+# Test-Driven Development
+
+## Iron Law
+
+No production code without a failing test first. If implementation was written before the test, delete it and start over.
+
+## Red → Green → Refactor
+
+1. **RED** — Write one minimal test for one behavior. Use `@DisplayName` and AssertJ (`Assertions.assertThat`).
+2. **Verify RED** — Run the test and confirm it fails for the right reason (missing behavior, not a typo).
+3. **GREEN** — Write the smallest code change that makes the test pass.
+4. **Verify GREEN** — Re-run tests; all must pass.
+5. **REFACTOR** — Clean up only after green. Do not add behavior during refactor.
+
+## Running Tests
+
+```bash
+# Single test class
+./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
+
+# Single test method
+./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
+```
+
+## Test Quality
+
+- One behavior per test; split if the name needs "and".
+- Test real behavior, not mocks (use `GdxTestExtension` / `EchoTestSupport` for game setup).
+- Place tests in `core/src/test/java/` mirroring the production package.
+- Never fix bugs without a failing test that reproduces them first.
+
+## Good vs Bad
+
+```java
+// ✅ GOOD — clear behavior, one assertion focus
+@Test
+@DisplayName("rejects snapshot when depth is invalid")
+void rejectsInvalidDepth() {
+    Assertions.assertThatThrownBy(() -> Echo.create(-1, ...))
+        .isInstanceOf(IllegalArgumentException.class);
+}
+
+// ❌ BAD — vague name, tests nothing meaningful
+@Test
+void testSnapshot() {
+    Echo snap = Echo.create(5, ...);
+    Assertions.assertThat(snap).isNotNull();
+}
+```
+
+## Before Marking Work Complete
+
+- [ ] Every new behavior has a test written first
+- [ ] Each test was watched failing before implementation
+- [ ] Minimal code was written to pass each test
+- [ ] `./gradlew :core:test` passes with no failures
+
+## Exceptions
+
+Ask before skipping TDD: throwaway prototypes, generated code, or config-only changes.

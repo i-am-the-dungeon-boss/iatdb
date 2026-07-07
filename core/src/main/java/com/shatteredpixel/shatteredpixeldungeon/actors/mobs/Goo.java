@@ -36,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
 import com.shatteredpixel.shatteredpixeldungeon.items.keys.WornKey;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoCaptureTrigger;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -304,6 +305,8 @@ public class Goo extends Mob {
 			Badges.validateBossChallengeCompleted();
 		}
 		Statistics.bossScores[0] += 1000;
+
+		EchoCaptureTrigger.onBossDefeated();
 		
 		yell( Messages.get(this, "defeated") );
 	}
