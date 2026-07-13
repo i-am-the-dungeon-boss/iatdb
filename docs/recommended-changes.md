@@ -1,6 +1,6 @@
 (Last Updated December 2022)
 
-This guide covers a few technical changes developers will likely want to make when creating their own Pixel Dungeon version based on Shattered's source code.
+This guide covers a few technical changes developers will likely want to make when creating their own Pixel Dungeon version based on I am the Dungeon Boss's source code.
 
 ## Application name, version name, and package name
 
@@ -10,21 +10,21 @@ There are a number of variables defined in the root [build.gradle](/build.gradle
 - `appVersionCode` defines the internal version number of your app. You want to increment this whenever releasing a new update. Read the next section for more details on this one.
 - `appVersionName` defines the user-visible version name of your app. Change this to whatever you like, and increment it whenever you release a new update.
 
-The other variables do not need to be changed when setting up your own version of Shattered, they are mainly technical configurations that do not need to be adjusted.
+The other variables do not need to be changed when setting up your own version of I am the Dungeon Boss, they are mainly technical configurations that do not need to be adjusted.
 
 Note that some guides may recommend that you change the package structure (i.e. the folder names) of the application. This used to be required, but is now optional as the `appPackageName` variable can be used instead.
 
 ## Application version code
 
-Shattered Pixel Dungeon has an internal version code which should be incremented with each release. It is defined with the `appVersionCode` variable in the root [build.gradle](/build.gradle) file.
+I am the Dungeon Boss has an internal version code which should be incremented with each release. It is defined with the `appVersionCode` variable in the root [build.gradle](/build.gradle) file.
 
-You may be tempted to set this value back to 1, but Shattered has compatibility code for previous versions which may be incorrectly triggered if you decrement the version code. The version code is entirely internal so there is no harm in using Shattered's current version code as a starting point.
+You may be tempted to set this value back to 1, but I am the Dungeon Boss has compatibility code for previous versions which may be incorrectly triggered if you decrement the version code. The version code is entirely internal so there is no harm in using the current version code as a starting point.
 
 If you wish to set it to 1 anyway, the various constant variables toward the top of [ShatteredPixelDungeon.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ShatteredPixelDungeon.java) are a good starting point for finding all of the cases where the game refers to the version code for compatibility purposes.
 
 ## Application Icon and Title Screen
 
-You will likely want to change the application icon and title screen to better visually distinguish your version from Shattered Pixel Dungeon. This is as simple as modifying image assets, but there are quite a few of them.
+You will likely want to change the application icon and title screen to better visually distinguish your version from I am the Dungeon Boss. This is as simple as modifying image assets, but there are quite a few of them.
 
 For the title screen, you can find the game's title graphic and separate glow layer [Here](/core/src/main/assets/interfaces/banners.png).
 
@@ -42,7 +42,7 @@ Note that due to the GPLv3 license, any edits you make to the credits scene must
 
 ## Update Notification
 
-Shattered Pixel Dungeon includes a github-based update notification which likely will not be useful unless it is modified.
+I am the Dungeon Boss includes a github-based update notification which likely will not be useful unless it is modified.
 
 To simply disable the notification change `:services:updates:githubUpdates` to `:services:updates:debugUpdates` for the release configurations in the build.gradle files in the [desktop](/desktop/build.gradle) and [android](/android/build.gradle) modules. The debug updates module does nothing by default and so works just fine in release builds.
 
@@ -52,7 +52,7 @@ More advanced developers can change the format for releases if they like, or mak
 
 ## News Feed
 
-Shattered Pixel Dungeon includes a news feed which pulls blog posts from [ShatteredPixel.com](http://ShatteredPixel.com). The articles there may not be useful to you so you may wish to remove them.
+I am the Dungeon Boss includes a news feed which pulls blog posts from [ShatteredPixel.com](http://ShatteredPixel.com). The articles there may not be useful to you so you may wish to remove them.
 
 To simply disable news entirely, comment out the line `add(btnNews);` in [TitleScene.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java).
 
@@ -62,7 +62,7 @@ More advanced developers can also write their own news checker services and use 
 
 ## Translations
 
-Shattered Pixel Dungeon supporters a number of languages which are translated via a [community translation project](https://www.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
+I am the Dungeon Boss supporters a number of languages which are translated via a [community translation project](https://www.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
 
 If you plan to add new text to the game, maintaining these translations may be difficult or impossible, and so you may wish to remove them:
 - In [Languages.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Languages.java) remove all of the enum constants except for ENGLISH.

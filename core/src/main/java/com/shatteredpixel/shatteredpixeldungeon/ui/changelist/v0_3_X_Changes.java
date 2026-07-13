@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ public class v0_3_X_Changes {
 				"The response from the community was and continues to be incredible! Even multiple years later Shattered's updates are still consistently translated into a number of languages."));
 		
 		changes.addButton( new ChangeButton(Icons.get(Icons.LANGS), "Translations!",
-				"Shattered Pixel Dungeon now supports multiple languages, thanks to a new community translation project!\n\n" +
+				"I am the Dungeon Boss now supports multiple languages, thanks to a new community translation project!\n\n" +
 				"The Following languages are supported at release:\n" +
 				"_-_ English\n" +
 				"_-_ Russian\n" +

@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -233,7 +233,7 @@ public class v0_7_X_Changes {
 				"_-_ Added a little surprise if you reach the surface with an upgraded ally item.\n\n" +
 				"_-_ Ring of elements and antimagic effects now apply to damage from wands.\n\n" +
 				"_-_ The great crab can now only block one enemy at a time.\n\n" +
-				"_-_ Shattered Pixel Dungeon now requires Android 2.3+ to run, up from Android 2.2+.\n" +
+				"_-_ I am the Dungeon Boss now requires Android 2.3+ to run, up from Android 2.2+.\n" +
 				"_-_ Google Play Games and sharing gameplay data now requires android 4.1+, up from 4.0+."));
 
 		changes.addButton( new ChangeButton(new Image(Assets.Sprites.SPINNER, 144, 0, 16, 16), Messages.get(ChangesScene.class, "bugfixes"),

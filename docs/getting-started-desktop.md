@@ -17,7 +17,7 @@ Performing a full setup is strongly recommended if you wish to make changes to t
 
 ## Prerequisites
 
-To compile Shattered Pixel Dungeon for desktop using this guide you will need:
+To compile I am the Dungeon Boss for desktop using this guide you will need:
 - A computer which meets the system requirements for [Android Studio](https://developer.android.com/studio#get-android-studio) or [Intellij](https://www.jetbrains.com/help/idea/installation-guide.html)
 - (recommended) a GitHub account to fork this repository, if you wish to use version control
 
@@ -27,7 +27,7 @@ Download and install the latest version of [Android Studio](https://developer.an
 
 Android Studio is recommended over Intellij as it is used by the developer, and makes compiling the [Android version](getting-started-android.md) of the game simpler. If you prefer Intellij you may use that instead. This guide will assume Android Studio is used, but the two programs are very similar.
 
-It is optional, but strongly recommended, to use version control to manage your copy of the Shattered Pixel Dungeon codebase. Version control is software which helps you manage changes to code. To use version control you will need to download and install [Git](https://git-scm.com/downloads). You are welcome to use a separate graphical git client or git CLI if you prefer, but this guide will use Android Studio's built-in git tools.
+It is optional, but strongly recommended, to use version control to manage your copy of the I am the Dungeon Boss codebase. Version control is software which helps you manage changes to code. To use version control you will need to download and install [Git](https://git-scm.com/downloads). You are welcome to use a separate graphical git client or git CLI if you prefer, but this guide will use Android Studio's built-in git tools.
 
 ## Setting up your copy of the code
 
@@ -63,13 +63,13 @@ That configuration is now saved and can be selected from the run configurations 
 
 A JAR (Java ARchive) is a file used to distribute Java applications. Just as with running the code, a run configuration must be set up to create the jar. Follow the above steps, but with 'release' instead of 'debug'. Running this configuration will generate a distributable JAR file in the `/desktop/build/libs` folder.
 
-Note that by distributing your modification of Shattered Pixel Dungeon, you are bound by the terms of the GPLv3 license, which requires that you make any modifications you have made open-source. If you followed this guide and are using version control, that is already set up for you as your forked repository is publicly hosted on GitHub. Just make sure to push any changes you make back to that repository.
+Note that by distributing your modification of I am the Dungeon Boss, you are bound by the terms of the GPLv3 license, which requires that you make any modifications you have made open-source. If you followed this guide and are using version control, that is already set up for you as your forked repository is publicly hosted on GitHub. Just make sure to push any changes you make back to that repository.
 
 Note that JAR files will require a [Java runtime enviroment](https://www.java.com/en/download/) to be installed on a user's computer in order to work.
 
 ## Generating OS-specific executables
 
-Shattered Pixel Dungeon uses [JPackage](https://dev.java/learn/jpackage/) and [Badass Runtime](https://badass-runtime-plugin.beryx.org/releases/latest/) to generate platform-specific executables that don't require users to install Java to run the game. This process is unfortunately more awkward, locks the game to a specific operating system, and produces larger files. Because of this JARs are recommended as a simpler starting point.
+I am the Dungeon Boss uses [JPackage](https://dev.java/learn/jpackage/) and [Badass Runtime](https://badass-runtime-plugin.beryx.org/releases/latest/) to generate platform-specific executables that don't require users to install Java to run the game. This process is unfortunately more awkward, locks the game to a specific operating system, and produces larger files. Because of this JARs are recommended as a simpler starting point.
 
 Just like with a JAR, generating a platform-specific executable requires a new run configuration. Use 'jpackageimage' instead of 'release'. This may take a bit of time, and will generate an executable file in the `/desktop/build/jpackage` folder. All the specific configurations for badass runtime and jpackage are already set up, but you can view them in the 'runtime' block in [desktop/build.gradle](./desktop/build.gradle).
 
@@ -79,4 +79,4 @@ You will only be able to create an executable that matches the operation system 
   - **Note that your .app will probably need to be [notarized](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution) by Apple for users to be able to use it.** The [desktop/notarize.sh](./desktop/notarize.sh) file helps automate this process if you already have notarization set up.
 - If you have a Linux computer, you can generate a folder with a Linux executable inside (zip before distributing)
 
-Note that these tools can also be used to generate platform-specific installers, but this functionality is unused in Shattered Pixel Dungeon.
+Note that these tools can also be used to generate platform-specific installers, but this functionality is unused in I am the Dungeon Boss.

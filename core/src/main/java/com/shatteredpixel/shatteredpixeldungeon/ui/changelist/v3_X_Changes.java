@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -401,7 +401,7 @@ public class v3_X_Changes {
 				"Note that darts are not affected by these changes, they effectively all belong to the same set and still cannot be upgraded."));
 
 		changes.addButton(new ChangeButton(Icons.get(Icons.DISPLAY_LAND), "New Title Background and Text Banners!",
-				"(v3.2.4) **Shattered Pixel Dungeon has a new title screen background, with art by Aleksandar Komitov!**\n" +
+				"(v3.2.4) **I am the Dungeon Boss has a new title screen background, with art by Aleksandar Komitov!**\n" +
 				"\n" +
 				"This new background is meant to both extend the classis archs, and tie the title screens more directly to the region splash arts! It features randomly selected floating fully rendered chunks of dungeon in front of an arch back-layer.\n" +
 				"\n" +
@@ -471,7 +471,7 @@ public class v3_X_Changes {
 				"\n" +
 				"**v3.2.2:**\n" +
 				"**-** Updated various internal code libraries.\n" +
-				"**-** Shattered Pixel Dungeon now requires Android 5.0+, up from 4.0+.\n" +
+				"**-** I am the Dungeon Boss now requires Android 5.0+, up from 4.0+.\n" +
 				"**-** Sharing Gameplay Data now requires Android 6.0+, up from 4.1+.\n" +
 				"**-** Desktop JAR build now requires Java 11+, up from 8+.\n" +
 				"**-** Slightly adjusted the visuals at the end of the prison region.\n" +
@@ -842,7 +842,7 @@ public class v3_X_Changes {
 				"Dev commentary will be added here in the future."));
 
 		changes.addButton( new ChangeButton(HeroSprite.avatar(HeroClass.CLERIC, 1), "The Cleric!",
-				"**Shattered Pixel Dungeon has another new hero, making for six total!!**\n" +
+				"**I am the Dungeon Boss has another new hero, making for six total!!**\n" +
 				"\n" +
 				"The Cleric is an entire new hero class **with a variety of unique spells that they learn via talents!** They can be unlocked by removing the curse on any piece of equipment, but existing players who already have a win will automatically unlock them!\n" +
 				"\n" +

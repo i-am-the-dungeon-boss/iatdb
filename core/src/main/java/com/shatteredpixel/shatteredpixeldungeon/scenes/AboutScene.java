@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,12 +64,12 @@ public class AboutScene extends PixelScene {
 		Component content = list.content();
 		content.clear();
 
-		//*** Shattered Pixel Dungeon Credits ***
+		//*** I am the Dungeon Boss Credits ***
 
 		CreditsBlock shpx = new CreditsBlock(true, Window.SHPX_COLOR,
-				"Shattered Pixel Dungeon",
+				"I am the Dungeon Boss",
 				Icons.SHPX.get(),
-				"Developed by: _Evan Debenham_\nBased on Pixel Dungeon's open source",
+				"Developed by: _Marwan Elzainy_\nBased on Pixel Dungeon's open source",
 				"ShatteredPixel.com",
 				"https://ShatteredPixel.com");
 		if (landscape()){
@@ -207,7 +207,7 @@ public class AboutScene extends PixelScene {
 				Window.TITLE_COLOR,
 				null,
 				null,
-				"Shattered Pixel Dungeon uses the following sound samples from _freesound.org_:\n\n" +
+				"I am the Dungeon Boss uses the following sound samples from _freesound.org_:\n\n" +
 
 				"Creative Commons Attribution License:\n" +
 				"_SFX ATTACK SWORD 001.wav_ by _JoelAudio_\n" +

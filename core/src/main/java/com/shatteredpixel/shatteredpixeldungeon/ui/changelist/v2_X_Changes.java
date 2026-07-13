@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -781,7 +781,7 @@ public class v2_X_Changes {
 				"Originally this quest was going to be much more focused on mining and ores, like Motherlode, Dome Keeper, or Miner Disturbance. In early testing this just wasn't fun though. I eventually realized that I was trying to jam a different game into the middle of Shattered, but instead I needed to use mining to enhance Shattered's existing gameplay. That led to the current quest design, which I think works quite well!"));
 
 		changes.addButton( new ChangeButton(new ItemSprite(ItemSpriteSheet.PICKAXE), "New Blacksmith Quest!",
-				"_Shattered Pixel Dungeon's blacksmith quest has been completely redone!_\n" +
+				"_I am the Dungeon Boss's blacksmith quest has been completely redone!_\n" +
 				"\n" +
 				"_The quest now takes place in a new sublevel, with one entirely new environment, and two more on the way in v2.3!_ Each environment has its own set of hazards, level generation logic, and unique enemies.\n" +
 				"\n" +
@@ -790,7 +790,7 @@ public class v2_X_Changes {
 				"_The quest rewards are also massively expanded._ The better you do on the quest, the more favor you'll earn in exchange for blacksmithing services. The old reforge option is still available, but there are several new options too."));
 
 		changes.addButton( new ChangeButton(Icons.AUDIO.get(), "New Music!",
-				"_Shattered Pixel Dungeon's soundtrack has been massively expanded!_ The game's soundtrack runtime has doubled in total, with almost 20 minutes of new audio by the game's composer: Kristjan Thomas Haaristo.\n" +
+				"_I am the Dungeon Boss's soundtrack has been massively expanded!_ The game's soundtrack runtime has doubled in total, with almost 20 minutes of new audio by the game's composer: Kristjan Thomas Haaristo.\n" +
 				"\n" +
 				"_The existing region tracks have been expanded._ Each track now has three total segments, instead of two. All of these segments play in a semi-random pattern, increasing variety for the game's more frequently heard music.\n" +
 				"\n" +
@@ -1199,14 +1199,14 @@ public class v2_X_Changes {
 				"_-_ 160 days after Shattered v1.4.0\n" +
 				"_-_ 413 days after Shattered v1.0.0\n" +
 				"\n" +
-				"v2.0.0 introduced Shattered Pixel Dungeon's first ever new hero: the Duelist!\n" +
+				"v2.0.0 introduced I am the Dungeon Boss's first ever new hero: the Duelist!\n" +
 				"\n" +
 				"The Duelist was the first of two new heroes that were focused around active abilities, as opposed to focusing on equipment power (Warrior and Mage), or environment interaction (Rogue and Huntress). I see v2.0 as the beginning of another new era in Shattered's development, as after focusing on new platforms during most of v1.X, game updates instead started focusing on big content expansions.\n" +
 				"\n" +
 				"Unfortunately the Duelist ended up releasing quite weak. I overestimated how well an ability focused hero would perform versus the existing heroes. I erred much more on the side of making the next hero stronger, and so far that seems to be working out quite well."));
 
 		changes.addButton(new ChangeButton(HeroSprite.avatar(HeroClass.DUELIST, 1), HeroClass.DUELIST.title(),
-				"_Shattered Pixel Dungeon has a new playable character!!_\n" +
+				"_I am the Dungeon Boss has a new playable character!!_\n" +
 				"\n" +
 				"The Duelist is an entire new hero class, _with a unique ability for every weapon in the game!_ She can be unlocked by earning a simple badge for equipping a T2 or higher weapon without a strength penalty. However, for existing players who already have a win she is unlocked by default!\n" +
 				"\n" +

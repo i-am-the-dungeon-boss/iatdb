@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-To compile Shattered Pixel Dungeon for iOS using this guide you will need:
+To compile I am the Dungeon Boss for iOS using this guide you will need:
 - (required) An Apple computer which meets the system requirements for [Android Studio](https://developer.android.com/studio#get-android-studio) and [Xcode](https://developer.apple.com/xcode/)
 - (recommended) A GitHub account to fork this repository, if you wish to use version control
 
@@ -10,7 +10,7 @@ To compile Shattered Pixel Dungeon for iOS using this guide you will need:
 
 Download and install the latest version of [Android Studio](https://developer.android.com/studio). This is the development environment which android apps use, it includes all the tools needed to get started with building android apps.
 
-It is optional, but strongly recommended, to use version control to manage your copy of the Shattered Pixel Dungeon codebase. Version control is software which helps you manage changes to code. To use version control you will need to download and install [Git](https://git-scm.com/downloads). You are welcome to use a separate graphical git client or git CLI if you prefer, but this guide will use Android Studio's built-in git tools.
+It is optional, but strongly recommended, to use version control to manage your copy of the I am the Dungeon Boss codebase. Version control is software which helps you manage changes to code. To use version control you will need to download and install [Git](https://git-scm.com/downloads). You are welcome to use a separate graphical git client or git CLI if you prefer, but this guide will use Android Studio's built-in git tools.
 
 ## Setting up your copy of the code
 
@@ -34,8 +34,8 @@ If you are not using version control, select 'Import project (Gradle, Eclipse AD
 
 # ...Good Luck!
 
-You have now set up the initial project on your computer. From this point compiling the game for Android or Desktop is simple, but iOS is significantly more complicated. This is due to a mixture of Apple's development process and the RoboVM tool that Shattered uses to cross-compile for iOS.
+You have now set up the initial project on your computer. From this point compiling the game for Android or Desktop is simple, but iOS is significantly more complicated. This is due to a mixture of Apple's development process and the RoboVM tool that I am the Dungeon Boss uses to cross-compile for iOS.
 
 I'll be frank, I do not have a set-by-step process down for how to get this working from scratch, good luck! A great starting point is: [Deploying your libGDX game to iOS in 2020](https://medium.com/@bschulte19e/deploying-your-libgdx-game-to-ios-in-2020-4ddce8fff26c). Some steps can be skipped as the actual application code is all done for you. Provisioning profiles and Xcode setup are the largest hurdles.
 
-Please contact me if you have any specific questions and I may be able to help, or if you wish to make a version based on Shattered available on the App Store.
+Please contact me if you have any specific questions and I may be able to help, or if you wish to make a version based on I am the Dungeon Boss available on the App Store.

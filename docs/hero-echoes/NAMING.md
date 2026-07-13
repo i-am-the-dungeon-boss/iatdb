@@ -8,7 +8,7 @@
 
 | Concept          | Name                                                  |
 | ---------------- | ----------------------------------------------------- |
-| Game             | I Am The Dungeon Boss                                 |
+| Game             | I am the Dungeon Boss                                 |
 | Online service   | Hero Echoes                                           |
 | Backend repo     | `hero-echoes-backend`                                 |
 | Game docs folder | `docs/hero-echoes/`                                   |

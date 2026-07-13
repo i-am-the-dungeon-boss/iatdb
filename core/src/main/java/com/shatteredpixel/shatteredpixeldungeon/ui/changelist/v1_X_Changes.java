@@ -2,8 +2,8 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
- * Shattered Pixel Dungeon
- * Copyright (C) 2014-2026 Evan Debenham
+ * I am the Dungeon Boss
+ * Copyright (C) 2014-2026 Marwan Elzainy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -487,7 +487,7 @@ public class v1_X_Changes {
 				"v1.2.0 also included a variety of little additions and tweaks. Most of them are self-explanatory, but the badge additions in particular were timed with the game's release on Steam so they could tie into steamworks achievements and give newer players a little more to do."));
 
 		changes.addButton( new ChangeButton(Icons.get(Icons.DISPLAY_LAND), "Desktop Enhancements and Steam Release!",
-				"_Shattered Pixel Dungeon has received a bunch of new features in preparation for its release on Steam!_\n\n" +
+				"_I am the Dungeon Boss has received a bunch of new features in preparation for its release on Steam!_\n\n" +
 				"These features include:\n" +
 				"_-_ A new main UI for larger displays, which places the inventory in the main game screen\n" +
 				"_-_ Full controller support, including button bindings and an analog stick cursor.\n" +
@@ -850,7 +850,7 @@ public class v1_X_Changes {
 				"I actually originally intended for this update to be v0.9.4, but a requirement by Apple forced me to change the versioning scheme just before the full release. In retrospect, I'm extremely glad that this update became v1.0.0. While it wasn't the largest update content-wise, I can think of no better time for v1.0 than the update where Shattered first released as a paid product."));
 
 		changes.addButton( new ChangeButton(Icons.get(Icons.DISPLAY_PORT), "iOS Release!",
-				"_Shattered Pixel Dungeon is now available on the iOS App Store!_\n\n" +
+				"_I am the Dungeon Boss is now available on the iOS App Store!_\n\n" +
 				"After years of requests, Shattered is finally available on Apple devices! The iOS version of the game will release in lockstep with the Android version moving forward, with some small variance due to different update approval processes.\n\n" +
 				"Note that the iOS version costs $5, but comes with some supporter features built-in. I have no plans to make any changes to the monetization of the Android version."));
 
