@@ -70,8 +70,8 @@ public class CityBossLevel extends Level {
 	private static final Rect arena = new Rect(1, 25, 14, 38);
 	private static final Rect end = new Rect(0, 0, 15, 22);
 
-	private static final int bottomDoor = 7 + (arena.bottom-1)*15;
-	private static final int topDoor = 7 + arena.top*15;
+	private static final int bottomDoor = 7 + (arena.bottom - 1) * 15;
+	private static final int topDoor = 7 + arena.top * 15;
 
 	public static final int throne;
 	private static final int[] pedestals = new int[4];
@@ -79,24 +79,24 @@ public class CityBossLevel extends Level {
 	static {
 		Point c = arena.center();
 		throne = c.x + (c.y) * WIDTH;
-		pedestals[0] = c.x-3 + (c.y-3) * WIDTH;
-		pedestals[1] = c.x+3 + (c.y-3) * WIDTH;
-		pedestals[2] = c.x+3 + (c.y+3) * WIDTH;
-		pedestals[3] = c.x-3 + (c.y+3) * WIDTH;
+		pedestals[0] = c.x - 3 + (c.y - 3) * WIDTH;
+		pedestals[1] = c.x + 3 + (c.y - 3) * WIDTH;
+		pedestals[2] = c.x + 3 + (c.y + 3) * WIDTH;
+		pedestals[3] = c.x - 3 + (c.y + 3) * WIDTH;
 	}
 
 	private ImpShopRoom impShop;
 
 	@Override
 	public void playLevelMusic() {
-		if (locked){
-			if (BossHealthBar.isBleeding()){
+		if (locked) {
+			if (BossHealthBar.isBleeding()) {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS_FINALE, true);
 			} else {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS, true);
 			}
-		//if top door isn't unlocked
-		} else if (map[topDoor] == Terrain.LOCKED_DOOR){
+			// if top door isn't unlocked
+		} else if (map[topDoor] == Terrain.LOCKED_DOOR) {
 			Music.INSTANCE.end();
 		} else {
 			Music.INSTANCE.playTracks(CityLevel.CITY_TRACK_LIST, CityLevel.CITY_TRACK_CHANCES, false);
@@ -116,16 +116,16 @@ public class CityBossLevel extends Level {
 	private static final String IMP_SHOP = "imp_shop";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( IMP_SHOP, impShop );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(IMP_SHOP, impShop);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		impShop = (ImpShopRoom) bundle.get( IMP_SHOP );
-		if (map[topDoor] != Terrain.LOCKED_DOOR && Imp.Quest.isCompleted() && !impShop.shopSpawned()){
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		impShop = (ImpShopRoom) bundle.get(IMP_SHOP);
+		if (map[topDoor] != Terrain.LOCKED_DOOR && Imp.Quest.isCompleted() && !impShop.shopSpawned()) {
 			spawnShop();
 		}
 	}
@@ -135,41 +135,41 @@ public class CityBossLevel extends Level {
 
 		setSize(WIDTH, HEIGHT);
 
-		//entrance room
+		// entrance room
 		Painter.fill(this, entry, Terrain.WALL);
 		Painter.fill(this, entry, 1, Terrain.BOOKSHELF);
 		Painter.fill(this, entry, 2, Terrain.EMPTY);
 
-		Painter.fill(this, entry.left+3, entry.top+3, 1, 5, Terrain.BOOKSHELF);
-		Painter.fill(this, entry.right-4, entry.top+3, 1, 5, Terrain.BOOKSHELF);
+		Painter.fill(this, entry.left + 3, entry.top + 3, 1, 5, Terrain.BOOKSHELF);
+		Painter.fill(this, entry.right - 4, entry.top + 3, 1, 5, Terrain.BOOKSHELF);
 
-		Painter.set(this, entry.left+5, entry.top+1, Terrain.REGION_DECO);
-		Painter.set(this, entry.left+7, entry.top+1, Terrain.REGION_DECO);
+		Painter.set(this, entry.left + 5, entry.top + 1, Terrain.REGION_DECO);
+		Painter.set(this, entry.left + 7, entry.top + 1, Terrain.REGION_DECO);
 
 		Point c = entry.center();
 
-		Painter.fill(this, c.x-1, c.y-2, 3, 1, Terrain.STATUE);
-		Painter.fill(this, c.x-1, c.y, 3, 1, Terrain.STATUE);
-		Painter.fill(this, c.x-1, c.y+2, 3, 1, Terrain.STATUE);
-		Painter.fill(this, c.x, entry.top+1, 1, 6, Terrain.EMPTY_SP);
+		Painter.fill(this, c.x - 1, c.y - 2, 3, 1, Terrain.STATUE);
+		Painter.fill(this, c.x - 1, c.y, 3, 1, Terrain.STATUE);
+		Painter.fill(this, c.x - 1, c.y + 2, 3, 1, Terrain.STATUE);
+		Painter.fill(this, c.x, entry.top + 1, 1, 6, Terrain.EMPTY_SP);
 
 		Painter.set(this, c.x, entry.top, Terrain.DOOR);
 
-		int entrance = c.x + (c.y+2)*width();
+		int entrance = c.x + (c.y + 2) * width();
 		Painter.set(this, entrance, Terrain.ENTRANCE);
 		transitions.add(new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE));
 
-		//DK's throne room
+		// DK's throne room
 		Painter.fillDiamond(this, arena, 1, Terrain.EMPTY);
 
 		Painter.fill(this, arena, 5, Terrain.EMPTY_SP);
 		Painter.fill(this, arena, 6, Terrain.CUSTOM_DECO);
 
 		c = arena.center();
-		Painter.set(this, c.x-3, c.y, Terrain.STATUE);
-		Painter.set(this, c.x-4, c.y, Terrain.STATUE);
-		Painter.set(this, c.x+3, c.y, Terrain.STATUE);
-		Painter.set(this, c.x+4, c.y, Terrain.STATUE);
+		Painter.set(this, c.x - 3, c.y, Terrain.STATUE);
+		Painter.set(this, c.x - 4, c.y, Terrain.STATUE);
+		Painter.set(this, c.x + 3, c.y, Terrain.STATUE);
+		Painter.set(this, c.x + 4, c.y, Terrain.STATUE);
 
 		Painter.set(this, pedestals[0], Terrain.PEDESTAL);
 		Painter.set(this, pedestals[1], Terrain.PEDESTAL);
@@ -178,39 +178,39 @@ public class CityBossLevel extends Level {
 
 		Painter.set(this, c.x, arena.top, Terrain.LOCKED_DOOR);
 
-		//exit hallway
+		// exit hallway
 		Painter.fill(this, end, Terrain.CHASM);
-		Painter.fill(this, end.left+4, end.top+5, 7, 18, Terrain.EMPTY);
-		Painter.fill(this, end.left+4, end.top+5, 7, 4, Terrain.EXIT);
+		Painter.fill(this, end.left + 4, end.top + 5, 7, 18, Terrain.EMPTY);
+		Painter.fill(this, end.left + 4, end.top + 5, 7, 4, Terrain.EXIT);
 
-		int exitCell = end.left+7 + (end.top+8)*width();
+		int exitCell = end.left + 7 + (end.top + 8) * width();
 		LevelTransition exit = new LevelTransition(this, exitCell, LevelTransition.Type.REGULAR_EXIT);
-		exit.set(end.left+4, end.top+4, end.left+4+6, end.top+4+4);
+		exit.set(end.left + 4, end.top + 4, end.left + 4 + 6, end.top + 4 + 4);
 		transitions.add(exit);
 
 		impShop = new ImpShopRoom();
-		impShop.set(end.left+3, end.top+12, end.left+11, end.top+20);
+		impShop.set(end.left + 3, end.top + 12, end.left + 11, end.top + 20);
 		Painter.set(this, impShop.center(), Terrain.PEDESTAL);
 
-		Painter.set(this, impShop.left+2, impShop.top, Terrain.STATUE);
-		Painter.set(this, impShop.left+6, impShop.top, Terrain.STATUE);
+		Painter.set(this, impShop.left + 2, impShop.top, Terrain.STATUE);
+		Painter.set(this, impShop.left + 6, impShop.top, Terrain.STATUE);
 
-		Painter.fill(this, end.left+5, end.bottom+1, 5, 1, Terrain.EMPTY);
-		Painter.fill(this, end.left+6, end.bottom+2, 3, 1, Terrain.EMPTY);
+		Painter.fill(this, end.left + 5, end.bottom + 1, 5, 1, Terrain.EMPTY);
+		Painter.fill(this, end.left + 6, end.bottom + 2, 3, 1, Terrain.EMPTY);
 
 		impShop.paint(this);
 		new CityPainter().paint(this, null);
 
-		//pillars last, no deco on these
-		Painter.fill(this, end.left+1, end.top+2, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.left+1, end.top+7, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.left+1, end.top+12, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.left+1, end.top+17, 2, 2, Terrain.WALL);
+		// pillars last, no deco on these
+		Painter.fill(this, end.left + 1, end.top + 2, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.left + 1, end.top + 7, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.left + 1, end.top + 12, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.left + 1, end.top + 17, 2, 2, Terrain.WALL);
 
-		Painter.fill(this, end.right-3, end.top+2, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.right-3, end.top+7, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.right-3, end.top+12, 2, 2, Terrain.WALL);
-		Painter.fill(this, end.right-3, end.top+17, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.right - 3, end.top + 2, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.right - 3, end.top + 7, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.right - 3, end.top + 12, 2, 2, Terrain.WALL);
+		Painter.fill(this, end.right - 3, end.top + 17, 2, 2, Terrain.WALL);
 
 		CustomTilemap customVisuals = new CustomGroundVisuals();
 		customVisuals.setRect(0, 0, width(), height());
@@ -223,8 +223,8 @@ public class CityBossLevel extends Level {
 		return true;
 	}
 
-	//returns a random pedestal that doesn't already have a summon inbound on it
-	public int getSummoningPos(){
+	// returns a random pedestal that doesn't already have a summon inbound on it
+	public int getSummoningPos() {
 		Mob king = getKing();
 		HashSet<DwarfKing.Summoning> summons = king.buffs(DwarfKing.Summoning.class);
 		ArrayList<Integer> positions = new ArrayList<>();
@@ -240,16 +240,17 @@ public class CityBossLevel extends Level {
 				positions.add(pedestal);
 			}
 		}
-		if (positions.isEmpty()){
+		if (positions.isEmpty()) {
 			return -1;
 		} else {
 			return Random.element(positions);
 		}
 	}
 
-	private Mob getKing(){
-		for (Mob m : mobs){
-			if (m instanceof DwarfKing) return m;
+	private Mob getKing() {
+		for (Mob m : mobs) {
+			if (m instanceof DwarfKing)
+				return m;
 		}
 		return null;
 	}
@@ -265,32 +266,32 @@ public class CityBossLevel extends Level {
 	@Override
 	protected void createItems() {
 		Random.pushGenerator(Random.Long());
-			ArrayList<Item> bonesItems = Bones.get();
-			if (bonesItems != null) {
-				int pos;
-				do {
-					pos = randomRespawnCell(null);
-				} while (pos == entrance());
-				for (Item i : bonesItems) {
-					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
-				}
+		ArrayList<Item> bonesItems = Bones.get();
+		if (bonesItems != null) {
+			int pos;
+			do {
+				pos = randomRespawnCell(null);
+			} while (pos == entrance());
+			for (Item i : bonesItems) {
+				drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
 			}
+		}
 		Random.popGenerator();
 	}
 
 	@Override
-	public int randomRespawnCell( Char ch ) {
+	public int randomRespawnCell(Char ch) {
 		ArrayList<Integer> candidates = new ArrayList<>();
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			int cell = entrance() + i;
 			if (passable[cell]
 					&& Actor.findChar(cell) == null
-					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){
+					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])) {
 				candidates.add(cell);
 			}
 		}
 
-		if (candidates.isEmpty()){
+		if (candidates.isEmpty()) {
 			return -1;
 		} else {
 			return Random.element(candidates);
@@ -299,21 +300,21 @@ public class CityBossLevel extends Level {
 
 	@Override
 	public boolean invalidHeroPos(int tile) {
-		//hero cannot be above top door if it is locked
-		if (map[topDoor] == Terrain.LOCKED_DOOR && tile <= topDoor){
+		// hero cannot be above top door if it is locked
+		if (map[topDoor] == Terrain.LOCKED_DOOR && tile <= topDoor) {
 			return true;
 		}
 		return super.invalidHeroPos(tile);
 	}
 
 	@Override
-	public void occupyCell( Char ch ) {
+	public void occupyCell(Char ch) {
 		if (map[bottomDoor] != Terrain.LOCKED_DOOR && map[topDoor] == Terrain.LOCKED_DOOR
 				&& ch.pos < bottomDoor && ch == Dungeon.hero) {
 			seal();
 		}
 
-		super.occupyCell( ch );
+		super.occupyCell(ch);
 	}
 
 	@Override
@@ -321,27 +322,28 @@ public class CityBossLevel extends Level {
 		super.seal();
 		Statistics.qualifiedForBossChallengeBadge = true;
 
-		//moves intelligent allies with the hero, preferring closer pos to entrance door
-		int doorPos = pointToCell(new Point(arena.left + arena.width()/2, arena.bottom));
+		// moves intelligent allies with the hero, preferring closer pos to entrance
+		// door
+		int doorPos = pointToCell(new Point(arena.left + arena.width() / 2, arena.bottom));
 		Mob.holdAllies(this, doorPos);
 		Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
 
-		DwarfKing boss = (DwarfKing) EchoBossSpawner.createRegionalBoss(new DwarfKing());
+		Mob boss = EchoBossSpawner.createRegionalBoss(new DwarfKing());
 		boss.state = boss.WANDERING;
 		boss.pos = pointToCell(arena.center());
-		GameScene.add( boss );
+		GameScene.add(boss);
 		boss.beckon(Dungeon.hero.pos);
 
 		if (heroFOV[boss.pos]) {
 			boss.notice();
-			boss.sprite.alpha( 0 );
-			boss.sprite.parent.add( new AlphaTweener( boss.sprite, 1, 0.1f ) );
+			boss.sprite.alpha(0);
+			boss.sprite.parent.add(new AlphaTweener(boss.sprite, 1, 0.1f));
 		}
 
 		EchoBossSpawner.announceIntroIfNeeded();
 
-		set( bottomDoor, Terrain.LOCKED_DOOR );
-		GameScene.updateMap( bottomDoor );
+		set(bottomDoor, Terrain.LOCKED_DOOR);
+		GameScene.updateMap(bottomDoor);
 		Dungeon.observe();
 
 		Game.runOnRenderThread(new Callback() {
@@ -356,11 +358,11 @@ public class CityBossLevel extends Level {
 	public void unseal() {
 		super.unseal();
 
-		set( bottomDoor, Terrain.DOOR );
-		GameScene.updateMap( bottomDoor );
+		set(bottomDoor, Terrain.DOOR);
+		GameScene.updateMap(bottomDoor);
 
-		set( topDoor, Terrain.DOOR );
-		GameScene.updateMap( topDoor );
+		set(topDoor, Terrain.DOOR);
+		GameScene.updateMap(topDoor);
 
 		if (Imp.Quest.isCompleted()) {
 			spawnShop();
@@ -380,15 +382,15 @@ public class CityBossLevel extends Level {
 		});
 	}
 
-	private void spawnShop(){
-		while (impShop.spacesNeeded() >= 7*(impShop.height()-2)){
+	private void spawnShop() {
+		while (impShop.spacesNeeded() >= 7 * (impShop.height() - 2)) {
 			impShop.bottom++;
 		}
 		impShop.spawnShop(this);
 	}
 
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(CityLevel.class, "water_name");
@@ -398,7 +400,7 @@ public class CityBossLevel extends Level {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
 
@@ -424,12 +426,12 @@ public class CityBossLevel extends Level {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
 
 	@Override
-	public Group addVisuals( ) {
+	public Group addVisuals() {
 		super.addVisuals();
 		CityLevel.addCityVisuals(this, visuals);
 		return visuals;
@@ -438,7 +440,7 @@ public class CityBossLevel extends Level {
 	@Override
 	public Group addWallVisuals() {
 		super.addWallVisuals();
-		CityLevel.addCityWallVisuals( this, wallVisuals );
+		CityLevel.addCityWallVisuals(this, wallVisuals);
 		return wallVisuals;
 	}
 
@@ -455,55 +457,55 @@ public class CityBossLevel extends Level {
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
-			int[] data = new int[tileW*tileH];
+			int[] data = new int[tileW * tileH];
 
 			int[] map = Dungeon.level.map;
 
 			int stairsTop = -1;
 
-			//upper part of the level, mostly demon halls tiles
-			for (int i = tileW; i < tileW*22; i++){
+			// upper part of the level, mostly demon halls tiles
+			for (int i = tileW; i < tileW * 22; i++) {
 
-				if (map[i] == Terrain.EXIT && stairsTop == -1){
+				if (map[i] == Terrain.EXIT && stairsTop == -1) {
 					stairsTop = i;
 				}
 
-				//pillars
-				if (map[i] == Terrain.WALL && map[i-tileW] == Terrain.CHASM){
-					data[i] = 13*8 + 6;
-					data[++i] = 13*8 + 7;
-				} else if (map[i] == Terrain.WALL && map[i-tileW] == Terrain.WALL){
-					data[i] = 14*8 + 6;
-					data[++i] = 14*8 + 7;
-				} else if (i > tileW && map[i] == Terrain.CHASM && map[i-tileW] == Terrain.WALL) {
-					data[i] = 15*8 + 6;
-					data[++i] = 15*8 + 7;
+				// pillars
+				if (map[i] == Terrain.WALL && map[i - tileW] == Terrain.CHASM) {
+					data[i] = 13 * 8 + 6;
+					data[++i] = 13 * 8 + 7;
+				} else if (map[i] == Terrain.WALL && map[i - tileW] == Terrain.WALL) {
+					data[i] = 14 * 8 + 6;
+					data[++i] = 14 * 8 + 7;
+				} else if (i > tileW && map[i] == Terrain.CHASM && map[i - tileW] == Terrain.WALL) {
+					data[i] = 15 * 8 + 6;
+					data[++i] = 15 * 8 + 7;
 
-				//imp's pedestal
+					// imp's pedestal
 				} else if (map[i] == Terrain.PEDESTAL) {
-					data[i] = 12*8 + 5;
+					data[i] = 12 * 8 + 5;
 
-				//skull piles
+					// skull piles
 				} else if (map[i] == Terrain.STATUE) {
-					data[i] = 15*8 + 5;
+					data[i] = 15 * 8 + 5;
 
-				//ground tiles
+					// ground tiles
 				} else if (map[i] == Terrain.EMPTY || map[i] == Terrain.EMPTY_DECO
 						|| map[i] == Terrain.EMBERS || map[i] == Terrain.GRASS
-						|| map[i] == Terrain.HIGH_GRASS || map[i] == Terrain.FURROWED_GRASS){
+						|| map[i] == Terrain.HIGH_GRASS || map[i] == Terrain.FURROWED_GRASS) {
 
-					//final ground stiching with city tiles
-					if (i/tileW == 21){
-						data[i] = 11*8 + 0;
-						data[++i] = 11*8 + 1;
-						data[++i] = 11*8 + 2;
-						data[++i] = 11*8 + 3;
-						data[++i] = 11*8 + 4;
-						data[++i] = 11*8 + 5;
-						data[++i] = 11*8 + 6;
+					// final ground stiching with city tiles
+					if (i / tileW == 21) {
+						data[i] = 11 * 8 + 0;
+						data[++i] = 11 * 8 + 1;
+						data[++i] = 11 * 8 + 2;
+						data[++i] = 11 * 8 + 3;
+						data[++i] = 11 * 8 + 4;
+						data[++i] = 11 * 8 + 5;
+						data[++i] = 11 * 8 + 6;
 					} else {
 
-						//regular ground tiles
+						// regular ground tiles
 						if (map[i - 1] == Terrain.CHASM) {
 							data[i] = 12 * 8 + 1;
 						} else if (map[i + 1] == Terrain.CHASM) {
@@ -515,85 +517,85 @@ public class CityBossLevel extends Level {
 						}
 					}
 
-					//otherwise no tile here
+					// otherwise no tile here
 				} else {
 					data[i] = -1;
 				}
 			}
 
-			//custom for stairs
-			for (int i = 0; i < STAIR_ROWS; i++){
-				for (int j = 0; j < 7; j++){
-					data[stairsTop+j] = (i+4)*8 + j;
+			// custom for stairs
+			for (int i = 0; i < STAIR_ROWS; i++) {
+				for (int j = 0; j < 7; j++) {
+					data[stairsTop + j] = (i + 4) * 8 + j;
 				}
 				stairsTop += tileW;
 			}
 
-			//lower part: statues, pedestals, and carpets
-			for (int i = tileW*22; i < tileW * tileH; i++){
+			// lower part: statues, pedestals, and carpets
+			for (int i = tileW * 22; i < tileW * tileH; i++) {
 
-				//pedestal spawners
-				if (map[i] == Terrain.PEDESTAL){
-					data[i] = 13*8 + 4;
+				// pedestal spawners
+				if (map[i] == Terrain.PEDESTAL) {
+					data[i] = 13 * 8 + 4;
 
-				//statues that should face left instead of right
-				} else if (map[i] == Terrain.STATUE && i%tileW > 7) {
+					// statues that should face left instead of right
+				} else if (map[i] == Terrain.STATUE && i % tileW > 7) {
 					data[i] = 15 * 8 + 4;
 
-				//carpet tiles
+					// carpet tiles
 				} else if (map[i] == Terrain.EMPTY_SP) {
-					//top row of DK's throne
+					// top row of DK's throne
 					if (map[i + 1] == Terrain.EMPTY_SP && map[i + tileW] == Terrain.EMPTY_SP) {
 						data[i] = 13 * 8 + 1;
 						data[++i] = 13 * 8 + 2;
 						data[++i] = 13 * 8 + 3;
 
-					//mid row of DK's throne
-					}else if (map[i + 1] == Terrain.CUSTOM_DECO) {
+						// mid row of DK's throne
+					} else if (map[i + 1] == Terrain.CUSTOM_DECO) {
 						data[i] = 14 * 8 + 1;
 						data[++i] = 14 * 8 + 2;
 						data[++i] = 14 * 8 + 3;
 
-					//bottom row of DK's throne
-					} else if (map[i+1] == Terrain.EMPTY_SP && map[i-tileW] == Terrain.EMPTY_SP){
-						data[i] = 15*8 + 1;
-						data[++i] = 15*8 + 2;
-						data[++i] = 15*8 + 3;
+						// bottom row of DK's throne
+					} else if (map[i + 1] == Terrain.EMPTY_SP && map[i - tileW] == Terrain.EMPTY_SP) {
+						data[i] = 15 * 8 + 1;
+						data[++i] = 15 * 8 + 2;
+						data[++i] = 15 * 8 + 3;
 
-					//otherwise entrance carpet
-					} else if (map[i-tileW] != Terrain.EMPTY_SP){
-						data[i] = 13*8 + 0;
-					} else if (map[i+tileW] != Terrain.EMPTY_SP){
-						data[i] = 15*8 + 0;
+						// otherwise entrance carpet
+					} else if (map[i - tileW] != Terrain.EMPTY_SP) {
+						data[i] = 13 * 8 + 0;
+					} else if (map[i + tileW] != Terrain.EMPTY_SP) {
+						data[i] = 15 * 8 + 0;
 					} else {
-						data[i] = 14*8 + 0;
+						data[i] = 14 * 8 + 0;
 					}
 
-					//otherwise no tile here
+					// otherwise no tile here
 				} else {
 					data[i] = -1;
 				}
 			}
 
-			v.map( data, tileW );
+			v.map(data, tileW);
 			return v;
 		}
 
 		@Override
 		public String name(int tileX, int tileY) {
-			int cell = (this.tileX + tileX) + (this.tileY + tileY)*tileW;
+			int cell = (this.tileX + tileX) + (this.tileY + tileY) * tileW;
 
-			//demon halls tiles
-			if (cell < Dungeon.level.width*22){
-				if (Dungeon.level.map[cell] == Terrain.STATUE){
+			// demon halls tiles
+			if (cell < Dungeon.level.width * 22) {
+				if (Dungeon.level.map[cell] == Terrain.STATUE) {
 					return Messages.get(HallsLevel.class, "statue_name");
 				}
 
-				//DK arena tiles
+				// DK arena tiles
 			} else {
-				if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
+				if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO) {
 					return Messages.get(CityBossLevel.class, "throne_name");
-				} else if (Dungeon.level.map[cell] == Terrain.PEDESTAL){
+				} else if (Dungeon.level.map[cell] == Terrain.PEDESTAL) {
 					return Messages.get(CityBossLevel.class, "summoning_name");
 				}
 			}
@@ -603,23 +605,23 @@ public class CityBossLevel extends Level {
 
 		@Override
 		public String desc(int tileX, int tileY) {
-			int cell = (this.tileX + tileX) + (this.tileY + tileY)*tileW;
+			int cell = (this.tileX + tileX) + (this.tileY + tileY) * tileW;
 
-			//demon halls tiles
-			if (cell < Dungeon.level.width*22){
-				if (Dungeon.level.map[cell] == Terrain.EXIT){
+			// demon halls tiles
+			if (cell < Dungeon.level.width * 22) {
+				if (Dungeon.level.map[cell] == Terrain.EXIT) {
 					return Messages.get(HallsLevel.class, "exit_desc");
-				} else if (Dungeon.level.map[cell] == Terrain.STATUE){
+				} else if (Dungeon.level.map[cell] == Terrain.STATUE) {
 					return Messages.get(HallsLevel.class, "statue_desc");
-				} else if (Dungeon.level.map[cell] == Terrain.EMPTY_DECO){
+				} else if (Dungeon.level.map[cell] == Terrain.EMPTY_DECO) {
 					return "";
 				}
 
-			//DK arena tiles
+				// DK arena tiles
 			} else {
-				if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
+				if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO) {
 					return Messages.get(CityBossLevel.class, "throne_desc");
-				} else if (Dungeon.level.map[cell] == Terrain.PEDESTAL){
+				} else if (Dungeon.level.map[cell] == Terrain.PEDESTAL) {
 					return Messages.get(CityBossLevel.class, "summoning_desc");
 				}
 			}
@@ -638,70 +640,70 @@ public class CityBossLevel extends Level {
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
-			int[] data = new int[tileW*tileH];
+			int[] data = new int[tileW * tileH];
 
 			int[] map = Dungeon.level.map;
 
 			int shadowTop = -1;
 
-			//upper part of the level, mostly demon halls tiles
-			for (int i = tileW; i < tileW*21; i++) {
+			// upper part of the level, mostly demon halls tiles
+			for (int i = tileW; i < tileW * 21; i++) {
 
-				if (map[i] == Terrain.EXIT && shadowTop == -1){
-					shadowTop = i - tileW*4;
+				if (map[i] == Terrain.EXIT && shadowTop == -1) {
+					shadowTop = i - tileW * 4;
 				}
 
-				//pillars
-				if (map[i] == Terrain.CHASM && map[i+tileW] == Terrain.WALL) {
-					data[i] = 12*8 + 6;
-					data[++i] = 12*8 + 7;
-				} else if (map[i] == Terrain.WALL && map[i-tileW] == Terrain.CHASM) {
+				// pillars
+				if (map[i] == Terrain.CHASM && map[i + tileW] == Terrain.WALL) {
+					data[i] = 12 * 8 + 6;
+					data[++i] = 12 * 8 + 7;
+				} else if (map[i] == Terrain.WALL && map[i - tileW] == Terrain.CHASM) {
 					data[i] = 13 * 8 + 6;
 					data[++i] = 13 * 8 + 7;
 
-				//skull tops
-				} else if (map[i+tileW] == Terrain.STATUE) {
-					data[i] = 14*8 + 5;
+					// skull tops
+				} else if (map[i + tileW] == Terrain.STATUE) {
+					data[i] = 14 * 8 + 5;
 
-				//otherwise no tile here
+					// otherwise no tile here
 				} else {
 					data[i] = -1;
 				}
 			}
 
-			//custom shadow  for stairs
-			for (int i = 0; i < 8; i++){
-				if (i < 4){
-					data[shadowTop] = i*8 + 0;
-					data[shadowTop+1] = data[shadowTop+2] = data[shadowTop+3] = data[shadowTop+4] =
-							data[shadowTop+5] = data[shadowTop+6] = i*8 + 1;
-					data[shadowTop+7] = i*8 + 2;
+			// custom shadow for stairs
+			for (int i = 0; i < 8; i++) {
+				if (i < 4) {
+					data[shadowTop] = i * 8 + 0;
+					data[shadowTop + 1] = data[shadowTop + 2] = data[shadowTop
+							+ 3] = data[shadowTop + 4] = data[shadowTop + 5] = data[shadowTop + 6] = i * 8 + 1;
+					data[shadowTop + 7] = i * 8 + 2;
 				} else {
 					int j = i - 4;
-					data[shadowTop] = j*8 + 3;
-					data[shadowTop+1] = data[shadowTop+2] = data[shadowTop+3] = data[shadowTop+4] =
-							data[shadowTop+5] = data[shadowTop+6] = j*8 + 4;
-					data[shadowTop+7] = j*8 + 5;
+					data[shadowTop] = j * 8 + 3;
+					data[shadowTop + 1] = data[shadowTop + 2] = data[shadowTop
+							+ 3] = data[shadowTop + 4] = data[shadowTop + 5] = data[shadowTop + 6] = j * 8 + 4;
+					data[shadowTop + 7] = j * 8 + 5;
 				}
 
 				shadowTop += tileW;
 			}
 
-			//lower part. Statues and DK's throne
-			for (int i = tileW*21; i < tileW * tileH; i++){
+			// lower part. Statues and DK's throne
+			for (int i = tileW * 21; i < tileW * tileH; i++) {
 
-				//Statues that need to face left instead of right
-				if (map[i] == Terrain.STATUE && i%tileW > 7){
-					data[i-tileW] = 14*8 + 4;
-				} else if (map[i] == Terrain.CUSTOM_DECO){
-					data[i-tileW] = 13*8 + 5;
+				// Statues that need to face left instead of right
+				if (map[i] == Terrain.STATUE && i % tileW > 7) {
+					data[i - tileW] = 14 * 8 + 4;
+				} else if (map[i] == Terrain.CUSTOM_DECO) {
+					data[i - tileW] = 13 * 8 + 5;
 				}
 
-				//always no tile here (as the above statements are modifying previous tiles)
+				// always no tile here (as the above statements are modifying previous tiles)
 				data[i] = -1;
 			}
 
-			v.map( data, tileW );
+			v.map(data, tileW);
 			return v;
 		}
 	}

@@ -72,21 +72,21 @@ public class HallsBossLevel extends Level {
 	private static final int WIDTH = 32;
 	private static final int HEIGHT = 32;
 
-	private static final int ROOM_LEFT		= WIDTH / 2 - 4;
-	private static final int ROOM_RIGHT		= WIDTH / 2 + 4;
-	private static final int ROOM_TOP		= 8;
-	private static final int ROOM_BOTTOM	= ROOM_TOP + 8;
+	private static final int ROOM_LEFT = WIDTH / 2 - 4;
+	private static final int ROOM_RIGHT = WIDTH / 2 + 4;
+	private static final int ROOM_TOP = 8;
+	private static final int ROOM_BOTTOM = ROOM_TOP + 8;
 
 	@Override
 	public void playLevelMusic() {
-		if (locked && BossHealthBar.isAssigned()){
-			if (BossHealthBar.isBleeding()){
+		if (locked && BossHealthBar.isAssigned()) {
+			if (BossHealthBar.isBleeding()) {
 				Music.INSTANCE.play(Assets.Music.HALLS_BOSS_FINALE, true);
 			} else {
 				Music.INSTANCE.play(Assets.Music.HALLS_BOSS, true);
 			}
-		//if exit isn't unlocked
-		} else if (map[exit()] != Terrain.EXIT || Statistics.amuletObtained){
+			// if exit isn't unlocked
+		} else if (map[exit()] != Terrain.EXIT || Statistics.amuletObtained) {
 			Music.INSTANCE.end();
 		} else {
 			Music.INSTANCE.playTracks(HallsLevel.HALLS_TRACK_LIST, HallsLevel.HALLS_TRACK_CHANCES, false);
@@ -113,15 +113,15 @@ public class HallsBossLevel extends Level {
 			int top;
 			int bottom;
 
-			if (i == 0 || i == 4){
-				top = Random.IntRange(ROOM_TOP-1, ROOM_TOP+3);
-				bottom = Random.IntRange(ROOM_BOTTOM+2, ROOM_BOTTOM+6);
-			} else if (i == 1 || i == 3){
-				top = Random.IntRange(ROOM_TOP-5, ROOM_TOP-1);
-				bottom = Random.IntRange(ROOM_BOTTOM+6, ROOM_BOTTOM+10);
+			if (i == 0 || i == 4) {
+				top = Random.IntRange(ROOM_TOP - 1, ROOM_TOP + 3);
+				bottom = Random.IntRange(ROOM_BOTTOM + 2, ROOM_BOTTOM + 6);
+			} else if (i == 1 || i == 3) {
+				top = Random.IntRange(ROOM_TOP - 5, ROOM_TOP - 1);
+				bottom = Random.IntRange(ROOM_BOTTOM + 6, ROOM_BOTTOM + 10);
 			} else {
-				top = Random.IntRange(ROOM_TOP-6, ROOM_TOP-3);
-				bottom = Random.IntRange(ROOM_BOTTOM+8, ROOM_BOTTOM+12);
+				top = Random.IntRange(ROOM_TOP - 6, ROOM_TOP - 3);
+				bottom = Random.IntRange(ROOM_BOTTOM + 8, ROOM_BOTTOM + 12);
 			}
 
 			Painter.fill(this, 4 + i * 5, top, 5, bottom - top + 1, Terrain.EMPTY);
@@ -133,19 +133,19 @@ public class HallsBossLevel extends Level {
 
 		}
 
-		int exitCell = width/2 + ((ROOM_TOP+1) * width);
-		int bossPos = exitCell + width*3;
+		int exitCell = width / 2 + ((ROOM_TOP + 1) * width);
+		int bossPos = exitCell + width * 3;
 
 		boolean[] patch = Patch.generate(width, height, 0.20f, 0, true);
 		for (int i = 0; i < length(); i++) {
 			if (map[i] == Terrain.EMPTY && patch[i]) {
-				map[i] = distance(i, bossPos)+Random.Int(5) >= 10 ? Terrain.REGION_DECO : Terrain.STATUE;
+				map[i] = distance(i, bossPos) + Random.Int(5) >= 10 ? Terrain.REGION_DECO : Terrain.STATUE;
 			}
 		}
 
 		map[entrance()] = Terrain.ENTRANCE;
 
-		Painter.fill(this, ROOM_LEFT-1, ROOM_TOP-1, 11, 11, Terrain.EMPTY );
+		Painter.fill(this, ROOM_LEFT - 1, ROOM_TOP - 1, 11, 11, Terrain.EMPTY);
 
 		patch = Patch.generate(width, height, 0.30f, 3, true);
 		for (int i = 0; i < length(); i++) {
@@ -160,13 +160,13 @@ public class HallsBossLevel extends Level {
 			}
 		}
 
-		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 9, Terrain.EMPTY_SP );
+		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 9, Terrain.EMPTY_SP);
 
-		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 2, Terrain.WALL_DECO );
-		Painter.fill(this, ROOM_LEFT, ROOM_BOTTOM-1, 2, 2, Terrain.WALL_DECO );
-		Painter.fill(this, ROOM_RIGHT-1, ROOM_BOTTOM-1, 2, 2, Terrain.WALL_DECO );
+		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 2, Terrain.WALL_DECO);
+		Painter.fill(this, ROOM_LEFT, ROOM_BOTTOM - 1, 2, 2, Terrain.WALL_DECO);
+		Painter.fill(this, ROOM_RIGHT - 1, ROOM_BOTTOM - 1, 2, 2, Terrain.WALL_DECO);
 
-		Painter.fill(this, ROOM_LEFT+3, ROOM_TOP+2, 3, 4, Terrain.EMPTY );
+		Painter.fill(this, ROOM_LEFT + 3, ROOM_TOP + 2, 3, 4, Terrain.EMPTY);
 
 		LevelTransition exit = new LevelTransition(this, exitCell, LevelTransition.Type.REGULAR_EXIT);
 		exit.top--;
@@ -175,7 +175,7 @@ public class HallsBossLevel extends Level {
 		transitions.add(exit);
 
 		CustomTilemap vis = new CenterPieceVisuals();
-		vis.pos(ROOM_LEFT, ROOM_TOP+1);
+		vis.pos(ROOM_LEFT, ROOM_TOP + 1);
 		customTiles.add(vis);
 
 		vis = new CenterPieceWalls();
@@ -188,12 +188,12 @@ public class HallsBossLevel extends Level {
 			}
 		}
 
-		//basic version of building flag maps for the pathfinder test
-		for (int i = 0; i < length; i++){
-			passable[i]	= ( Terrain.flags[map[i]] & Terrain.PASSABLE) != 0;
+		// basic version of building flag maps for the pathfinder test
+		for (int i = 0; i < length; i++) {
+			passable[i] = (Terrain.flags[map[i]] & Terrain.PASSABLE) != 0;
 		}
 
-		//ensures a path to the exit exists
+		// ensures a path to the exit exists
 		return (PathFinder.getStep(entrance(), exit(), passable) != -1);
 	}
 
@@ -208,32 +208,32 @@ public class HallsBossLevel extends Level {
 	@Override
 	protected void createItems() {
 		Random.pushGenerator(Random.Long());
-			ArrayList<Item> bonesItems = Bones.get();
-			if (bonesItems != null) {
-				int pos;
-				do {
-					pos = randomRespawnCell(null);
-				} while (pos == entrance());
-				for (Item i : bonesItems) {
-					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
-				}
+		ArrayList<Item> bonesItems = Bones.get();
+		if (bonesItems != null) {
+			int pos;
+			do {
+				pos = randomRespawnCell(null);
+			} while (pos == entrance());
+			for (Item i : bonesItems) {
+				drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
 			}
+		}
 		Random.popGenerator();
 	}
 
 	@Override
-	public int randomRespawnCell( Char ch ) {
+	public int randomRespawnCell(Char ch) {
 		ArrayList<Integer> candidates = new ArrayList<>();
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			int cell = entrance() + i;
 			if (passable[cell]
 					&& Actor.findChar(cell) == null
-					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){
+					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])) {
 				candidates.add(cell);
 			}
 		}
 
-		if (candidates.isEmpty()){
+		if (candidates.isEmpty()) {
 			return -1;
 		} else {
 			return Random.element(candidates);
@@ -241,13 +241,13 @@ public class HallsBossLevel extends Level {
 	}
 
 	@Override
-	public void occupyCell( Char ch ) {
+	public void occupyCell(Char ch) {
 		if (map[entrance()] == Terrain.ENTRANCE && map[exit()] != Terrain.EXIT
 				&& ch == Dungeon.hero && Dungeon.level.distance(ch.pos, entrance()) >= 2) {
 			seal();
 		}
 
-		super.occupyCell( ch );
+		super.occupyCell(ch);
 	}
 
 	@Override
@@ -255,55 +255,55 @@ public class HallsBossLevel extends Level {
 		super.seal();
 		Statistics.qualifiedForBossChallengeBadge = true;
 		int entrance = entrance();
-		set( entrance, Terrain.EMPTY_SP );
-		GameScene.updateMap( entrance );
-		CellEmitter.get( entrance ).start( FlameParticle.FACTORY, 0.1f, 10 );
+		set(entrance, Terrain.EMPTY_SP);
+		GameScene.updateMap(entrance);
+		CellEmitter.get(entrance).start(FlameParticle.FACTORY, 0.1f, 10);
 
 		Dungeon.observe();
 
-		YogDzewa boss = (YogDzewa) EchoBossSpawner.createRegionalBoss(new YogDzewa());
-		boss.pos = exit() + width*3;
+		Mob boss = EchoBossSpawner.createRegionalBoss(new YogDzewa());
+		boss.pos = exit() + width * 3;
 
-		//push any char that is already here away
-		if (Actor.findChar(boss.pos) != null){
+		// push any char that is already here away
+		if (Actor.findChar(boss.pos) != null) {
 			ArrayList<Integer> candidates = new ArrayList<>();
-			for (int i : PathFinder.NEIGHBOURS8){
-				if (Actor.findChar(boss.pos + i) == null){
+			for (int i : PathFinder.NEIGHBOURS8) {
+				if (Actor.findChar(boss.pos + i) == null) {
 					candidates.add(boss.pos + i);
 				}
 			}
 			Char ch = Actor.findChar(boss.pos);
-			if (!candidates.isEmpty()){
+			if (!candidates.isEmpty()) {
 				ch.pos = Random.element(candidates);
 			} else {
-				ch.pos = boss.pos+2*width;
+				ch.pos = boss.pos + 2 * width;
 			}
 			Actor.add(new Pushing(ch, boss.pos, ch.pos));
 		}
 
-		GameScene.add( boss );
+		GameScene.add(boss);
 		EchoBossSpawner.announceIntroIfNeeded();
 	}
 
 	@Override
 	public void unseal() {
 		super.unseal();
-		set( entrance(), Terrain.ENTRANCE );
-		GameScene.updateMap( entrance() );
+		set(entrance(), Terrain.ENTRANCE);
+		GameScene.updateMap(entrance());
 
-		set( exit(), Terrain.EXIT );
-		GameScene.updateMap( exit() );
+		set(exit(), Terrain.EXIT);
+		GameScene.updateMap(exit());
 
-		CellEmitter.get(exit()-1).burst(ShadowParticle.UP, 25);
+		CellEmitter.get(exit() - 1).burst(ShadowParticle.UP, 25);
 		CellEmitter.get(exit()).burst(ShadowParticle.UP, 100);
-		CellEmitter.get(exit()+1).burst(ShadowParticle.UP, 25);
-		for( CustomTilemap t : customTiles){
-			if (t instanceof CenterPieceVisuals){
+		CellEmitter.get(exit() + 1).burst(ShadowParticle.UP, 25);
+		for (CustomTilemap t : customTiles) {
+			if (t instanceof CenterPieceVisuals) {
 				((CenterPieceVisuals) t).updateState();
 			}
 		}
-		for( CustomTilemap t : customWalls){
-			if (t instanceof CenterPieceWalls){
+		for (CustomTilemap t : customWalls) {
+			if (t instanceof CenterPieceWalls) {
 				((CenterPieceWalls) t).updateState();
 			}
 		}
@@ -326,8 +326,8 @@ public class HallsBossLevel extends Level {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		for (Mob m : mobs){
-			if (m instanceof YogDzewa){
+		for (Mob m : mobs) {
+			if (m instanceof YogDzewa) {
 				((YogDzewa) m).updateVisibility(this);
 			}
 		}
@@ -342,20 +342,20 @@ public class HallsBossLevel extends Level {
 			Game.runOnRenderThread(new Callback() {
 				@Override
 				public void call() {
-					GameScene.show( new WndOptions( new ItemSprite(ItemSpriteSheet.AMULET),
+					GameScene.show(new WndOptions(new ItemSprite(ItemSpriteSheet.AMULET),
 							Messages.get(Amulet.class, "ascent_title"),
 							Messages.get(Amulet.class, "ascent_desc"),
 							Messages.get(Amulet.class, "ascent_yes"),
-							Messages.get(Amulet.class, "ascent_no")){
+							Messages.get(Amulet.class, "ascent_no")) {
 						@Override
 						protected void onSelect(int index) {
-							if (index == 0){
+							if (index == 0) {
 								Buff.affect(hero, AscensionChallenge.class);
 								Statistics.highestAscent = 25;
 								HallsBossLevel.super.activateTransition(hero, transition);
 							}
 						}
-					} );
+					});
 				}
 			});
 			return false;
@@ -366,7 +366,7 @@ public class HallsBossLevel extends Level {
 	}
 
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(HallsLevel.class, "water_name");
@@ -381,7 +381,7 @@ public class HallsBossLevel extends Level {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(HallsLevel.class, "region_deco_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
 
@@ -399,14 +399,14 @@ public class HallsBossLevel extends Level {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(HallsLevel.class, "region_deco_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
 
 	@Override
-	public Group addVisuals () {
+	public Group addVisuals() {
 		super.addVisuals();
-		HallsLevel.addHallsVisuals( this, visuals );
+		HallsLevel.addHallsVisuals(this, visuals);
 		return visuals;
 	}
 
@@ -419,8 +419,8 @@ public class HallsBossLevel extends Level {
 			tileH = 8;
 		}
 
-		private static final int[] map = new int[]{
-				 8,  9, 10, 11, 11, 11, 12, 13, 14,
+		private static final int[] map = new int[] {
+				8, 9, 10, 11, 11, 11, 12, 13, 14,
 				16, 17, 18, 27, 19, 27, 20, 21, 22,
 				24, 25, 26, 19, 19, 19, 28, 29, 30,
 				24, 25, 26, 19, 19, 19, 28, 29, 30,
@@ -437,8 +437,8 @@ public class HallsBossLevel extends Level {
 			return v;
 		}
 
-		private void updateState(){
-			if (vis != null){
+		private void updateState() {
+			if (vis != null) {
 				int[] data = map.clone();
 				if (Dungeon.level.map[Dungeon.level.exit()] == Terrain.EXIT) {
 					data[4] = 19;
@@ -458,7 +458,7 @@ public class HallsBossLevel extends Level {
 			tileH = 9;
 		}
 
-		private static final int[] map = new int[]{
+		private static final int[] map = new int[] {
 				-1, -1, -1, -1, -1, -1, -1, -1, -1,
 				-1, -1, -1, -1, -1, -1, -1, -1, -1,
 				-1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -476,8 +476,8 @@ public class HallsBossLevel extends Level {
 			return v;
 		}
 
-		private void updateState(){
-			if (vis != null){
+		private void updateState() {
+			if (vis != null) {
 				int[] data = map.clone();
 				if (Dungeon.level.map[Dungeon.level.exit()] == Terrain.EXIT) {
 					data[3] = 1;

@@ -5,9 +5,13 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 
-import java.util.Optional;
-
 public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLookup {
+
+	/** 2 attempts total (initial + 1 automatic retry). */
+	static final int RANKED_ATTEMPTS = 2;
+
+	/** Testable backoff between ranked auto-retries; production default 300ms. */
+	static long rankedRetryDelayMs = 300L;
 
 	private static EchoReplacementDecider.EchoLookup lookup;
 
@@ -35,28 +39,57 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 
 	public static void resetForTests() {
 		lookup = null;
+		rankedRetryDelayMs = 300L;
 		EchoOnlineSync.setDefaultForTests(null);
 	}
 
 	@Override
-	public Optional<EchoFetchResult> findEchoForDepth(int depth) {
-		Optional<EchoFetchResult> result;
+	public EchoLookupOutcome findEchoForDepth(int depth) {
+		EchoLookupOutcome outcome;
 		if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-			result = fetchRankedEcho(depth);
+			outcome = fetchRankedEcho(depth);
 		} else {
-			result = localLookup.findEchoForDepth(depth);
+			outcome = fetchLocalEcho(depth);
 		}
-		return result.filter(fetched -> fetched.policy != null);
+		if (outcome.isFound() && outcome.result.policy == null) {
+			return EchoLookupOutcome.notFound();
+		}
+		return outcome;
 	}
 
-	private Optional<EchoFetchResult> fetchRankedEcho(int depth) {
+	private EchoLookupOutcome fetchLocalEcho(int depth) {
+		try {
+			return localLookup.findEchoForDepth(depth);
+		} catch (Exception unexpected) {
+			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+		}
+	}
+
+	private EchoLookupOutcome fetchRankedEcho(int depth) {
 		if (!EchoOnlineSettings.canSyncOnline()) {
-			return Optional.empty();
+			return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
+		}
+		EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+		for (int attempt = 0; attempt < RANKED_ATTEMPTS; attempt++) {
+			if (attempt > 0) {
+				sleepRetryDelay();
+			}
+			last = client.fetchEcho(depth);
+			if (!last.isError()) {
+				return last;
+			}
+		}
+		return last;
+	}
+
+	private static void sleepRetryDelay() {
+		if (rankedRetryDelayMs <= 0) {
+			return;
 		}
 		try {
-			return client.fetchEcho(depth);
-		} catch (Exception ignored) {
-			return Optional.empty();
+			Thread.sleep(rankedRetryDelayMs);
+		} catch (InterruptedException interrupted) {
+			Thread.currentThread().interrupt();
 		}
 	}
 }

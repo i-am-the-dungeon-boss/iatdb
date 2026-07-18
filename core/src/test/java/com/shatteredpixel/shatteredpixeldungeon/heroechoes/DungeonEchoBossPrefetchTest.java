@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
@@ -97,10 +96,28 @@ class DungeonEchoBossPrefetchTest {
 		AtomicInteger lookups = new AtomicInteger();
 		CompositeEchoLookup.setEchoLookupForTests(depth -> {
 			lookups.incrementAndGet();
-			return Optional.<EchoFetchResult>empty();
+			return EchoLookupOutcome.notFound();
 		});
 
 		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isFalse();
 		Assertions.assertThat(lookups.get()).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("levelClassForDepth does not resolve or activate echo")
+	void levelClassForDepthDoesNotResolveEcho() {
+		EchoStorage storage = new EchoStorage();
+		storage.save(EchoTestSupport.warriorEchoWithData(5));
+		AtomicInteger lookups = new AtomicInteger();
+		CompositeEchoLookup.setEchoLookupForTests(depth -> {
+			lookups.incrementAndGet();
+			return storage.findEchoForDepth(depth);
+		});
+
+		Dungeon.levelClassForDepth(5, 0);
+
+		Assertions.assertThat(lookups.get()).isZero();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
 	}
 }

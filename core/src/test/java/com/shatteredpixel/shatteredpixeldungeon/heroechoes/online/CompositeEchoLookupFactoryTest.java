@@ -40,7 +40,7 @@ class CompositeEchoLookupFactoryTest {
 	@Test
 	@DisplayName("setEchoLookupForTests overrides the process-wide lookup")
 	void setEchoLookupForTestsOverridesLookup() {
-		EchoReplacementDecider.EchoLookup override = depth -> java.util.Optional.empty();
+		EchoReplacementDecider.EchoLookup override = depth -> EchoLookupOutcome.notFound();
 		CompositeEchoLookup.setEchoLookupForTests(override);
 
 		Assertions.assertThat(CompositeEchoLookup.echoLookup()).isSameAs(override);

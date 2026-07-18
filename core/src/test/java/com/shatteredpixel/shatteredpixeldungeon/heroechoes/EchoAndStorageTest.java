@@ -89,8 +89,8 @@ class EchoAndStorageTest {
         Echo snap = EchoTestSupport.warriorEcho(5);
         storage.save(snap);
 
-        Assertions.assertThat(storage.findEchoForDepth(5)).isPresent();
-        Assertions.assertThat(storage.findEchoForDepth(5).get().policy).isNotNull();
+        Assertions.assertThat(storage.findEchoForDepth(5).isFound()).isTrue();
+        Assertions.assertThat(storage.findEchoForDepth(5).result.policy).isNotNull();
 
         // overwrite with echo-only file (no policy)
         java.nio.file.Path path = java.nio.file.Path.of(
@@ -99,7 +99,7 @@ class EchoAndStorageTest {
             com.watabou.utils.Bundle.write(snap.toFileBundle(), fos);
         }
 
-        Assertions.assertThat(storage.findEchoForDepth(5)).isEmpty();
+        Assertions.assertThat(storage.findEchoForDepth(5).isNotFound()).isTrue();
     }
 
     @Test

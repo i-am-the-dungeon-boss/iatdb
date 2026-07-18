@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.watabou.utils.Bundle;
@@ -67,8 +68,10 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
     }
 
     @Override
-    public Optional<EchoFetchResult> findEchoForDepth(int depth) {
-        return loadResultForDepth(depth, Game.version);
+    public EchoLookupOutcome findEchoForDepth(int depth) {
+        return loadResultForDepth(depth, Game.version)
+                .map(EchoLookupOutcome::found)
+                .orElseGet(EchoLookupOutcome::notFound);
     }
 
     public static final class EchoEntry {

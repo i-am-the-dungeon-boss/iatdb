@@ -48,6 +48,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.input.KeyEvent;
@@ -66,6 +69,8 @@ import com.watabou.utils.Signal;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class InterlevelScene extends PixelScene {
 
@@ -672,10 +677,40 @@ public class InterlevelScene extends PixelScene {
 		}
 		loadingEchoBoss = true;
 		try {
-			Dungeon.prefetchEchoBossForDepth(depth);
+			Dungeon.prefetchEchoBossWithRankedRecovery(depth, InterlevelScene::promptEchoFetchFailed);
 		} finally {
 			loadingEchoBoss = false;
 		}
+	}
+
+	/**
+	 * Blocks the loading thread until the user chooses Retry or Continue solo.
+	 */
+	private static EchoPrefetchUserChoice promptEchoFetchFailed(EchoLookupOutcome failed) {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<EchoPrefetchUserChoice> choice = new AtomicReference<>(EchoPrefetchUserChoice.CONTINUE_SOLO);
+		String hint = failed != null ? failed.failureHint() : "";
+		Game.runOnRenderThread(() -> {
+			Game.scene().add(new WndEchoFetchFailed(new WndEchoFetchFailed.Listener() {
+				@Override
+				public void onRetry() {
+					choice.set(EchoPrefetchUserChoice.RETRY);
+					latch.countDown();
+				}
+
+				@Override
+				public void onContinueSolo() {
+					choice.set(EchoPrefetchUserChoice.CONTINUE_SOLO);
+					latch.countDown();
+				}
+			}, hint));
+		});
+		try {
+			latch.await();
+		} catch (InterruptedException interrupted) {
+			Thread.currentThread().interrupt();
+		}
+		return choice.get();
 	}
 
 	private Level newLevelWithEchoPrefetch(int depth, int branch) {

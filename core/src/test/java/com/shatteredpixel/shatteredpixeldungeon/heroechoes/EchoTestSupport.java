@@ -8,12 +8,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.watabou.utils.Bundle;
 
 import java.io.File;
-import java.util.Optional;
 
 /** Shared fixtures and cleanup for hero-echoes workflow tests. */
 public final class EchoTestSupport {
@@ -114,7 +114,7 @@ public final class EchoTestSupport {
 		return new EchoFetchResult(echo, EchoPolicy.fallback());
 	}
 
-	public static Optional<EchoFetchResult> optionalWithPolicy(Echo echo) {
-		return Optional.of(withPolicy(echo));
+	public static EchoLookupOutcome outcomeWithPolicy(Echo echo) {
+		return EchoLookupOutcome.found(withPolicy(echo));
 	}
 }

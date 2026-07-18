@@ -9,8 +9,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 class EchoClientTest {
@@ -43,11 +41,11 @@ class EchoClientTest {
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Optional<EchoFetchResult> result = client.fetchEcho(5);
+		EchoLookupOutcome result = client.fetchEcho(5);
 
-		Assertions.assertThat(result).isPresent();
-		Assertions.assertThat(result.get().echo.echoId).isEqualTo("5-99");
-		Assertions.assertThat(result.get().policy.rules).isNotEmpty();
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo("5-99");
+		Assertions.assertThat(result.result.policy.rules).isNotEmpty();
 		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/echoes/5");
 	}
 
@@ -75,14 +73,42 @@ class EchoClientTest {
 	}
 
 	@Test
-	@DisplayName("fetchEcho returns empty on 404")
-	void fetchEchoReturnsEmptyOn404() throws Exception {
+	@DisplayName("fetchEcho returns NOT_FOUND on 404")
+	void fetchEchoReturnsNotFoundOn404() {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(404, "{\"error\":\"missing\"}");
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Assertions.assertThat(client.fetchEcho(5)).isEmpty();
+		Assertions.assertThat(client.fetchEcho(5).isNotFound()).isTrue();
+	}
+
+	@Test
+	@DisplayName("fetchEcho returns ERROR on 503")
+	void fetchEchoReturnsErrorOn503() {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(503, "{\"error\":\"busy\"}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		EchoLookupOutcome outcome = client.fetchEcho(5);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.SERVER);
+		Assertions.assertThat(outcome.httpStatus).isEqualTo(503);
+	}
+
+	@Test
+	@DisplayName("fetchEcho returns ERROR when transport throws")
+	void fetchEchoReturnsErrorOnThrow() {
+		EchoHttpTransport transport = request -> {
+			throw new RuntimeException("network down");
+		};
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		EchoLookupOutcome outcome = client.fetchEcho(5);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.NETWORK);
 	}
 
 	@Test

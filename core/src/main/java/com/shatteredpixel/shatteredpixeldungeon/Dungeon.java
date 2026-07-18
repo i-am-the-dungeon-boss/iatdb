@@ -61,7 +61,6 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
-import com.shatteredpixel.shatteredpixeldungeon.levels.EchoBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
@@ -76,8 +75,12 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -98,6 +101,7 @@ import com.watabou.utils.SparseArray;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -369,9 +373,6 @@ public class Dungeon {
 				case 4:
 					return SewerLevel.class;
 				case 5:
-					if (prepareEchoBossForDepth(5)) {
-						return EchoBossLevel.class;
-					}
 					return SewerBossLevel.class;
 				case 6:
 				case 7:
@@ -379,7 +380,6 @@ public class Dungeon {
 				case 9:
 					return PrisonLevel.class;
 				case 10:
-					prepareEchoBossForDepth(10);
 					return PrisonBossLevel.class;
 				case 11:
 				case 12:
@@ -387,7 +387,6 @@ public class Dungeon {
 				case 14:
 					return CavesLevel.class;
 				case 15:
-					prepareEchoBossForDepth(15);
 					return CavesBossLevel.class;
 				case 16:
 				case 17:
@@ -395,7 +394,6 @@ public class Dungeon {
 				case 19:
 					return CityLevel.class;
 				case 20:
-					prepareEchoBossForDepth(20);
 					return CityBossLevel.class;
 				case 21:
 				case 22:
@@ -403,7 +401,6 @@ public class Dungeon {
 				case 24:
 					return HallsLevel.class;
 				case 25:
-					prepareEchoBossForDepth(25);
 					return HallsBossLevel.class;
 				case 26:
 					return LastLevel.class;
@@ -452,23 +449,8 @@ public class Dungeon {
 	}
 
 	public static Echo resolveEcho(int depth) {
-		clearPendingEcho();
-		if (!EchoReplacementDecider.isBossDepth(depth)) {
-			return null;
-		}
-		try {
-			return CompositeEchoLookup.echoLookup().findEchoForDepth(depth)
-					.filter(result -> result.echo != null && result.echo.hasCombatData())
-					.filter(result -> result.policy != null)
-					.map(result -> {
-						pendingEcho = result.echo;
-						pendingEchoPolicy = result.policy;
-						return result.echo;
-					})
-					.orElse(null);
-		} catch (Exception ignored) {
-			return null;
-		}
+		EchoLookupOutcome outcome = prefetchEchoBossOutcome(depth);
+		return outcome.isFound() ? pendingEcho : null;
 	}
 
 	public static void resetEchoStateForTests() {
@@ -491,20 +473,6 @@ public class Dungeon {
 		}
 	}
 
-	private static boolean prepareEchoBossForDepth(int depth) {
-		if (echoBossActive && pendingEcho != null) {
-			return true;
-		}
-		if (!EchoReplacementDecider.isBossDepth(depth)) {
-			echoBossActive = false;
-			clearPendingEcho();
-			return false;
-		}
-		resolveEcho(depth);
-		echoBossActive = pendingEcho != null;
-		return echoBossActive;
-	}
-
 	/**
 	 * True when descending onto a main-path boss floor that may need an echo fetch.
 	 */
@@ -513,10 +481,66 @@ public class Dungeon {
 	}
 
 	/**
-	 * Resolves echo boss data before level generation (InterlevelScene prefetch).
+	 * Resolves echo boss data before level generation.
+	 * 
+	 * @return true only when a spawnable echo was found
 	 */
 	public static boolean prefetchEchoBossForDepth(int depth) {
-		return prepareEchoBossForDepth(depth);
+		return prefetchEchoBossOutcome(depth).isFound();
+	}
+
+	/**
+	 * Looks up an echo for a boss depth and updates pending/active state.
+	 * Distinguishes FOUND / NOT_FOUND / ERROR (does not swallow fetch failures as
+	 * empty).
+	 */
+	public static EchoLookupOutcome prefetchEchoBossOutcome(int depth) {
+		if (echoBossActive && pendingEcho != null) {
+			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho,
+					pendingEchoPolicy != null ? pendingEchoPolicy : EchoPolicy.fallback()));
+		}
+		clearPendingEcho();
+		echoBossActive = false;
+		if (!EchoReplacementDecider.isBossDepth(depth)) {
+			return EchoLookupOutcome.notFound();
+		}
+		try {
+			EchoLookupOutcome outcome = CompositeEchoLookup.echoLookup().findEchoForDepth(depth);
+			if (outcome.isFound()) {
+				EchoFetchResult result = outcome.result;
+				if (result.echo != null && result.echo.hasCombatData() && result.policy != null) {
+					pendingEcho = result.echo;
+					pendingEchoPolicy = result.policy;
+					echoBossActive = true;
+					return outcome;
+				}
+				return EchoLookupOutcome.notFound();
+			}
+			return outcome;
+		} catch (Exception unexpected) {
+			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+		}
+	}
+
+	/**
+	 * Prefetch with ranked error recovery: on ERROR while RANKED, ask the user via
+	 * {@code onError} (Retry unlimited times, or Continue solo). The failed outcome
+	 * is passed so the UI can show why it failed.
+	 */
+	public static EchoLookupOutcome prefetchEchoBossWithRankedRecovery(
+			int depth, Function<EchoLookupOutcome, EchoPrefetchUserChoice> onError) {
+		while (true) {
+			EchoLookupOutcome outcome = prefetchEchoBossOutcome(depth);
+			if (!outcome.isError() || echoPlayMode != EchoPlayMode.RANKED) {
+				return outcome;
+			}
+			EchoPrefetchUserChoice choice = onError.apply(outcome);
+			if (choice == null || choice == EchoPrefetchUserChoice.CONTINUE_SOLO) {
+				echoPlayMode = EchoPlayMode.SOLO;
+				return prefetchEchoBossOutcome(depth);
+			}
+			// RETRY: loop with a fresh auto-retry cycle
+		}
 	}
 
 	public static void storeEchoChoiceInBundle(Bundle bundle) {

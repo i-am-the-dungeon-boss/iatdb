@@ -32,7 +32,7 @@ class EchoBossSpawnerTest {
 		storage.save(EchoTestSupport.warriorEchoWithData(10));
 		CompositeEchoLookup.setEchoLookupForTests(storage);
 
-		Dungeon.levelClassForDepth(10, 0);
+		Dungeon.prefetchEchoBossForDepth(10);
 
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
 	}
@@ -45,7 +45,7 @@ class EchoBossSpawnerTest {
 		storage.save(echo);
 		CompositeEchoLookup.setEchoLookupForTests(storage);
 		Dungeon.depth = 10;
-		Dungeon.levelClassForDepth(10, 0);
+		Dungeon.prefetchEchoBossForDepth(10);
 
 		Mob result = EchoBossSpawner.createRegionalBoss(new Goo());
 
@@ -61,7 +61,7 @@ class EchoBossSpawnerTest {
 		storage.save(EchoTestSupport.warriorEcho(10));
 		CompositeEchoLookup.setEchoLookupForTests(storage);
 
-		Dungeon.levelClassForDepth(10, 0);
+		Dungeon.prefetchEchoBossForDepth(10);
 
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isFalse();
 	}

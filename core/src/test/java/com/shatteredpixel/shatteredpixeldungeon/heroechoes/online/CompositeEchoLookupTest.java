@@ -10,8 +10,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.extension.ExtendWith;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 
@@ -22,12 +20,13 @@ class CompositeEchoLookupTest {
 	void cleanup() {
 		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 	}
 
 	@Test
 	@DisplayName("ranked mode fetches echo online")
-	void rankedModeFetchesOnline() throws Exception {
+	void rankedModeFetchesOnline() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -58,17 +57,17 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				local);
 
-		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(result).isPresent();
-		Assertions.assertThat(result.get().echo.echoId).isEqualTo("online-1");
-		Assertions.assertThat(result.get().policy).isNotNull();
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo("online-1");
+		Assertions.assertThat(result.result.policy).isNotNull();
 		Assertions.assertThat(transport.requests).hasSize(1);
 	}
 
 	@Test
-	@DisplayName("ranked mode returns empty when fetch response omits policy")
-	void rankedModeReturnsEmptyWithoutPolicy() throws Exception {
+	@DisplayName("ranked mode returns NOT_FOUND when fetch response omits policy")
+	void rankedModeReturnsNotFoundWithoutPolicy() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -92,12 +91,12 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				new EchoStorage());
 
-		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+		Assertions.assertThat(lookup.findEchoForDepth(5).isNotFound()).isTrue();
 	}
 
 	@Test
-	@DisplayName("ranked mode returns empty when online fetch misses")
-	void rankedModeReturnsEmptyOnMiss() throws Exception {
+	@DisplayName("ranked mode returns NOT_FOUND when online fetch misses")
+	void rankedModeReturnsNotFoundOnMiss() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(404, "{}");
 
@@ -113,12 +112,14 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				local);
 
-		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+		Assertions.assertThat(lookup.findEchoForDepth(5).isNotFound()).isTrue();
+		Assertions.assertThat(transport.requests).hasSize(1);
 	}
 
 	@Test
-	@DisplayName("ranked mode returns empty when online fetch throws")
-	void rankedModeReturnsEmptyOnThrow() throws Exception {
+	@DisplayName("ranked mode returns ERROR when online fetch keeps failing")
+	void rankedModeReturnsErrorOnThrow() {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
 		EchoHttpTransport transport = request -> {
 			throw new RuntimeException("network down");
 		};
@@ -135,12 +136,51 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				local);
 
-		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+		Assertions.assertThat(lookup.findEchoForDepth(5).isError()).isTrue();
+	}
+
+	@Test
+	@DisplayName("ranked mode auto-retries ERROR then returns FOUND")
+	void rankedModeAutoRetriesThenFound() {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+		transport.enqueue(200, "{"
+				+ "\"echo_id\":\"online-retry\","
+				+ "\"depth\":5,"
+				+ "\"game_version\":\"0.0.1\","
+				+ "\"hero_class\":\"MAGE\","
+				+ "\"lvl\":6,"
+				+ "\"hp\":20,"
+				+ "\"ht\":30,"
+				+ "\"timestamp\":1,"
+				+ "\"game_seed\":9,"
+				+ "\"echo_data_base64\":\"dGVzdA==\","
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":1,"
+				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
+				+ "}"
+				+ "}");
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				new EchoStorage());
+
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
+
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo("online-retry");
+		Assertions.assertThat(transport.requests).hasSize(2);
 	}
 
 	@Test
 	@DisplayName("non-ranked mode never fetches online even when backend is configured")
-	void nonRankedNeverFetchesOnline() throws Exception {
+	void nonRankedNeverFetchesOnline() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -168,17 +208,17 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				local);
 
-		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(result).isPresent();
-		Assertions.assertThat(result.get().echo.echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(result.get().policy).isNotNull();
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.result.policy).isNotNull();
 		Assertions.assertThat(transport.requests).isEmpty();
 	}
 
 	@Test
 	@DisplayName("solo mode fetches echo locally and never calls online")
-	void soloModeFetchesLocally() throws Exception {
+	void soloModeFetchesLocally() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -204,11 +244,11 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				local);
 
-		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(result).isPresent();
-		Assertions.assertThat(result.get().echo.echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(result.get().policy).isNotNull();
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.result.policy).isNotNull();
 		Assertions.assertThat(transport.requests).isEmpty();
 	}
 }

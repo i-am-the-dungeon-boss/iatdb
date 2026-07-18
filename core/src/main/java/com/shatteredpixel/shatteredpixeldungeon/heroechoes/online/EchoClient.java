@@ -9,7 +9,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class EchoClient {
 
@@ -53,17 +52,30 @@ public final class EchoClient {
 		}
 	}
 
-	public Optional<EchoFetchResult> fetchEcho(int depth) throws Exception {
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
-				"GET",
-				baseUrl + "/v1/echoes/" + depth,
-				jsonHeaders(false),
-				null));
+	public EchoLookupOutcome fetchEcho(int depth) {
+		try {
+			EchoHttpResponse response = transport.send(new EchoHttpRequest(
+					"GET",
+					baseUrl + "/v1/echoes/" + depth,
+					jsonHeaders(false),
+					null));
 
-		if (response.statusCode == 200) {
-			return Optional.of(EchoWireCodec.decodeEchoFetch(response.body));
+			if (response.statusCode == 200) {
+				try {
+					return EchoLookupOutcome.found(EchoWireCodec.decodeEchoFetch(response.body));
+				} catch (IllegalArgumentException missingPolicy) {
+					return EchoLookupOutcome.notFound();
+				} catch (Exception decodeError) {
+					return EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
+				}
+			}
+			if (response.statusCode == 404) {
+				return EchoLookupOutcome.notFound();
+			}
+			return EchoLookupOutcome.error(EchoLookupFailureKind.SERVER, response.statusCode);
+		} catch (Exception networkError) {
+			return EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
 		}
-		return Optional.empty();
 	}
 
 	public void uploadEcho(Echo echo) throws Exception {

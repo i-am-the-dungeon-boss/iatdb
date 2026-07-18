@@ -1,8 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
-
-import java.util.Optional;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 
 /**
  * Boss-depth helpers and the echo lookup contract used for hero-boss
@@ -24,6 +22,6 @@ public final class EchoReplacementDecider {
     }
 
     public interface EchoLookup {
-        Optional<EchoFetchResult> findEchoForDepth(int depth);
+        EchoLookupOutcome findEchoForDepth(int depth);
     }
 }

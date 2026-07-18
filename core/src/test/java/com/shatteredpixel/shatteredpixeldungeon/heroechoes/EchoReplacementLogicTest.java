@@ -2,13 +2,12 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -24,7 +23,7 @@ class BossReplacementLogicTest {
     @DisplayName("Uses hero boss when snapshot available on boss depth")
     void usesHeroBossWhenSnapshotAvailable() {
         CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .optionalWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
+                .outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
 
         boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
@@ -36,7 +35,7 @@ class BossReplacementLogicTest {
     @DisplayName("Metadata-only echo does not replace boss")
     void metadataOnlyEchoDoesNotReplaceBoss() {
         CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .optionalWithPolicy(EchoTestSupport.warriorEcho(depth)));
+                .outcomeWithPolicy(EchoTestSupport.warriorEcho(depth)));
 
         boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
@@ -47,7 +46,7 @@ class BossReplacementLogicTest {
     @Test
     @DisplayName("Falls back when no snapshot available")
     void fallsBackWhenNoSnapshotAvailable() {
-        CompositeEchoLookup.setEchoLookupForTests(depth -> Optional.empty());
+        CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
 
         boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
@@ -58,7 +57,7 @@ class BossReplacementLogicTest {
     @DisplayName("Non-boss depths never use hero boss even if snapshots exist")
     void nonBossDepthsNeverUseHeroBoss() {
         CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .optionalWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
+                .outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
 
         boolean should = Dungeon.prefetchEchoBossForDepth(4);
 
