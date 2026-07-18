@@ -96,6 +96,11 @@ public class AndroidLauncher extends AndroidApplication {
 
 			Gdx.app = this;
 			EchoOnlineSettings.loadDefaultDotEnv();
+			String echoBackendUrl = BuildConfig.ECHO_BACKEND_URL;
+			if (BuildConfig.DEBUG) {
+				echoBackendUrl = EchoOnlineSettings.forAndroidEmulatorLoopback(echoBackendUrl);
+			}
+			EchoOnlineSettings.setBuildDefaults(echoBackendUrl, BuildConfig.ECHO_API_KEY);
 			if (UpdateImpl.supportsUpdates()) {
 				Updates.service = UpdateImpl.getUpdateService();
 				EchoUpdates.baseUrlOverride = EchoOnlineSettings.backendUrl();

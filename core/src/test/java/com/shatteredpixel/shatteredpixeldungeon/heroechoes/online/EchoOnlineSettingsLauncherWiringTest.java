@@ -34,6 +34,27 @@ class EchoOnlineSettingsLauncherWiringTest {
 		Assertions.assertThat(source).contains("EchoOnlineSettings.loadDefaultDotEnv()");
 	}
 
+	@Test
+	@DisplayName("android launcher applies BuildConfig echo defaults on startup")
+	void androidLauncherAppliesBuildConfigDefaults() throws IOException {
+		String source = readSource(
+				"android/src/main/java/com/shatteredpixel/shatteredpixeldungeon/android/AndroidLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+		Assertions.assertThat(source).contains("BuildConfig.ECHO_BACKEND_URL");
+		Assertions.assertThat(source).contains("BuildConfig.ECHO_API_KEY");
+	}
+
+	@Test
+	@DisplayName("android build.gradle defines echo BuildConfig fields")
+	void androidBuildGradleDefinesEchoBuildConfigFields() throws IOException {
+		String source = readSource("android/build.gradle");
+
+		Assertions.assertThat(source).contains("ECHO_BACKEND_URL");
+		Assertions.assertThat(source).contains("ECHO_API_KEY");
+		Assertions.assertThat(source).contains("buildConfig");
+	}
+
 	private static String readSource(String relativePath) throws IOException {
 		Path file = findRepoFile(relativePath);
 		return Files.readString(file, StandardCharsets.UTF_8);

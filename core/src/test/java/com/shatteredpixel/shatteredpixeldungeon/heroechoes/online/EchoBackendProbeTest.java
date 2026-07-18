@@ -38,4 +38,30 @@ class EchoBackendProbeTest {
 
 		Assertions.assertThat(EchoBackendProbe.isOnlineReady()).isTrue();
 	}
+
+	@Test
+	@DisplayName("health probe auto-retries once then succeeds")
+	void healthProbeAutoRetriesThenSucceeds() {
+		EchoBackendProbe.probeRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+		transport.enqueue(200, "{\"status\":\"ok\"}");
+		EchoClient client = new EchoClient("https://echo.test", "", transport);
+
+		Assertions.assertThat(EchoBackendProbe.checkHealthWithRetry(client)).isTrue();
+		Assertions.assertThat(transport.requests).hasSize(2);
+	}
+
+	@Test
+	@DisplayName("health probe reports unreachable after initial attempt and retry both fail")
+	void healthProbeUnreachableAfterRetryFails() {
+		EchoBackendProbe.probeRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+		transport.enqueue(503, "{}");
+		EchoClient client = new EchoClient("https://echo.test", "", transport);
+
+		Assertions.assertThat(EchoBackendProbe.checkHealthWithRetry(client)).isFalse();
+		Assertions.assertThat(transport.requests).hasSize(2);
+	}
 }

@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
@@ -83,6 +84,7 @@ public class HeroSelectScene extends PixelScene {
 
 	// fading UI elements
 	private RenderedTextBlock title;
+	private RenderedTextBlock modeDesc;
 	private ArrayList<StyledButton> heroBtns = new ArrayList<>();
 	private RenderedTextBlock heroName; // only on landscape
 	private RenderedTextBlock heroDesc; // only on landscape
@@ -146,6 +148,9 @@ public class HeroSelectScene extends PixelScene {
 		title.hardlight(Window.TITLE_COLOR);
 		PixelScene.align(title);
 		add(title);
+
+		String modeDescKey = modeDescriptionKey(GamesInProgress.selectedEchoPlayMode);
+		final String modeDescText = modeDescKey == null ? null : Messages.get(this, modeDescKey);
 
 		startBtn = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
@@ -255,6 +260,15 @@ public class HeroSelectScene extends PixelScene {
 			title.setPos(insets.left + (leftArea - title.width()) / 2f, (h - uiHeight) / 2f);
 			align(title);
 
+			float curY = title.bottom() + uiSpacing;
+			if (modeDescText != null) {
+				modeDesc = createModeDesc(modeDescText, leftArea);
+				modeDesc.setPos(insets.left + (leftArea - modeDesc.width()) / 2f, title.bottom() + 2);
+				align(modeDesc);
+				float used = modeDesc.bottom() - title.bottom();
+				curY = modeDesc.bottom() + gapAfterModeDesc(uiSpacing, used);
+			}
+
 			int btnWidth = HeroBtn.MIN_WIDTH + 15;
 			int btnHeight = HeroBtn.HEIGHT;
 			if (uiHeight >= 180) {
@@ -263,7 +277,6 @@ public class HeroSelectScene extends PixelScene {
 
 			int cols = (int) Math.ceil(heroBtns.size() / 2f);
 			float curX = insets.left + (leftArea - btnWidth * cols + (cols - 1)) / 2f;
-			float curY = title.bottom() + uiSpacing;
 
 			int count = 0;
 			for (StyledButton button : heroBtns) {
@@ -352,8 +365,12 @@ public class HeroSelectScene extends PixelScene {
 				add(blocker);
 			}
 
-			title.setPos(insets.left + (w - title.width()) / 2f,
-					insets.top + (h - HeroBtn.HEIGHT - title.height() - 4));
+			float titleTop = insets.top + (h - HeroBtn.HEIGHT - title.height() - 4);
+			title.setPos(insets.left + (w - title.width()) / 2f, titleTop);
+			if (modeDescText != null) {
+				modeDesc = createModeDesc(modeDescText, w);
+				placeModeDescAbove(insets.left, w, title.top());
+			}
 
 			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height - HeroBtn.HEIGHT - 16, 20, 21);
 			optionsPane.setPos(heroBtns.get(0).left(), 0);
@@ -471,6 +488,12 @@ public class HeroSelectScene extends PixelScene {
 					(Camera.main.height - insets.bottom - HeroBtn.HEIGHT + 2 - startBtn.height()));
 			PixelScene.align(startBtn);
 
+			if (modeDesc != null) {
+				modeDesc.visible = modeDescVisibleAfterHeroSelected(false);
+				float contentW = Camera.main.width - insets.left - insets.right;
+				placeModeDescAbove(insets.left, contentW, startBtn.top());
+			}
+
 			infoButton.visible = infoButton.active = true;
 			infoButton.setPos(startBtn.right(), startBtn.top());
 
@@ -506,9 +529,74 @@ public class HeroSelectScene extends PixelScene {
 		}
 	}
 
+	/** Message key for the choose-hero mode blurb, or null when none. */
+	static String modeDescriptionKey(EchoPlayMode mode) {
+		if (mode == EchoPlayMode.SOLO) {
+			return "solo_desc";
+		}
+		if (mode == EchoPlayMode.RANKED) {
+			return "ranked_desc";
+		}
+		return null;
+	}
+
+	static int modeDescMaxWidth(float availableWidth) {
+		return Math.max(64, (int) availableWidth - 8);
+	}
+
+	static int modeDescFontSize(float availableWidth) {
+		return availableWidth <= 140 ? 5 : 6;
+	}
+
+	/**
+	 * Remaining gap under the mode blurb so following UI stays in the reserved
+	 * band.
+	 */
+	static float gapAfterModeDesc(float reservedGap, float modeDescUsedHeight) {
+		return Math.max(2f, reservedGap - modeDescUsedHeight);
+	}
+
+	/**
+	 * Portrait keeps the blurb above the start button until the shared UI fade
+	 * hides it.
+	 */
+	static boolean modeDescVisibleAfterHeroSelected(boolean landscape) {
+		return true;
+	}
+
+	/** Mode blurb uses the same fade alpha as the rest of the hero-select UI. */
+	static float modeDescAlpha(float uiAlpha) {
+		return uiAlpha;
+	}
+
+	/**
+	 * Top Y for a mode blurb placed just above an anchor (title or start button).
+	 */
+	static float modeDescAbove(float anchorTop, float modeDescHeight) {
+		return anchorTop - 2f - modeDescHeight;
+	}
+
+	private RenderedTextBlock createModeDesc(String text, float availableWidth) {
+		RenderedTextBlock block = PixelScene.renderTextBlock(text, modeDescFontSize(availableWidth));
+		block.align(RenderedTextBlock.CENTER_ALIGN);
+		block.maxWidth(modeDescMaxWidth(availableWidth));
+		add(block);
+		return block;
+	}
+
+	private void placeModeDescAbove(float left, float contentWidth, float anchorTop) {
+		modeDesc.setPos(
+				left + (contentWidth - modeDesc.width()) / 2f,
+				modeDescAbove(anchorTop, modeDesc.height()));
+		align(modeDesc);
+	}
+
 	private void updateFade() {
 		float alpha = GameMath.gate(0f, uiAlpha, 1f);
 		title.alpha(alpha);
+		if (modeDesc != null) {
+			modeDesc.alpha(modeDescAlpha(alpha));
+		}
 		for (StyledButton b : heroBtns) {
 			b.enable(alpha != 0);
 			b.alpha(alpha);

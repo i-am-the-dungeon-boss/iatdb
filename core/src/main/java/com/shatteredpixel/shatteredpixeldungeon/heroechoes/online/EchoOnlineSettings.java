@@ -14,9 +14,9 @@ import java.util.function.Function;
 
 /**
  * Hero Echoes online settings: ranked-mode gates, test overrides, and
- * connection
- * values from environment variables / optional {@code .env} file.
- * Process environment variables take precedence over values from the file.
+ * connection values from environment variables / optional {@code .env} file /
+ * build-time defaults (e.g. Android {@code BuildConfig}).
+ * Precedence: test override &gt; process env &gt; dotenv &gt; build defaults.
  */
 public final class EchoOnlineSettings {
 
@@ -26,9 +26,11 @@ public final class EchoOnlineSettings {
 	private static Boolean testOnlineOverride;
 	private static String testBackendUrlOverride;
 	private static String testApiKeyOverride;
+	private static String buildDefaultBackendUrl;
+	private static String buildDefaultApiKey;
 
 	private static final Map<String, String> dotEnv = new HashMap<>();
-	private static Function<String, String> envGetter = EchoOnlineSettings::resolve;
+	private static Function<String, String> systemEnvGetter = System::getenv;
 
 	private EchoOnlineSettings() {
 	}
@@ -51,7 +53,11 @@ public final class EchoOnlineSettings {
 		if (testBackendUrlOverride != null) {
 			return testBackendUrlOverride;
 		}
-		return trimToEmpty(envGetter.apply(BACKEND_URL));
+		String fromEnvOrDotEnv = trimToEmpty(resolve(BACKEND_URL));
+		if (!fromEnvOrDotEnv.isEmpty()) {
+			return fromEnvOrDotEnv;
+		}
+		return trimToEmpty(buildDefaultBackendUrl);
 	}
 
 	public static void setBackendUrl(String url) {
@@ -62,11 +68,35 @@ public final class EchoOnlineSettings {
 		if (testApiKeyOverride != null) {
 			return testApiKeyOverride;
 		}
-		return trimToEmpty(envGetter.apply(API_KEY));
+		String fromEnvOrDotEnv = trimToEmpty(resolve(API_KEY));
+		if (!fromEnvOrDotEnv.isEmpty()) {
+			return fromEnvOrDotEnv;
+		}
+		return trimToEmpty(buildDefaultApiKey);
 	}
 
 	public static void setApiKey(String apiKey) {
 		testApiKeyOverride = apiKey;
+	}
+
+	/**
+	 * Platform/build defaults used when env and dotenv do not supply a value.
+	 * Android debug/release inject these from {@code BuildConfig}.
+	 */
+	public static void setBuildDefaults(String backendUrl, String apiKey) {
+		buildDefaultBackendUrl = backendUrl;
+		buildDefaultApiKey = apiKey;
+	}
+
+	/** Maps desktop loopback hosts to the Android emulator host-loopback alias. */
+	public static String forAndroidEmulatorLoopback(String url) {
+		String value = trimToEmpty(url);
+		if (value.isEmpty()) {
+			return value;
+		}
+		return value
+				.replace("://localhost", "://10.0.2.2")
+				.replace("://127.0.0.1", "://10.0.2.2");
 	}
 
 	public static boolean isConfigured() {
@@ -107,19 +137,21 @@ public final class EchoOnlineSettings {
 	}
 
 	static void setEnvForTests(Function<String, String> getter) {
-		envGetter = getter != null ? getter : EchoOnlineSettings::resolve;
+		systemEnvGetter = getter != null ? getter : System::getenv;
 	}
 
 	public static void resetForTests() {
 		testOnlineOverride = null;
 		testBackendUrlOverride = null;
 		testApiKeyOverride = null;
+		buildDefaultBackendUrl = null;
+		buildDefaultApiKey = null;
 		dotEnv.clear();
-		envGetter = EchoOnlineSettings::resolve;
+		systemEnvGetter = System::getenv;
 	}
 
 	private static String resolve(String key) {
-		String fromSystem = System.getenv(key);
+		String fromSystem = systemEnvGetter.apply(key);
 		if (fromSystem != null && !fromSystem.trim().isEmpty()) {
 			return fromSystem;
 		}

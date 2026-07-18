@@ -38,6 +38,7 @@ class EchoOnlineSettingsEnvTest {
 	@Test
 	@DisplayName("loads values from a dotenv file")
 	void loadsValuesFromDotEnvFile() throws Exception {
+		EchoOnlineSettings.setEnvForTests(key -> null);
 		java.nio.file.Path envFile = java.nio.file.Files.createTempFile("echo-online", ".env");
 		java.nio.file.Files.writeString(
 				envFile,
@@ -56,5 +57,54 @@ class EchoOnlineSettingsEnvTest {
 
 		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEmpty();
 		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEmpty();
+	}
+
+	@Test
+	@DisplayName("uses build defaults when env and dotenv are unset")
+	void usesBuildDefaultsWhenUnset() {
+		EchoOnlineSettings.setEnvForTests(key -> null);
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("https://echo.example.com");
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("build-key");
+	}
+
+	@Test
+	@DisplayName("env values take precedence over build defaults")
+	void envTakesPrecedenceOverBuildDefaults() {
+		Map<String, String> env = new HashMap<>();
+		env.put(EchoOnlineSettings.BACKEND_URL, "http://localhost:3000");
+		env.put(EchoOnlineSettings.API_KEY, "env-key");
+		EchoOnlineSettings.setEnvForTests(env::get);
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://localhost:3000");
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("env-key");
+	}
+
+	@Test
+	@DisplayName("dotenv values take precedence over build defaults")
+	void dotenvTakesPrecedenceOverBuildDefaults() throws Exception {
+		EchoOnlineSettings.setEnvForTests(key -> null);
+		java.nio.file.Path envFile = java.nio.file.Files.createTempFile("echo-online", ".env");
+		java.nio.file.Files.writeString(
+				envFile,
+				"ECHO_BACKEND_URL=http://dotenv.local:3000\nECHO_API_KEY=dotenv-key\n");
+		EchoOnlineSettings.loadDotEnv(envFile.toFile());
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://dotenv.local:3000");
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("dotenv-key");
+	}
+
+	@Test
+	@DisplayName("rewrites localhost to Android emulator loopback host")
+	void rewritesLocalhostToAndroidEmulatorLoopback() {
+		Assertions.assertThat(EchoOnlineSettings.forAndroidEmulatorLoopback("http://localhost:3000"))
+				.isEqualTo("http://10.0.2.2:3000");
+		Assertions.assertThat(EchoOnlineSettings.forAndroidEmulatorLoopback("http://127.0.0.1:3000"))
+				.isEqualTo("http://10.0.2.2:3000");
+		Assertions.assertThat(EchoOnlineSettings.forAndroidEmulatorLoopback("https://echo.example.com"))
+				.isEqualTo("https://echo.example.com");
 	}
 }

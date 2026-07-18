@@ -1,9 +1,75 @@
 apply plugin: 'com.android.application'
 
+def loadDotEnvFile(File file) {
+    def values = [:]
+    if (file == null || !file.isFile()) {
+        return values
+    }
+    file.eachLine('UTF-8') { line ->
+        def trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+            return
+        }
+        def separator = trimmed.indexOf('=')
+        if (separator <= 0) {
+            return
+        }
+        def key = trimmed.substring(0, separator).trim()
+        def value = trimmed.substring(separator + 1).trim()
+        if ((value.startsWith('"') && value.endsWith('"'))
+                || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length() - 1)
+        }
+        values[key] = value
+    }
+    return values
+}
+
+def quoteBuildConfigString(String value) {
+    def escaped = (value ?: '')
+            .replace('\\', '\\\\')
+            .replace('"', '\\"')
+    return "\"${escaped}\""
+}
+
+def echoEnvFile = rootProject.file('.env')
+def echoEnv = loadDotEnvFile(echoEnvFile)
+
+def echoEnvOrProp = { String key ->
+    def fromGradle = project.findProperty(key)
+    if (fromGradle != null && fromGradle.toString().trim()) {
+        return fromGradle.toString().trim()
+    }
+    def fromProcess = System.getenv(key)
+    if (fromProcess != null && !fromProcess.trim().isEmpty()) {
+        return fromProcess.trim()
+    }
+    def fromFile = echoEnv[key]
+    if (fromFile != null && !fromFile.toString().trim().isEmpty()) {
+        return fromFile.toString().trim()
+    }
+    return ''
+}
+
+def echoDebugBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL')
+def echoDebugApiKey = echoEnvOrProp('ECHO_API_KEY')
+def echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL_RELEASE')
+if (!echoReleaseBackendUrl) {
+    echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL')
+}
+def echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY_RELEASE')
+if (!echoReleaseApiKey) {
+    echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY')
+}
+
 android {
     namespace 'com.shatteredpixel.shatteredpixeldungeon.android'
     compileSdk appAndroidCompileSDK
     compileOptions.sourceCompatibility = compileOptions.targetCompatibility = appJavaCompatibility
+
+    buildFeatures {
+        buildConfig true
+    }
 
     sourceSets.main.assets.srcDirs = [new File(project(':core').projectDir, "/src/main/assets")]
 
@@ -13,7 +79,7 @@ android {
     }
 
     defaultConfig {
-        manifestPlaceholders = [appName:appName]
+        manifestPlaceholders = [appName:appName, usesCleartextTraffic: 'false']
         applicationId appPackageName
 
         versionCode appVersionCode
@@ -21,12 +87,18 @@ android {
 
         minSdkVersion appAndroidMinSDK
         targetSdkVersion appAndroidTargetSDK
+
+        buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString('')
+        buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString('')
     }
 
     buildTypes {
         debug {
             applicationIdSuffix ".indev"
             versionNameSuffix '-INDEV'
+            manifestPlaceholders.usesCleartextTraffic = 'true'
+            buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoDebugBackendUrl)
+            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoDebugApiKey)
             dependencies {
                 debugImplementation project(':services:updates:echoUpdates')
                 debugImplementation project(':services:news:debugNews')
@@ -41,6 +113,9 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoReleaseBackendUrl)
+            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoReleaseApiKey)
 
             dependencies {
                 // IATDB: version checks via hero-echoes /v1/game-version; news stays stubbed

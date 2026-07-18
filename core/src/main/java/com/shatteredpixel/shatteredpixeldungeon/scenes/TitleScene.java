@@ -48,7 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.TitleFeedButtons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleRankedIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleSupportLayout;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoConnectionFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndSettings;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats;
@@ -353,8 +353,24 @@ public class TitleScene extends PixelScene {
 		updateFade();
 		if (!EchoBackendProbe.isOnlineReady() && !offlineErrorShown) {
 			offlineErrorShown = true;
-			add(new WndError(Messages.get(this, EchoBackendProbe.offlineMessageKey())));
+			showOfflineConnectionDialog();
 		}
+	}
+
+	private void showOfflineConnectionDialog() {
+		add(new WndEchoConnectionFailed(
+				Messages.get(this, EchoBackendProbe.offlineMessageKey()),
+				new WndEchoConnectionFailed.Listener() {
+					@Override
+					public void onRetry() {
+						offlineErrorShown = false;
+						EchoBackendProbe.probeAsync(() -> onBackendProbeComplete());
+					}
+
+					@Override
+					public void onDismiss() {
+					}
+				}));
 	}
 
 	/**
@@ -409,8 +425,7 @@ public class TitleScene extends PixelScene {
 
 	private void beginEchoRun(EchoPlayMode mode) {
 		if (!EchoBackendProbe.isOnlineReady()) {
-			add(new WndError(Messages.get(this, EchoBackendProbe.offlineMessageKey())));
-			EchoBackendProbe.probeAsync(this::onBackendProbeComplete);
+			showOfflineConnectionDialog();
 			return;
 		}
 
