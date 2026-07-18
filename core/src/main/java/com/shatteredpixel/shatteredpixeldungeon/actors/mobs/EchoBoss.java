@@ -10,7 +10,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroCombatDelegate;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
@@ -23,6 +22,9 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
+
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class EchoBoss extends Mob {
 
@@ -80,7 +82,8 @@ public class EchoBoss extends Mob {
     }
 
     public static int scaledHT(Echo echo, int depth) {
-        if (echo == null) return 200;
+        if (echo == null)
+            return 200;
         float depthBonus = 1f + depth * 0.02f;
         return Math.round(echo.ht * BOSS_HP_MULTIPLIER * depthBonus);
     }
@@ -120,12 +123,12 @@ public class EchoBoss extends Mob {
                     echo,
                     Dungeon.depth,
                     Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.version
-            );
+                    Game.version);
         }
     }
 
-    public IntendedAction decideAction(int hpPercent, boolean hasHealingPotion, boolean meleeThreatened, int currentAbilityCooldown) {
+    public IntendedAction decideAction(int hpPercent, boolean hasHealingPotion, boolean meleeThreatened,
+            int currentAbilityCooldown) {
         if (echoPolicy != null) {
             EchoPolicyContext context = new EchoPolicyContext()
                     .selfHpRatio(hpPercent / 100f)
@@ -199,42 +202,66 @@ public class EchoBoss extends Mob {
 
     @Override
     public int damageRoll() {
-        return EchoHeroCombatDelegate.damageRoll(echoHero, pos);
+        return withEchoHeroPosInt(echoHero::damageRoll);
     }
 
     @Override
     public int attackSkill(Char target) {
-        return EchoHeroCombatDelegate.attackSkill(echoHero, pos, target);
+        return withEchoHeroPosInt(() -> echoHero.attackSkill(target));
     }
 
     @Override
     public int defenseSkill(Char enemy) {
-        return EchoHeroCombatDelegate.defenseSkill(echoHero, pos, enemy);
+        return withEchoHeroPosInt(() -> echoHero.defenseSkill(enemy));
     }
 
     @Override
     public int drRoll() {
-        return EchoHeroCombatDelegate.drRoll(echoHero, pos);
+        return withEchoHeroPosInt(echoHero::drRoll);
     }
 
     @Override
     public float attackDelay() {
-        return EchoHeroCombatDelegate.attackDelay(echoHero, pos);
+        return withEchoHeroPos(echoHero::attackDelay);
     }
 
     @Override
     public float speed() {
-        return EchoHeroCombatDelegate.speed(echoHero, pos);
+        return withEchoHeroPos(echoHero::combatSpeed);
     }
 
     @Override
     public int attackProc(final Char enemy, int damage) {
-        return EchoHeroCombatDelegate.attackProc(echoHero, pos, enemy, damage);
+        return withEchoHeroPosInt(() -> echoHero.attackProc(enemy, damage));
     }
 
     @Override
     public int defenseProc(Char enemy, int damage) {
-        return EchoHeroCombatDelegate.defenseProc(echoHero, pos, enemy, damage);
+        return withEchoHeroPosInt(() -> echoHero.defenseProc(enemy, damage));
+    }
+
+    /**
+     * Echo hero is never placed on the level; sync {@link Hero#pos} for combat
+     * queries only.
+     */
+    private int withEchoHeroPosInt(IntSupplier action) {
+        int savedPos = echoHero.pos;
+        echoHero.pos = pos;
+        try {
+            return action.getAsInt();
+        } finally {
+            echoHero.pos = savedPos;
+        }
+    }
+
+    private <T> T withEchoHeroPos(Supplier<T> action) {
+        int savedPos = echoHero.pos;
+        echoHero.pos = pos;
+        try {
+            return action.get();
+        } finally {
+            echoHero.pos = savedPos;
+        }
     }
 
     @Override
@@ -331,8 +358,7 @@ public class EchoBoss extends Mob {
                     echo,
                     Dungeon.depth,
                     Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.version
-            );
+                    Game.version);
         }
         super.die(cause);
         EchoBossRegionalDeath.apply(this, cause);

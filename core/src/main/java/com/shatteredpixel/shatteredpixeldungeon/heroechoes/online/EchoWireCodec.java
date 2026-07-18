@@ -66,12 +66,12 @@ public final class EchoWireCodec {
 			echo.userName = root.optString("user_name", "");
 		}
 
-		EchoPolicy policy = EchoPolicy.fallback();
-		if (root.has("echo_policy")) {
-			policy = EchoPolicy.fromJson(root.getJSONObject("echo_policy"));
-			if (!policy.isSupported()) {
-				policy = EchoPolicy.fallback();
-			}
+		if (!root.has("echo_policy")) {
+			throw new IllegalArgumentException("echo fetch response requires echo_policy");
+		}
+		EchoPolicy policy = EchoPolicy.fromJson(root.getJSONObject("echo_policy"));
+		if (!policy.isSupported()) {
+			policy = EchoPolicy.fallback();
 		}
 
 		return new EchoFetchResult(echo, policy);

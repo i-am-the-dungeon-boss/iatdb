@@ -22,12 +22,12 @@ class CompositeEchoLookupTest {
 	void cleanup() {
 		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 	}
 
 	@Test
-	@DisplayName("uses online echo when online mode is enabled and fetch succeeds")
-	void usesOnlineEchoFirst() throws Exception {
+	@DisplayName("ranked mode fetches echo online")
+	void rankedModeFetchesOnline() throws Exception {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -49,30 +49,115 @@ class CompositeEchoLookupTest {
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
 
 		EchoStorage local = new EchoStorage();
 		local.save(EchoTestSupport.warriorEcho(5));
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
-				local
-		);
+				local);
 
-		Optional<Echo> echo = lookup.findEchoForDepth(5);
+		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(echo).isPresent();
-		Assertions.assertThat(echo.get().echoId).isEqualTo("online-1");
-		Assertions.assertThat(lookup.getLastFetchedPolicy()).isPresent();
+		Assertions.assertThat(result).isPresent();
+		Assertions.assertThat(result.get().echo.echoId).isEqualTo("online-1");
+		Assertions.assertThat(result.get().policy).isNotNull();
+		Assertions.assertThat(transport.requests).hasSize(1);
 	}
 
 	@Test
-	@DisplayName("falls back to local echo when online fetch misses outside ranked mode")
-	void fallsBackToLocalEcho() throws Exception {
+	@DisplayName("ranked mode returns empty when fetch response omits policy")
+	void rankedModeReturnsEmptyWithoutPolicy() throws Exception {
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(200, "{"
+				+ "\"echo_id\":\"online-1\","
+				+ "\"depth\":5,"
+				+ "\"game_version\":\"0.0.1\","
+				+ "\"hero_class\":\"MAGE\","
+				+ "\"lvl\":6,"
+				+ "\"hp\":20,"
+				+ "\"ht\":30,"
+				+ "\"timestamp\":1,"
+				+ "\"game_seed\":9,"
+				+ "\"echo_data_base64\":\"dGVzdA==\""
+				+ "}");
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				new EchoStorage());
+
+		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("ranked mode returns empty when online fetch misses")
+	void rankedModeReturnsEmptyOnMiss() throws Exception {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(404, "{}");
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+		EchoStorage local = new EchoStorage();
+		local.save(EchoTestSupport.warriorEcho(5));
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("ranked mode returns empty when online fetch throws")
+	void rankedModeReturnsEmptyOnThrow() throws Exception {
+		EchoHttpTransport transport = request -> {
+			throw new RuntimeException("network down");
+		};
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+		EchoStorage local = new EchoStorage();
+		local.save(EchoTestSupport.warriorEcho(5));
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("non-ranked mode never fetches online even when backend is configured")
+	void nonRankedNeverFetchesOnline() throws Exception {
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(200, "{"
+				+ "\"echo_id\":\"online-1\","
+				+ "\"depth\":5,"
+				+ "\"game_version\":\"0.0.1\","
+				+ "\"hero_class\":\"MAGE\","
+				+ "\"lvl\":6,"
+				+ "\"hp\":20,"
+				+ "\"ht\":30,"
+				+ "\"timestamp\":1,"
+				+ "\"game_seed\":9,"
+				+ "\"echo_data_base64\":\"dGVzdA==\""
+				+ "}");
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 
 		Echo localEcho = EchoTestSupport.warriorEcho(5);
@@ -81,19 +166,19 @@ class CompositeEchoLookupTest {
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
-				local
-		);
+				local);
 
-		Optional<Echo> echo = lookup.findEchoForDepth(5);
+		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(echo).isPresent();
-		Assertions.assertThat(echo.get().echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(lookup.getLastFetchedPolicy()).isEmpty();
+		Assertions.assertThat(result).isPresent();
+		Assertions.assertThat(result.get().echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.get().policy).isNotNull();
+		Assertions.assertThat(transport.requests).isEmpty();
 	}
 
 	@Test
-	@DisplayName("solo mode skips online fetch even when backend is configured")
-	void soloModeSkipsOnlineFetch() throws Exception {
+	@DisplayName("solo mode fetches echo locally and never calls online")
+	void soloModeFetchesLocally() throws Exception {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"online-1\","
@@ -117,61 +202,13 @@ class CompositeEchoLookupTest {
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
-				local
-		);
+				local);
 
-		Optional<Echo> echo = lookup.findEchoForDepth(5);
+		Optional<EchoFetchResult> result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(echo).isPresent();
-		Assertions.assertThat(echo.get().echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result).isPresent();
+		Assertions.assertThat(result.get().echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.get().policy).isNotNull();
 		Assertions.assertThat(transport.requests).isEmpty();
-	}
-
-	@Test
-	@DisplayName("falls back to local echo when online fetch throws outside ranked mode")
-	void fallsBackWhenOnlineFetchThrows() throws Exception {
-		EchoHttpTransport transport = request -> {
-			throw new RuntimeException("network down");
-		};
-
-		EchoOnlineSettings.setOnlineEnabled(true);
-		EchoOnlineSettings.setBackendUrl("https://echo.test");
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
-
-		Echo localEcho = EchoTestSupport.warriorEcho(5);
-		EchoStorage local = new EchoStorage();
-		local.save(localEcho);
-
-		CompositeEchoLookup lookup = new CompositeEchoLookup(
-				new EchoClient("https://echo.test", "secret", transport),
-				local
-		);
-
-		Optional<Echo> echo = lookup.findEchoForDepth(5);
-
-		Assertions.assertThat(echo).isPresent();
-		Assertions.assertThat(echo.get().echoId).isEqualTo(localEcho.echoId);
-	}
-
-	@Test
-	@DisplayName("ranked mode does not fall back to local echoes")
-	void rankedModeSkipsLocalFallback() throws Exception {
-		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-		transport.enqueue(404, "{}");
-
-		EchoOnlineSettings.setOnlineEnabled(true);
-		EchoOnlineSettings.setBackendUrl("https://echo.test");
-		EchoOnlineSettings.setApiKey("secret");
-		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
-
-		EchoStorage local = new EchoStorage();
-		local.save(EchoTestSupport.warriorEcho(5));
-
-		CompositeEchoLookup lookup = new CompositeEchoLookup(
-				new EchoClient("https://echo.test", "secret", transport),
-				local
-		);
-
-		Assertions.assertThat(lookup.findEchoForDepth(5)).isEmpty();
 	}
 }

@@ -6,11 +6,14 @@ import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineService;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.watabou.utils.Bundle;
 
 import java.io.File;
+import java.util.Optional;
 
 /** Shared fixtures and cleanup for hero-echoes workflow tests. */
 public final class EchoTestSupport {
@@ -19,7 +22,8 @@ public final class EchoTestSupport {
 	public static final String LEADERBOARD_FILE = "leaderboard.json";
 	public static final String TEST_GAME_VERSION = "0.0.1";
 
-	private EchoTestSupport() {}
+	private EchoTestSupport() {
+	}
 
 	public static void resetWorkflowState() {
 		deleteRecursively(new File("echoes"));
@@ -29,7 +33,6 @@ public final class EchoTestSupport {
 		new File("leaderboard-solo.json").delete();
 		new File("leaderboard-ranked.json").delete();
 		Dungeon.hero = null;
-		Dungeon.setEchoLookup(null);
 		Dungeon.resetEchoStateForTests();
 		GamesInProgress.clearSlotCache();
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
@@ -38,7 +41,7 @@ public final class EchoTestSupport {
 		SPDSettings.echoesWeakSnapshots(false);
 		SPDSettings.playerName("");
 		EchoOnlineSettings.resetForTests();
-		EchoOnlineService.resetForTests();
+		CompositeEchoLookup.resetForTests();
 	}
 
 	public static Echo warriorEcho(int depth) {
@@ -50,8 +53,7 @@ public final class EchoTestSupport {
 				6,
 				28,
 				30,
-				null
-		);
+				null);
 	}
 
 	/** Echo with bundled hero data — required for echo boss spawn and combat. */
@@ -69,8 +71,7 @@ public final class EchoTestSupport {
 				6,
 				28,
 				30,
-				bundleHero(hero)
-		);
+				bundleHero(hero));
 	}
 
 	public static Echo echoWithVersion(int depth, String gameVersion) {
@@ -81,20 +82,23 @@ public final class EchoTestSupport {
 
 	public static int countEchoFiles() {
 		File dir = new File(EchoPlayModePaths.echoesDir());
-		if (!dir.exists()) return 0;
+		if (!dir.exists())
+			return 0;
 		String[] files = dir.list();
 		return files == null ? 0 : files.length;
 	}
 
 	public static void deleteRecursively(File file) {
-		if (file == null || !file.exists()) return;
+		if (file == null || !file.exists())
+			return;
 		if (file.isDirectory()) {
 			File[] children = file.listFiles();
 			if (children != null) {
-				for (File child : children) deleteRecursively(child);
+				for (File child : children)
+					deleteRecursively(child);
 			}
 		}
-		//noinspection ResultOfMethodCallIgnored
+		// noinspection ResultOfMethodCallIgnored
 		file.delete();
 	}
 
@@ -104,5 +108,13 @@ public final class EchoTestSupport {
 
 	public static Bundle bundleHero(Hero hero) {
 		return EchoHeroSnapshot.captureFromHero(hero);
+	}
+
+	public static EchoFetchResult withPolicy(Echo echo) {
+		return new EchoFetchResult(echo, EchoPolicy.fallback());
+	}
+
+	public static Optional<EchoFetchResult> optionalWithPolicy(Echo echo) {
+		return Optional.of(withPolicy(echo));
 	}
 }

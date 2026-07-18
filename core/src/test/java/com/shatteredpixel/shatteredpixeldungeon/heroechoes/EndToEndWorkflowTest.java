@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoBossLevel;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -10,7 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * End-to-end workflow: boss victory snapshot -> depth-5 routing -> heroic boss creation.
+ * End-to-end workflow: boss victory snapshot -> depth-5 routing -> heroic boss
+ * creation.
  */
 @ExtendWith(GdxTestExtension.class)
 class EndToEndWorkflowTest {
@@ -27,7 +29,7 @@ class EndToEndWorkflowTest {
         EchoCaptureTrigger.saveEcho(
                 EchoTestSupport.warriorEchoWithData(5), 5, storage);
 
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(EchoBossLevel.class);
 
         Echo pending = Dungeon.getPendingEcho();
@@ -41,7 +43,7 @@ class EndToEndWorkflowTest {
     @Test
     @DisplayName("Workflow falls back to default boss when no snapshots exist")
     void workflowFallsBackWithoutSnapshots() {
-        Dungeon.setEchoLookup(new EchoStorage());
+        CompositeEchoLookup.setEchoLookupForTests(new EchoStorage());
 
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0))
                 .isEqualTo(com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel.class);

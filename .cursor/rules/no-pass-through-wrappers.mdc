@@ -1,0 +1,57 @@
+---
+description: Avoid redundant pass-through wrapper classes in Java; put logic where it is used or owned
+alwaysApply: false
+---
+# No Pass-Through Wrappers (Java)
+
+Do not add a class whose public API only forwards to another type. Prefer putting behavior on the owner, caller, or an existing type that already has a reason to exist.
+
+## Iron Law
+
+A new type needs **non-trivial policy, state, or a real seam** (I/O, async, test double, mode routing). If removing the type and inlining one call site does not hurt clarity or testing, do not create it.
+
+## Reject
+
+- One-line facades (`prefetch()` → `Dungeon.prefetch…()`)
+- Service locators that only `new` a composite and hold a static
+- Config layers that only re-expose another config’s getters
+- “Helper” classes whose every method is `return Other.method(…)`
+- Existence-check APIs that re-run the same lookup the caller must do next (double fetch)
+
+## Prefer
+
+| Instead of                                   | Do                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| Prefetch facade                              | Call the owner (`Dungeon`, storage, client) from the scene/caller |
+| Online “service” factory                     | Static `echoLookup()` / `instance()` on the real lookup type      |
+| Tiny health/JSON helper used once            | Private/package method on the client                              |
+| Settings wrapping Env                        | One settings/config type                                          |
+| `shouldX` that duplicates `resolveX` filters | One resolve path; callers use the result                          |
+
+## Allowed thin types
+
+- **Real routing / policy** (e.g. ranked vs local lookup)
+- **Async / lifecycle** (executor, probe cache, upload queue)
+- **Testable seams** (HTTP transport interface + impl)
+- **Shared multi-caller API** used by several levels/UI with more than a one-liner
+- **Value objects** (results, policies, DTOs)
+
+## Before adding a class
+
+1. Name the **extra behavior** in one sentence. If you cannot, inline.
+2. Count call sites: one site → private method on the caller/owner.
+3. Check for a second lookup of the same data in the same flow — collapse to one.
+4. Prefer extending an existing owner over a new `*Service` / `*Helper` / `*Prefetch` type.
+
+## Examples (echo cull)
+
+```text
+❌ EchoBossPrefetch.prefetch(depth) → Dungeon.prefetchEchoBossForDepth(depth)
+✅ InterlevelScene calls Dungeon directly
+
+❌ EchoOnlineService.echoLookup() only builds CompositeEchoLookup
+✅ CompositeEchoLookup.echoLookup() owns the singleton
+
+❌ shouldUseEchoBoss(lookup) then resolveEcho(lookup)  // two fetches
+✅ prepareEchoBoss → resolveEcho once
+```

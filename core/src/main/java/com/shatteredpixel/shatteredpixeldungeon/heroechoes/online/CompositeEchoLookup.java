@@ -1,69 +1,62 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 
 import java.util.Optional;
 
 public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLookup {
 
+	private static EchoReplacementDecider.EchoLookup lookup;
+
 	private final EchoClient client;
 	private final EchoReplacementDecider.EchoLookup localLookup;
-	private EchoPolicy lastFetchedPolicy;
 
 	public CompositeEchoLookup(EchoClient client, EchoReplacementDecider.EchoLookup localLookup) {
 		this.client = client;
 		this.localLookup = localLookup;
 	}
 
-	@Override
-	public Optional<Echo> findEchoForDepth(int depth) {
-		lastFetchedPolicy = null;
-
-		if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-			return fetchRankedEcho(depth);
+	public static EchoReplacementDecider.EchoLookup echoLookup() {
+		if (lookup == null) {
+			lookup = new CompositeEchoLookup(
+					EchoClient.createDefault(),
+					new EchoStorage());
 		}
-
-		if (shouldTryOnlineFetch()) {
-			try {
-				Optional<EchoFetchResult> online = client.fetchEcho(depth);
-				if (online.isPresent()) {
-					lastFetchedPolicy = online.get().policy;
-					return Optional.of(online.get().echo);
-				}
-			} catch (Exception ignored) {
-				// fall through to local lookup
-			}
-		}
-
-		return localLookup.findEchoForDepth(depth);
+		return lookup;
 	}
 
-	private Optional<Echo> fetchRankedEcho(int depth) {
+	/** Test-only override for the process-wide echo lookup. */
+	public static void setEchoLookupForTests(EchoReplacementDecider.EchoLookup override) {
+		lookup = override;
+	}
+
+	public static void resetForTests() {
+		lookup = null;
+		EchoOnlineSync.setDefaultForTests(null);
+	}
+
+	@Override
+	public Optional<EchoFetchResult> findEchoForDepth(int depth) {
+		Optional<EchoFetchResult> result;
+		if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
+			result = fetchRankedEcho(depth);
+		} else {
+			result = localLookup.findEchoForDepth(depth);
+		}
+		return result.filter(fetched -> fetched.policy != null);
+	}
+
+	private Optional<EchoFetchResult> fetchRankedEcho(int depth) {
 		if (!EchoOnlineSettings.canSyncOnline()) {
 			return Optional.empty();
 		}
 		try {
-			Optional<EchoFetchResult> online = client.fetchEcho(depth);
-			if (online.isPresent()) {
-				lastFetchedPolicy = online.get().policy;
-				return Optional.of(online.get().echo);
-			}
+			return client.fetchEcho(depth);
 		} catch (Exception ignored) {
+			return Optional.empty();
 		}
-		return Optional.empty();
-	}
-
-	public Optional<EchoPolicy> getLastFetchedPolicy() {
-		return Optional.ofNullable(lastFetchedPolicy);
-	}
-
-	private static boolean shouldTryOnlineFetch() {
-		if (Dungeon.echoPlayMode == EchoPlayMode.SOLO) {
-			return false;
-		}
-		return EchoOnlineSettings.canSyncOnline();
 	}
 }

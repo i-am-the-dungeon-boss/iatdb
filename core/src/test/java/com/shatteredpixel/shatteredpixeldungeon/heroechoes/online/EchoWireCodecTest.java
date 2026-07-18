@@ -54,6 +54,27 @@ class EchoWireCodecTest {
 	}
 
 	@Test
+	@DisplayName("rejects echo fetch response without echo policy")
+	void rejectsEchoFetchResponseWithoutPolicy() {
+		String json = "{"
+				+ "\"echo_id\":\"5-1\","
+				+ "\"depth\":5,"
+				+ "\"game_version\":\"0.0.1\","
+				+ "\"hero_class\":\"MAGE\","
+				+ "\"lvl\":6,"
+				+ "\"hp\":20,"
+				+ "\"ht\":30,"
+				+ "\"timestamp\":100,"
+				+ "\"game_seed\":42,"
+				+ "\"echo_data_base64\":\"dGVzdA==\""
+				+ "}";
+
+		Assertions.assertThatThrownBy(() -> EchoWireCodec.decodeEchoFetch(json))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("echo_policy");
+	}
+
+	@Test
 	@DisplayName("encodes leaderboard fight results for upload")
 	void encodesLeaderboardResult() {
 		String json = EchoWireCodec.encodeLeaderboardResult(

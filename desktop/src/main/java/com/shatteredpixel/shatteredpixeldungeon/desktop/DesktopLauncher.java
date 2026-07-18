@@ -31,7 +31,7 @@ import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineEnv;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.EchoUpdates;
@@ -55,7 +55,7 @@ public class DesktopLauncher {
 			return;
 		}
 
-		EchoOnlineEnv.loadDefaultDotEnv();
+		EchoOnlineSettings.loadDefaultDotEnv();
 
 		// detection for FreeBSD (which is equivalent to linux for us)
 		// TODO might want to merge request this to libGDX
@@ -138,7 +138,7 @@ public class DesktopLauncher {
 
 		if (UpdateImpl.supportsUpdates()) {
 			Updates.service = UpdateImpl.getUpdateService();
-			EchoUpdates.baseUrlOverride = EchoOnlineEnv.backendUrl();
+			EchoUpdates.baseUrlOverride = EchoOnlineSettings.backendUrl();
 		}
 		if (NewsImpl.supportsNews()) {
 			News.service = NewsImpl.getNewsService();

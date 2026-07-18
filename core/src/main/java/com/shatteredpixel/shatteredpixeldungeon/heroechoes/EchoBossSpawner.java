@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 /**
@@ -10,7 +11,8 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
  */
 public final class EchoBossSpawner {
 
-	private EchoBossSpawner() {}
+	private EchoBossSpawner() {
+	}
 
 	public static boolean shouldSpawn() {
 		Echo pending = Dungeon.getPendingEcho();
@@ -31,7 +33,14 @@ public final class EchoBossSpawner {
 
 	public static void announceIntroIfNeeded() {
 		if (shouldSpawn()) {
-			GLog.h(EchoMessages.introBannerText(Dungeon.getPendingEcho()));
+			GLog.h(introBannerText(Dungeon.getPendingEcho()));
 		}
+	}
+
+	public static String introBannerText(Echo echo) {
+		if (echo == null) {
+			return Messages.get(EchoBoss.class, "intro_default");
+		}
+		return Messages.get(EchoBoss.class, "intro", echo.heroClass, echo.lvl);
 	}
 }

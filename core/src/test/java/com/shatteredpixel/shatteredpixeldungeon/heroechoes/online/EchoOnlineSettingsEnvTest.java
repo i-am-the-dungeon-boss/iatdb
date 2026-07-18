@@ -8,31 +8,31 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-class EchoOnlineEnvTest {
+class EchoOnlineSettingsEnvTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoOnlineEnv.resetForTests();
+		EchoOnlineSettings.resetForTests();
 	}
 
 	@Test
 	@DisplayName("reads backend URL from ECHO_BACKEND_URL")
 	void readsBackendUrlFromEnv() {
 		Map<String, String> env = new HashMap<>();
-		env.put(EchoOnlineEnv.BACKEND_URL, " http://localhost:3000 ");
-		EchoOnlineEnv.setEnvForTests(env::get);
+		env.put(EchoOnlineSettings.BACKEND_URL, " http://localhost:3000 ");
+		EchoOnlineSettings.setEnvForTests(env::get);
 
-		Assertions.assertThat(EchoOnlineEnv.backendUrl()).isEqualTo("http://localhost:3000");
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://localhost:3000");
 	}
 
 	@Test
 	@DisplayName("reads API key from ECHO_API_KEY")
 	void readsApiKeyFromEnv() {
 		Map<String, String> env = new HashMap<>();
-		env.put(EchoOnlineEnv.API_KEY, "secret-key");
-		EchoOnlineEnv.setEnvForTests(env::get);
+		env.put(EchoOnlineSettings.API_KEY, "secret-key");
+		EchoOnlineSettings.setEnvForTests(env::get);
 
-		Assertions.assertThat(EchoOnlineEnv.apiKey()).isEqualTo("secret-key");
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("secret-key");
 	}
 
 	@Test
@@ -41,21 +41,20 @@ class EchoOnlineEnvTest {
 		java.nio.file.Path envFile = java.nio.file.Files.createTempFile("echo-online", ".env");
 		java.nio.file.Files.writeString(
 				envFile,
-				"ECHO_BACKEND_URL=http://localhost:3000\nECHO_API_KEY=secret\n"
-		);
+				"ECHO_BACKEND_URL=http://localhost:3000\nECHO_API_KEY=secret\n");
 
-		EchoOnlineEnv.loadDotEnv(envFile.toFile());
+		EchoOnlineSettings.loadDotEnv(envFile.toFile());
 
-		Assertions.assertThat(EchoOnlineEnv.backendUrl()).isEqualTo("http://localhost:3000");
-		Assertions.assertThat(EchoOnlineEnv.apiKey()).isEqualTo("secret");
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://localhost:3000");
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("secret");
 	}
 
 	@Test
 	@DisplayName("returns empty values when env vars are unset")
 	void returnsEmptyWhenUnset() {
-		EchoOnlineEnv.setEnvForTests(key -> null);
+		EchoOnlineSettings.setEnvForTests(key -> null);
 
-		Assertions.assertThat(EchoOnlineEnv.backendUrl()).isEmpty();
-		Assertions.assertThat(EchoOnlineEnv.apiKey()).isEmpty();
+		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEmpty();
+		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEmpty();
 	}
 }

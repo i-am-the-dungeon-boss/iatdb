@@ -83,6 +83,26 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("EchoStorage findEchoForDepth requires persisted echo policy")
+    void findEchoForDepthRequiresPolicy() throws Exception {
+        EchoStorage storage = new EchoStorage();
+        Echo snap = EchoTestSupport.warriorEcho(5);
+        storage.save(snap);
+
+        Assertions.assertThat(storage.findEchoForDepth(5)).isPresent();
+        Assertions.assertThat(storage.findEchoForDepth(5).get().policy).isNotNull();
+
+        // overwrite with echo-only file (no policy)
+        java.nio.file.Path path = java.nio.file.Path.of(
+                EchoPlayModePaths.echoesDir(), "depth-5.dat");
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(path.toFile())) {
+            com.watabou.utils.Bundle.write(snap.toFileBundle(), fos);
+        }
+
+        Assertions.assertThat(storage.findEchoForDepth(5)).isEmpty();
+    }
+
+    @Test
     @DisplayName("EchoStorage skips incompatible versions on load")
     void skipsIncompatibleVersionOnLoad() {
         EchoStorage storage = new EchoStorage();
@@ -118,8 +138,7 @@ class EchoAndStorageTest {
         }
 
         File dir = EchoStorage.getEchoesDir();
-        File[] depthFiles = dir.listFiles((d, name) ->
-                name.equals("depth-5.dat") || name.startsWith("depth-5-"));
+        File[] depthFiles = dir.listFiles((d, name) -> name.equals("depth-5.dat") || name.startsWith("depth-5-"));
 
         Assertions.assertThat(depthFiles).isNotNull();
         Assertions.assertThat(depthFiles.length).isEqualTo(1);

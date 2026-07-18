@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
@@ -102,7 +103,7 @@ class EchoSnapshotRoundTripTest {
 		EchoStorage storage = new EchoStorage();
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
-		Dungeon.setEchoLookup(storage);
+		CompositeEchoLookup.setEchoLookupForTests(storage);
 		Dungeon.depth = 5;
 		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
 

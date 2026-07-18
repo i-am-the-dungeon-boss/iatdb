@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import com.watabou.utils.Bundle;
@@ -24,7 +25,7 @@ class Depth5EchoBossSelectionTest {
     @Test
     @DisplayName("Depth 5 uses default boss level when no echo is available")
     void depth5UsesDefaultBossWithoutEcho() {
-        Dungeon.setEchoLookup(depth -> Optional.empty());
+        CompositeEchoLookup.setEchoLookupForTests(depth -> Optional.empty());
 
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
         Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
@@ -36,7 +37,7 @@ class Depth5EchoBossSelectionTest {
     void depth5UsesEchoBossLevelWhenAvailable() {
         EchoStorage storage = new EchoStorage();
         storage.save(EchoTestSupport.warriorEchoWithData(5));
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
 
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(EchoBossLevel.class);
         Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
@@ -47,18 +48,19 @@ class Depth5EchoBossSelectionTest {
     void resolveEchoStoresPendingSnapshot() {
         EchoStorage storage = new EchoStorage();
         storage.save(EchoTestSupport.warriorEchoWithData(5));
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
 
         Echo resolved = Dungeon.resolveEcho(5);
 
         Assertions.assertThat(resolved).isNotNull();
         Assertions.assertThat(Dungeon.getPendingEcho()).isEqualTo(resolved);
+        Assertions.assertThat(Dungeon.getPendingEchoPolicy()).isNotNull();
     }
 
     @Test
     @DisplayName("Corrupted snapshot lookup falls back to default boss level")
     void corruptedSnapshotFallsBackToDefaultBoss() {
-        Dungeon.setEchoLookup(depth -> {
+        CompositeEchoLookup.setEchoLookupForTests(depth -> {
             throw new RuntimeException("corrupt snapshot");
         });
 
@@ -72,14 +74,14 @@ class Depth5EchoBossSelectionTest {
         EchoStorage storage = new EchoStorage();
         Echo snap = EchoTestSupport.warriorEchoWithData(5);
         storage.save(snap);
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(EchoBossLevel.class);
 
         Bundle bundle = new Bundle();
         Dungeon.storeEchoChoiceInBundle(bundle);
 
         EchoTestSupport.resetWorkflowState();
-        Dungeon.setEchoLookup(depth -> Optional.empty());
+        CompositeEchoLookup.setEchoLookupForTests(depth -> Optional.empty());
 
         Dungeon.restoreEchoChoiceFromBundle(bundle);
 

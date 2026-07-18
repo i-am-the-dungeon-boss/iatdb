@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonBossLevel;
@@ -26,7 +27,7 @@ class EchoBossDepthRoutingTest {
         for (int depth : EchoReplacementDecider.BOSS_DEPTHS) {
             EchoTestSupport.resetWorkflowState();
             storage.save(EchoTestSupport.warriorEchoWithData(depth));
-            Dungeon.setEchoLookup(storage);
+            CompositeEchoLookup.setEchoLookupForTests(storage);
 
             Dungeon.levelClassForDepth(depth, 0);
 
@@ -42,14 +43,14 @@ class EchoBossDepthRoutingTest {
     void depthFiveUsesHeroicLevelOthersKeepRegional() {
         EchoStorage storage = new EchoStorage();
         storage.save(EchoTestSupport.warriorEchoWithData(5));
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
 
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(EchoBossLevel.class);
 
         EchoTestSupport.resetWorkflowState();
         storage = new EchoStorage();
         storage.save(EchoTestSupport.warriorEchoWithData(10));
-        Dungeon.setEchoLookup(storage);
+        CompositeEchoLookup.setEchoLookupForTests(storage);
 
         Assertions.assertThat(Dungeon.levelClassForDepth(10, 0)).isEqualTo(PrisonBossLevel.class);
         Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();

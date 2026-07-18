@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import org.assertj.core.api.Assertions;
@@ -29,7 +30,7 @@ class EchoBossSpawnerTest {
 	void shouldSpawnTrueWhenEchoBossPrepared() {
 		EchoStorage storage = new EchoStorage();
 		storage.save(EchoTestSupport.warriorEchoWithData(10));
-		Dungeon.setEchoLookup(storage);
+		CompositeEchoLookup.setEchoLookupForTests(storage);
 
 		Dungeon.levelClassForDepth(10, 0);
 
@@ -42,7 +43,7 @@ class EchoBossSpawnerTest {
 		Echo echo = EchoTestSupport.warriorEchoWithData(10);
 		EchoStorage storage = new EchoStorage();
 		storage.save(echo);
-		Dungeon.setEchoLookup(storage);
+		CompositeEchoLookup.setEchoLookupForTests(storage);
 		Dungeon.depth = 10;
 		Dungeon.levelClassForDepth(10, 0);
 
@@ -58,7 +59,7 @@ class EchoBossSpawnerTest {
 	void shouldSpawnFalseWithoutCombatData() {
 		EchoStorage storage = new EchoStorage();
 		storage.save(EchoTestSupport.warriorEcho(10));
-		Dungeon.setEchoLookup(storage);
+		CompositeEchoLookup.setEchoLookupForTests(storage);
 
 		Dungeon.levelClassForDepth(10, 0);
 

@@ -21,15 +21,9 @@ class UiUxAndPolishTest {
     }
 
     @Test
-    @DisplayName("Intro banner key is defined for hero boss encounters")
-    void introBannerKeyIsDefined() {
-        Assertions.assertThat(EchoMessages.introBannerKey()).isEqualTo("actors.mobs.echoboss.intro");
-    }
-
-    @Test
     @DisplayName("Intro banner text includes hero class and level from snapshot")
     void introBannerTextUsesSnapshotMetadata() {
-        String text = EchoMessages.introBannerText(EchoTestSupport.warriorEcho(5));
+        String text = EchoBossSpawner.introBannerText(EchoTestSupport.warriorEcho(5));
 
         Assertions.assertThat(text).isNotBlank();
         Assertions.assertThat(text.toLowerCase()).contains("warrior");

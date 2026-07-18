@@ -8,6 +8,12 @@ public final class EchoFetchResult {
 	public final EchoPolicy policy;
 
 	public EchoFetchResult(Echo echo, EchoPolicy policy) {
+		if (echo == null) {
+			throw new IllegalArgumentException("echo is required");
+		}
+		if (policy == null) {
+			throw new IllegalArgumentException("echo_policy is required");
+		}
 		this.echo = echo;
 		this.policy = policy;
 	}

@@ -34,7 +34,6 @@ class RankedEchoFetchIntegrationTest {
 
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, fetchJson);
-		transport.enqueue(200, fetchJson);
 
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
@@ -45,17 +44,16 @@ class RankedEchoFetchIntegrationTest {
 		EchoStorage local = new EchoStorage();
 		local.save(localEcho);
 
-		Dungeon.setEchoLookup(new CompositeEchoLookup(
+		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
 				local));
 
 		boolean found = Dungeon.prefetchEchoBossForDepth(5);
 
 		Assertions.assertThat(found).isTrue();
-		Assertions.assertThat(transport.requests).hasSize(2);
+		Assertions.assertThat(transport.requests).hasSize(1);
 		Assertions.assertThat(transport.requests.get(0).method).isEqualTo("GET");
 		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/echoes/5");
-		Assertions.assertThat(transport.requests.get(1).url).contains("/v1/echoes/5");
 		Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
 		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo("ranked-online-5");
 		Assertions.assertThat(Dungeon.getPendingEcho().hasCombatData()).isTrue();
@@ -75,7 +73,7 @@ class RankedEchoFetchIntegrationTest {
 		EchoStorage local = new EchoStorage();
 		local.save(EchoTestSupport.warriorEchoWithData(5));
 
-		Dungeon.setEchoLookup(new CompositeEchoLookup(
+		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
 				local));
 

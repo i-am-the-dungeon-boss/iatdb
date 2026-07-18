@@ -4,6 +4,8 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,19 @@ public final class EchoClient {
 				baseUrl + "/health",
 				jsonHeaders(false),
 				null));
-		return EchoHealth.isHealthy(response.statusCode, response.body);
+		return isHealthy(response.statusCode, response.body);
+	}
+
+	static boolean isHealthy(int statusCode, String body) {
+		if (statusCode != 200 || body == null || body.isBlank()) {
+			return false;
+		}
+		try {
+			JSONObject json = new JSONObject(body);
+			return "ok".equals(json.optString("status"));
+		} catch (Exception ignored) {
+			return false;
+		}
 	}
 
 	public Optional<EchoFetchResult> fetchEcho(int depth) throws Exception {

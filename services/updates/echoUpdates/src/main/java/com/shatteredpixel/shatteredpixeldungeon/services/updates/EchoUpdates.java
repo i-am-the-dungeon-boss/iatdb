@@ -27,11 +27,12 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
 /**
- * Checks hero-echoes {@code GET /v1/game-version} for a newer {@code version_name}.
+ * Checks hero-echoes {@code GET /v1/game-version} for a newer
+ * {@code version_name}.
  */
 public class EchoUpdates extends UpdateService {
 
-	/** Optional override set by launchers (e.g. from EchoOnlineEnv). */
+	/** Optional override set by launchers (e.g. from EchoOnlineSettings). */
 	public static String baseUrlOverride = "";
 
 	@Override
@@ -136,7 +137,9 @@ public class EchoUpdates extends UpdateService {
 		return "";
 	}
 
-	/** True when remote semver is greater than local (ignores local -INDEV suffix). */
+	/**
+	 * True when remote semver is greater than local (ignores local -INDEV suffix).
+	 */
 	static boolean isRemoteNewer(String remoteName, String localVersion) {
 		if (remoteName == null || remoteName.isEmpty()) {
 			return false;
