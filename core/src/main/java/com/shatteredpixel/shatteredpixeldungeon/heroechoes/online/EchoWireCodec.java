@@ -16,13 +16,14 @@ import java.util.List;
 
 public final class EchoWireCodec {
 
-	private EchoWireCodec() {}
+	private EchoWireCodec() {
+	}
 
 	public static String encodeEchoUpload(Echo echo, String sourceClient) throws Exception {
 		JSONObject json = new JSONObject();
 		json.put("echo_id", echo.echoId);
 		json.put("depth", echo.depth);
-		json.put("game_version", echo.gameVersion > 0 ? echo.gameVersion : Game.versionCode);
+		json.put("game_version", gameVersionForUpload(echo));
 		json.put("hero_class", echo.heroClass);
 		if (echo.userName != null && !echo.userName.isEmpty()) {
 			json.put("user_name", echo.userName);
@@ -42,7 +43,7 @@ public final class EchoWireCodec {
 		Echo echo = new Echo();
 		echo.echoId = root.getString("echo_id");
 		echo.depth = root.getInt("depth");
-		echo.gameVersion = root.getInt("game_version");
+		echo.gameVersion = readGameVersion(root);
 		echo.heroClass = root.optString("hero_class", "UNKNOWN");
 		echo.userName = root.optString("user_name", "");
 		echo.lvl = root.optInt("lvl", 0);
@@ -59,7 +60,7 @@ public final class EchoWireCodec {
 			echo = Echo.fromFileBundle(fileBundle);
 			echo.echoId = root.getString("echo_id");
 			echo.depth = root.getInt("depth");
-			echo.gameVersion = root.getInt("game_version");
+			echo.gameVersion = readGameVersion(root);
 		}
 		if (root.has("user_name")) {
 			echo.userName = root.optString("user_name", "");
@@ -83,7 +84,7 @@ public final class EchoWireCodec {
 		}
 		json.put("boss_win", result.bossWin);
 		json.put("depth", result.depth);
-		json.put("game_version", result.gameVersion);
+		json.put("game_version", result.gameVersion != null ? result.gameVersion : "");
 		json.put("player_class", result.playerClass != null ? result.playerClass : "UNKNOWN");
 		json.put("damage_dealt", result.damageDealt);
 		json.put("damage_taken", result.damageTaken);
@@ -109,10 +110,27 @@ public final class EchoWireCodec {
 					row.optInt("damage_dealt", 0),
 					row.optInt("damage_taken", 0),
 					row.optInt("turns", 0),
-					(float) row.optDouble("win_rate_proxy", 0)
-			));
+					(float) row.optDouble("win_rate_proxy", 0)));
 		}
 		return entries;
+	}
+
+	private static String gameVersionForUpload(Echo echo) {
+		if (echo.gameVersion != null && !echo.gameVersion.isEmpty()) {
+			return echo.gameVersion;
+		}
+		return Game.version != null ? Game.version : "";
+	}
+
+	private static String readGameVersion(JSONObject root) {
+		Object raw = root.opt("game_version");
+		if (raw == null || raw == JSONObject.NULL) {
+			return "";
+		}
+		if (raw instanceof Number) {
+			return String.valueOf(((Number) raw).intValue());
+		}
+		return root.optString("game_version", "");
 	}
 
 	private static String encodeEchoData(Echo echo) throws Exception {

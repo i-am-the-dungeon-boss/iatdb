@@ -79,13 +79,13 @@ public class HeroSelectScene extends PixelScene {
 
 	private Image background;
 	private Image fadeLeft, fadeRight;
-	private IconButton btnFade; //only on landscape
+	private IconButton btnFade; // only on landscape
 
-	//fading UI elements
+	// fading UI elements
 	private RenderedTextBlock title;
 	private ArrayList<StyledButton> heroBtns = new ArrayList<>();
-	private RenderedTextBlock heroName; //only on landscape
-	private RenderedTextBlock heroDesc; //only on landscape
+	private RenderedTextBlock heroName; // only on landscape
+	private RenderedTextBlock heroDesc; // only on landscape
 	private StyledButton startBtn;
 	private IconButton infoButton;
 	private IconButton btnOptions;
@@ -106,12 +106,12 @@ public class HeroSelectScene extends PixelScene {
 		Badges.loadGlobal();
 		Journal.loadGlobal();
 
-		insets = Game.platform.getSafeInsets(PlatformSupport.INSET_BLK).scale(1f/defaultZoom);
+		insets = Game.platform.getSafeInsets(PlatformSupport.INSET_BLK).scale(1f / defaultZoom);
 
 		float w = (Camera.main.width - insets.left - insets.right);
 		float h = (Camera.main.height - insets.top - insets.bottom);
 
-		background = new Image(TextureCache.createSolid(0xFF2d2f31), 0, 0, 800, 450){
+		background = new Image(TextureCache.createSolid(0xFF2d2f31), 0, 0, 800, 450) {
 			@Override
 			public void update() {
 				if (GamesInProgress.selectedClass != null) {
@@ -124,15 +124,15 @@ public class HeroSelectScene extends PixelScene {
 				}
 			}
 		};
-		background.scale.set(Camera.main.height/background.height);
+		background.scale.set(Camera.main.height / background.height);
 
-		background.x = (Camera.main.width - background.width())/2f;
-		background.y = (Camera.main.height - background.height())/2f;
+		background.x = (Camera.main.width - background.width()) / 2f;
+		background.y = (Camera.main.height - background.height()) / 2f;
 		PixelScene.align(background);
 		add(background);
 
 		fadeLeft = new Image(TextureCache.createGradient(0xFF000000, 0xFF000000, 0x00000000));
-		fadeLeft.x = background.x-2;
+		fadeLeft.x = background.x - 2;
 		fadeLeft.scale.set(3, background.height());
 		add(fadeLeft);
 
@@ -147,12 +147,13 @@ public class HeroSelectScene extends PixelScene {
 		PixelScene.align(title);
 		add(title);
 
-		startBtn = new StyledButton(Chrome.Type.GREY_BUTTON_TR, ""){
+		startBtn = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
 			protected void onClick() {
 				super.onClick();
 
-				if (GamesInProgress.selectedClass == null) return;
+				if (GamesInProgress.selectedClass == null)
+					return;
 
 				Dungeon.hero = null;
 				Dungeon.daily = Dungeon.dailyReplay = false;
@@ -161,7 +162,7 @@ public class HeroSelectScene extends PixelScene {
 				ActionIndicator.clearAction();
 				InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
 
-				Game.switchScene( InterlevelScene.class );
+				Game.switchScene(InterlevelScene.class);
 			}
 		};
 		startBtn.icon(Icons.get(Icons.ENTER));
@@ -170,7 +171,7 @@ public class HeroSelectScene extends PixelScene {
 		add(startBtn);
 		startBtn.visible = startBtn.active = false;
 
-		infoButton = new IconButton(Icons.get(Icons.INFO)){
+		infoButton = new IconButton(Icons.get(Icons.INFO)) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -178,7 +179,7 @@ public class HeroSelectScene extends PixelScene {
 				if (cls != null) {
 					Window info = new WndHeroInfo(GamesInProgress.selectedClass);
 					if (landscape()) {
-						info.offset((int)(w / 6), 0);
+						info.offset((int) (w / 6), 0);
 					}
 					ShatteredPixelDungeon.scene().addToFront(info);
 				}
@@ -193,7 +194,7 @@ public class HeroSelectScene extends PixelScene {
 		infoButton.setSize(20, 21);
 		add(infoButton);
 
-		for (HeroClass cl : HeroClass.values()){
+		for (HeroClass cl : HeroClass.values()) {
 			HeroBtn button = new HeroBtn(cl);
 			add(button);
 			heroBtns.add(button);
@@ -204,7 +205,7 @@ public class HeroSelectScene extends PixelScene {
 		optionsPane.layout();
 		add(optionsPane);
 
-		btnOptions = new IconButton(Icons.get(Icons.PREFS)){
+		btnOptions = new IconButton(Icons.get(Icons.PREFS)) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -228,79 +229,78 @@ public class HeroSelectScene extends PixelScene {
 			}
 		};
 		updateOptionsColor();
-		btnOptions.visible = false;
+		btnOptions.visible = btnOptions.active = false;
 
-		if(!SPDSettings.intro()){
-			add(btnOptions);
-		}
-
-		if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){
+		if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
 			Dungeon.challenges = 0;
 			SPDSettings.challenges(0);
 			SPDSettings.customSeed("");
 		}
 
-		if (landscape()){
-			float leftArea = Math.max(100, w/3f);
-			float uiHeight = Math.min(h-20, 300);
-			float uiSpacing = (uiHeight-120)/2f;
+		if (landscape()) {
+			float leftArea = Math.max(100, w / 3f);
+			float uiHeight = Math.min(h - 20, 300);
+			float uiSpacing = (uiHeight - 120) / 2f;
 
-			if (uiHeight >= 160) uiSpacing -= 5;
-			if (uiHeight >= 180) uiSpacing -= 6;
+			if (uiHeight >= 160)
+				uiSpacing -= 5;
+			if (uiHeight >= 180)
+				uiSpacing -= 6;
 
-			background.x += insets.left + leftArea/6f;
+			background.x += insets.left + leftArea / 6f;
 
-			float fadeLeftScale = 47 * (leftArea - background.x)/leftArea;
+			float fadeLeftScale = 47 * (leftArea - background.x) / leftArea;
 			fadeLeft.scale = new PointF(3 + Math.max(0, fadeLeftScale), background.height());
 
-			title.setPos(insets.left + (leftArea - title.width())/2f, (h-uiHeight)/2f);
+			title.setPos(insets.left + (leftArea - title.width()) / 2f, (h - uiHeight) / 2f);
 			align(title);
 
 			int btnWidth = HeroBtn.MIN_WIDTH + 15;
 			int btnHeight = HeroBtn.HEIGHT;
-			if (uiHeight >= 180){
+			if (uiHeight >= 180) {
 				btnHeight += 6;
 			}
 
-			int cols = (int)Math.ceil(heroBtns.size()/2f);
-			float curX = insets.left + (leftArea - btnWidth * cols + (cols-1))/2f;
+			int cols = (int) Math.ceil(heroBtns.size() / 2f);
+			float curX = insets.left + (leftArea - btnWidth * cols + (cols - 1)) / 2f;
 			float curY = title.bottom() + uiSpacing;
 
 			int count = 0;
-			for (StyledButton button : heroBtns){
+			for (StyledButton button : heroBtns) {
 				button.setRect(curX, curY, btnWidth, btnHeight);
 				align(button);
-				curX += btnWidth+1;
+				curX += btnWidth + 1;
 				count++;
-				if (count >= (1+heroBtns.size())/2){
-					curX -= btnWidth*count + count;
-					curY += btnHeight+1;
-					if (heroBtns.size()%2 != 0){
-						curX += btnWidth/2f;
+				if (count >= (1 + heroBtns.size()) / 2) {
+					curX -= btnWidth * count + count;
+					curY += btnHeight + 1;
+					if (heroBtns.size() % 2 != 0) {
+						curX += btnWidth / 2f;
 					}
 					count = 0;
 				}
 			}
 
 			heroName = renderTextBlock(9);
-			heroName.setPos(insets.left, heroBtns.get(heroBtns.size()-1).bottom()+5);
+			heroName.setPos(insets.left, heroBtns.get(heroBtns.size() - 1).bottom() + 5);
 			add(heroName);
 
-			if (uiHeight >= 160){
+			if (uiHeight >= 160) {
 				heroDesc = renderTextBlock(6);
 			} else {
 				heroDesc = renderTextBlock(5);
 			}
 			heroDesc.align(RenderedTextBlock.CENTER_ALIGN);
-			heroDesc.setPos(insets.left, heroName.bottom()+5);
+			heroDesc.setPos(insets.left, heroName.bottom() + 5);
 			add(heroDesc);
 
 			startBtn.text(Messages.titleCase(Messages.get(this, "start")));
-			startBtn.setSize(startBtn.reqWidth()+8, 21);
-			startBtn.setPos(insets.left + (leftArea - startBtn.width())/2f, title.top() + uiHeight - startBtn.height());
+			startBtn.setSize(startBtn.reqWidth() + 8, 21);
+			startBtn.setPos(insets.left + (leftArea - startBtn.width()) / 2f,
+					title.top() + uiHeight - startBtn.height());
 			align(startBtn);
 
-			btnFade = new IconButton(Icons.CHEVRON.get()){
+			btnFade = new IconButton(Icons.CHEVRON.get()) {
 				@Override
 				protected void onClick() {
 					enable(false);
@@ -316,7 +316,7 @@ public class HeroSelectScene extends PixelScene {
 			btnFade.icon().originToCenter();
 			btnFade.icon().angle = 270f;
 			btnFade.visible = btnFade.active = false;
-			btnFade.setRect(startBtn.left()-20, startBtn.top(), 20, 21);
+			btnFade.setRect(startBtn.left() - 20, startBtn.top(), 20, 21);
 			align(btnFade);
 			add(btnFade);
 
@@ -340,33 +340,36 @@ public class HeroSelectScene extends PixelScene {
 				curX += btnWidth;
 			}
 
-			//add a darkening bar along bottom
-			if (insets.bottom > 0){
-				SkinnedBlock bar = new SkinnedBlock(Camera.main.width, insets.bottom, TextureCache.createSolid(0xAA000000));
+			// add a darkening bar along bottom
+			if (insets.bottom > 0) {
+				SkinnedBlock bar = new SkinnedBlock(Camera.main.width, insets.bottom,
+						TextureCache.createSolid(0xAA000000));
 				bar.y = h + insets.top;
 				add(bar);
 
-				PointerArea blocker = new PointerArea(0, Camera.main.width - insets.bottom, Camera.main.width, insets.bottom);
+				PointerArea blocker = new PointerArea(0, Camera.main.width - insets.bottom, Camera.main.width,
+						insets.bottom);
 				add(blocker);
 			}
 
-			title.setPos(insets.left + (w - title.width()) / 2f, insets.top + (h - HeroBtn.HEIGHT - title.height() - 4));
+			title.setPos(insets.left + (w - title.width()) / 2f,
+					insets.top + (h - HeroBtn.HEIGHT - title.height() - 4));
 
-			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height-HeroBtn.HEIGHT-16, 20, 21);
+			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height - HeroBtn.HEIGHT - 16, 20, 21);
 			optionsPane.setPos(heroBtns.get(0).left(), 0);
 		}
 
 		btnExit = new ExitButton();
 		int ofs = PixelScene.landscape() ? 0 : 4;
-		btnExit.setPos( Camera.main.width - btnExit.width() - ofs, ofs );
-		add( btnExit );
+		btnExit.setPos(Camera.main.width - btnExit.width() - ofs, ofs);
+		add(btnExit);
 		btnExit.visible = btnExit.active = !SPDSettings.intro();
 
-		PointerArea fadeResetter = new PointerArea(0, 0, Camera.main.width, Camera.main.height){
+		PointerArea fadeResetter = new PointerArea(0, 0, Camera.main.width, Camera.main.height) {
 			@Override
 			public boolean onSignal(PointerEvent event) {
-				if (event != null && event.type == PointerEvent.Type.UP){
-					if (uiAlpha == 0 && landscape()){
+				if (event != null && event.type == PointerEvent.Type.UP) {
+					if (uiAlpha == 0 && landscape()) {
 						parent.add(new Tweener(parent, 0.5f) {
 							@Override
 							protected void updateValues(float progress) {
@@ -389,7 +392,7 @@ public class HeroSelectScene extends PixelScene {
 		add(fadeResetter);
 		resetFade();
 
-		if (GamesInProgress.selectedClass != null){
+		if (GamesInProgress.selectedClass != null) {
 			setSelectedHero(GamesInProgress.selectedClass);
 		}
 
@@ -402,48 +405,48 @@ public class HeroSelectScene extends PixelScene {
 
 	}
 
-	private void updateOptionsColor(){
-		if (!SPDSettings.customSeed().isEmpty()){
+	private void updateOptionsColor() {
+		if (!SPDSettings.customSeed().isEmpty()) {
 			btnOptions.icon().hardlight(1f, 1.5f, 0.67f);
-		} else if (SPDSettings.challenges() != 0){
+		} else if (SPDSettings.challenges() != 0) {
 			btnOptions.icon().hardlight(2f, 1.33f, 0.5f);
 		} else {
 			btnOptions.icon().resetColor();
 		}
 	}
 
-	private void setSelectedHero(HeroClass cl){
+	private void setSelectedHero(HeroClass cl) {
 		GamesInProgress.selectedClass = cl;
 		GamesInProgress.randomizedClass = false;
 
 		try {
-			//loading these big jpgs fails sometimes, so we have a catch for it
+			// loading these big jpgs fails sometimes, so we have a catch for it
 			background.texture(cl.splashArt());
-		} catch (Exception e){
+		} catch (Exception e) {
 			Game.reportException(e);
 			background.texture(TextureCache.createSolid(0xFF2d2f31));
 			background.frame(0, 0, 800, 450);
 		}
 		background.visible = true;
-		background.hardlight(1.5f,1.5f,1.5f);
+		background.hardlight(1.5f, 1.5f, 1.5f);
 
-		float leftPortion = Math.max(100, (Camera.main.width - insets.left - insets.right)/3f);
+		float leftPortion = Math.max(100, (Camera.main.width - insets.left - insets.right) / 3f);
 
 		if (landscape()) {
 
 			heroName.text(Messages.titleCase(cl.title()));
 			heroName.hardlight(Window.TITLE_COLOR);
-			heroName.setPos(insets.left + (leftPortion - heroName.width() - 20)/2f, heroName.top());
+			heroName.setPos(insets.left + (leftPortion - heroName.width() - 20) / 2f, heroName.top());
 			align(heroName);
 
 			heroDesc.text(cl.shortDesc());
 			heroDesc.maxWidth(80);
-			heroDesc.setPos(insets.left +(leftPortion - heroDesc.width())/2f, heroName.bottom() + 5);
+			heroDesc.setPos(insets.left + (leftPortion - heroDesc.width()) / 2f, heroName.bottom() + 5);
 			align(heroDesc);
 
-			while(startBtn.top() < heroDesc.bottom()){
-				heroDesc.maxWidth(heroDesc.maxWidth()+10);
-				heroDesc.setPos(Math.max(insets.left, (leftPortion - heroDesc.width())/2f), heroName.bottom() + 5);
+			while (startBtn.top() < heroDesc.bottom()) {
+				heroDesc.maxWidth(heroDesc.maxWidth() + 10);
+				heroDesc.setPos(Math.max(insets.left, (leftPortion - heroDesc.width()) / 2f), heroName.bottom() + 5);
 				align(heroDesc);
 			}
 
@@ -452,10 +455,10 @@ public class HeroSelectScene extends PixelScene {
 			startBtn.visible = startBtn.active = true;
 
 			infoButton.visible = infoButton.active = true;
-			infoButton.setPos(heroName.right(), heroName.top() + (heroName.height() - infoButton.height())/2f);
+			infoButton.setPos(heroName.right(), heroName.top() + (heroName.height() - infoButton.height()) / 2f);
 			align(infoButton);
 
-			btnOptions.visible = btnOptions.active = !SPDSettings.intro();
+			btnOptions.visible = btnOptions.active = false;
 
 		} else {
 			title.visible = false;
@@ -464,14 +467,15 @@ public class HeroSelectScene extends PixelScene {
 			startBtn.text(Messages.titleCase(cl.title()));
 			startBtn.setSize(startBtn.reqWidth() + 8, 21);
 
-			startBtn.setPos((Camera.main.width - startBtn.width())/2f, (Camera.main.height - insets.bottom - HeroBtn.HEIGHT + 2 - startBtn.height()));
+			startBtn.setPos((Camera.main.width - startBtn.width()) / 2f,
+					(Camera.main.height - insets.bottom - HeroBtn.HEIGHT + 2 - startBtn.height()));
 			PixelScene.align(startBtn);
 
 			infoButton.visible = infoButton.active = true;
 			infoButton.setPos(startBtn.right(), startBtn.top());
 
-			btnOptions.visible = btnOptions.active = !SPDSettings.intro();
-			btnOptions.setPos(startBtn.left()-btnOptions.width(), startBtn.top());
+			btnOptions.visible = btnOptions.active = false;
+			btnOptions.setPos(startBtn.left() - btnOptions.width(), startBtn.top());
 
 			optionsPane.setPos(heroBtns.get(0).left(), startBtn.top() - optionsPane.height() - 2);
 			align(optionsPane);
@@ -485,30 +489,31 @@ public class HeroSelectScene extends PixelScene {
 	@Override
 	public void update() {
 		super.update();
-		if (SPDSettings.intro() && Rankings.INSTANCE.totalNumber > 0){
+		if (SPDSettings.intro() && Rankings.INSTANCE.totalNumber > 0) {
 			SPDSettings.intro(false);
 		}
 		btnExit.visible = btnExit.active = !SPDSettings.intro();
-		//do not fade when a window is open
-		for (Object v : members){
-			if (v instanceof Window) resetFade();
+		// do not fade when a window is open
+		for (Object v : members) {
+			if (v instanceof Window)
+				resetFade();
 		}
 		if (!PixelScene.landscape() && GamesInProgress.selectedClass != null) {
-			if (uiAlpha > 0f){
-				uiAlpha -= Game.elapsed/4f;
+			if (uiAlpha > 0f) {
+				uiAlpha -= Game.elapsed / 4f;
 			}
 			updateFade();
 		}
 	}
 
-	private void updateFade(){
+	private void updateFade() {
 		float alpha = GameMath.gate(0f, uiAlpha, 1f);
 		title.alpha(alpha);
-		for (StyledButton b : heroBtns){
+		for (StyledButton b : heroBtns) {
 			b.enable(alpha != 0);
 			b.alpha(alpha);
 		}
-		if (heroName != null){
+		if (heroName != null) {
 			heroName.alpha(alpha);
 			heroDesc.alpha(alpha);
 			btnFade.enable(alpha != 0);
@@ -525,38 +530,38 @@ public class HeroSelectScene extends PixelScene {
 		infoButton.enable(alpha != 0);
 		infoButton.icon().alpha(alpha);
 
-		if (landscape()){
+		if (landscape()) {
 
-			int w = (int)(Camera.main.width - insets.left - insets.right);
+			int w = (int) (Camera.main.width - insets.left - insets.right);
 
-			background.x = insets.left + (w - background.width())/2f;
+			background.x = insets.left + (w - background.width()) / 2f;
 
-			float leftPortion = Math.max(100, w/3f);
+			float leftPortion = Math.max(100, w / 3f);
 
-			background.x += (leftPortion/2f)*alpha;
+			background.x += (leftPortion / 2f) * alpha;
 
-			float fadeLeftScale = 47 * (leftPortion - (background.x - insets.left))/leftPortion;
-			fadeLeft.scale.x = 3 + Math.max(fadeLeftScale, 0)*alpha;
-			fadeLeft.x = background.x-4;
+			float fadeLeftScale = 47 * (leftPortion - (background.x - insets.left)) / leftPortion;
+			fadeLeft.scale.x = 3 + Math.max(fadeLeftScale, 0) * alpha;
+			fadeLeft.x = background.x - 4;
 			fadeRight.x = background.x + background.width() + 4;
 		}
 
-		fadeLeft.x = background.x-5;
+		fadeLeft.x = background.x - 5;
 		fadeRight.x = background.x + background.width() + 5;
 
 		fadeLeft.visible = background.x > 0 || (alpha > 0 && landscape());
 		fadeRight.visible = background.x + background.width() < Camera.main.width;
 	}
 
-	private void resetFade(){
-		//starts fading after 4 seconds, fades over 4 seconds.
+	private void resetFade() {
+		// starts fading after 4 seconds, fades over 4 seconds.
 		uiAlpha = 2f;
 		updateFade();
 	}
 
 	@Override
 	protected void onBackPressed() {
-		if (btnExit.active){
+		if (btnExit.active) {
 			ShatteredPixelDungeon.switchScene(TitleScene.class);
 		} else {
 			super.onBackPressed();
@@ -570,7 +575,7 @@ public class HeroSelectScene extends PixelScene {
 		private static final int MIN_WIDTH = 20;
 		private static final int HEIGHT = 24;
 
-		HeroBtn ( HeroClass cl ){
+		HeroBtn(HeroClass cl) {
 			super(Chrome.Type.GREY_BUTTON_TR, "");
 
 			this.cl = cl;
@@ -582,8 +587,8 @@ public class HeroSelectScene extends PixelScene {
 		@Override
 		public void update() {
 			super.update();
-			if (cl != GamesInProgress.selectedClass){
-				if (!cl.isUnlocked()){
+			if (cl != GamesInProgress.selectedClass) {
+				if (!cl.isUnlocked()) {
 					icon.brightness(0.1f);
 				} else {
 					icon.brightness(0.6f);
@@ -597,12 +602,12 @@ public class HeroSelectScene extends PixelScene {
 		protected void onClick() {
 			super.onClick();
 
-			if( !cl.isUnlocked() ){
-				ShatteredPixelDungeon.scene().addToFront( new WndMessage(cl.unlockMsg()));
+			if (!cl.isUnlocked()) {
+				ShatteredPixelDungeon.scene().addToFront(new WndMessage(cl.unlockMsg()));
 			} else if (GamesInProgress.selectedClass == cl) {
 				Window w = new WndHeroInfo(cl);
-				if (landscape()){
-					w.offset(Camera.main.width/6, 0);
+				if (landscape()) {
+					w.offset(Camera.main.width / 6, 0);
 				}
 				ShatteredPixelDungeon.scene().addToFront(w);
 			} else {
@@ -613,7 +618,8 @@ public class HeroSelectScene extends PixelScene {
 		@Override
 		protected void layout() {
 			super.layout();
-			//if we're super tall (i.e. rendering into display inset) then put hero at the top
+			// if we're super tall (i.e. rendering into display inset) then put hero at the
+			// top
 			if (height > 30) {
 				icon.y = y + (HEIGHT - icon.height()) / 2f;
 			}
@@ -637,60 +643,65 @@ public class HeroSelectScene extends PixelScene {
 
 			buttons = new ArrayList<>();
 			spacers = new ArrayList<>();
-			StyledButton seedButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, "custom_seed"), 6){
+			StyledButton seedButton = new StyledButton(Chrome.Type.BLANK,
+					Messages.get(HeroSelectScene.class, "custom_seed"), 6) {
 				@Override
 				protected void onClick() {
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){
-						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(
+					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
+						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 								Icons.get(Icons.SEED),
 								Messages.get(HeroSelectScene.class, "custom_seed"),
-								Messages.get(HeroSelectScene.class, "custom_seed_nowin"))
-						);
+								Messages.get(HeroSelectScene.class, "custom_seed_nowin")));
 						return;
 					}
 
 					String existingSeedtext = SPDSettings.customSeed();
-					ShatteredPixelDungeon.scene().addToFront( new WndTextInput(Messages.get(HeroSelectScene.class, "custom_seed_title"),
-							Messages.get(HeroSelectScene.class, "custom_seed_desc"),
-							existingSeedtext,
-							20,
-							false,
-							Messages.get(HeroSelectScene.class, "custom_seed_set"),
-							Messages.get(HeroSelectScene.class, "custom_seed_clear")){
-						@Override
-						public void onSelect(boolean positive, String text) {
-							text = DungeonSeed.formatText(text);
-							long seed = DungeonSeed.convertFromText(text);
+					ShatteredPixelDungeon.scene()
+							.addToFront(new WndTextInput(Messages.get(HeroSelectScene.class, "custom_seed_title"),
+									Messages.get(HeroSelectScene.class, "custom_seed_desc"),
+									existingSeedtext,
+									20,
+									false,
+									Messages.get(HeroSelectScene.class, "custom_seed_set"),
+									Messages.get(HeroSelectScene.class, "custom_seed_clear")) {
+								@Override
+								public void onSelect(boolean positive, String text) {
+									text = DungeonSeed.formatText(text);
+									long seed = DungeonSeed.convertFromText(text);
 
-							if (positive && seed != -1){
+									if (positive && seed != -1) {
 
-								for (GamesInProgress.Info info : GamesInProgress.checkAll()){
-									if (info.customSeed.isEmpty() && info.seed == seed){
+										for (GamesInProgress.Info info : GamesInProgress.checkAll()) {
+											if (info.customSeed.isEmpty() && info.seed == seed) {
+												SPDSettings.customSeed("");
+												icon.resetColor();
+												ShatteredPixelDungeon.scene().addToFront(new WndMessage(
+														Messages.get(HeroSelectScene.class, "custom_seed_duplicate")));
+												return;
+											}
+										}
+
+										SPDSettings.customSeed(text);
+										icon.hardlight(1f, 1.5f, 0.67f);
+									} else {
 										SPDSettings.customSeed("");
 										icon.resetColor();
-										ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, "custom_seed_duplicate")));
-										return;
 									}
+									updateOptionsColor();
 								}
-
-								SPDSettings.customSeed(text);
-								icon.hardlight(1f, 1.5f, 0.67f);
-							} else {
-								SPDSettings.customSeed("");
-								icon.resetColor();
-							}
-							updateOptionsColor();
-						}
-					});
+							});
 				}
 			};
 			seedButton.leftJustify = true;
 			seedButton.icon(Icons.get(Icons.SEED));
-			if (!SPDSettings.customSeed().isEmpty()) seedButton.icon().hardlight(1f, 1.5f, 0.67f);;
+			if (!SPDSettings.customSeed().isEmpty())
+				seedButton.icon().hardlight(1f, 1.5f, 0.67f);
+			;
 			buttons.add(seedButton);
 			add(seedButton);
 
-			StyledButton dailyButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, "daily"), 6){
+			StyledButton dailyButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, "daily"),
+					6) {
 
 				private static final long SECOND = 1000;
 				private static final long MINUTE = 60 * SECOND;
@@ -701,47 +712,49 @@ public class HeroSelectScene extends PixelScene {
 				protected void onClick() {
 					super.onClick();
 
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){
-						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(
+					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
+						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 								Icons.get(Icons.CALENDAR),
 								Messages.get(HeroSelectScene.class, "daily"),
-								Messages.get(HeroSelectScene.class, "daily_nowin"))
-						);
+								Messages.get(HeroSelectScene.class, "daily_nowin")));
 						return;
 					}
 
 					long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime;
-					if (diff > 24*HOUR){
-						ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, "daily_unavailable_long", (diff / DAY)+1)));
+					if (diff > 24 * HOUR) {
+						ShatteredPixelDungeon.scene().addToFront(new WndMessage(
+								Messages.get(HeroSelectScene.class, "daily_unavailable_long", (diff / DAY) + 1)));
 						return;
 					}
 
-					for (GamesInProgress.Info game : GamesInProgress.checkAll()){
-						if (game.daily){
-							ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, "daily_existing")));
+					for (GamesInProgress.Info game : GamesInProgress.checkAll()) {
+						if (game.daily) {
+							ShatteredPixelDungeon.scene()
+									.addToFront(new WndMessage(Messages.get(HeroSelectScene.class, "daily_existing")));
 							return;
 						}
 					}
 
 					Image icon = Icons.get(Icons.CALENDAR);
-					if (diff <= 0)  icon.hardlight(0.5f, 1f, 2f);
-					else            icon.hardlight(1f, 0.5f, 2f);
+					if (diff <= 0)
+						icon.hardlight(0.5f, 1f, 2f);
+					else
+						icon.hardlight(1f, 0.5f, 2f);
 					ShatteredPixelDungeon.scene().addToFront(new WndOptions(
 							icon,
 							Messages.get(HeroSelectScene.class, "daily"),
-							diff > 0 ?
-								Messages.get(HeroSelectScene.class, "daily_repeat") :
-								Messages.get(HeroSelectScene.class, "daily_desc"),
+							diff > 0 ? Messages.get(HeroSelectScene.class, "daily_repeat")
+									: Messages.get(HeroSelectScene.class, "daily_desc"),
 							Messages.get(HeroSelectScene.class, "daily_yes"),
-							Messages.get(HeroSelectScene.class, "daily_no")){
+							Messages.get(HeroSelectScene.class, "daily_no")) {
 						@Override
 						protected void onSelect(int index) {
-							if (index == 0){
+							if (index == 0) {
 								if (diff <= 0) {
 									long time = Game.realTime - (Game.realTime % DAY);
 
-									//earliest possible daily for v3.0.1 is Mar 01 2025
-									//which is 20,148 days days after Jan 1 1970
+									// earliest possible daily for v3.0.1 is Mar 01 2025
+									// which is 20,148 days days after Jan 1 1970
 									time = Math.max(time, 20_148 * DAY);
 
 									SPDSettings.lastDaily(time);
@@ -756,7 +769,7 @@ public class HeroSelectScene extends PixelScene {
 								ActionIndicator.clearAction();
 								InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
 
-								Game.switchScene( InterlevelScene.class );
+								Game.switchScene(InterlevelScene.class);
 							}
 						}
 					});
@@ -773,11 +786,11 @@ public class HeroSelectScene extends PixelScene {
 				public void update() {
 					super.update();
 
-					if (Game.realTime > timeToUpdate && visible){
+					if (Game.realTime > timeToUpdate && visible) {
 						long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime;
 
-						if (diff > 0){
-							if (diff > 30*HOUR){
+						if (diff > 0) {
+							if (diff > 30 * HOUR) {
 								text("30:00:00+");
 							} else {
 								text(dateFormat.format(new Date(diff)));
@@ -796,43 +809,46 @@ public class HeroSelectScene extends PixelScene {
 			add(dailyButton);
 			buttons.add(dailyButton);
 
-			challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, "title"), 6){
+			challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, "title"), 6) {
 				@Override
 				protected void onClick() {
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){
-						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(
+					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
+						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 								Icons.get(Icons.CHALLENGE_GREY),
 								Messages.get(WndChallenges.class, "title"),
-								Messages.get(HeroSelectScene.class, "challenges_nowin")
-						));
+								Messages.get(HeroSelectScene.class, "challenges_nowin")));
 						return;
 					}
 
 					ShatteredPixelDungeon.scene().addToFront(new WndChallenges(SPDSettings.challenges(), true) {
 						public void onBackPressed() {
 							super.onBackPressed();
-							icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
+							icon(Icons
+									.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
 							updateOptionsColor();
 						}
-					} );
+					});
 				}
 			};
 			challengeButton.leftJustify = true;
-			challengeButton.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
+			challengeButton
+					.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
 			add(challengeButton);
 			buttons.add(challengeButton);
 
 			int unlockedCount = 0;
-			for (HeroClass cls : HeroClass.values()){
-				if (cls.isUnlocked()) unlockedCount++;
+			for (HeroClass cls : HeroClass.values()) {
+				if (cls.isUnlocked())
+					unlockedCount++;
 			}
 
 			if (unlockedCount >= 2) {
-				StyledButton randomButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, "randomize"), 6) {
+				StyledButton randomButton = new StyledButton(Chrome.Type.BLANK,
+						Messages.get(HeroSelectScene.class, "randomize"), 6) {
 					@Override
 					protected void onClick() {
 
-						if (Badges.isUnlocked(Badges.Badge.VICTORY) || DeviceCompat.isDebug()){
+						if (Badges.isUnlocked(Badges.Badge.VICTORY) || DeviceCompat.isDebug()) {
 							ShatteredPixelDungeon.scene().addToFront(new WndRandomize());
 						} else {
 
@@ -851,7 +867,7 @@ public class HeroSelectScene extends PixelScene {
 				add(randomButton);
 			}
 
-			for (int i = 1; i < buttons.size(); i++){
+			for (int i = 1; i < buttons.size(); i++) {
 				ColorBlock spc = new ColorBlock(1, 1, 0xFF000000);
 				add(spc);
 				spacers.add(spc);
@@ -864,10 +880,10 @@ public class HeroSelectScene extends PixelScene {
 			CheckBox chkChals;
 			OptionSlider optChals;
 
-			public WndRandomize(){
+			public WndRandomize() {
 				super();
 
-				chkHero = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_hero")){
+				chkHero = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_hero")) {
 					@Override
 					public void checked(boolean value) {
 						super.checked(value);
@@ -878,7 +894,7 @@ public class HeroSelectScene extends PixelScene {
 				chkHero.checked(heroWasRandomized);
 				add(chkHero);
 
-				chkChals = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_chals")){
+				chkChals = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_chals")) {
 					@Override
 					public void checked(boolean value) {
 						super.checked(value);
@@ -890,10 +906,11 @@ public class HeroSelectScene extends PixelScene {
 				add(chkChals);
 
 				int max = Challenges.MAX_CHALS;
-				optChals = new OptionSlider(Messages.get(HeroSelectScene.class, "randomize_chals_title"), "0", Integer.toString(max), 0, max) {
+				optChals = new OptionSlider(Messages.get(HeroSelectScene.class, "randomize_chals_title"), "0",
+						Integer.toString(max), 0, max) {
 					@Override
 					protected void onChange() {
-						//do nothing immediately
+						// do nothing immediately
 					}
 				};
 				optChals.enable(false);
@@ -903,7 +920,7 @@ public class HeroSelectScene extends PixelScene {
 
 				chkChals.checked(chalWasRandomized);
 
-				RedButton btnCancel = new RedButton(Messages.get(HeroSelectScene.class, "randomize_cancel")){
+				RedButton btnCancel = new RedButton(Messages.get(HeroSelectScene.class, "randomize_cancel")) {
 					@Override
 					protected void onClick() {
 						super.onClick();
@@ -913,29 +930,30 @@ public class HeroSelectScene extends PixelScene {
 				btnCancel.setRect(61, 64, 60, 16);
 				add(btnCancel);
 
-				RedButton btnConfirm = new RedButton(Messages.get(HeroSelectScene.class, "randomize_confirm")){
+				RedButton btnConfirm = new RedButton(Messages.get(HeroSelectScene.class, "randomize_confirm")) {
 					@Override
 					protected void onClick() {
 						super.onClick();
 						hide();
 
-						if (chkChals.checked()){
+						if (chkChals.checked()) {
 							int chals = optChals.getSelectedValue();
 							ArrayList<Integer> chalMasks = new ArrayList<>();
-							for (int i = 0; i < Challenges.MAX_CHALS; i++){
-								chalMasks.add((int)Math.pow(2, i));
+							for (int i = 0; i < Challenges.MAX_CHALS; i++) {
+								chalMasks.add((int) Math.pow(2, i));
 							}
 							Random.shuffle(chalMasks);
 							int mask = 0;
-							for (int i = 0; i < chals; i++){
+							for (int i = 0; i < chals; i++) {
 								mask += chalMasks.remove(0);
 							}
 							SPDSettings.challenges(mask);
-							challengeButton.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
+							challengeButton.icon(Icons
+									.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
 							ShatteredPixelDungeon.scene().addToFront(new WndChallenges(mask, false));
 						}
 
-						if (chkHero.checked()){
+						if (chkHero.checked()) {
 							HeroClass randomCls;
 							do {
 								randomCls = Random.oneOf(HeroClass.values());
@@ -950,7 +968,7 @@ public class HeroSelectScene extends PixelScene {
 				btnConfirm.setRect(0, 64, 60, 16);
 				add(btnConfirm);
 
-				resize(120, (int)btnConfirm.bottom());
+				resize(120, (int) btnConfirm.bottom());
 
 			}
 
@@ -964,38 +982,39 @@ public class HeroSelectScene extends PixelScene {
 			bg.y = y;
 
 			int width = 0;
-			for (StyledButton btn : buttons){
-				if (width < btn.reqWidth()) width = (int)btn.reqWidth();
+			for (StyledButton btn : buttons) {
+				if (width < btn.reqWidth())
+					width = (int) btn.reqWidth();
 			}
 			width += bg.marginHor();
 
-			int top = (int)y + bg.marginTop() - 1;
+			int top = (int) y + bg.marginTop() - 1;
 			int i = 0;
-			for (StyledButton btn : buttons){
-				btn.setRect(x+bg.marginLeft(), top, width - bg.marginHor(), 16);
-				top = (int)btn.bottom();
+			for (StyledButton btn : buttons) {
+				btn.setRect(x + bg.marginLeft(), top, width - bg.marginHor(), 16);
+				top = (int) btn.bottom();
 				if (i < spacers.size()) {
 					spacers.get(i).size(btn.width(), 1);
 					spacers.get(i).x = btn.left();
-					spacers.get(i).y = PixelScene.align(btn.bottom()-0.5f);
+					spacers.get(i).y = PixelScene.align(btn.bottom() - 0.5f);
 					i++;
 				}
 			}
 
 			this.width = width;
-			this.height = top+bg.marginBottom()-y-1;
+			this.height = top + bg.marginBottom() - y - 1;
 			bg.size(this.width, this.height);
 
 		}
 
-		private void alpha( float value ){
+		private void alpha(float value) {
 			bg.alpha(value);
 
-			for (StyledButton btn : buttons){
+			for (StyledButton btn : buttons) {
 				btn.alpha(value);
 			}
 
-			for (ColorBlock spc : spacers){
+			for (ColorBlock spc : spacers) {
 				spc.alpha(value);
 			}
 		}

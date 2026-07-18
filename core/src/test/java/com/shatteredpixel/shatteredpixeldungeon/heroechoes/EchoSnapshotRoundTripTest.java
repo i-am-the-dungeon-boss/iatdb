@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import org.assertj.core.api.Assertions;
@@ -16,7 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Verifies boss-capture snapshots survive storage round-trip and feed EchoBoss correctly.
+ * Verifies boss-capture snapshots survive storage round-trip and feed EchoBoss
+ * correctly.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoSnapshotRoundTripTest {
@@ -27,8 +29,8 @@ class EchoSnapshotRoundTripTest {
 	}
 
 	@Test
-	@DisplayName("storage round-trip preserves full hero combat data from boss capture")
-	void storageRoundTripPreservesFullHeroCombatData() {
+	@DisplayName("boss-win hero with inventory snapshots and reloads equipped and backpack items")
+	void bossWinHeroSnapshotLoadPreservesInventory() {
 		Hero hero = richHero();
 		EchoStorage storage = new EchoStorage();
 
@@ -37,16 +39,24 @@ class EchoSnapshotRoundTripTest {
 		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
 		Hero restored = EchoHeroSnapshot.restoreHero(loaded);
 
+		Assertions.assertThat(loaded.hasCombatData()).isTrue();
+		Assertions.assertThat(loaded.depth).isEqualTo(5);
 		Assertions.assertThat(loaded.heroClass).isEqualTo("MAGE");
-		Assertions.assertThat(loaded.lvl).isEqualTo(hero.lvl);
-		Assertions.assertThat(loaded.hp).isEqualTo(hero.HP);
-		Assertions.assertThat(loaded.ht).isEqualTo(hero.HT);
+		Assertions.assertThat(loaded.lvl).isEqualTo(14);
+		Assertions.assertThat(loaded.hp).isEqualTo(65);
+		Assertions.assertThat(loaded.ht).isEqualTo(70);
+
 		Assertions.assertThat(restored.heroClass).isEqualTo(HeroClass.MAGE);
-		Assertions.assertThat(restored.lvl).isEqualTo(hero.lvl);
-		Assertions.assertThat(restored.STR).isEqualTo(hero.STR);
+		Assertions.assertThat(restored.lvl).isEqualTo(14);
+		Assertions.assertThat(restored.STR).isEqualTo(18);
+		Assertions.assertThat(restored.HP).isEqualTo(65);
+		Assertions.assertThat(restored.HT).isEqualTo(70);
 		Assertions.assertThat(restored.belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(restored.belongings.weapon()).isInstanceOf(WornShortsword.class);
 		Assertions.assertThat(restored.belongings.getItem(PotionOfHealing.class)).isNotNull();
+		Assertions.assertThat(restored.belongings.getItem(PotionOfHealing.class).quantity()).isEqualTo(2);
+		Assertions.assertThat(restored.belongings.getItem(ScrollOfUpgrade.class)).isNotNull();
+		Assertions.assertThat(restored.belongings.getItem(ScrollOfUpgrade.class).quantity()).isEqualTo(1);
 	}
 
 	@Test
@@ -81,7 +91,8 @@ class EchoSnapshotRoundTripTest {
 		boss.HP = 10;
 
 		Assertions.assertThat(boss.tryHealFromInventory()).isTrue();
-		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfHealing.class)).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfHealing.class).quantity())
+				.isEqualTo(1);
 	}
 
 	@Test
@@ -122,7 +133,12 @@ class EchoSnapshotRoundTripTest {
 
 		PotionOfHealing potion = new PotionOfHealing();
 		potion.identify();
+		potion.quantity(2);
 		potion.collect(hero.belongings.backpack);
+
+		ScrollOfUpgrade scroll = new ScrollOfUpgrade();
+		scroll.identify();
+		scroll.collect(hero.belongings.backpack);
 
 		return hero;
 	}

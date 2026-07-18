@@ -31,8 +31,7 @@ public class GdxTestExtension implements BeforeAllCallback {
 		config.updatesPerSecond = 30;
 		new HeadlessApplication(new ApplicationAdapter() {}, config);
 		FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
-		Game.versionCode = EchoTestSupport.TEST_GAME_VERSION;
-		Game.version = Game.versionCode + "-INDEV";
+		Game.version = EchoTestSupport.TEST_GAME_VERSION;
 		Messages.setup(Languages.ENGLISH);
 		Scroll.initLabels();
 		Potion.initColors();

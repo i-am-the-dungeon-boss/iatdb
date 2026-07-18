@@ -177,7 +177,7 @@ public class WndEchoDetail extends WndTabbed {
 			}
 			statSlot(Messages.get(WndEchoDetail.class, "compatible"),
 					Messages.get(WndEchoes.class,
-							echo.isCompatibleWith(Game.versionCode) ? "yes" : "no"));
+							echo.isCompatibleWith(Game.version) ? "yes" : "no"));
 
 			long when = echo.timestamp > 0 ? echo.timestamp : entry.sortTime();
 			if (when > 0) {
@@ -185,7 +185,7 @@ public class WndEchoDetail extends WndTabbed {
 				statSlot(Messages.get(WndEchoDetail.class, "saved"), format.format(new Date(when)));
 			}
 
-			if (!echo.isCompatibleWith(Game.versionCode)) {
+			if (!echo.isCompatibleWith(Game.version)) {
 				pos += GAP;
 				RenderedTextBlock warn = PixelScene.renderTextBlock(
 						Messages.get(WndEchoDetail.class, "incompatible_warn"), 6);

@@ -28,7 +28,7 @@ android {
             applicationIdSuffix ".indev"
             versionNameSuffix '-INDEV'
             dependencies {
-                debugImplementation project(':services:updates:debugUpdates')
+                debugImplementation project(':services:updates:echoUpdates')
                 debugImplementation project(':services:news:debugNews')
             }
         }
@@ -43,8 +43,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             dependencies {
-                releaseImplementation project(':services:updates:githubUpdates')
-                releaseImplementation project(':services:news:shatteredNews')
+                // IATDB: version checks via hero-echoes /v1/game-version; news stays stubbed
+                releaseImplementation project(':services:updates:echoUpdates')
+                releaseImplementation project(':services:news:debugNews')
             }
         }
     }
@@ -60,6 +61,8 @@ configurations { natives }
 
 dependencies {
     implementation project(':core')
+
+    implementation 'com.android.billingclient:billing:7.1.1'
 
     implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"

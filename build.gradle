@@ -12,10 +12,11 @@ allprojects {
 
     ext {
         appName = 'I am the Dungeon Boss'
-        appPackageName = 'com.shatteredpixel.shatteredpixeldungeon'
+        appPackageName = 'com.marwanelzainy.iatdb'
 
+        // Keep at/above Shattered's code so save-compat branches aren't mis-triggered.
         appVersionCode = 896
-        appVersionName = '3.3.8'
+        appVersionName = '0.0.1'
 
         appJavaCompatibility = JavaVersion.VERSION_11
 

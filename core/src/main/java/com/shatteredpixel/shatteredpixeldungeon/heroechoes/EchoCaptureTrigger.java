@@ -35,7 +35,7 @@ public final class EchoCaptureTrigger {
         Echo echo = Echo.fromHero(
 				hero,
 				depth,
-				com.watabou.noosa.Game.versionCode,
+				com.watabou.noosa.Game.version,
 				Dungeon.seed
 		);
 		EchoSnapshotDebug.applyIfEnabled(echo);

@@ -14,26 +14,28 @@ class EchoBackendProbeTest {
 	}
 
 	@Test
-	@DisplayName("ranked is unavailable when backend URL is missing")
+	@DisplayName("online is unavailable when backend URL is missing")
 	void unavailableWithoutBackendUrl() {
-		Assertions.assertThat(EchoBackendProbe.canStartRanked()).isFalse();
+		Assertions.assertThat(EchoBackendProbe.isOnlineReady()).isFalse();
+		Assertions.assertThat(EchoBackendProbe.offlineMessageKey()).isEqualTo("offline_unconfigured");
 	}
 
 	@Test
-	@DisplayName("ranked is unavailable when backend is configured but unreachable")
+	@DisplayName("online is unavailable when backend is configured but unreachable")
 	void unavailableWhenUnreachable() {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoBackendProbe.setReachableForTests(false);
 
-		Assertions.assertThat(EchoBackendProbe.canStartRanked()).isFalse();
+		Assertions.assertThat(EchoBackendProbe.isOnlineReady()).isFalse();
+		Assertions.assertThat(EchoBackendProbe.offlineMessageKey()).isEqualTo("offline_unreachable");
 	}
 
 	@Test
-	@DisplayName("ranked is available when backend is configured and healthy")
+	@DisplayName("online is available when backend is configured and healthy")
 	void availableWhenReachable() {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoBackendProbe.setReachableForTests(true);
 
-		Assertions.assertThat(EchoBackendProbe.canStartRanked()).isTrue();
+		Assertions.assertThat(EchoBackendProbe.isOnlineReady()).isTrue();
 	}
 }

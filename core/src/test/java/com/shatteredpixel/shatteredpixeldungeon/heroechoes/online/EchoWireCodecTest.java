@@ -31,7 +31,7 @@ class EchoWireCodecTest {
 		String json = "{"
 				+ "\"echo_id\":\"5-1\","
 				+ "\"depth\":5,"
-				+ "\"game_version\":846,"
+				+ "\"game_version\":\"0.0.1\","
 				+ "\"hero_class\":\"MAGE\","
 				+ "\"lvl\":6,"
 				+ "\"hp\":20,"
@@ -58,9 +58,7 @@ class EchoWireCodecTest {
 	void encodesLeaderboardResult() {
 		String json = EchoWireCodec.encodeLeaderboardResult(
 				new com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult(
-						"5-1", true, 5, 99L, 846, "MAGE", 40, 12, 20
-				)
-		);
+						"5-1", true, 5, 99L, "0.0.1", "MAGE", 40, 12, 20));
 
 		Assertions.assertThat(json).contains("\"boss_win\":true");
 		Assertions.assertThat(json).contains("\"player_class\":\"MAGE\"");
@@ -79,7 +77,7 @@ class EchoWireCodecTest {
 				+ "\"damage_dealt\":40,"
 				+ "\"damage_taken\":12,"
 				+ "\"turns\":20,"
-				+ "\"win_rate_proxy\":0.75"
+				+ "\"win_rate_proxy\":1"
 				+ "}]";
 
 		var entries = EchoWireCodec.decodeLeaderboardEntries(json);
@@ -88,6 +86,6 @@ class EchoWireCodecTest {
 		Assertions.assertThat(entries.get(0).rank).isEqualTo(1);
 		Assertions.assertThat(entries.get(0).echoId).isEqualTo("5-1");
 		Assertions.assertThat(entries.get(0).playerClass).isEqualTo("MAGE");
-		Assertions.assertThat(entries.get(0).winRateProxy).isEqualTo(0.75f);
+		Assertions.assertThat(entries.get(0).winRateProxy).isEqualTo(1f);
 	}
 }

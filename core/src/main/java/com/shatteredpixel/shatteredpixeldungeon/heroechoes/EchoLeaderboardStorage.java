@@ -70,7 +70,7 @@ public class EchoLeaderboardStorage {
                                 Boolean.parseBoolean(parts[1]),
                                 Integer.parseInt(parts[2]),
                                 Long.parseLong(parts[3]),
-                                Integer.parseInt(parts[4]),
+                                parts[4],
                                 parts[5],
                                 Integer.parseInt(parts[6]),
                                 Integer.parseInt(parts[7]),

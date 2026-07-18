@@ -4,14 +4,13 @@
     "**/target/**": true
   },
   "java.settings.url": ".vscode/java.prefs",
-  "java.import.exclusions": ["**/ios/**", "**/android/**"],
-  "java.import.generatesMetadataFilesAtProjectRoot": true,
-  "java.compile.nullAnalysis.mode": "disabled",
-  "java.errors.incompleteClasspath.severity": "ignore",
-  "problems.visibility": {
-    "exclude": {
-      "**/build/**": true,
-      "**/.gradle/**": true
+  "java.jdt.ls.androidSupport.enabled": "on",
+  "java.test.config": [
+    {
+      "name": "core-assets",
+      "workingDirectory": "${workspaceFolder}/core/src/main/assets",
+      "vmArgs": ["-Dfile.encoding=UTF-8"]
     }
-  }
+  ],
+  "java.test.defaultConfig": "core-assets"
 }

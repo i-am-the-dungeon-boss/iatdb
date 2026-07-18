@@ -49,13 +49,13 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         }
     }
 
-    public Optional<Echo> loadForDepth(int depth, int currentGameVersion) {
+    public Optional<Echo> loadForDepth(int depth, String currentGameVersion) {
         return loadCompatibleForDepth(depth, currentGameVersion);
     }
 
     @Override
     public Optional<Echo> findEchoForDepth(int depth) {
-        return loadForDepth(depth, Game.versionCode);
+        return loadForDepth(depth, Game.version);
     }
 
     public static final class EchoEntry {
@@ -142,7 +142,7 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
                 || name.equals("latest-depth-" + depth + ".dat");
     }
 
-    private Optional<Echo> loadCompatibleForDepth(int depth, int currentGameVersion) {
+    private Optional<Echo> loadCompatibleForDepth(int depth, String currentGameVersion) {
         File canonical = new File(canonicalPath(depth));
         if (canonical.exists()) {
             try {

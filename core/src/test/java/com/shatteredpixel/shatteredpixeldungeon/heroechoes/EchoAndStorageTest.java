@@ -61,10 +61,10 @@ class EchoAndStorageTest {
     @DisplayName("isCompatibleWith accepts same major version only")
     void versionCompatibilityUsesMajorVersion() {
         Echo snap = EchoTestSupport.warriorEcho(5);
-        snap.gameVersion = 846;
+        snap.gameVersion = "0.0.1";
 
-        Assertions.assertThat(snap.isCompatibleWith(850)).isTrue();
-        Assertions.assertThat(snap.isCompatibleWith(946)).isFalse();
+        Assertions.assertThat(snap.isCompatibleWith("0.0.5")).isTrue();
+        Assertions.assertThat(snap.isCompatibleWith("1.0.0")).isFalse();
     }
 
     @Test
@@ -86,7 +86,7 @@ class EchoAndStorageTest {
     @DisplayName("EchoStorage skips incompatible versions on load")
     void skipsIncompatibleVersionOnLoad() {
         EchoStorage storage = new EchoStorage();
-        Echo old = EchoTestSupport.echoWithVersion(5, 100);
+        Echo old = EchoTestSupport.echoWithVersion(5, "1.0.0");
         storage.save(old);
 
         Optional<Echo> loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);

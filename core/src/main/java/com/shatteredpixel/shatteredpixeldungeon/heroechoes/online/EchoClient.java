@@ -3,7 +3,6 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
-import com.watabou.noosa.Game;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +27,7 @@ public final class EchoClient {
 		return new EchoClient(
 				EchoOnlineSettings.backendUrl(),
 				EchoOnlineSettings.apiKey(),
-				new JavaEchoHttpTransport()
-		);
+				new JavaEchoHttpTransport());
 	}
 
 	public boolean checkHealth() throws Exception {
@@ -37,19 +35,16 @@ public final class EchoClient {
 				"GET",
 				baseUrl + "/health",
 				jsonHeaders(false),
-				null
-		));
+				null));
 		return EchoHealth.isHealthy(response.statusCode, response.body);
 	}
 
-	public Optional<EchoFetchResult> fetchEcho(int depth, int gameVersion) throws Exception {
-		String url = baseUrl + "/v1/echoes/" + depth + "?game_version=" + gameVersion;
+	public Optional<EchoFetchResult> fetchEcho(int depth) throws Exception {
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"GET",
-				url,
+				baseUrl + "/v1/echoes/" + depth,
 				jsonHeaders(false),
-				null
-		));
+				null));
 
 		if (response.statusCode == 200) {
 			return Optional.of(EchoWireCodec.decodeEchoFetch(response.body));
@@ -63,8 +58,7 @@ public final class EchoClient {
 				"POST",
 				baseUrl + "/v1/echoes",
 				jsonHeaders(true),
-				body
-		));
+				body));
 		ensureSuccess(response);
 	}
 
@@ -74,8 +68,7 @@ public final class EchoClient {
 				"POST",
 				baseUrl + "/v1/leaderboard/results",
 				jsonHeaders(true),
-				body
-		));
+				body));
 		ensureSuccess(response);
 	}
 
@@ -85,8 +78,7 @@ public final class EchoClient {
 				"GET",
 				url,
 				jsonHeaders(false),
-				null
-		));
+				null));
 		if (response.statusCode == 200) {
 			return EchoWireCodec.decodeLeaderboardEntries(response.body);
 		}
@@ -116,7 +108,4 @@ public final class EchoClient {
 		}
 	}
 
-	public int currentGameVersion() {
-		return Game.versionCode;
-	}
 }

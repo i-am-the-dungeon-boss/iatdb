@@ -10,7 +10,7 @@ public class Echo {
     private static final String ECHO_DATA = "echo_data";
 
     public String echoId;
-    public int gameVersion;
+    public String gameVersion;
     public int depth;
     public String heroClass = "UNKNOWN";
     public String userName = "";
@@ -25,7 +25,7 @@ public class Echo {
         return echoData != null;
     }
 
-    public static Echo create(int depth, int gameVersion, long gameSeed,
+    public static Echo create(int depth, String gameVersion, long gameSeed,
                                       String heroClass, int lvl, int hp, int ht,
                                       Bundle echoData) {
         Echo s = new Echo();
@@ -42,7 +42,7 @@ public class Echo {
         return s;
     }
 
-    public static Echo create(int depth, int gameVersion, long gameSeed,
+    public static Echo create(int depth, String gameVersion, long gameSeed,
                                       String heroClass, String userName, int lvl, int hp, int ht,
                                       Bundle echoData) {
         Echo echo = create(depth, gameVersion, gameSeed, heroClass, lvl, hp, ht, echoData);
@@ -50,7 +50,7 @@ public class Echo {
         return echo;
     }
 
-    public static Echo fromHero(Hero hero, int depth, int gameVersion, long gameSeed) {
+    public static Echo fromHero(Hero hero, int depth, String gameVersion, long gameSeed) {
         if (hero == null) {
             return create(depth, gameVersion, gameSeed, "UNKNOWN", 0, 0, 1, null);
         }
@@ -68,18 +68,22 @@ public class Echo {
         );
     }
 
-    public boolean isCompatibleWith(int currentVersion) {
-        return majorVersion(gameVersion) == majorVersion(currentVersion);
+    public boolean isCompatibleWith(String currentVersion) {
+        return majorVersion(gameVersion).equals(majorVersion(currentVersion));
     }
 
-    private static int majorVersion(int versionCode) {
-        return versionCode / 100;
+    private static String majorVersion(String version) {
+        if (version == null || version.isEmpty()) {
+            return "";
+        }
+        String base = version.split("-", 2)[0];
+        return base.split("\\.", 2)[0];
     }
 
     public Bundle toBundle() {
         Bundle b = new Bundle();
         b.put("echo_id", echoId);
-        b.put("game_version", gameVersion);
+        b.put("game_version", gameVersion != null ? gameVersion : "");
         b.put("depth", depth);
         b.put("hero_class", heroClass);
         b.put("user_name", userName != null ? userName : "");
@@ -97,7 +101,13 @@ public class Echo {
     public static Echo fromBundle(Bundle b) {
         Echo s = new Echo();
         s.echoId = b.getString("echo_id");
-        s.gameVersion = b.getInt("game_version");
+        if (b.contains("game_version")) {
+            try {
+                s.gameVersion = b.getString("game_version");
+            } catch (Exception ignored) {
+                s.gameVersion = String.valueOf(b.getInt("game_version"));
+            }
+        }
         s.depth = b.getInt("depth");
         s.heroClass = b.getString("hero_class");
         s.userName = b.contains("user_name") ? b.getString("user_name") : "";

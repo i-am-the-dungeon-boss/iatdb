@@ -7,9 +7,11 @@ public final class EchoBackendProbe {
 	private static Boolean testReachableOverride;
 	private static volatile Boolean lastReachable;
 
-	private EchoBackendProbe() {}
+	private EchoBackendProbe() {
+	}
 
-	public static boolean canStartRanked() {
+	/** Backend URL configured and last health probe succeeded. */
+	public static boolean isOnlineReady() {
 		if (!EchoOnlineSettings.isConfigured()) {
 			return false;
 		}
@@ -17,6 +19,11 @@ public final class EchoBackendProbe {
 			return testReachableOverride;
 		}
 		return Boolean.TRUE.equals(lastReachable);
+	}
+
+	/** Message key under TitleScene when {@link #isOnlineReady()} is false. */
+	public static String offlineMessageKey() {
+		return EchoOnlineSettings.isConfigured() ? "offline_unreachable" : "offline_unconfigured";
 	}
 
 	public static void probeAsync(Runnable onComplete) {

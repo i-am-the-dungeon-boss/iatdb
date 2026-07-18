@@ -47,16 +47,15 @@ class RankedEchoFetchIntegrationTest {
 
 		Dungeon.setEchoLookup(new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
-				local
-		));
+				local));
 
 		boolean found = Dungeon.prefetchEchoBossForDepth(5);
 
 		Assertions.assertThat(found).isTrue();
 		Assertions.assertThat(transport.requests).hasSize(2);
 		Assertions.assertThat(transport.requests.get(0).method).isEqualTo("GET");
-		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/echoes/5?game_version=");
-		Assertions.assertThat(transport.requests.get(1).url).contains("/v1/echoes/5?game_version=");
+		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/echoes/5");
+		Assertions.assertThat(transport.requests.get(1).url).contains("/v1/echoes/5");
 		Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
 		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo("ranked-online-5");
 		Assertions.assertThat(Dungeon.getPendingEcho().hasCombatData()).isTrue();
@@ -78,8 +77,7 @@ class RankedEchoFetchIntegrationTest {
 
 		Dungeon.setEchoLookup(new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
-				local
-		));
+				local));
 
 		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isFalse();
 		Assertions.assertThat(transport.requests).hasSize(1);

@@ -27,7 +27,7 @@ class EchoClientTest {
 		transport.enqueue(200, "{"
 				+ "\"echo_id\":\"5-99\","
 				+ "\"depth\":5,"
-				+ "\"game_version\":846,"
+				+ "\"game_version\":\"0.0.1\","
 				+ "\"hero_class\":\"WARRIOR\","
 				+ "\"lvl\":6,"
 				+ "\"hp\":20,"
@@ -43,12 +43,12 @@ class EchoClientTest {
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Optional<EchoFetchResult> result = client.fetchEcho(5, 846);
+		Optional<EchoFetchResult> result = client.fetchEcho(5);
 
 		Assertions.assertThat(result).isPresent();
 		Assertions.assertThat(result.get().echo.echoId).isEqualTo("5-99");
 		Assertions.assertThat(result.get().policy.rules).isNotEmpty();
-		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/echoes/5?game_version=846");
+		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/echoes/5");
 	}
 
 	@Test
@@ -82,7 +82,7 @@ class EchoClientTest {
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Assertions.assertThat(client.fetchEcho(5, 846)).isEmpty();
+		Assertions.assertThat(client.fetchEcho(5)).isEmpty();
 	}
 
 	@Test
@@ -124,8 +124,7 @@ class EchoClientTest {
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 		client.postLeaderboardResult(new EchoFightResult(
-				"5-1", true, 5, 1L, 846, "MAGE", 30, 10, 12
-		));
+				"5-1", true, 5, 1L, "0.0.1", "MAGE", 30, 10, 12));
 
 		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/leaderboard/results");
 		Assertions.assertThat(transport.requests.get(0).body).contains("\"boss_win\":true");

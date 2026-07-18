@@ -23,7 +23,7 @@ public final class EchoDetailsFormatter {
 		return Messages.get(WndEchoes.class, "list_item", echo.depth, echo.heroClass, echo.lvl);
 	}
 
-	public static String formatDetails(EchoStorage.EchoEntry entry, int currentGameVersion) {
+	public static String formatDetails(EchoStorage.EchoEntry entry, String currentGameVersion) {
 		Echo echo = entry.echo;
 		StringBuilder sb = new StringBuilder();
 

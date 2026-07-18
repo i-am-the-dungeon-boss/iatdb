@@ -17,7 +17,7 @@ public final class EchoTestSupport {
 
 	public static final String ECHOES_DIR = "echoes";
 	public static final String LEADERBOARD_FILE = "leaderboard.json";
-	public static final int TEST_GAME_VERSION = 846;
+	public static final String TEST_GAME_VERSION = "0.0.1";
 
 	private EchoTestSupport() {}
 
@@ -73,7 +73,7 @@ public final class EchoTestSupport {
 		);
 	}
 
-	public static Echo echoWithVersion(int depth, int gameVersion) {
+	public static Echo echoWithVersion(int depth, String gameVersion) {
 		Echo snap = warriorEcho(depth);
 		snap.gameVersion = gameVersion;
 		return snap;

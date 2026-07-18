@@ -59,6 +59,7 @@ void testSnapshot() {
 - [ ] Each test was watched failing before implementation
 - [ ] Minimal code was written to pass each test
 - [ ] `./gradlew :core:test` passes with no failures
+- [ ] For new features / feature changes: report **tests created**, **test gaps**, and **redundant tests** (use `@DisplayName` titles), then ask whether to implement gaps and remove redundant ones
 
 ## Exceptions
 

@@ -28,7 +28,7 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 
 		if (shouldTryOnlineFetch()) {
 			try {
-				Optional<EchoFetchResult> online = client.fetchEcho(depth, client.currentGameVersion());
+				Optional<EchoFetchResult> online = client.fetchEcho(depth);
 				if (online.isPresent()) {
 					lastFetchedPolicy = online.get().policy;
 					return Optional.of(online.get().echo);
@@ -46,7 +46,7 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 			return Optional.empty();
 		}
 		try {
-			Optional<EchoFetchResult> online = client.fetchEcho(depth, client.currentGameVersion());
+			Optional<EchoFetchResult> online = client.fetchEcho(depth);
 			if (online.isPresent()) {
 				lastFetchedPolicy = online.get().policy;
 				return Optional.of(online.get().echo);

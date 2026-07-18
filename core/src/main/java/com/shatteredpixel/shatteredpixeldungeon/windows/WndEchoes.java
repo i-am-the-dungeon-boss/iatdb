@@ -51,7 +51,7 @@ public class WndEchoes extends Window {
 					return false;
 				}
 			};
-			if (!echo.isCompatibleWith(Game.versionCode)) {
+			if (!echo.isCompatibleWith(Game.version)) {
 				item.hardlight(0xFF6666);
 			}
 			list.addItem(item);

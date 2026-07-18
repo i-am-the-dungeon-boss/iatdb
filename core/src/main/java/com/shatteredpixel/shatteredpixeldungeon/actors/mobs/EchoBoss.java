@@ -120,7 +120,7 @@ public class EchoBoss extends Mob {
                     echo,
                     Dungeon.depth,
                     Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.versionCode
+                    Game.version
             );
         }
     }
@@ -331,7 +331,7 @@ public class EchoBoss extends Mob {
                     echo,
                     Dungeon.depth,
                     Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.versionCode
+                    Game.version
             );
         }
         super.die(cause);

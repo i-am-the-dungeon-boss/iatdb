@@ -25,7 +25,7 @@ class LeaderboardFeatureTest {
     @DisplayName("EchoLeaderboardEntry maps fight result fields and win rate proxy")
     void leaderboardEntryFromFightResult() {
         EchoFightResult result = new EchoFightResult(
-                "snap-1", true, 5, 123L, 846, "WARRIOR", 50, 20, 30);
+                "snap-1", true, 5, 123L, "0.0.1", "WARRIOR", 50, 20, 30);
 
         EchoLeaderboardEntry entry = EchoLeaderboardEntry.fromFightResult(result, 2);
 
@@ -46,9 +46,9 @@ class LeaderboardFeatureTest {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
         EchoLeaderboardStorage storage = new EchoLeaderboardStorage();
 
-        storage.append(new EchoFightResult("a", true, 5, 1000L, 846, "WARRIOR", 50, 30, 100));
-        storage.append(new EchoFightResult("b", false, 5, 1001L, 846, "MAGE", 70, 20, 90));
-        storage.append(new EchoFightResult("c", true, 5, 1002L, 846, "ROGUE", 40, 40, 80));
+        storage.append(new EchoFightResult("a", true, 5, 1000L, "0.0.1", "WARRIOR", 50, 30, 100));
+        storage.append(new EchoFightResult("b", false, 5, 1001L, "0.0.1", "MAGE", 70, 20, 90));
+        storage.append(new EchoFightResult("c", true, 5, 1002L, "0.0.1", "ROGUE", 40, 40, 80));
 
         List<EchoFightResult> top = storage.loadTop(2);
         Assertions.assertThat(top).hasSize(2);
@@ -61,11 +61,11 @@ class LeaderboardFeatureTest {
     @DisplayName("EchoFightResult stores snapshot id, player class, and game version")
     void recordStoresExtendedMetadata() {
         EchoFightResult record = new EchoFightResult(
-                "snap-1", true, 5, 123L, 846, "WARRIOR", 10, 5, 20);
+                "snap-1", true, 5, 123L, "0.0.1", "WARRIOR", 10, 5, 20);
 
         Assertions.assertThat(record.echoId).isEqualTo("snap-1");
         Assertions.assertThat(record.playerClass).isEqualTo("WARRIOR");
-        Assertions.assertThat(record.gameVersion).isEqualTo(846);
+        Assertions.assertThat(record.gameVersion).isEqualTo("0.0.1");
     }
 
     @Test
@@ -75,7 +75,7 @@ class LeaderboardFeatureTest {
         EchoLeaderboardStorage storage = new EchoLeaderboardStorage();
         for (int i = 0; i < 205; i++) {
             storage.append(new EchoFightResult(
-                    "id-" + i, true, 5, i, 846, "WARRIOR", i, 0, 10));
+                    "id-" + i, true, 5, i, "0.0.1", "WARRIOR", i, 0, 10));
         }
 
         Assertions.assertThat(storage.loadTop(300).size()).isLessThanOrEqualTo(200);

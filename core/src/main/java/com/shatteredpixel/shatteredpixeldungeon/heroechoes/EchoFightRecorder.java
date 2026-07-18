@@ -29,7 +29,7 @@ public final class EchoFightRecorder {
 		turns++;
 	}
 
-	public void recordBossVictory(Echo bossEcho, int depth, HeroClass playerClass, int gameVersion) {
+	public void recordBossVictory(Echo bossEcho, int depth, HeroClass playerClass, String gameVersion) {
 		persist(new EchoFightResult(
 				bossEcho != null ? bossEcho.echoId : null,
 				true,
@@ -50,7 +50,7 @@ public final class EchoFightRecorder {
 		EchoOnlineSync.instance().postLeaderboardResultAsync(result);
 	}
 
-	public void recordBossDefeat(Echo bossEcho, int depth, HeroClass playerClass, int gameVersion) {
+	public void recordBossDefeat(Echo bossEcho, int depth, HeroClass playerClass, String gameVersion) {
 		persist(new EchoFightResult(
 				bossEcho != null ? bossEcho.echoId : null,
 				false,

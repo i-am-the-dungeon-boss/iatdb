@@ -112,7 +112,7 @@ public class WndGame extends Window {
 			protected void onClick() {
 				try {
 					String timestamp = String.format("%d", System.currentTimeMillis());
-					Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.versionCode, Dungeon.seed);
+					Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.version, Dungeon.seed);
 					EchoSnapshotDebug.applyIfEnabled(echo);
 					echo.echoId = "manual-" + timestamp;
 					if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
