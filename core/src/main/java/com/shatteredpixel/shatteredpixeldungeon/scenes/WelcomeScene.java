@@ -56,7 +56,8 @@ public class WelcomeScene extends PixelScene {
 
 	private static final int LATEST_UPDATE = ShatteredPixelDungeon.v3_3_0;
 
-	//used so that the game does not keep showing the window forever if cleaning fails
+	// used so that the game does not keep showing the window forever if cleaning
+	// fails
 	private static boolean triedCleaningTemp = false;
 
 	@Override
@@ -65,12 +66,12 @@ public class WelcomeScene extends PixelScene {
 
 		final int previousVersion = SPDSettings.version();
 
-		if (!triedCleaningTemp && FileUtils.cleanTempFiles()){
+		if (!triedCleaningTemp && FileUtils.cleanTempFiles()) {
 			add(new WndHardNotification(Icons.get(Icons.WARNING),
 					Messages.get(WndError.class, "title"),
 					Messages.get(this, "save_warning"),
 					Messages.get(this, "continue"),
-					5){
+					5) {
 				@Override
 				public void hide() {
 					super.hide();
@@ -81,14 +82,20 @@ public class WelcomeScene extends PixelScene {
 			return;
 		}
 
-		if (ShatteredPixelDungeon.versionCode == previousVersion && !SPDSettings.intro()) {
+		if (shouldSkipWelcome(previousVersion, ShatteredPixelDungeon.versionCode, SPDSettings.intro())) {
+			if (previousVersion == 0 || SPDSettings.intro()) {
+				SPDSettings.version(ShatteredPixelDungeon.versionCode);
+				GamesInProgress.selectedClass = null;
+				GamesInProgress.curSlot = GamesInProgress.firstEmpty();
+				SPDSettings.intro(false);
+			}
 			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 			return;
 		}
 
 		Music.INSTANCE.playTracks(
-				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
-				new float[]{1, 1},
+				new String[] { Assets.Music.THEME_1, Assets.Music.THEME_2 },
+				new float[] { 1, 1 },
 				false);
 
 		uiCamera.visible = false;
@@ -98,25 +105,25 @@ public class WelcomeScene extends PixelScene {
 		RectF insets = getCommonInsets();
 
 		TitleBackground BG = new TitleBackground(w, h);
-		add( BG );
+		add(BG);
 
-		//darkens the arches
+		// darkens the arches
 		add(new ColorBlock(w, h, 0x44000000));
 
 		w -= insets.left + insets.right;
 		h -= insets.top + insets.bottom;
 
-		Image title = BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_LAND : BannerSprites.Type.TITLE_PORT);
-		add( title );
+		Image title = BannerSprites.get(landscape() ? BannerSprites.Type.TITLE_LAND : BannerSprites.Type.TITLE_PORT);
+		add(title);
 
-		float topRegion = Math.max(title.height - 6, h*0.45f);
+		float topRegion = Math.max(title.height - 6, h * 0.45f);
 
 		title.x = insets.left + (w - title.width()) / 2f;
 		title.y = insets.top + 2 + (topRegion - title.height()) / 2f;
 
 		align(title);
 
-		if (landscape()){
+		if (landscape()) {
 			placeTorch(title.x + 30, title.y + 35);
 			placeTorch(title.x + title.width - 30, title.y + 35);
 		} else {
@@ -124,14 +131,18 @@ public class WelcomeScene extends PixelScene {
 			placeTorch(title.x + title.width - 16, title.y + 70);
 		}
 
-		Image signs = new Image(BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_GLOW_LAND : BannerSprites.Type.TITLE_GLOW_PORT)){
+		Image signs = new Image(BannerSprites
+				.get(landscape() ? BannerSprites.Type.TITLE_GLOW_LAND : BannerSprites.Type.TITLE_GLOW_PORT)) {
 			private float time = 0;
+
 			@Override
 			public void update() {
 				super.update();
-				am = Math.max(0f, (float)Math.sin( time += Game.elapsed ));
-				if (time >= 1.5f*Math.PI) time = 0;
+				am = Math.max(0f, (float) Math.sin(time += Game.elapsed));
+				if (time >= 1.5f * Math.PI)
+					time = 0;
 			}
+
 			@Override
 			public void draw() {
 				Blending.setLightMode();
@@ -139,42 +150,39 @@ public class WelcomeScene extends PixelScene {
 				Blending.setNormalMode();
 			}
 		};
-		signs.x = title.x + (title.width() - signs.width())/2f;
+		signs.x = title.x + (title.width() - signs.width()) / 2f;
 		signs.y = title.y;
-		add( signs );
-		
-		StyledButton okay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "continue")){
+		add(signs);
+
+		StyledButton okay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "continue")) {
 			@Override
 			protected void onClick() {
 				super.onClick();
-				if (previousVersion == 0 || SPDSettings.intro()){
+				boolean intro = SPDSettings.intro();
+				if (previousVersion == 0 || intro) {
 
-					if (previousVersion > 0){
+					if (previousVersion > 0) {
 						updateVersion(previousVersion);
 					}
 
 					SPDSettings.version(ShatteredPixelDungeon.versionCode);
 					GamesInProgress.selectedClass = null;
 					GamesInProgress.curSlot = GamesInProgress.firstEmpty();
-					if (GamesInProgress.curSlot == -1 || Rankings.INSTANCE.totalNumber > 0){
-						SPDSettings.intro(false);
-						ShatteredPixelDungeon.switchScene(TitleScene.class);
-					} else {
-						ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-					}
+					SPDSettings.intro(false);
 				} else {
 					updateVersion(previousVersion);
-					ShatteredPixelDungeon.switchScene(TitleScene.class);
 				}
+				ShatteredPixelDungeon.switchScene(continueTarget());
 			}
 		};
 
 		float buttonY = insets.top + Math.min(topRegion + (PixelScene.landscape() ? 60 : 120), h - 24);
 
-		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L-6 : PixelScene.MIN_WIDTH_P-2;
+		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L - 6 : PixelScene.MIN_WIDTH_P - 2;
 		float btnAreaLeft = insets.left + (w - buttonAreaWidth) / 2f;
-		if (previousVersion != 0 && !SPDSettings.intro()){
-			StyledButton changes = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(TitleScene.class, "changes")){
+		if (previousVersion != 0 && !SPDSettings.intro()) {
+			StyledButton changes = new StyledButton(Chrome.Type.GREY_BUTTON_TR,
+					Messages.get(TitleScene.class, "changes")) {
 				@Override
 				protected void onClick() {
 					super.onClick();
@@ -182,10 +190,10 @@ public class WelcomeScene extends PixelScene {
 					ShatteredPixelDungeon.switchScene(ChangesScene.class);
 				}
 			};
-			okay.setRect(btnAreaLeft, buttonY, (buttonAreaWidth/2)-1, 20);
+			okay.setRect(btnAreaLeft, buttonY, (buttonAreaWidth / 2) - 1, 20);
 			add(okay);
 
-			changes.setRect(okay.right()+1, buttonY, okay.width(), 20);
+			changes.setRect(okay.right() + 1, buttonY, okay.width(), 20);
 			changes.icon(Icons.get(Icons.CHANGES));
 			add(changes);
 		} else {
@@ -200,14 +208,14 @@ public class WelcomeScene extends PixelScene {
 		if (previousVersion == 0 || SPDSettings.intro()) {
 			message = Document.INTROS.pageBody(0);
 		} else if (previousVersion <= ShatteredPixelDungeon.versionCode) {
-			if (previousVersion < LATEST_UPDATE){
+			if (previousVersion < LATEST_UPDATE) {
 				message = Messages.get(this, "update_intro");
 				message += "\n\n" + Messages.get(this, "update_msg");
 			} else {
-				//TODO: change the messages here in accordance with the type of patch.
+				// TODO: change the messages here in accordance with the type of patch.
 				message = Messages.get(this, "patch_intro");
 				message += "\n";
-				//message += "\n" + Messages.get(this, "patch_balance");
+				// message += "\n" + Messages.get(this, "patch_balance");
 				message += "\n" + Messages.get(this, "patch_bugfixes");
 				message += "\n" + Messages.get(this, "patch_translations");
 
@@ -216,78 +224,91 @@ public class WelcomeScene extends PixelScene {
 			message = Messages.get(this, "what_msg");
 		}
 
-		text.text(message, Math.min(w-20, 300));
+		text.text(message, Math.min(w - 20, 300));
 		float titleBottom = title.y + title.height();
 		float textSpace = okay.top() - titleBottom - 4;
-		text.setPos(insets.left + (w - text.width()) / 2f, (titleBottom + 2) + (textSpace - text.height())/2);
+		text.setPos(insets.left + (w - text.width()) / 2f, (titleBottom + 2) + (textSpace - text.height()) / 2);
 		add(text);
 
-		if (SPDSettings.intro() && ControllerHandler.isControllerConnected()){
+		if (SPDSettings.intro() && ControllerHandler.isControllerConnected()) {
 			addToFront(new WndHardNotification(Icons.CONTROLLER.get(),
 					Messages.get(WelcomeScene.class, "controller_title"),
 					Messages.get(WelcomeScene.class, "controller_body"),
 					Messages.get(WelcomeScene.class, "controller_okay"),
-					0){
+					0) {
 				@Override
 				public void onBackPressed() {
-					//do nothing, must press the okay button
+					// do nothing, must press the okay button
 				}
 			});
 		}
 	}
 
-	private void placeTorch( float x, float y ) {
+	/**
+	 * Destination after WelcomeScene Continue/Enter. Always title; first-run
+	 * hero-select shortcut is disabled.
+	 */
+	static Class<? extends PixelScene> continueTarget() {
+		return TitleScene.class;
+	}
+
+	/** True when WelcomeScene should bounce straight to title (no welcome UI). */
+	static boolean shouldSkipWelcome(int previousVersion, int currentVersion, boolean intro) {
+		return previousVersion == 0 || intro || currentVersion == previousVersion;
+	}
+
+	private void placeTorch(float x, float y) {
 		Fireball fb = new Fireball();
-		fb.x = x - fb.width()/2f;
+		fb.x = x - fb.width() / 2f;
 		fb.y = y - fb.height();
 
 		align(fb);
-		add( fb );
+		add(fb);
 	}
 
-	private void updateVersion(int previousVersion){
+	private void updateVersion(int previousVersion) {
 
-		//update rankings, to update any data which may be outdated
-		if (previousVersion < LATEST_UPDATE){
+		// update rankings, to update any data which may be outdated
+		if (previousVersion < LATEST_UPDATE) {
 
 			Badges.loadGlobal();
 			Journal.loadGlobal();
 
-			//pre-unlock Cleric for those who already have a win
-			if (previousVersion <= ShatteredPixelDungeon.v2_5_4){
-				if (Badges.isUnlocked(Badges.Badge.VICTORY) && !Badges.isUnlocked(Badges.Badge.UNLOCK_CLERIC)){
+			// pre-unlock Cleric for those who already have a win
+			if (previousVersion <= ShatteredPixelDungeon.v2_5_4) {
+				if (Badges.isUnlocked(Badges.Badge.VICTORY) && !Badges.isUnlocked(Badges.Badge.UNLOCK_CLERIC)) {
 					Badges.unlock(Badges.Badge.UNLOCK_CLERIC);
 				}
 			}
 
 			try {
 				Rankings.INSTANCE.load();
-				for (Rankings.Record rec : Rankings.INSTANCE.records.toArray(new Rankings.Record[0])){
+				for (Rankings.Record rec : Rankings.INSTANCE.records.toArray(new Rankings.Record[0])) {
 					try {
 						Rankings.INSTANCE.loadGameData(rec);
 						Rankings.INSTANCE.saveGameData(rec);
 					} catch (Exception e) {
-						//if we encounter a fatal per-record error, then clear that record's data
+						// if we encounter a fatal per-record error, then clear that record's data
 						rec.gameData = null;
-						Game.reportException( new RuntimeException("Rankings Updating Failed!",e));
+						Game.reportException(new RuntimeException("Rankings Updating Failed!", e));
 					}
 				}
-				if (Rankings.INSTANCE.latestDaily != null){
+				if (Rankings.INSTANCE.latestDaily != null) {
 					try {
 						Rankings.INSTANCE.loadGameData(Rankings.INSTANCE.latestDaily);
 						Rankings.INSTANCE.saveGameData(Rankings.INSTANCE.latestDaily);
 					} catch (Exception e) {
-						//if we encounter a fatal per-record error, then clear that record's data
+						// if we encounter a fatal per-record error, then clear that record's data
 						Rankings.INSTANCE.latestDaily.gameData = null;
-						Game.reportException( new RuntimeException("Rankings Updating Failed!",e));
+						Game.reportException(new RuntimeException("Rankings Updating Failed!", e));
 					}
 				}
 				Collections.sort(Rankings.INSTANCE.records, Rankings.scoreComparator);
 				Rankings.INSTANCE.save();
 			} catch (Exception e) {
-				//if we encounter a fatal error, then just clear the rankings
-				FileUtils.deleteFile( Rankings.RANKINGS_FILE );
-				Game.reportException( new RuntimeException("Rankings Updating Failed!",e));
+				// if we encounter a fatal error, then just clear the rankings
+				FileUtils.deleteFile(Rankings.RANKINGS_FILE);
+				Game.reportException(new RuntimeException("Rankings Updating Failed!", e));
 			}
 			Dungeon.daily = Dungeon.dailyReplay = false;
 
@@ -298,5 +319,5 @@ public class WelcomeScene extends PixelScene {
 
 		SPDSettings.version(ShatteredPixelDungeon.versionCode);
 	}
-	
+
 }
