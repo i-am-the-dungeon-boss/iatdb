@@ -1,6 +1,6 @@
 # Naming Convention — Echo
 
-**Rule:** Use **Echo** for feature code and docs. **Hero Echoes** for the online service brand. Keep **hero_** on wire fields that describe hero payload (`hero_class`, `echo_data_base64`).
+**Rule:** Use **Echo** for feature code and docs. **Hero Echoes** for the online service brand. Keep **hero\_** on wire fields that describe hero payload (`hero_class`, `echo_data_base64`).
 
 ---
 
@@ -51,14 +51,15 @@
 
 ## API / JSON
 
-| Field / path             | Notes                                   |
-| ------------------------ | --------------------------------------- |
-| `GET /v1/echoes/{depth}` | Fetch echo + `echo_policy`              |
-| `POST /v1/echoes`        | Upload after boss kill                  |
-| `echo_id`                | Client-generated id (`{depth}-{ms}`)    |
-| `echo_data_base64`       | Serialized hero bundle                  |
-| `echo_policy`            | Combat plan on fetch (server-generated) |
-| `boss_win`               | Echo won the fight                      |
+| Field / path             | Notes                                       |
+| ------------------------ | ------------------------------------------- |
+| `GET /v1/echoes/{depth}` | Fetch echo + stored `echo_policy`           |
+| `POST /v1/echoes/policy` | Solo: generate `echo_policy` for local echo |
+| `POST /v1/echoes`        | Upload after boss kill                      |
+| `echo_id`                | Client-generated id (`{depth}-{ms}`)        |
+| `echo_data_base64`       | Serialized hero bundle                      |
+| `echo_policy`            | Combat plan on fetch (server-generated)     |
+| `boss_win`               | Echo won the fight                          |
 
 ---
 

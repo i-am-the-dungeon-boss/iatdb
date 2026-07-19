@@ -78,6 +78,26 @@ public final class EchoClient {
 		}
 	}
 
+	/**
+	 * Asks the backend to generate a fight policy for a local (solo) echo.
+	 * Returns null on any failure so callers can keep a local/fallback policy.
+	 */
+	public EchoPolicy fetchEchoPolicy(String heroClass, int lvl) {
+		try {
+			EchoHttpResponse response = transport.send(new EchoHttpRequest(
+					"POST",
+					baseUrl + "/v1/echoes/policy",
+					jsonHeaders(false),
+					EchoWireCodec.encodeEchoPolicyRequest(heroClass, lvl)));
+			if (response.statusCode != 200) {
+				return null;
+			}
+			return EchoWireCodec.decodeEchoPolicyResponse(response.body);
+		} catch (Exception ignored) {
+			return null;
+		}
+	}
+
 	public void uploadEcho(Echo echo) throws Exception {
 		String body = EchoWireCodec.encodeEchoUpload(echo, SOURCE_CLIENT);
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(

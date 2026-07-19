@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
@@ -59,7 +60,22 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 
 	private EchoLookupOutcome fetchLocalEcho(int depth) {
 		try {
-			return localLookup.findEchoForDepth(depth);
+			EchoLookupOutcome local = localLookup.findEchoForDepth(depth);
+			if (!local.isFound()) {
+				return local;
+			}
+			if (Dungeon.echoPlayMode != EchoPlayMode.SOLO || !EchoOnlineSettings.isConfigured()) {
+				return local;
+			}
+			Echo echo = local.result.echo;
+			EchoPolicy remotePolicy = client.fetchEchoPolicy(echo.heroClass, echo.lvl);
+			if (remotePolicy == null || !remotePolicy.isSupported()) {
+				return local;
+			}
+			if (localLookup instanceof EchoStorage) {
+				((EchoStorage) localLookup).save(echo, remotePolicy);
+			}
+			return EchoLookupOutcome.found(new EchoFetchResult(echo, remotePolicy));
 		} catch (Exception unexpected) {
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
 		}

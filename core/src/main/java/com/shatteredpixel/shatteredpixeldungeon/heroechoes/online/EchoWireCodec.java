@@ -38,6 +38,25 @@ public final class EchoWireCodec {
 		return json.toString();
 	}
 
+	public static String encodeEchoPolicyRequest(String heroClass, int lvl) {
+		JSONObject json = new JSONObject();
+		json.put("hero_class", heroClass != null && !heroClass.isEmpty() ? heroClass : "UNKNOWN");
+		json.put("lvl", Math.max(0, lvl));
+		return json.toString();
+	}
+
+	public static EchoPolicy decodeEchoPolicyResponse(String json) {
+		JSONObject root = new JSONObject(json);
+		if (!root.has("echo_policy")) {
+			throw new IllegalArgumentException("policy response requires echo_policy");
+		}
+		EchoPolicy policy = EchoPolicy.fromJson(root.getJSONObject("echo_policy"));
+		if (!policy.isSupported()) {
+			throw new IllegalArgumentException("unsupported echo_policy");
+		}
+		return policy;
+	}
+
 	public static EchoFetchResult decodeEchoFetch(String json) throws Exception {
 		JSONObject root = new JSONObject(json);
 		Echo echo = new Echo();

@@ -217,23 +217,44 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
-	@DisplayName("solo mode fetches echo locally and never calls online")
-	void soloModeFetchesLocally() {
+	@DisplayName("solo mode uses local echo and requests policy from backend when configured")
+	void soloModeRequestsPolicyFromBackend() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"online-1\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"MAGE\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\""
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":1,"
+				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"WAIT\"},\"priority\":0}]"
+				+ "}"
 				+ "}");
 
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		Echo localEcho = EchoTestSupport.warriorEcho(5);
+		EchoStorage local = new EchoStorage();
+		local.save(localEcho);
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
+
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.result.policy.rules.get(0).action.type)
+				.isEqualTo(EchoPolicyAction.Type.WAIT);
+		Assertions.assertThat(transport.requests).hasSize(1);
+		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/echoes/policy");
+	}
+
+	@Test
+	@DisplayName("solo mode keeps local policy when backend is not configured")
+	void soloModeKeepsLocalPolicyWhenUnconfigured() {
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(200, "{\"echo_policy\":{\"policy_schema_version\":1,\"rules\":[]}}");
+
+		EchoOnlineSettings.resetForTests();
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 
 		Echo localEcho = EchoTestSupport.warriorEcho(5);

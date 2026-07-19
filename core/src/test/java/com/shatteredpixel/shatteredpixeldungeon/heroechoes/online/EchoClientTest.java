@@ -112,6 +112,43 @@ public class EchoClientTest {
 	}
 
 	@Test
+	@DisplayName("fetchEchoPolicy posts hero_class and lvl and returns decoded policy")
+	void fetchEchoPolicyReturnsPolicy() {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "{"
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":1,"
+				+ "\"rules\":[{\"when\":{\"class\":\"MAGE\"},\"do\":{\"action\":\"KEEP_DISTANCE\",\"range\":3},\"priority\":60},"
+				+ "{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
+				+ "}"
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+		EchoPolicy policy = client.fetchEchoPolicy("MAGE", 8);
+
+		Assertions.assertThat(policy).isNotNull();
+		Assertions.assertThat(policy.isSupported()).isTrue();
+		Assertions.assertThat(policy.rules).hasSize(2);
+		EchoHttpRequest request = transport.requests.get(0);
+		Assertions.assertThat(request.method).isEqualTo("POST");
+		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes/policy");
+		Assertions.assertThat(request.body).contains("\"hero_class\":\"MAGE\"");
+		Assertions.assertThat(request.body).contains("\"lvl\":8");
+		Assertions.assertThat(request.headers.get("X-API-Key")).isNull();
+	}
+
+	@Test
+	@DisplayName("fetchEchoPolicy returns null when request fails")
+	void fetchEchoPolicyReturnsNullOnFailure() {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		Assertions.assertThat(client.fetchEchoPolicy("WARRIOR", 6)).isNull();
+	}
+
+	@Test
 	@DisplayName("uploadEcho fails on unauthorized responses")
 	void uploadEchoFailsOnUnauthorized() {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();

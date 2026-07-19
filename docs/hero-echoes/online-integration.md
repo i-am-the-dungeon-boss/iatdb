@@ -14,7 +14,7 @@ Hero Echoes is a private backend that:
 
 1. Collects hero echos after boss kills
 2. Serves random compatible echoes when entering a boss floor
-3. Attaches a **`echo_policy`** (combat plan) with each fetch — **one HTTP call per fight**
+3. Returns a stored **`echo_policy`** (combat plan) with each ranked fetch; solo asks `POST /v1/echoes/policy` for a generated plan — **one HTTP call per fight**
 4. Stores and ranks fight outcomes on a leaderboard
 
 The game client ships a **thin HTTP client** and a **generic policy interpreter**. Proprietary tuning lives on the server.
