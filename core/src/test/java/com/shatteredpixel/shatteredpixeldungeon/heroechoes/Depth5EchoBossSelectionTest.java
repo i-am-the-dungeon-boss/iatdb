@@ -30,6 +30,7 @@ class Depth5EchoBossSelectionTest {
         storage.save(EchoTestSupport.warriorEchoWithData(5));
         CompositeEchoLookup.setEchoLookupForTests(storage);
 
+        Dungeon.depth = 5;
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
         Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
         Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
@@ -86,6 +87,7 @@ class Depth5EchoBossSelectionTest {
         storage.save(snap);
         CompositeEchoLookup.setEchoLookupForTests(storage);
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
+        Dungeon.depth = 5;
         Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
 
         Bundle bundle = new Bundle();
@@ -94,6 +96,7 @@ class Depth5EchoBossSelectionTest {
         EchoTestSupport.resetWorkflowState();
         CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
 
+        Dungeon.depth = 5;
         Dungeon.restoreEchoChoiceFromBundle(bundle);
 
         Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();

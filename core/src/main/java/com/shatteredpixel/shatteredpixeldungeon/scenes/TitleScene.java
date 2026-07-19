@@ -429,8 +429,7 @@ public class TitleScene extends PixelScene {
 			return;
 		}
 
-		GamesInProgress.selectedEchoPlayMode = mode;
-		GamesInProgress.clearSlotCache();
+		GamesInProgress.selectEchoPlayMode(mode);
 		GamesInProgress.selectedClass = null;
 		if (GamesInProgress.checkAll().size() == 0) {
 			GamesInProgress.curSlot = 1;

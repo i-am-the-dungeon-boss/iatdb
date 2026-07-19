@@ -50,6 +50,24 @@ class DebugSettingsTest {
 	}
 
 	@Test
+	@DisplayName("debug start depth is the floor before the first boss")
+	void debugStartDepthIsBeforeFirstBoss() {
+		Assertions.assertThat(DebugSettings.START_DEPTH).isEqualTo(4);
+	}
+
+	@Test
+	@DisplayName("debug start hero pos is exit stairs when enabled, entrance otherwise")
+	void debugStartHeroPosIsExitWhenEnabled() {
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		Assertions.assertThat(DebugSettings.debugStartHeroPos())
+				.isEqualTo(DebugSettings.START_AT_EXIT);
+
+		DebugSettings.setDebugStart(false);
+		Assertions.assertThat(DebugSettings.debugStartHeroPos()).isEqualTo(-1);
+	}
+
+	@Test
 	@DisplayName("applyDebugStart sets depth, level, and strength when enabled")
 	void applyDebugStartSetsHeroAndDepth() {
 		Hero hero = new Hero();

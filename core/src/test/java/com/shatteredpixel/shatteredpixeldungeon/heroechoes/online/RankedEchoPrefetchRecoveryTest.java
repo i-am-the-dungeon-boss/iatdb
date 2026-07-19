@@ -1,7 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoCaptureTrigger;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
@@ -58,6 +62,40 @@ class RankedEchoPrefetchRecoveryTest {
 		Assertions.assertThat(outcome.isFound()).isTrue();
 		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
 		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo("local-after-solo");
+	}
+
+	@Test
+	@DisplayName("continue solo after ranked ERROR still captures boss kill into echoes-solo")
+	void continueSoloStillCapturesBossKillIntoEchoesSolo() {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		EchoHttpTransport transport = request -> {
+			throw new RuntimeException("network down");
+		};
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				new EchoStorage()));
+
+		Dungeon.prefetchEchoBossWithRankedRecovery(
+				5, failed -> EchoPrefetchUserChoice.CONTINUE_SOLO);
+
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+		Dungeon.depth = 5;
+
+		EchoCaptureTrigger.onBossDefeated();
+
+		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
+		Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
+		Assertions.assertThat(new File("echoes-ranked/depth-5.dat")).doesNotExist();
+		Assertions.assertThat(new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
+				.isPresent();
 	}
 
 	@Test

@@ -11,7 +11,8 @@ public final class EchoPlayModePaths {
 	private static final String ECHOES_BASE = "echoes";
 	private static final String LEADERBOARD_BASE = "leaderboard";
 
-	private EchoPlayModePaths() {}
+	private EchoPlayModePaths() {
+	}
 
 	public static EchoPlayMode storageMode() {
 		if (Dungeon.echoPlayMode != null && Dungeon.echoPlayMode != EchoPlayMode.NONE) {
@@ -38,11 +39,10 @@ public final class EchoPlayModePaths {
 	}
 
 	public static String echoesDir(EchoPlayMode mode) {
-		String suffix = gameFolderSuffix(mode);
-		if (suffix.isEmpty()) {
-			return ECHOES_BASE;
+		if (mode == null || mode == EchoPlayMode.NONE) {
+			mode = EchoPlayMode.SOLO;
 		}
-		return ECHOES_BASE + suffix;
+		return ECHOES_BASE + gameFolderSuffix(mode);
 	}
 
 	public static String echoesDir() {

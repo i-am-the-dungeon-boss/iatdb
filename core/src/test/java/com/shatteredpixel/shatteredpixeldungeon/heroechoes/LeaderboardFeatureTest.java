@@ -1,14 +1,16 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.badlogic.gdx.Files;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.List;
 
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,8 @@ class LeaderboardFeatureTest {
 
     @AfterEach
     void cleanup() {
+        FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
+        EchoTestSupport.deleteRecursively(new File("app-files"));
         EchoTestSupport.resetWorkflowState();
     }
 
@@ -84,14 +88,66 @@ class LeaderboardFeatureTest {
 
     @Test
     @DisplayName("EchoLeaderboardStorage ignores corrupted leaderboard files")
-    void ignoresCorruptedFile() throws Exception {
+    void ignoresCorruptedFile() {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-        try (FileWriter writer = new FileWriter(EchoPlayModePaths.leaderboardFile())) {
-            writer.write("this is not,a,valid,leaderboard\n");
-        }
+        FileUtils.getFileHandle(EchoPlayModePaths.leaderboardFile())
+                .writeBytes("this is not,a,valid,leaderboard\n".getBytes(), false);
 
         EchoLeaderboardStorage storage = new EchoLeaderboardStorage();
         Assertions.assertThat(storage.loadTop(10)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("solo default boss kill records killer on local leaderboard")
+    void soloDefaultBossKillRecordsKillerOnLocalLeaderboard() {
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+        Dungeon.depth = 5;
+        Hero hero = new Hero();
+        Dungeon.hero = hero;
+        HeroClass.WARRIOR.initHero(hero);
+
+        EchoCaptureTrigger.onBossDefeated();
+
+        List<EchoFightResult> top = new EchoLeaderboardStorage().loadTop(10);
+        Assertions.assertThat(top).hasSize(1);
+        Assertions.assertThat(top.get(0).bossWin).isFalse();
+        Assertions.assertThat(top.get(0).echoId).isNull();
+        Assertions.assertThat(top.get(0).playerClass).isEqualTo("WARRIOR");
+        Assertions.assertThat(top.get(0).depth).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("echo boss floor does not double-record leaderboard via onBossDefeated")
+    void echoBossFloorDoesNotDoubleRecordViaOnBossDefeated() {
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+        Dungeon.depth = 5;
+        Echo local = EchoTestSupport.warriorEchoWithData(5);
+        new EchoStorage().save(local);
+        Assertions.assertThat(Dungeon.prefetchEchoBossOutcome(5).isFound()).isTrue();
+
+        Hero hero = new Hero();
+        Dungeon.hero = hero;
+        HeroClass.MAGE.initHero(hero);
+
+        EchoCaptureTrigger.onBossDefeated();
+
+        Assertions.assertThat(new EchoLeaderboardStorage().loadTop(10)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("solo leaderboard save uses FileUtils local storage not process cwd")
+    void soloLeaderboardSaveUsesFileUtilsLocalStorageNotProcessCwd() {
+        FileUtils.setDefaultFileProperties(Files.FileType.Local, "app-files/");
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+        EchoLeaderboardStorage storage = new EchoLeaderboardStorage();
+        storage.append(new EchoFightResult(
+                "solo-1", true, 5, 1000L, "0.0.1", "WARRIOR", 50, 10, 20));
+
+        Assertions.assertThat(FileUtils.fileExists("leaderboard-solo.json")).isTrue();
+        Assertions.assertThat(new File("leaderboard-solo.json")).doesNotExist();
+        Assertions.assertThat(storage.loadTop(1)).hasSize(1);
+        Assertions.assertThat(storage.loadTop(1).get(0).echoId).isEqualTo("solo-1");
     }
 
     @Test
@@ -105,7 +161,7 @@ class LeaderboardFeatureTest {
         recorder.recordBossVictory(snap, 5, HeroClass.MAGE, EchoTestSupport.TEST_GAME_VERSION);
 
         Assertions.assertThat(storage.loadTop(10)).isEmpty();
-        Assertions.assertThat(new File("leaderboard-ranked.json").exists()).isFalse();
+        Assertions.assertThat(FileUtils.fileExists("leaderboard-ranked.json")).isFalse();
     }
 
     @Test

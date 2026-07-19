@@ -1,9 +1,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.badlogic.gdx.Files;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +21,8 @@ class EchoAndStorageTest {
 
     @AfterEach
     void cleanup() {
+        FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
+        EchoTestSupport.deleteRecursively(new File("app-files"));
         EchoTestSupport.resetWorkflowState();
     }
 
@@ -83,6 +87,21 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("solo EchoStorage save writes depth file containing echo and echo_policy")
+    void soloSaveWritesEchoAndPolicyKeys() throws Exception {
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+        Echo snap = EchoTestSupport.warriorEchoWithData(5);
+
+        new EchoStorage().save(snap);
+
+        Assertions.assertThat(FileUtils.fileExists("echoes-solo/depth-5.dat")).isTrue();
+        Bundle fileBundle = FileUtils.bundleFromFile("echoes-solo/depth-5.dat");
+        Assertions.assertThat(fileBundle.contains(Echo.BUNDLE_KEY)).isTrue();
+        Assertions.assertThat(fileBundle.contains(EchoStorage.POLICY_BUNDLE_KEY)).isTrue();
+        Assertions.assertThat(new EchoStorage().findEchoForDepth(5).isFound()).isTrue();
+    }
+
+    @Test
     @DisplayName("EchoStorage findEchoForDepth requires persisted echo policy")
     void findEchoForDepthRequiresPolicy() throws Exception {
         EchoStorage storage = new EchoStorage();
@@ -126,28 +145,67 @@ class EchoAndStorageTest {
     }
 
     @Test
-    @DisplayName("EchoStorage keeps only one echo per boss depth")
-    void keepsOnlyOneEchoPerDepth() {
+    @DisplayName("solo echo save uses FileUtils local storage not process cwd")
+    void soloEchoSaveUsesFileUtilsLocalStorageNotProcessCwd() {
+        FileUtils.setDefaultFileProperties(Files.FileType.Local, "app-files/");
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+        new EchoStorage().save(EchoTestSupport.warriorEcho(5));
+
+        Assertions.assertThat(FileUtils.fileExists("echoes-solo/depth-5.dat")).isTrue();
+        Assertions.assertThat(new File("echoes-solo/depth-5.dat")).doesNotExist();
+        Assertions.assertThat(new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
+                .isPresent();
+    }
+
+    @Test
+    @DisplayName("solo mode keeps one echo per boss depth")
+    void soloModeKeepsOneEchoPerBossDepth() {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
         EchoStorage storage = new EchoStorage();
+
+        storage.save(EchoTestSupport.warriorEcho(5));
+        storage.save(EchoTestSupport.warriorEcho(10));
+
         for (int i = 0; i < EchoStorage.MAX_ECHOES_PER_DEPTH + 5; i++) {
             Echo snap = EchoTestSupport.warriorEcho(5);
-            snap.echoId = "snap-" + i;
+            snap.echoId = "solo-5-" + i;
             snap.timestamp = 1_000L + i;
             storage.save(snap);
         }
 
-        File dir = EchoStorage.getEchoesDir();
-        File[] depthFiles = dir.listFiles((d, name) -> name.equals("depth-5.dat") || name.startsWith("depth-5-"));
+        Assertions.assertThat(EchoTestSupport.countEchoFiles()).isEqualTo(2);
+        Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
+                .isPresent()
+                .get()
+                .extracting(e -> e.echoId)
+                .isEqualTo("solo-5-5");
+        Assertions.assertThat(storage.loadForDepth(10, EchoTestSupport.TEST_GAME_VERSION)).isPresent();
+    }
 
-        Assertions.assertThat(depthFiles).isNotNull();
-        Assertions.assertThat(depthFiles.length).isEqualTo(1);
-        Assertions.assertThat(depthFiles[0].getName()).isEqualTo("depth-5.dat");
+    @Test
+    @DisplayName("ranked mode keeps one echo per boss depth")
+    void rankedModeKeepsOneEchoPerBossDepth() {
+        Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+        EchoStorage storage = new EchoStorage();
 
-        Optional<Echo> loaded = storage.loadForDepth(
-                5, EchoTestSupport.TEST_GAME_VERSION);
-        Assertions.assertThat(loaded).isPresent();
-        Assertions.assertThat(loaded.get().echoId).isEqualTo("snap-5");
+        storage.save(EchoTestSupport.warriorEcho(5));
+        storage.save(EchoTestSupport.warriorEcho(15));
+
+        for (int i = 0; i < EchoStorage.MAX_ECHOES_PER_DEPTH + 5; i++) {
+            Echo snap = EchoTestSupport.warriorEcho(5);
+            snap.echoId = "ranked-5-" + i;
+            snap.timestamp = 1_000L + i;
+            storage.save(snap);
+        }
+
+        Assertions.assertThat(EchoTestSupport.countEchoFiles()).isEqualTo(2);
+        Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
+                .isPresent()
+                .get()
+                .extracting(e -> e.echoId)
+                .isEqualTo("ranked-5-5");
+        Assertions.assertThat(storage.loadForDepth(15, EchoTestSupport.TEST_GAME_VERSION)).isPresent();
     }
 
     @Test

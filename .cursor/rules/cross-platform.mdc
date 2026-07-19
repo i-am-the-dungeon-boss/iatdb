@@ -1,0 +1,42 @@
+---
+description: Every feature and change must work on Android, desktop, and iOS
+alwaysApply: true
+---
+
+# Cross-Platform (Android / Desktop / iOS)
+
+This game ships on **desktop, Android, and iOS**. Every feature you implement or change must work on all three unless the user explicitly scopes it to one platform.
+
+## Default
+
+- Put shared behavior in `core` so all launchers get it.
+- Do not assume a desktop JVM, mouse/keyboard-only input, large screen, or process cwd.
+- Prefer existing portable APIs (`FileUtils`, libGDX, `Game.platform`, existing UI patterns) over new platform forks.
+
+## Before finishing any feature or change
+
+Ask: “Does this still work on Android, desktop, and iOS?”
+
+- [ ] Logic lives in `core` (or each platform module is updated intentionally)
+- [ ] No desktop-only assumptions (cwd files, `System.exit` paths, mouse-only UX, unbounded RAM)
+- [ ] Touch + keyboard/mouse still usable where UI changed
+- [ ] Portrait and landscape considered if layout/UI changed
+- [ ] Network / threading / lifecycle safe on mobile (pause, background, slow I/O)
+- [ ] Persistence uses `FileUtils` Local — not raw `java.io.File` relative paths
+
+## File persistence (common footgun)
+
+Launchers set `FileUtils.setDefaultFileProperties(Files.FileType.Local, "")`. Game data must use that sandbox on every platform.
+
+```java
+// ❌ BAD — process cwd; breaks on Android/iOS
+new FileOutputStream("echoes-solo/depth-5.dat");
+
+// ✅ GOOD
+FileUtils.bundleToFile("echoes-solo/depth-5.dat", bundle);
+```
+
+## Exceptions
+
+- Launcher modules (`android/`, `ios/`, `desktop/`) may use native APIs.
+- Platform-specific work only when the user asks for it; note which platforms are out of scope.

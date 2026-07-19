@@ -30,8 +30,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoSnapshotDebug;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -45,23 +45,22 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
-import com.watabou.utils.FileUtils;
 
 public class WndGame extends Window {
 
-	private static final int WIDTH		= 120;
-	private static final int BTN_HEIGHT	= 20;
-	private static final int GAP		= 2;
-	
+	private static final int WIDTH = 120;
+	private static final int BTN_HEIGHT = 20;
+	private static final int GAP = 2;
+
 	private int pos;
-	
+
 	public WndGame() {
-		
+
 		super();
 
-		//settings
+		// settings
 		RedButton curBtn;
-		addButton( curBtn = new RedButton( Messages.get(this, "settings") ) {
+		addButton(curBtn = new RedButton(Messages.get(this, "settings")) {
 			@Override
 			protected void onClick() {
 				hide();
@@ -72,37 +71,37 @@ public class WndGame extends Window {
 
 		// Challenges window
 		if (Dungeon.challenges > 0) {
-			addButton( curBtn = new RedButton( Messages.get(this, "challenges") ) {
+			addButton(curBtn = new RedButton(Messages.get(this, "challenges")) {
 				@Override
 				protected void onClick() {
 					hide();
-					GameScene.show( new WndChallenges( Dungeon.challenges, false ) );
+					GameScene.show(new WndChallenges(Dungeon.challenges, false));
 				}
-			} );
+			});
 			curBtn.icon(Icons.get(Icons.CHALLENGE_COLOR));
 		}
 
 		// Restart
 		if (Dungeon.hero == null || !Dungeon.hero.isAlive()) {
 
-			addButton( curBtn = new RedButton( Messages.get(this, "start") ) {
+			addButton(curBtn = new RedButton(Messages.get(this, "start")) {
 				@Override
 				protected void onClick() {
 					GamesInProgress.selectedClass = Dungeon.hero.heroClass;
 					GamesInProgress.curSlot = GamesInProgress.firstEmpty();
 					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
 				}
-			} );
+			});
 			curBtn.icon(Icons.get(Icons.ENTER));
 			curBtn.textColor(Window.TITLE_COLOR);
-			
-			addButton( curBtn = new RedButton( Messages.get(this, "rankings") ) {
+
+			addButton(curBtn = new RedButton(Messages.get(this, "rankings")) {
 				@Override
 				protected void onClick() {
 					InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
-					Game.switchScene( RankingsScene.class );
+					Game.switchScene(RankingsScene.class);
 				}
-			} );
+			});
 			curBtn.icon(Icons.get(Icons.RANKINGS));
 		}
 
@@ -110,25 +109,16 @@ public class WndGame extends Window {
 		RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
 			@Override
 			protected void onClick() {
-				try {
-					String timestamp = String.format("%d", System.currentTimeMillis());
-					Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.version, Dungeon.seed);
-					EchoSnapshotDebug.applyIfEnabled(echo);
-					echo.echoId = "manual-" + timestamp;
-					if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-						EchoOnlineSync.instance().uploadEchoAsync(echo);
-					} else {
-						String echoFolder = EchoPlayModePaths.echoesDir();
-						if (!FileUtils.dirExists(echoFolder)) {
-							FileUtils.getFileHandle(echoFolder).mkdirs();
-						}
-						FileUtils.bundleToFile(echoFolder + "/echo_" + timestamp + ".dat", echo.toFileBundle());
-						EchoOnlineSync.instance().uploadEchoAsync(echo);
-					}
-					GLog.p(Messages.get(WndGame.class, "echo_saved"));
-				} catch (IOException e) {
-					GLog.n(Messages.get(WndGame.class, "echo_failed"));
+				String timestamp = String.format("%d", System.currentTimeMillis());
+				Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.version, Dungeon.seed);
+				EchoSnapshotDebug.applyIfEnabled(echo);
+				echo.echoId = "manual-" + timestamp;
+				if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
+					saveRankedEcho(echo);
+				} else {
+					saveLocalEcho(echo);
 				}
+				GLog.p(Messages.get(WndGame.class, "echo_saved"));
 			}
 		};
 		addButton(saveEcho);
@@ -158,26 +148,44 @@ public class WndGame extends Window {
 				} catch (IOException e) {
 					ShatteredPixelDungeon.reportException(e);
 				}
+				Dungeon.echoPlayMode = EchoPlayMode.NONE;
 				Game.switchScene(TitleScene.class);
 			}
 		});
 		curBtn.icon(Icons.get(Icons.DISPLAY));
-		if (SPDSettings.intro()) curBtn.enable(false);
+		if (SPDSettings.intro())
+			curBtn.enable(false);
 
-		resize( WIDTH, pos );
+		resize(WIDTH, pos);
 	}
-	
-	private void addButton( RedButton btn ) {
-		add( btn );
-		btn.setRect( 0, pos > 0 ? pos += GAP : 0, WIDTH, BTN_HEIGHT );
+
+	/**
+	 * Persists a manually captured echo for the active non-ranked play mode.
+	 * Package-visible for tests.
+	 */
+	static void saveLocalEcho(Echo echo) {
+		new EchoStorage().save(echo);
+	}
+
+	/**
+	 * Uploads a manually captured echo for ranked mode (no local file).
+	 * Package-visible for tests.
+	 */
+	static void saveRankedEcho(Echo echo) {
+		EchoOnlineSync.instance().uploadEchoAsync(echo);
+	}
+
+	private void addButton(RedButton btn) {
+		add(btn);
+		btn.setRect(0, pos > 0 ? pos += GAP : 0, WIDTH, BTN_HEIGHT);
 		pos += BTN_HEIGHT;
 	}
 
-	private void addButtons( RedButton btn1, RedButton btn2 ) {
-		add( btn1 );
-		btn1.setRect( 0, pos > 0 ? pos += GAP : 0, (WIDTH - GAP) / 2, BTN_HEIGHT );
-		add( btn2 );
-		btn2.setRect( btn1.right() + GAP, btn1.top(), WIDTH - btn1.right() - GAP, BTN_HEIGHT );
+	private void addButtons(RedButton btn1, RedButton btn2) {
+		add(btn1);
+		btn1.setRect(0, pos > 0 ? pos += GAP : 0, (WIDTH - GAP) / 2, BTN_HEIGHT);
+		add(btn2);
+		btn2.setRect(btn1.right() + GAP, btn1.top(), WIDTH - btn1.right() - GAP, BTN_HEIGHT);
 		pos += BTN_HEIGHT;
 	}
 }

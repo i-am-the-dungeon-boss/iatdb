@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -748,7 +749,7 @@ public class InterlevelScene extends PixelScene {
 			}
 
 			Level level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
-			Dungeon.switchLevel(level, -1);
+			Dungeon.switchLevel(level, DebugSettings.debugStartHeroPos());
 		} else {
 			if (curTransition.destBranch != Dungeon.branch && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
 				// FIXME avoids holding allies when entering city quest area, this is very

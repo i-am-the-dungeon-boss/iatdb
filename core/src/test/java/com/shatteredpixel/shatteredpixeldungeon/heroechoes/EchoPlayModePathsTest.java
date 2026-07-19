@@ -29,12 +29,41 @@ class EchoPlayModePathsTest {
 	}
 
 	@Test
+	@DisplayName("unset play mode uses solo echo directory, not legacy echoes/")
+	void unsetPlayModeUsesSoloEchoDir() {
+		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
+
+		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-solo");
+		Assertions.assertThat(EchoPlayModePaths.echoesDir(EchoPlayMode.NONE)).isEqualTo("echoes-solo");
+	}
+
+	@Test
 	@DisplayName("ranked and solo use separate game save folders")
 	void rankedAndSoloUseSeparateGameFolders() {
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.RANKED;
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-ranked");
 
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.SOLO;
+		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-solo");
+	}
+
+	@Test
+	@DisplayName("selecting ranked mode clears stale solo dungeon mode for save folders")
+	void selectingRankedModeClearsStaleSoloDungeonMode() {
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
+
+		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-ranked");
+	}
+
+	@Test
+	@DisplayName("active solo dungeon mode keeps solo save folder when selected mode is still ranked")
+	void activeSoloDungeonModeKeepsSoloSaveFolder() {
+		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.RANKED;
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-solo");
 	}
 

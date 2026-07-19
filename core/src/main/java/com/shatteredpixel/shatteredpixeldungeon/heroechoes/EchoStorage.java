@@ -1,16 +1,15 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.badlogic.gdx.files.FileHandle;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
-import com.watabou.utils.Bundle;
-
 import com.watabou.noosa.Game;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,17 +22,14 @@ import java.util.regex.Pattern;
 
 public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
 
+    /** One persisted echo per boss depth within the active play mode. */
     public static final int MAX_ECHOES_PER_DEPTH = 1;
     public static final String POLICY_BUNDLE_KEY = "echo_policy";
     private static final Pattern DEPTH_FILE = Pattern.compile("^depth-(\\d+)(?:-\\d+)?\\.dat$");
 
     public static File getEchoesDir() {
-        File dir = new File(EchoPlayModePaths.echoesDir());
-        if (!dir.exists()) {
-            // noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-        }
-        return dir;
+        ensureEchoesDir();
+        return FileUtils.getFileHandle(EchoPlayModePaths.echoesDir()).file();
     }
 
     public void save(Echo echo) {
@@ -47,7 +43,7 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
             throw new IllegalArgumentException("echo_policy is required");
         }
         try {
-            getEchoesDir();
+            ensureEchoesDir();
             if (echo.timestamp <= 0) {
                 echo.timestamp = System.currentTimeMillis();
             }
@@ -58,7 +54,7 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
             clearDepth(echo.depth);
             Bundle fileBundle = echo.toFileBundle();
             fileBundle.put(POLICY_BUNDLE_KEY, policy.toBundle());
-            writeBundle(canonicalPath(echo.depth), fileBundle);
+            FileUtils.bundleToFile(canonicalPath(echo.depth), fileBundle);
         } catch (IOException ignored) {
         }
     }
@@ -94,23 +90,26 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         }
     }
 
-    /** Newest echo per boss depth, sorted newest first. */
+    /** Newest echo per boss depth for the active play mode, sorted newest first. */
     public List<EchoEntry> loadAll() {
         Map<Integer, EchoEntry> newestPerDepth = new HashMap<>();
-        File dir = getEchoesDir();
-        File[] files = dir.listFiles((d, name) -> name.endsWith(".dat") && !name.startsWith("latest-"));
-        if (files == null)
-            return new ArrayList<>();
-
-        for (File file : files) {
-            int depth = parseDepth(file.getName());
-            if (depth < 0)
+        ensureEchoesDir();
+        String dirName = EchoPlayModePaths.echoesDir();
+        for (String name : FileUtils.filesInDir(dirName)) {
+            if (!name.endsWith(".dat") || name.startsWith("latest-")) {
                 continue;
+            }
+            int depth = parseDepth(name);
+            if (depth < 0) {
+                continue;
+            }
             try {
-                Echo loaded = loadEchoFromFile(file);
-                if (loaded == null)
+                String path = dirName + "/" + name;
+                Echo loaded = loadEchoFromPath(path);
+                if (loaded == null) {
                     continue;
-                EchoEntry entry = new EchoEntry(file, loaded);
+                }
+                EchoEntry entry = new EchoEntry(FileUtils.getFileHandle(path).file(), loaded);
                 EchoEntry existing = newestPerDepth.get(depth);
                 if (existing == null || entry.sortTime() > existing.sortTime()) {
                     newestPerDepth.put(depth, entry);
@@ -129,16 +128,25 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         if (entry == null || entry.echo == null) {
             return false;
         }
-        File dir = getEchoesDir();
-        File[] files = dir.listFiles((d, name) -> belongsToDepth(name, entry.echo.depth));
-        if (files == null || files.length == 0) {
-            return false;
-        }
+        ensureEchoesDir();
+        String dirName = EchoPlayModePaths.echoesDir();
         boolean deleted = false;
-        for (File file : files) {
-            deleted |= file.delete();
+        for (String name : FileUtils.filesInDir(dirName)) {
+            if (belongsToDepth(name, entry.echo.depth)) {
+                deleted |= FileUtils.deleteFile(dirName + "/" + name);
+            }
         }
         return deleted;
+    }
+
+    private static void ensureEchoesDir() {
+        String dirName = EchoPlayModePaths.echoesDir();
+        if (!FileUtils.dirExists(dirName)) {
+            FileHandle dir = FileUtils.getFileHandle(dirName);
+            if (dir != null) {
+                dir.mkdirs();
+            }
+        }
     }
 
     private static String canonicalPath(int depth) {
@@ -146,13 +154,14 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
     }
 
     private static void clearDepth(int depth) {
-        File dir = getEchoesDir();
-        File[] files = dir.listFiles((d, name) -> belongsToDepth(name, depth));
-        if (files == null)
+        String dirName = EchoPlayModePaths.echoesDir();
+        if (!FileUtils.dirExists(dirName)) {
             return;
-        for (File file : files) {
-            // noinspection ResultOfMethodCallIgnored
-            file.delete();
+        }
+        for (String name : FileUtils.filesInDir(dirName)) {
+            if (belongsToDepth(name, depth)) {
+                FileUtils.deleteFile(dirName + "/" + name);
+            }
         }
     }
 
@@ -163,8 +172,8 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
     }
 
     private Optional<EchoFetchResult> loadResultForDepth(int depth, String currentGameVersion) {
-        File canonical = new File(canonicalPath(depth));
-        if (canonical.exists()) {
+        String canonical = canonicalPath(depth);
+        if (FileUtils.fileExists(canonical)) {
             try {
                 return readResult(canonical, depth, currentGameVersion);
             } catch (Exception ignored) {
@@ -172,20 +181,27 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
             return Optional.empty();
         }
 
-        File dir = getEchoesDir();
-        File[] files = dir.listFiles((d, name) -> name.startsWith("depth-" + depth + "-") && name.endsWith(".dat"));
-        if (files == null)
+        String dirName = EchoPlayModePaths.echoesDir();
+        if (!FileUtils.dirExists(dirName)) {
             return Optional.empty();
+        }
 
         EchoFetchResult newest = null;
         long newestTime = Long.MIN_VALUE;
-        for (File file : files) {
+        for (String name : FileUtils.filesInDir(dirName)) {
+            if (!name.startsWith("depth-" + depth + "-") || !name.endsWith(".dat")) {
+                continue;
+            }
             try {
-                Optional<EchoFetchResult> loaded = readResult(file, depth, currentGameVersion);
-                if (loaded.isEmpty())
+                String path = dirName + "/" + name;
+                Optional<EchoFetchResult> loaded = readResult(path, depth, currentGameVersion);
+                if (loaded.isEmpty()) {
                     continue;
+                }
                 EchoFetchResult result = loaded.get();
-                long sortTime = result.echo.timestamp > 0 ? result.echo.timestamp : file.lastModified();
+                long sortTime = result.echo.timestamp > 0
+                        ? result.echo.timestamp
+                        : FileUtils.getFileHandle(path).lastModified();
                 if (sortTime >= newestTime) {
                     newest = result;
                     newestTime = sortTime;
@@ -196,9 +212,9 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         return Optional.ofNullable(newest);
     }
 
-    private static Optional<EchoFetchResult> readResult(File file, int depth, String currentGameVersion)
+    private static Optional<EchoFetchResult> readResult(String path, int depth, String currentGameVersion)
             throws IOException {
-        Bundle fileBundle = readBundle(file.getPath());
+        Bundle fileBundle = FileUtils.bundleFromFile(path);
         if (!fileBundle.contains(Echo.BUNDLE_KEY) || !fileBundle.contains(POLICY_BUNDLE_KEY)) {
             return Optional.empty();
         }
@@ -217,23 +233,11 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         return Integer.parseInt(matcher.group(1));
     }
 
-    private static Echo loadEchoFromFile(File file) throws IOException {
-        Bundle fileBundle = readBundle(file.getPath());
+    private static Echo loadEchoFromPath(String path) throws IOException {
+        Bundle fileBundle = FileUtils.bundleFromFile(path);
         if (!fileBundle.contains(Echo.BUNDLE_KEY)) {
             return null;
         }
         return Echo.fromFileBundle(fileBundle);
-    }
-
-    private static void writeBundle(String path, Bundle bundle) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(path)) {
-            Bundle.write(bundle, fos);
-        }
-    }
-
-    private static Bundle readBundle(String path) throws IOException {
-        try (FileInputStream fis = new FileInputStream(path)) {
-            return Bundle.read(fis);
-        }
     }
 }

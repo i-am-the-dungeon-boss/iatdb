@@ -80,7 +80,7 @@ public final class EchoOnlineSync {
 		executor.execute(task);
 	}
 
-	void awaitBackgroundTasksForTests() throws InterruptedException {
+	public void awaitBackgroundTasksForTests() throws InterruptedException {
 		executor.shutdown();
 		executor.awaitTermination(5, TimeUnit.SECONDS);
 	}

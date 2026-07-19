@@ -22,6 +22,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
+import com.watabou.utils.Bundle;
 
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -39,6 +40,11 @@ public class EchoBoss extends Mob {
     public static final int ABILITY_COOLDOWN_TURNS = 50;
     public static final int HEAL_THRESHOLD_PERCENT = 35;
     public static final int MAX_HEALING_POTIONS = 2;
+
+    private static final String ECHO = "echo";
+    private static final String ECHO_POLICY = "echo_policy";
+    private static final String ABILITY_COOLDOWN = "ability_cooldown";
+    private static final String HEALING_POTIONS_USED = "healing_potions_used";
 
     {
         spriteClass = EchoBossSprite.class;
@@ -89,20 +95,66 @@ public class EchoBoss extends Mob {
     }
 
     public void initFromEcho(Echo echo, int depth) {
+        initFromEcho(echo, depth, Dungeon.getPendingEchoPolicy(), true);
+    }
+
+    private void initFromEcho(Echo echo, int depth, EchoPolicy policy, boolean scaleHp) {
         if (echo == null || !echo.hasCombatData()) {
             throw new IllegalArgumentException("Echo boss requires echo with hero combat data");
         }
         this.echo = echo;
-        echoPolicy = Dungeon.getPendingEchoPolicy();
+        // null policy keeps the built-in heal/attack heuristics in decideAction
+        echoPolicy = policy;
         fightRecorder = new EchoFightRecorder(new EchoLeaderboardStorage());
         echoHero = EchoHeroSnapshot.restoreHero(echo);
         if (echoHero == null) {
             throw new IllegalArgumentException("Echo boss requires restorable hero combat data");
         }
-        HP = HT = scaledHT(echo, depth);
+        if (scaleHp) {
+            HP = HT = scaledHT(echo, depth);
+        }
         defenseSkill = echoHero.defenseSkill(null);
         EXP = Math.max(20, echo.lvl * 5);
         maxLvl = Math.max(30, echo.lvl);
+    }
+
+    @Override
+    public void storeInBundle(Bundle bundle) {
+        super.storeInBundle(bundle);
+        if (echo != null) {
+            bundle.put(ECHO, echo.toBundle());
+        }
+        if (echoPolicy != null) {
+            bundle.put(ECHO_POLICY, echoPolicy.toBundle());
+        }
+        bundle.put(ABILITY_COOLDOWN, abilityCooldown);
+        bundle.put(HEALING_POTIONS_USED, healingPotionsUsed);
+    }
+
+    @Override
+    public void restoreFromBundle(Bundle bundle) {
+        // Stored echo is authoritative; pending echo may be cleared or from another
+        // fight.
+        if (bundle.contains(ECHO)) {
+            Echo stored = Echo.fromBundle(bundle.getBundle(ECHO));
+            EchoPolicy policy = bundle.contains(ECHO_POLICY)
+                    ? EchoPolicy.fromBundle(bundle.getBundle(ECHO_POLICY))
+                    : null;
+            initFromEcho(stored, Dungeon.depth, policy, false);
+        } else if (echo == null && Dungeon.getPendingEcho() != null) {
+            // Pre-persistence saves only had Dungeon.pendingEcho.
+            initFromEcho(Dungeon.getPendingEcho(), Dungeon.depth, Dungeon.getPendingEchoPolicy(), false);
+        }
+        super.restoreFromBundle(bundle);
+        if (bundle.contains(ABILITY_COOLDOWN)) {
+            abilityCooldown = bundle.getInt(ABILITY_COOLDOWN);
+        }
+        if (bundle.contains(HEALING_POTIONS_USED)) {
+            healingPotionsUsed = bundle.getInt(HEALING_POTIONS_USED);
+        }
+        if (state != SLEEPING) {
+            BossHealthBar.assignBoss(this);
+        }
     }
 
     public static void onHeroDeath() {

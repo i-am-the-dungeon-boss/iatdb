@@ -6,15 +6,21 @@ import com.watabou.utils.DeviceCompat;
 /** Debug-only toggles for quick testing in INDEV / desktop:debug builds. */
 public final class DebugSettings {
 
-	public static final int START_DEPTH = 5;
+	/** Floor before the first boss so descending triggers a real echo prefetch. */
+	public static final int START_DEPTH = 4;
 	public static final int START_LEVEL = 50;
 	public static final int START_STR = 50;
+	/**
+	 * Passed to {@link Dungeon#switchLevel} to place the hero on the down stairs.
+	 */
+	public static final int START_AT_EXIT = -2;
 
 	private static Boolean debugBuildOverride;
 	private static Boolean debugStartOverride;
 	private static Boolean weakEchoSnapshotsOverride;
 
-	private DebugSettings() {}
+	private DebugSettings() {
+	}
 
 	public static boolean isDebugBuild() {
 		if (debugBuildOverride != null) {
@@ -79,6 +85,14 @@ public final class DebugSettings {
 		if (START_STR > Hero.STARTING_STR) {
 			hero.STR = START_STR;
 		}
+	}
+
+	/**
+	 * Hero spawn cell for a new run: exit stairs when debug start is on, otherwise
+	 * default entrance placement ({@code -1}).
+	 */
+	public static int debugStartHeroPos() {
+		return debugStart() ? START_AT_EXIT : -1;
 	}
 
 	public static void resetForTests() {

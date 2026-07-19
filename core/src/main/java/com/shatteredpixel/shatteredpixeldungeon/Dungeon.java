@@ -495,7 +495,7 @@ public class Dungeon {
 	 * empty).
 	 */
 	public static EchoLookupOutcome prefetchEchoBossOutcome(int depth) {
-		if (echoBossActive && pendingEcho != null) {
+		if (echoBossActive && pendingEcho != null && pendingEcho.depth == depth) {
 			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho,
 					pendingEchoPolicy != null ? pendingEchoPolicy : EchoPolicy.fallback()));
 		}
@@ -544,6 +544,11 @@ public class Dungeon {
 	}
 
 	public static void storeEchoChoiceInBundle(Bundle bundle) {
+		// Pending echo is only meaningful on the boss floor it was fetched for.
+		if (!isPendingEchoForCurrentBossFloor()) {
+			clearPendingEcho();
+			echoBossActive = false;
+		}
 		bundle.put("echo_boss_active", echoBossActive);
 		if (pendingEcho != null) {
 			bundle.put("pending_echo", pendingEcho.toBundle());
@@ -565,6 +570,19 @@ public class Dungeon {
 		} else {
 			pendingEchoPolicy = null;
 		}
+		// Never carry a pending echo onto non-boss floors (or the wrong boss depth).
+		if (!isPendingEchoForCurrentBossFloor()) {
+			clearPendingEcho();
+			echoBossActive = false;
+		}
+	}
+
+	private static boolean isPendingEchoForCurrentBossFloor() {
+		return echoBossActive
+				&& pendingEcho != null
+				&& pendingEcho.hasCombatData()
+				&& EchoReplacementDecider.isBossDepth(depth)
+				&& pendingEcho.depth == depth;
 	}
 
 	public static void resetLevel() {

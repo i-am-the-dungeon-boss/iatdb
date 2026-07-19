@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-class EchoClientTest {
+public class EchoClientTest {
 
 	@AfterEach
 	void cleanup() {
@@ -181,12 +181,12 @@ class EchoClientTest {
 		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/leaderboard/5?limit=10");
 	}
 
-	static final class FakeEchoHttpTransport implements EchoHttpTransport {
+	public static final class FakeEchoHttpTransport implements EchoHttpTransport {
 
-		final List<EchoHttpRequest> requests = new CopyOnWriteArrayList<>();
+		public final List<EchoHttpRequest> requests = new CopyOnWriteArrayList<>();
 		final List<EchoHttpResponse> responses = new CopyOnWriteArrayList<>();
 
-		void enqueue(int status, String body) {
+		public void enqueue(int status, String body) {
 			responses.add(new EchoHttpResponse(status, body));
 		}
 

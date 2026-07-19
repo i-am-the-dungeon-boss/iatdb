@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutc
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
 
 import java.io.File;
 
@@ -26,6 +27,12 @@ public final class EchoTestSupport {
 	}
 
 	public static void resetWorkflowState() {
+		FileUtils.deleteDir("echoes");
+		FileUtils.deleteDir("echoes-solo");
+		FileUtils.deleteDir("echoes-ranked");
+		FileUtils.deleteFile("leaderboard.json");
+		FileUtils.deleteFile("leaderboard-solo.json");
+		FileUtils.deleteFile("leaderboard-ranked.json");
 		deleteRecursively(new File("echoes"));
 		deleteRecursively(new File("echoes-solo"));
 		deleteRecursively(new File("echoes-ranked"));
@@ -81,11 +88,11 @@ public final class EchoTestSupport {
 	}
 
 	public static int countEchoFiles() {
-		File dir = new File(EchoPlayModePaths.echoesDir());
-		if (!dir.exists())
+		String dir = EchoPlayModePaths.echoesDir();
+		if (!FileUtils.dirExists(dir)) {
 			return 0;
-		String[] files = dir.list();
-		return files == null ? 0 : files.length;
+		}
+		return FileUtils.filesInDir(dir).size();
 	}
 
 	public static void deleteRecursively(File file) {

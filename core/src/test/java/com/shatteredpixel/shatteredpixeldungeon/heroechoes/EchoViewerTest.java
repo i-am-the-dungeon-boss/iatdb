@@ -179,7 +179,7 @@ class EchoViewerTest {
 	@Test
 	@DisplayName("inventory layout fits snapshot detail window bounds")
 	void inventoryLayoutFitsDetailWindow() {
-		for (int slots : new int[]{4, 21, 25, 26}) {
+		for (int slots : new int[] { 4, 21, 25, 26 }) {
 			int[] layout = WndEchoDetail.fittingInventoryLayout(slots);
 			int cols = layout[0];
 			int size = layout[1];
@@ -195,7 +195,7 @@ class EchoViewerTest {
 	@Test
 	@DisplayName("inventory layout always uses five columns like the main bag")
 	void inventoryLayoutUsesFiveColumns() {
-		for (int slots : new int[]{21, 25, 26}) {
+		for (int slots : new int[] { 21, 25, 26 }) {
 			Assertions.assertThat(WndEchoDetail.fittingInventoryLayout(slots)[0]).isEqualTo(5);
 		}
 	}
