@@ -35,7 +35,7 @@ class EchoPlayerNameTest {
 	}
 
 	@Test
-	@DisplayName("fromHero uses Anonymous plus class when settings are blank")
+	@DisplayName("fromHero uses Anonymous when settings are blank")
 	void fromHeroDefaultsBlankPlayerName() {
 		SPDSettings.playerName("");
 		Hero hero = new Hero();
@@ -46,14 +46,15 @@ class EchoPlayerNameTest {
 
 		Echo echo = Echo.fromHero(hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L);
 
-		Assertions.assertThat(echo.userName).isEqualTo("Anonymous Warrior");
+		Assertions.assertThat(echo.userName).isEqualTo("Anonymous");
 	}
 
 	@Test
-	@DisplayName("default user name includes hero class")
-	void defaultUserNameIncludesHeroClass() {
-		Assertions.assertThat(Echo.defaultUserName("MAGE")).isEqualTo("Anonymous Mage");
-		Assertions.assertThat(Echo.defaultUserName("HUNTRESS")).isEqualTo("Anonymous Huntress");
+	@DisplayName("default user name is Anonymous")
+	void defaultUserNameIsAnonymous() {
+		Assertions.assertThat(Echo.defaultUserName("MAGE")).isEqualTo("Anonymous");
+		Assertions.assertThat(Echo.defaultUserName("HUNTRESS")).isEqualTo("Anonymous");
+		Assertions.assertThat(Echo.defaultUserName(null)).isEqualTo("Anonymous");
 	}
 
 	@Test

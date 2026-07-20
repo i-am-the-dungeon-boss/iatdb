@@ -4,12 +4,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.watabou.utils.Bundle;
 
-import java.util.Locale;
-
 public class Echo {
 
     public static final String BUNDLE_KEY = "echo";
-    /** Prefix when {@link SPDSettings#playerName()} is unset (plus hero class). */
+    /** Used when {@link SPDSettings#playerName()} is unset. */
     public static final String DEFAULT_USER_NAME = "Anonymous";
     private static final String ECHO_DATA = "echo_data";
 
@@ -42,7 +40,7 @@ public class Echo {
         s.gameSeed = gameSeed;
         s.timestamp = System.currentTimeMillis();
         s.heroClass = heroClass;
-        s.userName = defaultUserName(heroClass);
+        s.userName = DEFAULT_USER_NAME;
         s.lvl = lvl;
         s.hp = hp;
         s.ht = ht;
@@ -78,14 +76,8 @@ public class Echo {
                 data);
     }
 
-    /** e.g. {@code MAGE} → {@code Anonymous Mage}. */
     public static String defaultUserName(String heroClass) {
-        if (heroClass == null || heroClass.isEmpty()) {
-            return DEFAULT_USER_NAME;
-        }
-        String label = heroClass.substring(0, 1).toUpperCase(Locale.ROOT)
-                + heroClass.substring(1).toLowerCase(Locale.ROOT);
-        return DEFAULT_USER_NAME + " " + label;
+        return DEFAULT_USER_NAME;
     }
 
     public static String resolveUserName(String userName, String heroClass) {
