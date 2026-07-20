@@ -28,8 +28,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setOnlineEnabled(false);
 		sync.uploadEchoAsync(EchoTestSupport.warriorEcho(5));
 		sync.postLeaderboardResultAsync(new EchoFightResult(
-				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8
-		));
+				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8));
 
 		Assertions.assertThat(transport.requests).isEmpty();
 	}
@@ -45,7 +44,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
 
-		sync.uploadEchoAsync(EchoTestSupport.warriorEcho(5));
+		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
 		sync.awaitBackgroundTasksForTests();
 
 		Assertions.assertThat(transport.requests).hasSize(1);
@@ -63,8 +62,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 
 		sync.postLeaderboardResultAsync(new EchoFightResult(
-				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8
-		));
+				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8));
 		sync.awaitBackgroundTasksForTests();
 
 		Assertions.assertThat(transport.requests).hasSize(1);

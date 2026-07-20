@@ -1,4 +1,6 @@
 > **Related:** [PLAN.md](../../PLAN.md) · [online-integration.md](online-integration.md) · [README](README.md)
+>
+> **Superseded AI notes:** Flat-action stubs (`decideAction`, `wantsToHeal`, `PolicyInterpreter`, armor-ability cooldown) are **removed**. Hunting AI is `EchoPolicyStatusBuilder` → `EchoPolicyMatcher` → `EchoRoleExecutor`. Prefer [online-integration.md](online-integration.md) for the current pipeline; sections below that mention those stubs are historical.
 
 # Hero vs EchoBoss — Gap Analysis & Implementation Plan
 
@@ -8,9 +10,9 @@ This compares the player `Hero` (`core/src/main/java/com/shatteredpixel/shattere
 
 ## Executive Summary
 
-**What works today:** Echo capture, local storage, depth-5 boss replacement, boss HP scaling, partial combat stat delegation (`damageRoll`, `attackSkill`, `drRoll`), basic mob AI (chase + melee), class-based sprite tint, settings toggle, intro messaging, and leaderboard plumbing.
+**What works today:** Echo capture, local storage, boss replacement, boss HP scaling, combat stat delegation, role-based policy AI (match/execute), class-based sprite tint, settings, intro messaging, and leaderboard plumbing.
 
-**What does not work yet:** Most of what makes a hero *feel* like a hero in combat — evasion, attack speed, weapon/armor procs, talents on hit, subclass mechanics, consumable usage, armor/weapon abilities, ranged combat, and class-specific AI. Several pieces are **stubbed but not wired** (`decideAction`, `wantsToHeal`, minimal armor abilities).
+**What does not work yet:** Full hero _feel_ in combat — many weapon/armor procs, talents on hit, subclass mechanics, real armor/weapon abilities, and some ranged paths still fall through to mob AI when policy cannot resolve them.
 
 **Architectural note:** `EchoBoss` is a `Mob` holding a detached `Hero echoHero`. Combat rolls partially delegate to `echoHero`, but proc/speed/defense paths run on the `Mob` entity, so enchantments, glyphs, and talent triggers largely never fire.
 
@@ -18,8 +20,8 @@ This compares the player `Hero` (`core/src/main/java/com/shatteredpixel/shattere
 
 ## Feature Parity Checklist
 
-| Category                      | Hero                                                 | EchoBoss                                                        | Status                                   |
-| ----------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------- |
+| Category                      | Hero                                                 | EchoBoss                                                        | Status                                    |
+| ----------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------- |
 | **HP**                        | `Hero.updateHT()` + rings/elixirs                    | `scaledHT()` × 1.3 × depth bonus; boss HP separate from echo    | ✅ Implemented (intentionally buffed)     |
 | **Attack accuracy**           | `Hero.attackSkill()` — weapon, rings, talents        | Delegates to `echoHero.attackSkill()`                           | ✅ Partial (rolls work if bundle present) |
 | **Evasion**                   | `Hero.defenseSkill()` — armor, rings, talents, parry | `Mob.defenseSkill` flat field; init bug sets `attackSkill`      | ❌ Missing / buggy                        |
@@ -70,10 +72,12 @@ This compares the player `Hero` (`core/src/main/java/com/shatteredpixel/shattere
 ```
 
 **Implemented:**
+
 - `scaledHT()` — `BOSS_HP_MULTIPLIER` (1.3) + 2% per depth (`EchoBoss.java` ~90–94).
 - Overrides: `damageRoll()`, `attackSkill()`, `drRoll()` delegate to `echoHero` (~167–188).
 
 **Missing / broken:**
+
 - `defenseSkill` Mob field wrongly set to **attack** skill (line 104).
 - No override of `defenseSkill(Char)` — uses `Mob.defenseSkill` (~678–698 in `Mob.java`), ignoring armor/talents on `echoHero`.
 - No `speed()` or `attackDelay()` overrides — boss moves and attacks at generic mob pace.
@@ -88,6 +92,7 @@ This compares the player `Hero` (`core/src/main/java/com/shatteredpixel/shattere
 ### Capture (`Echo.fromHero`, `Hero.storeInBundle`)
 
 Full hero state is serialized:
+
 - Class, subclass, `armorAbility`, talents (`Talent.storeTalentsInBundle`)
 - Equipped: weapon, armor, artifact, misc, ring, second weapon
 - Full backpack (`Belongings.storeInBundle` — `Belongings.java` ~176–186)
@@ -166,8 +171,8 @@ Full hero state is serialized:
 
 ### PLAN.md intent vs reality
 
-| Planned AI                           | Status                                  |
-| ------------------------------------ | --------------------------------------- |
+| Planned AI                           | Status                                   |
+| ------------------------------------ | ---------------------------------------- |
 | Chase and attack                     | ✅ Via `Mob`                             |
 | Heal at low HP                       | 🟡 Logic only                            |
 | Class-specific positioning           | 🟡 Mage branch in `decideAction`, unused |
@@ -207,14 +212,14 @@ Full hero state is serialized:
 
 | Data captured                  | Used at boss runtime?                 | Gap                                       |
 | ------------------------------ | ------------------------------------- | ----------------------------------------- |
-| `heroClass`, `lvl`, `hp`, `ht` | Metadata, scaling, sprite             | ✅                                         |
-| Full `echoData` bundle         | Restored to `echoHero`                | ✅ when present                            |
+| `heroClass`, `lvl`, `hp`, `ht` | Metadata, scaling, sprite             | ✅                                        |
+| Full `echoData` bundle         | Restored to `echoHero`                | ✅ when present                           |
 | Talents                        | On `echoHero` only                    | Not wired to Mob combat                   |
 | Buffs at capture time          | Restored via `Char.restoreFromBundle` | May be inappropriate; no `live()` cleanup |
 | Backpack consumables           | UI viewer only                        | Boss cannot use                           |
 | `subClass`                     | Stored                                | Never consulted by AI                     |
 | `armorAbility`                 | Stored                                | Minimal stub                              |
-| Version compatibility          | `isCompatibleWith()`                  | ✅ storage skips incompatible              |
+| Version compatibility          | `isCompatibleWith()`                  | ✅ storage skips incompatible             |
 | Game seed                      | Stored                                | Not used for AI RNG                       |
 
 **Test gap:** Most boss tests use `warriorEcho()` with `echoData = null`, so combat delegation is untested with real equipment bundles.

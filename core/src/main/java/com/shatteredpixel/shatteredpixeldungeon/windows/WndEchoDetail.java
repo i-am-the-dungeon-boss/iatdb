@@ -18,7 +18,6 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
-import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 
 import java.text.DateFormat;
@@ -39,7 +38,7 @@ public class WndEchoDetail extends WndTabbed {
 	private static final int TITLE_HEIGHT = 14;
 
 	public static int[] fittingInventoryLayout(int slotCount) {
-		return new int[]{COLS, fittingInventorySlotSize(slotCount)};
+		return new int[] { COLS, fittingInventorySlotSize(slotCount) };
 	}
 
 	public static int fittingInventorySlotSize(int slotCount) {
@@ -116,8 +115,7 @@ public class WndEchoDetail extends WndTabbed {
 				Messages.get(this, "delete_title"),
 				Messages.get(this, "delete_body", echo.depth),
 				Messages.get(this, "delete_yes"),
-				Messages.get(this, "delete_no")
-		) {
+				Messages.get(this, "delete_no")) {
 			@Override
 			protected void onSelect(int index) {
 				if (index == 0) {
@@ -156,9 +154,12 @@ public class WndEchoDetail extends WndTabbed {
 			pos = title.bottom() + 2 * GAP;
 
 			int strBonus = hero.STR() - hero.STR;
-			if (strBonus > 0) statSlot(Messages.get(WndEchoDetail.class, "str"), hero.STR + " + " + strBonus);
-			else if (strBonus < 0) statSlot(Messages.get(WndEchoDetail.class, "str"), hero.STR + " - " + -strBonus);
-			else statSlot(Messages.get(WndEchoDetail.class, "str"), Integer.toString(hero.STR()));
+			if (strBonus > 0)
+				statSlot(Messages.get(WndEchoDetail.class, "str"), hero.STR + " + " + strBonus);
+			else if (strBonus < 0)
+				statSlot(Messages.get(WndEchoDetail.class, "str"), hero.STR + " - " + -strBonus);
+			else
+				statSlot(Messages.get(WndEchoDetail.class, "str"), Integer.toString(hero.STR()));
 
 			if (hero.shielding() > 0) {
 				statSlot(Messages.get(WndEchoDetail.class, "health"), hero.HP + "+" + hero.shielding() + "/" + hero.HT);
@@ -175,9 +176,10 @@ public class WndEchoDetail extends WndTabbed {
 			if (echo.gameSeed != 0) {
 				statSlot(Messages.get(WndEchoDetail.class, "dungeon_seed"), DungeonSeed.convertToCode(echo.gameSeed));
 			}
-			statSlot(Messages.get(WndEchoDetail.class, "compatible"),
-					Messages.get(WndEchoes.class,
-							echo.isCompatibleWith(Game.version) ? "yes" : "no"));
+			// Version gating disabled for now.
+			// statSlot(Messages.get(WndEchoDetail.class, "compatible"),
+			// Messages.get(WndEchoes.class,
+			// echo.isCompatibleWith(Game.version) ? "yes" : "no"));
 
 			long when = echo.timestamp > 0 ? echo.timestamp : entry.sortTime();
 			if (when > 0) {
@@ -185,15 +187,15 @@ public class WndEchoDetail extends WndTabbed {
 				statSlot(Messages.get(WndEchoDetail.class, "saved"), format.format(new Date(when)));
 			}
 
-			if (!echo.isCompatibleWith(Game.version)) {
-				pos += GAP;
-				RenderedTextBlock warn = PixelScene.renderTextBlock(
-						Messages.get(WndEchoDetail.class, "incompatible_warn"), 6);
-				warn.maxWidth(WIDTH);
-				warn.hardlight(0xFF6666);
-				warn.setPos(0, pos);
-				add(warn);
-			}
+			// if (!echo.isCompatibleWith(Game.version)) {
+			// pos += GAP;
+			// RenderedTextBlock warn = PixelScene.renderTextBlock(
+			// Messages.get(WndEchoDetail.class, "incompatible_warn"), 6);
+			// warn.maxWidth(WIDTH);
+			// warn.hardlight(0xFF6666);
+			// warn.setPos(0, pos);
+			// add(warn);
+			// }
 		}
 
 		private void statSlot(String label, String value) {

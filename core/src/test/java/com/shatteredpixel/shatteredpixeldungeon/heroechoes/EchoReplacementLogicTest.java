@@ -34,8 +34,9 @@ class BossReplacementLogicTest {
     @Test
     @DisplayName("Metadata-only echo does not replace boss")
     void metadataOnlyEchoDoesNotReplaceBoss() {
-        CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .outcomeWithPolicy(EchoTestSupport.warriorEcho(depth)));
+        EchoStorage storage = new EchoStorage();
+        storage.save(EchoTestSupport.warriorEcho(5));
+        CompositeEchoLookup.setEchoLookupForTests(storage);
 
         boolean should = Dungeon.prefetchEchoBossForDepth(5);
 

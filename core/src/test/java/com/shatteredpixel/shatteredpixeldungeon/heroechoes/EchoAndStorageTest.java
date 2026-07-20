@@ -4,6 +4,7 @@ import com.badlogic.gdx.Files;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -47,6 +48,37 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("create rejects blank hero class")
+    void createRejectsBlankHeroClass() {
+        Assertions.assertThatThrownBy(() -> Echo.create(
+                5, EchoTestSupport.TEST_GAME_VERSION, 1L,
+                "", 6, 28, 30, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hero_class");
+    }
+
+    @Test
+    @DisplayName("fromHero rejects null hero")
+    void fromHeroRejectsNullHero() {
+        Assertions.assertThatThrownBy(() -> Echo.fromHero(
+                null, 5, EchoTestSupport.TEST_GAME_VERSION, 1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hero");
+    }
+
+    @Test
+    @DisplayName("fromHero rejects hero without hero class")
+    void fromHeroRejectsMissingHeroClass() {
+        Hero hero = new Hero();
+        hero.heroClass = null;
+
+        Assertions.assertThatThrownBy(() -> Echo.fromHero(
+                hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hero_class");
+    }
+
+    @Test
     @DisplayName("Bundle round-trip preserves snapshot metadata")
     void bundleRoundTripPreservesFields() {
         Echo original = EchoTestSupport.warriorEcho(5);
@@ -62,20 +94,20 @@ class EchoAndStorageTest {
     }
 
     @Test
-    @DisplayName("isCompatibleWith accepts same major version only")
+    @DisplayName("isCompatibleWith currently always accepts (version gating off)")
     void versionCompatibilityUsesMajorVersion() {
         Echo snap = EchoTestSupport.warriorEcho(5);
         snap.gameVersion = "0.0.1";
 
         Assertions.assertThat(snap.isCompatibleWith("0.0.5")).isTrue();
-        Assertions.assertThat(snap.isCompatibleWith("1.0.0")).isFalse();
+        Assertions.assertThat(snap.isCompatibleWith("1.0.0")).isTrue();
     }
 
     @Test
     @DisplayName("EchoStorage save and loadForDepth round-trip a snapshot")
     void saveAndLoadForDepth() {
         EchoStorage storage = new EchoStorage();
-        Echo snap = EchoTestSupport.warriorEcho(5);
+        Echo snap = EchoTestSupport.warriorEchoWithData(5);
 
         storage.save(snap);
 
@@ -84,6 +116,7 @@ class EchoAndStorageTest {
         Assertions.assertThat(loaded).isPresent();
         Assertions.assertThat(loaded.get().depth).isEqualTo(5);
         Assertions.assertThat(loaded.get().heroClass).isEqualTo("WARRIOR");
+        Assertions.assertThat(loaded.get().hasCombatData()).isTrue();
     }
 
     @Test
@@ -102,10 +135,30 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("EchoStorage save round-trips role-based policy with the snapshot")
+    void saveRoundTripsRoleBasedPolicy() {
+        EchoStorage storage = new EchoStorage();
+        Echo snap = EchoTestSupport.warriorEchoWithData(5);
+        EchoPolicy policy = EchoTestSupport.roleBasedPolicy();
+
+        storage.save(snap, policy);
+
+        EchoPolicy loaded = storage.findEchoForDepth(5).result.policy;
+        Assertions.assertThat(loaded.isSupported()).isTrue();
+        Assertions.assertThat(loaded.schemaVersion).isEqualTo(EchoTestSupport.TEST_GAME_VERSION);
+        Assertions.assertThat(loaded.root().toString()).isEqualTo(policy.root().toString());
+        Assertions.assertThat(loaded.root().getJSONObject("capabilities").has("RANGED")).isTrue();
+        Assertions.assertThat(loaded.root().getJSONArray("reactions").getJSONObject(0).getString("id"))
+                .isEqualTo("finish_him");
+        Assertions.assertThat(loaded.root().getJSONObject("tuning").getDouble("aggression"))
+                .isEqualTo(0.55);
+    }
+
+    @Test
     @DisplayName("EchoStorage findEchoForDepth requires persisted echo policy")
     void findEchoForDepthRequiresPolicy() throws Exception {
         EchoStorage storage = new EchoStorage();
-        Echo snap = EchoTestSupport.warriorEcho(5);
+        Echo snap = EchoTestSupport.warriorEchoWithData(5);
         storage.save(snap);
 
         Assertions.assertThat(storage.findEchoForDepth(5).isFound()).isTrue();
@@ -122,14 +175,25 @@ class EchoAndStorageTest {
     }
 
     @Test
-    @DisplayName("EchoStorage skips incompatible versions on load")
-    void skipsIncompatibleVersionOnLoad() {
+    @DisplayName("EchoStorage findEchoForDepth skips metadata-only echoes")
+    void findEchoForDepthSkipsMetadataOnly() {
         EchoStorage storage = new EchoStorage();
-        Echo old = EchoTestSupport.echoWithVersion(5, "1.0.0");
+        storage.save(EchoTestSupport.warriorEcho(5));
+
+        Assertions.assertThat(storage.findEchoForDepth(5).isNotFound()).isTrue();
+    }
+
+    @Test
+    @DisplayName("EchoStorage loads echoes regardless of game version for now")
+    void loadsEchoRegardlessOfGameVersion() {
+        EchoStorage storage = new EchoStorage();
+        Echo old = EchoTestSupport.warriorEchoWithData(5);
+        old.gameVersion = "1.0.0";
         storage.save(old);
 
         Optional<Echo> loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
-        Assertions.assertThat(loaded).isEmpty();
+        Assertions.assertThat(loaded).isPresent();
+        Assertions.assertThat(loaded.get().gameVersion).isEqualTo("1.0.0");
     }
 
     @Test
@@ -150,7 +214,7 @@ class EchoAndStorageTest {
         FileUtils.setDefaultFileProperties(Files.FileType.Local, "app-files/");
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 
-        new EchoStorage().save(EchoTestSupport.warriorEcho(5));
+        new EchoStorage().save(EchoTestSupport.warriorEchoWithData(5));
 
         Assertions.assertThat(FileUtils.fileExists("echoes-solo/depth-5.dat")).isTrue();
         Assertions.assertThat(new File("echoes-solo/depth-5.dat")).doesNotExist();
@@ -164,11 +228,11 @@ class EchoAndStorageTest {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
         EchoStorage storage = new EchoStorage();
 
-        storage.save(EchoTestSupport.warriorEcho(5));
-        storage.save(EchoTestSupport.warriorEcho(10));
+        storage.save(EchoTestSupport.warriorEchoWithData(5));
+        storage.save(EchoTestSupport.warriorEchoWithData(10));
 
         for (int i = 0; i < EchoStorage.MAX_ECHOES_PER_DEPTH + 5; i++) {
-            Echo snap = EchoTestSupport.warriorEcho(5);
+            Echo snap = EchoTestSupport.warriorEchoWithData(5);
             snap.echoId = "solo-5-" + i;
             snap.timestamp = 1_000L + i;
             storage.save(snap);
@@ -189,11 +253,11 @@ class EchoAndStorageTest {
         Dungeon.echoPlayMode = EchoPlayMode.RANKED;
         EchoStorage storage = new EchoStorage();
 
-        storage.save(EchoTestSupport.warriorEcho(5));
-        storage.save(EchoTestSupport.warriorEcho(15));
+        storage.save(EchoTestSupport.warriorEchoWithData(5));
+        storage.save(EchoTestSupport.warriorEchoWithData(15));
 
         for (int i = 0; i < EchoStorage.MAX_ECHOES_PER_DEPTH + 5; i++) {
-            Echo snap = EchoTestSupport.warriorEcho(5);
+            Echo snap = EchoTestSupport.warriorEchoWithData(5);
             snap.echoId = "ranked-5-" + i;
             snap.timestamp = 1_000L + i;
             storage.save(snap);
@@ -214,12 +278,12 @@ class EchoAndStorageTest {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
         EchoStorage storage = new EchoStorage();
 
-        Echo first = EchoTestSupport.warriorEcho(5);
+        Echo first = EchoTestSupport.warriorEchoWithData(5);
         first.echoId = "first";
         first.timestamp = 1_000L;
         storage.save(first);
 
-        Echo second = EchoTestSupport.warriorEcho(5);
+        Echo second = EchoTestSupport.warriorEchoWithData(5);
         second.echoId = "second";
         second.timestamp = 2_000L;
         storage.save(second);

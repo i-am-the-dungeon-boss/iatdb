@@ -30,7 +30,7 @@ class EchoBossRegionalDeathTest {
         Dungeon.hero = hero;
         HeroClass.WARRIOR.initHero(hero);
 
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(5), 5);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(5), 5);
         boss.pos = 10;
         Dungeon.depth = 5;
 
@@ -47,7 +47,7 @@ class EchoBossRegionalDeathTest {
         HeroClass.WARRIOR.initHero(hero);
         hero.lvl = 7;
 
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(5), 5);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(5), 5);
         boss.pos = 10;
         Dungeon.depth = 5;
 
@@ -62,7 +62,7 @@ class EchoBossRegionalDeathTest {
     @DisplayName("solo regional boss death captures hero into echoes-solo")
     void soloRegionalDeathCapturesHeroIntoEchoesSolo() {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(5), 5);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(5), 5);
         boss.pos = 10;
         Dungeon.depth = 5;
 
@@ -92,7 +92,7 @@ class EchoBossRegionalDeathTest {
         Hero hero = new Hero();
         Dungeon.hero = hero;
         HeroClass.WARRIOR.initHero(hero);
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(10), 10);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(10), 10);
         Dungeon.depth = 10;
 
         EchoBossRegionalDeath.apply(boss, boss);
@@ -107,7 +107,7 @@ class EchoBossRegionalDeathTest {
         Hero hero = new Hero();
         Dungeon.hero = hero;
         HeroClass.WARRIOR.initHero(hero);
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(15), 15);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(15), 15);
         Dungeon.depth = 15;
 
         EchoBossRegionalDeath.apply(boss, boss);
@@ -122,7 +122,7 @@ class EchoBossRegionalDeathTest {
         Hero hero = new Hero();
         Dungeon.hero = hero;
         HeroClass.WARRIOR.initHero(hero);
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(20), 20);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(20), 20);
         Dungeon.depth = 20;
 
         EchoBossRegionalDeath.apply(boss, boss);
@@ -138,7 +138,7 @@ class EchoBossRegionalDeathTest {
         Hero hero = new Hero();
         Dungeon.hero = hero;
         HeroClass.WARRIOR.initHero(hero);
-        EchoBoss boss = new EchoBoss(EchoTestSupport.warriorEchoWithData(25), 25);
+        EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(25), 25);
         Dungeon.depth = 25;
 
         EchoBossRegionalDeath.apply(boss, boss);

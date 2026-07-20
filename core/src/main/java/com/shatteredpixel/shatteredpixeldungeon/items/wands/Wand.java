@@ -436,6 +436,11 @@ public abstract class Wand extends Item {
 	protected int chargesPerCast() {
 		return 1;
 	}
+
+	/** Decrement charges without {@link #wandUsed()} hero turn / talent side effects (EchoBoss AI). */
+	public void spendChargesForAi() {
+		curCharges = Math.max(0, curCharges - (cursed ? 1 : chargesPerCast()));
+	}
 	
 	public void fx(Ballistica bolt, Callback callback) {
 		MagicMissile.boltFromChar( curUser.sprite.parent,

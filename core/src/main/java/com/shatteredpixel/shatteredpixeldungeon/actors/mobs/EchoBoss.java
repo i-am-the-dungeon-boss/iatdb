@@ -3,48 +3,36 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyAction;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyContext;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyInterpreter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyMatcher;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStatus;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStatusBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossRegionalDeath;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.DeviceCompat;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class EchoBoss extends Mob {
 
-    public enum IntendedAction {
-        ATTACK,
-        HEAL,
-        MOVE,
-        WAIT
-    }
-
     public static final float BOSS_HP_MULTIPLIER = 1.3f;
-    public static final int ABILITY_COOLDOWN_TURNS = 50;
-    public static final int HEAL_THRESHOLD_PERCENT = 35;
-    public static final int MAX_HEALING_POTIONS = 2;
 
     private static final String ECHO = "echo";
     private static final String ECHO_POLICY = "echo_policy";
-    private static final String ABILITY_COOLDOWN = "ability_cooldown";
-    private static final String HEALING_POTIONS_USED = "healing_potions_used";
 
     {
         spriteClass = EchoBossSprite.class;
@@ -63,28 +51,36 @@ public class EchoBoss extends Mob {
     private Hero echoHero;
     private EchoFightRecorder fightRecorder;
     private EchoPolicy echoPolicy;
-    private int abilityCooldown = 0;
-    private int healingPotionsUsed = 0;
+    /** Recipe id → current step index (advanced when a recipe step executes). */
+    private final Map<String, Integer> recipeSteps = new HashMap<>();
 
     public Echo getEcho() {
         return echo;
+    }
+
+    public EchoPolicy getEchoPolicy() {
+        return echoPolicy;
     }
 
     public Hero getEchoHero() {
         return echoHero;
     }
 
+    /**
+     * Bundle / reflection construction; state comes from
+     * {@link #restoreFromBundle}.
+     */
     public EchoBoss() {
         super();
-        Echo pending = Dungeon.getPendingEcho();
-        if (pending != null) {
-            initFromEcho(pending, Dungeon.depth);
-        }
     }
 
     public EchoBoss(Echo echo, int depth) {
+        this(echo, depth, Dungeon.getPendingEchoPolicy());
+    }
+
+    public EchoBoss(Echo echo, int depth, EchoPolicy policy) {
         super();
-        initFromEcho(echo, depth);
+        initFromEcho(echo, depth, policy, true);
     }
 
     public static int scaledHT(Echo echo, int depth) {
@@ -94,16 +90,14 @@ public class EchoBoss extends Mob {
         return Math.round(echo.ht * BOSS_HP_MULTIPLIER * depthBonus);
     }
 
-    public void initFromEcho(Echo echo, int depth) {
-        initFromEcho(echo, depth, Dungeon.getPendingEchoPolicy(), true);
-    }
-
     private void initFromEcho(Echo echo, int depth, EchoPolicy policy, boolean scaleHp) {
         if (echo == null || !echo.hasCombatData()) {
             throw new IllegalArgumentException("Echo boss requires echo with hero combat data");
         }
+        if (policy == null || !policy.isSupported()) {
+            throw new IllegalArgumentException("Echo boss requires a supported echo_policy");
+        }
         this.echo = echo;
-        // null policy keeps the built-in heal/attack heuristics in decideAction
         echoPolicy = policy;
         fightRecorder = new EchoFightRecorder(new EchoLeaderboardStorage());
         echoHero = EchoHeroSnapshot.restoreHero(echo);
@@ -121,37 +115,21 @@ public class EchoBoss extends Mob {
     @Override
     public void storeInBundle(Bundle bundle) {
         super.storeInBundle(bundle);
-        if (echo != null) {
-            bundle.put(ECHO, echo.toBundle());
-        }
-        if (echoPolicy != null) {
-            bundle.put(ECHO_POLICY, echoPolicy.toBundle());
-        }
-        bundle.put(ABILITY_COOLDOWN, abilityCooldown);
-        bundle.put(HEALING_POTIONS_USED, healingPotionsUsed);
+        bundle.put(ECHO, echo.toBundle());
+        bundle.put(ECHO_POLICY, echoPolicy.toBundle());
     }
 
     @Override
     public void restoreFromBundle(Bundle bundle) {
-        // Stored echo is authoritative; pending echo may be cleared or from another
-        // fight.
-        if (bundle.contains(ECHO)) {
-            Echo stored = Echo.fromBundle(bundle.getBundle(ECHO));
-            EchoPolicy policy = bundle.contains(ECHO_POLICY)
-                    ? EchoPolicy.fromBundle(bundle.getBundle(ECHO_POLICY))
-                    : null;
-            initFromEcho(stored, Dungeon.depth, policy, false);
-        } else if (echo == null && Dungeon.getPendingEcho() != null) {
-            // Pre-persistence saves only had Dungeon.pendingEcho.
-            initFromEcho(Dungeon.getPendingEcho(), Dungeon.depth, Dungeon.getPendingEchoPolicy(), false);
+        // Stored echo + policy are authoritative; pending may be cleared or from
+        // another fight.
+        if (!bundle.contains(ECHO) || !bundle.contains(ECHO_POLICY)) {
+            throw new IllegalArgumentException("Echo boss requires echo and echo_policy");
         }
+        Echo stored = Echo.fromBundle(bundle.getBundle(ECHO));
+        EchoPolicy policy = EchoPolicy.fromBundle(bundle.getBundle(ECHO_POLICY));
+        initFromEcho(stored, Dungeon.depth, policy, false);
         super.restoreFromBundle(bundle);
-        if (bundle.contains(ABILITY_COOLDOWN)) {
-            abilityCooldown = bundle.getInt(ABILITY_COOLDOWN);
-        }
-        if (bundle.contains(HEALING_POTIONS_USED)) {
-            healingPotionsUsed = bundle.getInt(HEALING_POTIONS_USED);
-        }
         if (state != SLEEPING) {
             BossHealthBar.assignBoss(this);
         }
@@ -169,87 +147,38 @@ public class EchoBoss extends Mob {
         }
     }
 
-    public void recordPlayerDefeat() {
-        if (fightRecorder != null) {
-            fightRecorder.recordBossVictory(
-                    echo,
-                    Dungeon.depth,
-                    Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.version);
-        }
+    private void recordPlayerDefeat() {
+        fightRecorder.recordBossVictory(
+                echo,
+                Dungeon.depth,
+                Dungeon.hero != null ? Dungeon.hero.heroClass : null,
+                Game.version);
     }
 
-    public IntendedAction decideAction(int hpPercent, boolean hasHealingPotion, boolean meleeThreatened,
-            int currentAbilityCooldown) {
-        if (echoPolicy != null) {
-            EchoPolicyContext context = new EchoPolicyContext()
-                    .selfHpRatio(hpPercent / 100f)
-                    .heroClass(echo.heroClass)
-                    .heroVisible(Dungeon.hero != null)
-                    .distance(Dungeon.hero != null && Dungeon.level != null
-                            ? Dungeon.level.distance(pos, Dungeon.hero.pos)
-                            : 99);
-            if (hasHealingPotion) {
-                context.hasItem("PotionOfHealing", 1);
-            }
-            EchoPolicyAction action = EchoPolicyInterpreter.interpret(echoPolicy, context);
-            return EchoPolicyInterpreter.toIntendedAction(action);
-        }
-
-        if (hpPercent < HEAL_THRESHOLD_PERCENT
-                && hasHealingPotion
-                && healingPotionsUsed < MAX_HEALING_POTIONS
-                && !meleeThreatened) {
-            return IntendedAction.HEAL;
-        }
-        if (meleeThreatened && echoHero.heroClass == HeroClass.MAGE) {
-            return IntendedAction.MOVE;
-        }
-        return IntendedAction.ATTACK;
-    }
-
-    public boolean wantsToHeal(int hpPercent, boolean hasHealingPotion, boolean meleeThreatened) {
-        return decideAction(hpPercent, hasHealingPotion, meleeThreatened, abilityCooldown) == IntendedAction.HEAL;
-    }
-
-    public boolean tryHealFromInventory() {
-        if (healingPotionsUsed >= MAX_HEALING_POTIONS) {
+    /**
+     * Policy movement: {@link Mob#getCloser} is protected; updates sprite like
+     * hunting AI.
+     */
+    public boolean policyStepCloser(int cell) {
+        int oldPos = pos;
+        if (!getCloser(cell)) {
             return false;
         }
-        PotionOfHealing potion = echoHero.belongings.getItem(PotionOfHealing.class);
-        if (potion == null) {
-            return false;
-        }
-        potion.detach(echoHero.belongings.backpack);
-        PotionOfHealing.heal(this);
-        consumeHealingPotion();
+        moveSprite(oldPos, pos);
         return true;
     }
 
-    public void consumeHealingPotion() {
-        healingPotionsUsed++;
-    }
-
-    public int healingPotionsUsed() {
-        return healingPotionsUsed;
-    }
-
-    public int abilityCooldown() {
-        return abilityCooldown;
-    }
-
-    private int hpPercent() {
-        return HT > 0 ? (HP * 100 / HT) : 100;
-    }
-
-    private boolean hasHealingPotion() {
-        return echoHero.belongings.getItem(PotionOfHealing.class) != null;
-    }
-
-    private boolean isMeleeThreatened() {
-        return Dungeon.hero != null
-                && Dungeon.level != null
-                && Dungeon.level.adjacent(pos, Dungeon.hero.pos);
+    /**
+     * Policy movement: {@link Mob#getFurther} is protected; updates sprite like
+     * hunting AI.
+     */
+    public boolean policyStepFurther(int cell) {
+        int oldPos = pos;
+        if (!getFurther(cell)) {
+            return false;
+        }
+        moveSprite(oldPos, pos);
+        return true;
     }
 
     @Override
@@ -318,7 +247,7 @@ public class EchoBoss extends Mob {
 
     @Override
     public void damage(int dmg, Object src) {
-        if (fightRecorder != null && dmg > 0 && src == Dungeon.hero) {
+        if (dmg > 0 && src == Dungeon.hero) {
             fightRecorder.trackDamageTaken(dmg);
         }
         super.damage(dmg, src);
@@ -326,7 +255,7 @@ public class EchoBoss extends Mob {
 
     @Override
     public boolean attack(Char enemy, float dmgMulti, float dmgBonus, float accMulti) {
-        if (fightRecorder != null && enemy == Dungeon.hero) {
+        if (enemy == Dungeon.hero) {
             int hpBefore = enemy.HP;
             boolean result = super.attack(enemy, dmgMulti, dmgBonus, accMulti);
             fightRecorder.trackDamageDealt(Math.max(0, hpBefore - enemy.HP));
@@ -349,69 +278,92 @@ public class EchoBoss extends Mob {
     @Override
     protected boolean act() {
         if (state != HUNTING) {
+            debugAct("state=" + state + " → default mob act (not HUNTING)");
             return super.act();
         }
 
-        if (fightRecorder != null) {
-            fightRecorder.trackTurn();
+        // Char.act FOV update — needed before policy pathfinding when we spend the turn
+        // here.
+        if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()) {
+            fieldOfView = new boolean[Dungeon.level.length()];
         }
+        Dungeon.level.updateFieldOfView(this, fieldOfView);
 
-        if (abilityCooldown > 0) {
-            abilityCooldown--;
+        fightRecorder.trackTurn();
+
+        if (tryPolicyAct()) {
+            return true;
         }
-
-        if (abilityCooldown <= 0 && Dungeon.hero != null) {
-            useArmorAbility();
-            abilityCooldown = ABILITY_COOLDOWN_TURNS;
-        }
-
-        IntendedAction action = decideAction(
-                hpPercent(), hasHealingPotion(), isMeleeThreatened(), abilityCooldown);
-
-        switch (action) {
-            case HEAL:
-                if (tryHealFromInventory()) {
-                    spend(TICK);
-                    return true;
-                }
-                break;
-            case MOVE:
-                if (Dungeon.hero != null && getFurther(Dungeon.hero.pos)) {
-                    spend(TICK);
-                    return true;
-                }
-                break;
-            case WAIT:
-                spend(TICK);
-                return true;
-            case ATTACK:
-            default:
-                break;
-        }
-
+        // Melee / unresolved roles fall through to standard mob hunting AI.
+        debugAct("policy did not spend turn → fall through to mob hunting AI");
         return super.act();
     }
 
-    private void useArmorAbility() {
-        if (echoHero.armorAbility != null) {
-            if (echoHero.heroClass == HeroClass.WARRIOR) {
-                Buff.affect(this, Combo.class).hit(Dungeon.hero);
-            }
-            if (echoHero.heroClass == HeroClass.ROGUE) {
-                Buff.affect(this, Invisibility.class, 3f);
-            }
+    /**
+     * Sense → match → resolve → execute (canvas §9).
+     * 
+     * @return true if the turn was fully spent by policy
+     */
+    private boolean tryPolicyAct() {
+        EchoPolicyStatus status = EchoPolicyStatusBuilder.build(this, echoPolicy);
+        debugAct("sense hpSelf=" + fmt(status.selfHpRatio)
+                + " hpEnemy=" + fmt(status.enemyHpRatio)
+                + " dist=" + status.distance
+                + " los=" + status.enemyInLos
+                + " on=" + status.onTerrain
+                + " self=[" + String.join(",", status.selfStatuses) + "]"
+                + " enemy=[" + String.join(",", status.enemyStatuses) + "]"
+                + " ready=" + status.rolesReady
+                + " recipes=" + recipeSteps);
+
+        EchoPolicyChoice choice = EchoPolicyMatcher.choose(echoPolicy, status, recipeSteps);
+        if (choice == null) {
+            debugAct("match → no choice");
+            return false;
+        }
+        debugAct("match → layer=" + choice.layer
+                + " role=" + choice.useRole
+                + (choice.recipeId != null ? " recipe=" + choice.recipeId : ""));
+
+        int posBefore = pos;
+        boolean spent = EchoRoleExecutor.execute(this, echoPolicy, status, choice);
+        if (!spent) {
+            // Melee / staff fallthrough — let mob AI attack this turn.
+            debugAct("execute → not spent (fallthrough), role=" + choice.useRole);
+            return false;
+        }
+        if ("recipes".equals(choice.layer) && choice.recipeId != null) {
+            recipeSteps.merge(choice.recipeId, 1, Integer::sum);
+            debugAct("recipe step advanced id=" + choice.recipeId
+                    + " nextStep=" + recipeSteps.get(choice.recipeId));
+        }
+        debugAct("execute → spent turn, role=" + choice.useRole);
+        // Match hunting AI: movement costs 1/speed; other roles cost one tick.
+        if (pos != posBefore) {
+            spend(1f / speed());
+        } else {
+            spend(TICK);
+        }
+        return true;
+    }
+
+    private static String fmt(float ratio) {
+        return String.format(java.util.Locale.ROOT, "%.2f", ratio);
+    }
+
+    private static void debugAct(String message) {
+        if (DeviceCompat.isDebug()) {
+            DeviceCompat.log("EchoBoss", message);
         }
     }
 
     @Override
     public void die(Object cause) {
-        if (fightRecorder != null) {
-            fightRecorder.recordBossDefeat(
-                    echo,
-                    Dungeon.depth,
-                    Dungeon.hero != null ? Dungeon.hero.heroClass : null,
-                    Game.version);
-        }
+        fightRecorder.recordBossDefeat(
+                echo,
+                Dungeon.depth,
+                Dungeon.hero != null ? Dungeon.hero.heroClass : null,
+                Game.version);
         super.die(cause);
         EchoBossRegionalDeath.apply(this, cause);
     }

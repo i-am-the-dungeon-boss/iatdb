@@ -29,7 +29,7 @@ See [docs/hero-echoes/README.md](docs/hero-echoes/README.md) and [online-integra
 [Game client — GPL, this repo]
   Echo, EchoStorage, EchoClient
   EchoReplacementDecider → GET /v1/echoes/{depth}
-  EchoBoss + PolicyInterpreter (generic)
+  EchoBoss + EchoPolicyMatcher / EchoRoleExecutor
   EchoLeaderboardStorage + optional fetch
 
 [Hero Echoes service — proprietary, hero-echoes-backend]
@@ -53,17 +53,17 @@ See [docs/hero-echoes/README.md](docs/hero-echoes/README.md) and [online-integra
 ### Phase 2: Combat parity (in progress)
 
 - Combat delegation (evasion, procs, speed, attack delay)
-- Wire heal AI stubs; class positioning
-- See [gap analysis](docs/hero-echoes/echo-boss-gap-analysis.md)
+- Policy-driven item/role use (HEAL, cleanses, throws, movement); more parity still open
+- See [gap analysis](docs/hero-echoes/echo-boss-gap-analysis.md) (AI sections partly historical)
 
-### Phase 3: Online integration (next)
+### Phase 3: Online integration ✅ (core done)
 
 1. **`EchoClient`** — `GET/POST /v1/echoes`, leaderboard endpoints
 2. **`EchoWireCodec`** — `echo_data_base64` encoding
-3. **`EchoPolicy` + `PolicyInterpreter`** — run server policy locally
-4. Integrate fetch into `EchoReplacementDecider` (online first, local fallback, default boss)
+3. **`EchoPolicy` + matcher/executor** — role-based policy runtime
+4. **`CompositeEchoLookup`** — ranked online first, local/solo paths
 5. Async upload after boss kill; async result POST after echo fight
-6. Backend deployed separately (`hero-echoes-backend`)
+6. Backend deployed separately (`hero-echoes`)
 
 ### Phase 4: Expansion & polish
 

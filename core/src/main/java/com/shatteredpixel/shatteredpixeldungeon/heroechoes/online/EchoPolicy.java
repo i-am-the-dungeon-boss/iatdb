@@ -1,116 +1,83 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.watabou.noosa.Game;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
+/**
+ * Merged echo policy blob from the backend (capabilities / reactions / …).
+ * Persisted as received;
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss}
+ * matches and executes roles each hunting turn.
+ */
 public final class EchoPolicy {
 
-	public static final int SUPPORTED_SCHEMA_VERSION = 1;
+	public final String schemaVersion;
+	private final JSONObject root;
 
-	public final int schemaVersion;
-	public final List<Rule> rules;
-	public final JSONObject tuning;
+	public EchoPolicy(JSONObject root) {
+		JSONObject copy = root != null ? new JSONObject(root.toString()) : new JSONObject();
+		this.root = copy;
+		this.schemaVersion = readSchemaVersion(copy);
+	}
 
-	public EchoPolicy(int schemaVersion, List<Rule> rules, JSONObject tuning) {
-		this.schemaVersion = schemaVersion;
-		this.rules = rules != null ? rules : Collections.emptyList();
-		this.tuning = tuning;
+	/** Label written into fallback / local policies (not enforced). */
+	public static String supportedSchemaVersion() {
+		return Game.version != null ? Game.version : "";
+	}
+
+	public JSONObject root() {
+		return root;
 	}
 
 	public static EchoPolicy fromJson(String json) {
-		JSONObject root = new JSONObject(json);
-		return fromJson(root);
+		return fromJson(new JSONObject(json));
 	}
 
 	public static EchoPolicy fromJson(JSONObject root) {
-		int schemaVersion = root.optInt("policy_schema_version", 0);
-		JSONArray rulesArray = root.optJSONArray("rules");
-		List<Rule> rules = new ArrayList<>();
-		if (rulesArray != null) {
-			for (int i = 0; i < rulesArray.length(); i++) {
-				rules.add(Rule.fromJson(rulesArray.getJSONObject(i)));
-			}
-		}
-		return new EchoPolicy(schemaVersion, rules, root.optJSONObject("tuning"));
+		return new EchoPolicy(root);
 	}
 
 	public static EchoPolicy fallback() {
-		List<Rule> rules = new ArrayList<>();
-		rules.add(new Rule(
-				new JSONObject(),
-				new EchoPolicyAction(EchoPolicyAction.Type.MELEE_CHASE, null, 0),
-				0
-		));
-		return new EchoPolicy(SUPPORTED_SCHEMA_VERSION, rules, null);
+		JSONObject root = new JSONObject();
+		root.put("policy_schema_version", supportedSchemaVersion());
+		JSONObject capabilities = new JSONObject();
+		capabilities.put("MELEE", new JSONObject()
+				.put("pick", "FIRST_LEGAL")
+				.put("items", new JSONArray().put("*melee")));
+		root.put("capabilities", capabilities);
+		root.put("reactions", new JSONArray());
+		root.put("recipes", new JSONArray());
+		root.put("positioning", new JSONObject());
+		root.put("matchups", new JSONObject());
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray().put("default"))
+				.put("default_roles", new JSONArray().put("MELEE").put("WAIT")));
+		root.put("tuning", new JSONObject());
+		return new EchoPolicy(root);
 	}
 
+	/** Role-based policy with capabilities. Schema version is not checked for now. */
 	public boolean isSupported() {
-		return schemaVersion == SUPPORTED_SCHEMA_VERSION && !rules.isEmpty();
+		return root.has("capabilities");
 	}
 
 	public com.watabou.utils.Bundle toBundle() {
 		com.watabou.utils.Bundle bundle = new com.watabou.utils.Bundle();
 		bundle.put("policy_schema_version", schemaVersion);
-		org.json.JSONArray rulesArray = new org.json.JSONArray();
-		for (Rule rule : rules) {
-			org.json.JSONObject ruleJson = new org.json.JSONObject();
-			ruleJson.put("when", rule.when);
-			org.json.JSONObject doJson = new org.json.JSONObject();
-			doJson.put("action", rule.action.type.name());
-			if (rule.action.item != null) {
-				doJson.put("item", rule.action.item);
-			}
-			if (rule.action.range > 0) {
-				doJson.put("range", rule.action.range);
-			}
-			ruleJson.put("do", doJson);
-			ruleJson.put("priority", rule.priority);
-			rulesArray.put(ruleJson);
-		}
-		bundle.put("rules_json", rulesArray.toString());
-		if (tuning != null) {
-			bundle.put("tuning_json", tuning.toString());
-		}
+		bundle.put("policy_json", root.toString());
 		return bundle;
 	}
 
 	public static EchoPolicy fromBundle(com.watabou.utils.Bundle bundle) {
-		if (bundle == null) {
-			return fallback();
+		if (bundle == null || !bundle.contains("policy_json")) {
+			throw new IllegalArgumentException("echo_policy is required");
 		}
-		org.json.JSONObject root = new org.json.JSONObject();
-		root.put("policy_schema_version", bundle.getInt("policy_schema_version"));
-		if (bundle.contains("rules_json")) {
-			root.put("rules", new org.json.JSONArray(bundle.getString("rules_json")));
-		}
-		if (bundle.contains("tuning_json")) {
-			root.put("tuning", new org.json.JSONObject(bundle.getString("tuning_json")));
-		}
-		EchoPolicy policy = fromJson(root);
-		return policy.isSupported() ? policy : fallback();
+		return fromJson(bundle.getString("policy_json"));
 	}
 
-	public static final class Rule {
-		public final JSONObject when;
-		public final EchoPolicyAction action;
-		public final int priority;
-
-		public Rule(JSONObject when, EchoPolicyAction action, int priority) {
-			this.when = when != null ? when : new JSONObject();
-			this.action = action;
-			this.priority = priority;
-		}
-
-		static Rule fromJson(JSONObject json) {
-			JSONObject when = json.optJSONObject("when");
-			JSONObject doObj = json.optJSONObject("do");
-			EchoPolicyAction action = EchoPolicyAction.fromJson(doObj);
-			return new Rule(when, action, json.optInt("priority", 0));
-		}
+	private static String readSchemaVersion(JSONObject root) {
+		Object raw = root.opt("policy_schema_version");
+		return raw instanceof String ? (String) raw : "";
 	}
 }

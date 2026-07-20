@@ -18,11 +18,13 @@ public final class EchoFightRecorder {
 	}
 
 	public void trackDamageDealt(int amount) {
-		if (amount > 0) damageDealt += amount;
+		if (amount > 0)
+			damageDealt += amount;
 	}
 
 	public void trackDamageTaken(int amount) {
-		if (amount > 0) damageTaken += amount;
+		if (amount > 0)
+			damageTaken += amount;
 	}
 
 	public void trackTurn() {
@@ -30,17 +32,19 @@ public final class EchoFightRecorder {
 	}
 
 	public void recordBossVictory(Echo bossEcho, int depth, HeroClass playerClass, String gameVersion) {
+		if (playerClass == null) {
+			throw new IllegalArgumentException("fight result requires player_class");
+		}
 		persist(new EchoFightResult(
 				bossEcho != null ? bossEcho.echoId : null,
 				true,
 				depth,
 				System.currentTimeMillis(),
 				gameVersion,
-				playerClass != null ? playerClass.name() : "UNKNOWN",
+				playerClass.name(),
 				damageDealt,
 				damageTaken,
-				turns
-		));
+				turns));
 	}
 
 	private void persist(EchoFightResult result) {
@@ -51,20 +55,30 @@ public final class EchoFightRecorder {
 	}
 
 	public void recordBossDefeat(Echo bossEcho, int depth, HeroClass playerClass, String gameVersion) {
+		if (playerClass == null) {
+			throw new IllegalArgumentException("fight result requires player_class");
+		}
 		persist(new EchoFightResult(
 				bossEcho != null ? bossEcho.echoId : null,
 				false,
 				depth,
 				System.currentTimeMillis(),
 				gameVersion,
-				playerClass != null ? playerClass.name() : "UNKNOWN",
+				playerClass.name(),
 				damageDealt,
 				damageTaken,
-				turns
-		));
+				turns));
 	}
 
-	public int damageDealt() { return damageDealt; }
-	public int damageTaken() { return damageTaken; }
-	public int turns() { return turns; }
+	public int damageDealt() {
+		return damageDealt;
+	}
+
+	public int damageTaken() {
+		return damageTaken;
+	}
+
+	public int turns() {
+		return turns;
+	}
 }

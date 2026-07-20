@@ -101,6 +101,9 @@ class Depth5EchoBossSelectionTest {
 
         Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();
         Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
+        Assertions.assertThat(Dungeon.getPendingEchoPolicy()).isNotNull();
+        Assertions.assertThat(Dungeon.getPendingEchoPolicy().isSupported()).isTrue();
+        Assertions.assertThat(Dungeon.getPendingEchoPolicy().root().has("capabilities")).isTrue();
         Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
         Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
     }

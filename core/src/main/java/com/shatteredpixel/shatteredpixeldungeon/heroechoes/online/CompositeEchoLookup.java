@@ -46,16 +46,10 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 
 	@Override
 	public EchoLookupOutcome findEchoForDepth(int depth) {
-		EchoLookupOutcome outcome;
 		if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-			outcome = fetchRankedEcho(depth);
-		} else {
-			outcome = fetchLocalEcho(depth);
+			return fetchRankedEcho(depth);
 		}
-		if (outcome.isFound() && outcome.result.policy == null) {
-			return EchoLookupOutcome.notFound();
-		}
-		return outcome;
+		return fetchLocalEcho(depth);
 	}
 
 	private EchoLookupOutcome fetchLocalEcho(int depth) {
@@ -68,7 +62,7 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 				return local;
 			}
 			Echo echo = local.result.echo;
-			EchoPolicy remotePolicy = client.fetchEchoPolicy(echo.heroClass, echo.lvl);
+			EchoPolicy remotePolicy = client.fetchEchoPolicy(echo);
 			if (remotePolicy == null || !remotePolicy.isSupported()) {
 				return local;
 			}

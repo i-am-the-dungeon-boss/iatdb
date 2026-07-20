@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.ShadowBox;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -51,6 +52,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
 import com.watabou.gltextures.TextureCache;
@@ -310,10 +312,8 @@ public class InterlevelScene extends PixelScene {
 		String text = Messages.get(Mode.class, mode.name());
 
 		loadingText = PixelScene.renderTextBlock(text, 9);
-		loadingText.setPos(
-				insets.left + w - loadingText.width() - 12,
-				insets.top + h - loadingText.height() - 6);
-		align(loadingText);
+		loadingText.align(RenderedTextBlock.RIGHT_ALIGN);
+		layoutLoadingText(w, h);
 		add(loadingText);
 
 		if (mode == Mode.DESCEND && lastRegion <= 5 && !DeviceCompat.isDebug()) {
@@ -505,6 +505,7 @@ public class InterlevelScene extends PixelScene {
 	}
 
 	private int dots = 0;
+	private boolean showingEchoBossLoad = false;
 	private boolean textFadingIn = true;
 
 	@Override
@@ -515,10 +516,17 @@ public class InterlevelScene extends PixelScene {
 			waitingTime += Game.elapsed;
 		}
 
-		if (mode != Mode.FALL && dots != Math.ceil(waitingTime / ((2 * fadeTime) / 3f))) {
-			String text = loadingEchoBoss
+		int w = (int) (Camera.main.width - insets.left - insets.right);
+		int h = (int) (Camera.main.height - insets.top - insets.bottom);
+
+		boolean echoLoad = loadingEchoBoss;
+		if (mode != Mode.FALL
+				&& (dots != Math.ceil(waitingTime / ((2 * fadeTime) / 3f))
+						|| echoLoad != showingEchoBossLoad)) {
+			String text = echoLoad
 					? Messages.get(InterlevelScene.class, "loading_echo_boss")
 					: Messages.get(Mode.class, mode.name());
+			showingEchoBossLoad = echoLoad;
 			dots = (int) Math.ceil(waitingTime / ((2 * fadeTime) / 3f)) % 3;
 			switch (dots) {
 				case 1:
@@ -532,10 +540,9 @@ public class InterlevelScene extends PixelScene {
 					loadingText.text(text + "...");
 					break;
 			}
+			// Longer echo-boss copy must re-anchor or it clips past the right edge.
+			layoutLoadingText(w, h);
 		}
-
-		int w = (int) (Camera.main.width - insets.left - insets.right);
-		int h = (int) (Camera.main.height - insets.top - insets.bottom);
 
 		switch (phase) {
 
@@ -667,6 +674,23 @@ public class InterlevelScene extends PixelScene {
 			timeLeft = fadeTime;
 		}
 
+	}
+
+	/**
+	 * Right-align loading label inside the safe area (supports longer echo-boss
+	 * copy).
+	 */
+	private void layoutLoadingText(int w, int h) {
+		int maxW = Math.max(48, w - 24);
+		String text = loadingText.text();
+		if (text != null) {
+			loadingText.align(RenderedTextBlock.RIGHT_ALIGN);
+			loadingText.text(text, maxW);
+		}
+		loadingText.setPos(
+				insets.left + w - loadingText.width() - 12,
+				insets.top + h - loadingText.height() - 6);
+		align(loadingText);
 	}
 
 	private void prefetchEchoBossIfNeeded(int depth, int branch) {
@@ -850,8 +874,31 @@ public class InterlevelScene extends PixelScene {
 			Dungeon.switchLevel(Dungeon.loadLevel(GamesInProgress.curSlot), -1);
 		} else {
 			Level level = Dungeon.loadLevel(GamesInProgress.curSlot);
-			Dungeon.switchLevel(level, Dungeon.hero.pos);
+			if (Dungeon.shouldRetreatEchoBossOnContinue(level)) {
+				retreatFromSealedEchoBoss();
+			} else {
+				Dungeon.switchLevel(level, Dungeon.hero.pos);
+			}
 		}
+	}
+
+	/**
+	 * Closing the game mid echo-boss fight forfeits the arena: abandon the
+	 * sealed boss floor and resume on the previous floor at its down-stairs.
+	 */
+	private void retreatFromSealedEchoBoss() throws IOException {
+		Dungeon.abandonSealedEchoBossFloor();
+		Dungeon.depth = Math.max(1, Dungeon.depth - 1);
+
+		Level level;
+		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
+			level = Dungeon.loadLevel(GamesInProgress.curSlot);
+		} else {
+			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
+		}
+		// -2 → place on REGULAR_EXIT (stairs down toward the boss floor)
+		Dungeon.switchLevel(level, -2);
+		GLog.w(Messages.get(EchoBoss.class, "quit_retreat"));
 	}
 
 	private void resurrect() {

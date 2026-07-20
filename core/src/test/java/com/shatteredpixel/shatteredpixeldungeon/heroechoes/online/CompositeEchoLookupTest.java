@@ -26,24 +26,11 @@ class CompositeEchoLookupTest {
 
 	@Test
 	@DisplayName("ranked mode fetches echo online")
-	void rankedModeFetchesOnline() {
+	void rankedModeFetchesOnline() throws Exception {
+		Echo online = EchoTestSupport.warriorEchoWithData(5);
+		online.echoId = "online-1";
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"online-1\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"MAGE\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\","
-				+ "\"echo_policy\":{"
-				+ "\"policy_schema_version\":1,"
-				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
-				+ "}"
-				+ "}");
+		transport.enqueue(200, EchoTestSupport.fetchResponseJson(online, EchoPolicy.fallback()));
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
@@ -51,7 +38,7 @@ class CompositeEchoLookupTest {
 		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
 
 		EchoStorage local = new EchoStorage();
-		local.save(EchoTestSupport.warriorEcho(5));
+		local.save(EchoTestSupport.warriorEchoWithData(5));
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
@@ -66,21 +53,13 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
-	@DisplayName("ranked mode returns NOT_FOUND when fetch response omits policy")
-	void rankedModeReturnsNotFoundWithoutPolicy() {
+	@DisplayName("ranked mode retries DECODE when fetch response is corrupt")
+	void rankedModeRetriesDecodeOnCorruptBody() throws Exception {
+		Echo online = EchoTestSupport.warriorEchoWithData(5);
+		String corrupt = EchoWireCodec.encodeEchoUpload(online, "test-client");
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"online-1\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"MAGE\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\""
-				+ "}");
+		transport.enqueue(200, corrupt);
+		transport.enqueue(200, corrupt);
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
@@ -91,7 +70,10 @@ class CompositeEchoLookupTest {
 				new EchoClient("https://echo.test", "secret", transport),
 				new EchoStorage());
 
-		Assertions.assertThat(lookup.findEchoForDepth(5).isNotFound()).isTrue();
+		EchoLookupOutcome outcome = lookup.findEchoForDepth(5);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+		Assertions.assertThat(transport.requests).hasSize(CompositeEchoLookup.RANKED_ATTEMPTS);
 	}
 
 	@Test
@@ -106,7 +88,7 @@ class CompositeEchoLookupTest {
 		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
 
 		EchoStorage local = new EchoStorage();
-		local.save(EchoTestSupport.warriorEcho(5));
+		local.save(EchoTestSupport.warriorEchoWithData(5));
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
@@ -130,7 +112,7 @@ class CompositeEchoLookupTest {
 		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
 
 		EchoStorage local = new EchoStorage();
-		local.save(EchoTestSupport.warriorEcho(5));
+		local.save(EchoTestSupport.warriorEchoWithData(5));
 
 		CompositeEchoLookup lookup = new CompositeEchoLookup(
 				new EchoClient("https://echo.test", "secret", transport),
@@ -141,26 +123,13 @@ class CompositeEchoLookupTest {
 
 	@Test
 	@DisplayName("ranked mode auto-retries ERROR then returns FOUND")
-	void rankedModeAutoRetriesThenFound() {
+	void rankedModeAutoRetriesThenFound() throws Exception {
 		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		Echo online = EchoTestSupport.warriorEchoWithData(5);
+		online.echoId = "online-retry";
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(503, "{}");
-		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"online-retry\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"MAGE\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\","
-				+ "\"echo_policy\":{"
-				+ "\"policy_schema_version\":1,"
-				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
-				+ "}"
-				+ "}");
+		transport.enqueue(200, EchoTestSupport.fetchResponseJson(online, EchoPolicy.fallback()));
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
@@ -182,25 +151,14 @@ class CompositeEchoLookupTest {
 	@DisplayName("non-ranked mode never fetches online even when backend is configured")
 	void nonRankedNeverFetchesOnline() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"online-1\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"MAGE\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\""
-				+ "}");
+		transport.enqueue(200, "{\"unused\":true}");
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 
-		Echo localEcho = EchoTestSupport.warriorEcho(5);
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
 		EchoStorage local = new EchoStorage();
 		local.save(localEcho);
 
@@ -222,15 +180,19 @@ class CompositeEchoLookupTest {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_policy\":{"
-				+ "\"policy_schema_version\":1,"
-				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"WAIT\"},\"priority\":0}]"
-				+ "}"
+				+ "\"policy_schema_version\":\"0.0.1\","
+				+ "\"capabilities\":{\"MELEE\":{\"pick\":\"FIRST_LEGAL\",\"items\":[\"*melee\"]}},"
+				+ "\"reactions\":[],"
+				+ "\"recipes\":[],"
+				+ "\"selection\":{\"order\":[\"default\"],\"default_roles\":[\"MELEE\"]}"
+				+ "},"
+				+ "\"base_policy_version\":\"0.0.1\""
 				+ "}");
 
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 
-		Echo localEcho = EchoTestSupport.warriorEcho(5);
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
 		EchoStorage local = new EchoStorage();
 		local.save(localEcho);
 
@@ -242,8 +204,8 @@ class CompositeEchoLookupTest {
 
 		Assertions.assertThat(result.isFound()).isTrue();
 		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(result.result.policy.rules.get(0).action.type)
-				.isEqualTo(EchoPolicyAction.Type.WAIT);
+		Assertions.assertThat(result.result.policy.isSupported()).isTrue();
+		Assertions.assertThat(result.result.policy.root().has("capabilities")).isTrue();
 		Assertions.assertThat(transport.requests).hasSize(1);
 		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/echoes/policy");
 	}
@@ -252,12 +214,12 @@ class CompositeEchoLookupTest {
 	@DisplayName("solo mode keeps local policy when backend is not configured")
 	void soloModeKeepsLocalPolicyWhenUnconfigured() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-		transport.enqueue(200, "{\"echo_policy\":{\"policy_schema_version\":1,\"rules\":[]}}");
+		transport.enqueue(200, "{\"echo_policy\":{\"policy_schema_version\":\"0.0.1\",\"capabilities\":{}}}");
 
 		EchoOnlineSettings.resetForTests();
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 
-		Echo localEcho = EchoTestSupport.warriorEcho(5);
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
 		EchoStorage local = new EchoStorage();
 		local.save(localEcho);
 

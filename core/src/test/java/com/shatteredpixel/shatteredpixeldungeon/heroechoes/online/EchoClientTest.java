@@ -3,14 +3,17 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@ExtendWith(GdxTestExtension.class)
 public class EchoClientTest {
 
 	@AfterEach
@@ -21,23 +24,10 @@ public class EchoClientTest {
 	@Test
 	@DisplayName("fetchEcho returns decoded echo and policy on 200")
 	void fetchEchoReturnsResult() throws Exception {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		echo.echoId = "5-99";
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
-		transport.enqueue(200, "{"
-				+ "\"echo_id\":\"5-99\","
-				+ "\"depth\":5,"
-				+ "\"game_version\":\"0.0.1\","
-				+ "\"hero_class\":\"WARRIOR\","
-				+ "\"lvl\":6,"
-				+ "\"hp\":20,"
-				+ "\"ht\":30,"
-				+ "\"timestamp\":1,"
-				+ "\"game_seed\":9,"
-				+ "\"echo_data_base64\":\"dGVzdA==\","
-				+ "\"echo_policy\":{"
-				+ "\"policy_schema_version\":1,"
-				+ "\"rules\":[{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
-				+ "}"
-				+ "}");
+		transport.enqueue(200, EchoTestSupport.fetchResponseJson(echo, EchoPolicy.fallback()));
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
@@ -45,7 +35,8 @@ public class EchoClientTest {
 
 		Assertions.assertThat(result.isFound()).isTrue();
 		Assertions.assertThat(result.result.echo.echoId).isEqualTo("5-99");
-		Assertions.assertThat(result.result.policy.rules).isNotEmpty();
+		Assertions.assertThat(result.result.echo.hasCombatData()).isTrue();
+		Assertions.assertThat(result.result.policy.isSupported()).isTrue();
 		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/echoes/5");
 	}
 
@@ -84,6 +75,33 @@ public class EchoClientTest {
 	}
 
 	@Test
+	@DisplayName("fetchEcho returns DECODE when 200 body omits required fields")
+	void fetchEchoReturnsDecodeWhenBodyIncomplete() throws Exception {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, EchoWireCodec.encodeEchoUpload(echo, "test-client"));
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		EchoLookupOutcome outcome = client.fetchEcho(5);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+	}
+
+	@Test
+	@DisplayName("fetchEcho returns DECODE when 200 body is not JSON")
+	void fetchEchoReturnsDecodeWhenBodyMalformed() {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "not-json");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		EchoLookupOutcome outcome = client.fetchEcho(5);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+	}
+
+	@Test
 	@DisplayName("fetchEcho returns ERROR on 503")
 	void fetchEchoReturnsErrorOn503() {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
@@ -112,28 +130,34 @@ public class EchoClientTest {
 	}
 
 	@Test
-	@DisplayName("fetchEchoPolicy posts hero_class and lvl and returns decoded policy")
+	@DisplayName("fetchEchoPolicy posts policy_input and returns decoded policy")
 	void fetchEchoPolicyReturnsPolicy() {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_policy\":{"
-				+ "\"policy_schema_version\":1,"
-				+ "\"rules\":[{\"when\":{\"class\":\"MAGE\"},\"do\":{\"action\":\"KEEP_DISTANCE\",\"range\":3},\"priority\":60},"
-				+ "{\"when\":{},\"do\":{\"action\":\"MELEE_CHASE\"},\"priority\":0}]"
-				+ "}"
+				+ "\"policy_schema_version\":\"0.0.1\","
+				+ "\"capabilities\":{\"RANGED\":{\"pick\":\"MAX_DAMAGE\",\"items\":[\"MagesStaff\"]},"
+				+ "\"MELEE\":{\"pick\":\"FIRST_LEGAL\",\"items\":[\"*melee\"]}},"
+				+ "\"reactions\":[],"
+				+ "\"recipes\":[],"
+				+ "\"selection\":{\"order\":[\"default\"],\"default_roles\":[\"RANGED\",\"MELEE\"]}"
+				+ "},"
+				+ "\"base_policy_version\":\"0.0.1\""
 				+ "}");
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
-		EchoPolicy policy = client.fetchEchoPolicy("MAGE", 8);
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		EchoPolicy policy = client.fetchEchoPolicy(echo);
 
 		Assertions.assertThat(policy).isNotNull();
 		Assertions.assertThat(policy.isSupported()).isTrue();
-		Assertions.assertThat(policy.rules).hasSize(2);
+		Assertions.assertThat(policy.root().getJSONObject("capabilities").has("RANGED")).isTrue();
 		EchoHttpRequest request = transport.requests.get(0);
 		Assertions.assertThat(request.method).isEqualTo("POST");
 		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes/policy");
-		Assertions.assertThat(request.body).contains("\"hero_class\":\"MAGE\"");
-		Assertions.assertThat(request.body).contains("\"lvl\":8");
+		Assertions.assertThat(request.body).contains("\"hero_class\":\"WARRIOR\"");
+		Assertions.assertThat(request.body).contains("\"items\":");
+		Assertions.assertThat(request.body).contains("\"talents\":");
 		Assertions.assertThat(request.headers.get("X-API-Key")).isNull();
 	}
 
@@ -145,7 +169,7 @@ public class EchoClientTest {
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Assertions.assertThat(client.fetchEchoPolicy("WARRIOR", 6)).isNull();
+		Assertions.assertThat(client.fetchEchoPolicy(EchoTestSupport.warriorEchoWithData(5))).isNull();
 	}
 
 	@Test
@@ -153,7 +177,7 @@ public class EchoClientTest {
 	void uploadEchoFailsOnUnauthorized() {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(401, "{\"detail\":\"Unauthorized\"}");
-		Echo echo = EchoTestSupport.warriorEcho(5);
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
 
 		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
 
@@ -167,7 +191,7 @@ public class EchoClientTest {
 	void uploadEchoPostsWithApiKey() throws Exception {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(201, "{}");
-		Echo echo = EchoTestSupport.warriorEcho(5);
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
 
 		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
 		client.uploadEcho(echo);

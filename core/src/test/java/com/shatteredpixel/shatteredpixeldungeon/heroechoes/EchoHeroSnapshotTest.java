@@ -176,7 +176,7 @@ class EchoHeroSnapshotTest {
 		ActionIndicator.setAction(playerAction);
 		GameScene.updateItemDisplays = false;
 
-		new EchoBoss(echo, 5);
+		EchoTestSupport.createBoss(echo, 5);
 
 		Assertions.assertThat(Dungeon.quickslot.getItem(0)).isSameAs(playerPotion);
 		Assertions.assertThat(ActionIndicator.action).isSameAs(playerAction);
@@ -191,7 +191,7 @@ class EchoHeroSnapshotTest {
 		Hero hero = heroWithPlateArmor();
 		Echo echo = Echo.fromHero(hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L);
 
-		EchoBoss boss = new EchoBoss(echo, 5);
+		EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
 
 		Assertions.assertThat(boss.getEchoHero().belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(EchoBossSprite.armorTierFor(boss.getEchoHero(), echo))

@@ -2,18 +2,13 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 
+/** Spawnable echo + policy pair from lookup/fetch. */
 public final class EchoFetchResult {
 
 	public final Echo echo;
 	public final EchoPolicy policy;
 
 	public EchoFetchResult(Echo echo, EchoPolicy policy) {
-		if (echo == null) {
-			throw new IllegalArgumentException("echo is required");
-		}
-		if (policy == null) {
-			throw new IllegalArgumentException("echo_policy is required");
-		}
 		this.echo = echo;
 		this.policy = policy;
 	}

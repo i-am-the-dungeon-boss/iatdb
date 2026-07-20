@@ -35,13 +35,34 @@ class EchoPlayerNameTest {
 	}
 
 	@Test
-	@DisplayName("encodeEchoUpload includes user_name when set")
-	void encodeEchoUploadIncludesUserName() throws Exception {
-		Echo echo = EchoTestSupport.warriorEcho(5);
-		echo.userName = "Marwan";
+	@DisplayName("fromHero uses Anonymous plus class when settings are blank")
+	void fromHeroDefaultsBlankPlayerName() {
+		SPDSettings.playerName("");
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+		hero.lvl = 5;
+		hero.HP = hero.HT = 30;
 
-		String json = EchoWireCodec.encodeEchoUpload(echo, "test-client");
+		Echo echo = Echo.fromHero(hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L);
 
-		Assertions.assertThat(json).contains("\"user_name\":\"Marwan\"");
+		Assertions.assertThat(echo.userName).isEqualTo("Anonymous Warrior");
+	}
+
+	@Test
+	@DisplayName("default user name includes hero class")
+	void defaultUserNameIncludesHeroClass() {
+		Assertions.assertThat(Echo.defaultUserName("MAGE")).isEqualTo("Anonymous Mage");
+		Assertions.assertThat(Echo.defaultUserName("HUNTRESS")).isEqualTo("Anonymous Huntress");
+	}
+
+	@Test
+	@DisplayName("encodeEchoUpload always includes user_name")
+	void encodeEchoUploadAlwaysIncludesUserName() throws Exception {
+		Echo named = EchoTestSupport.warriorEchoWithData(5);
+		named.userName = "Marwan";
+
+		Assertions.assertThat(EchoWireCodec.encodeEchoUpload(named, "test-client"))
+				.contains("\"user_name\":\"Marwan\"");
 	}
 }

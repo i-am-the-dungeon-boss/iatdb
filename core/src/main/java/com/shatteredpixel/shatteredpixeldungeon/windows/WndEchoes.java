@@ -7,7 +7,6 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingListPane;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
-import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
 
 import java.util.List;
@@ -51,9 +50,10 @@ public class WndEchoes extends Window {
 					return false;
 				}
 			};
-			if (!echo.isCompatibleWith(Game.version)) {
-				item.hardlight(0xFF6666);
-			}
+			// Version gating disabled for now.
+			// if (!echo.isCompatibleWith(Game.version)) {
+			// item.hardlight(0xFF6666);
+			// }
 			list.addItem(item);
 		}
 

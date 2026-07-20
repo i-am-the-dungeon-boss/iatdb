@@ -23,7 +23,9 @@ public class EchoBossSprite extends MobSprite {
         idle();
     }
 
-    /** Matches {@link HeroSprite#updateArmor()} tier selection for the echo hero. */
+    /**
+     * Matches {@link HeroSprite#updateArmor()} tier selection for the echo hero.
+     */
     public static int armorTierFor(Hero echoHero, Echo echo) {
         if (echoHero != null) {
             int tier = echoHero.tier();
@@ -53,6 +55,9 @@ public class EchoBossSprite extends MobSprite {
 
         attack = new Animation(15, false);
         attack.frames(film, 13, 14, 15, 0);
+
+        // Match HeroSprite: ranged / wand shots use zap (clone of attack).
+        zap = attack.clone();
 
         if (ch != null && ch.isAlive()) {
             idle();

@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
@@ -178,5 +179,29 @@ class DungeonEchoBossPrefetchTest {
 		Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();
 		Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
 		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo(echo.echoId);
+	}
+
+	@Test
+	@DisplayName("store and restore keep role-based pending policy with the echo")
+	void storeRestoreKeepsRoleBasedPendingPolicy() {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		EchoPolicy policy = EchoTestSupport.roleBasedPolicy();
+		CompositeEchoLookup.setEchoLookupForTests(
+				depth -> EchoTestSupport.outcomeWithPolicy(echo, policy));
+		Dungeon.depth = 5;
+		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
+
+		Bundle bundle = new Bundle();
+		Dungeon.storeEchoChoiceInBundle(bundle);
+
+		EchoTestSupport.resetWorkflowState();
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
+		Dungeon.depth = 5;
+		Dungeon.restoreEchoChoiceFromBundle(bundle);
+
+		Assertions.assertThat(Dungeon.getPendingEchoPolicy()).isNotNull();
+		Assertions.assertThat(Dungeon.getPendingEchoPolicy().isSupported()).isTrue();
+		Assertions.assertThat(Dungeon.getPendingEchoPolicy().root().toString())
+				.isEqualTo(policy.root().toString());
 	}
 }

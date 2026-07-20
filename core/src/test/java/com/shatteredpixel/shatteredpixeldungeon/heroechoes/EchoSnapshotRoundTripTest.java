@@ -68,32 +68,16 @@ class EchoSnapshotRoundTripTest {
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
 		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
-		EchoBoss boss = new EchoBoss(loaded, 5);
+		EchoBoss boss = EchoTestSupport.createBoss(loaded, 5);
 		Hero echoHero = boss.getEchoHero();
 
 		Assertions.assertThat(echoHero.heroClass).isEqualTo(HeroClass.MAGE);
 		Assertions.assertThat(echoHero.belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(echoHero.belongings.weapon()).isInstanceOf(WornShortsword.class);
-		Assertions.assertThat(echoHero.belongings.getItem(PotionOfHealing.class)).isNotNull();
+		Assertions.assertThat(echoHero.belongings.getItem(PotionOfHealing.class).quantity()).isEqualTo(2);
 		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(echoHero.defenseSkill(hero));
 		Assertions.assertThat(EchoBossSprite.armorTierFor(echoHero, loaded))
 				.isEqualTo(((PlateArmor) hero.belongings.armor()).tier);
-	}
-
-	@Test
-	@DisplayName("EchoBoss from storage-loaded snapshot can heal using backpack potion")
-	void echoBossHealsFromStorageLoadedBackpack() {
-		Hero hero = richHero();
-		EchoStorage storage = new EchoStorage();
-		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
-
-		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
-		EchoBoss boss = new EchoBoss(loaded, 5);
-		boss.HP = 10;
-
-		Assertions.assertThat(boss.tryHealFromInventory()).isTrue();
-		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfHealing.class).quantity())
-				.isEqualTo(1);
 	}
 
 	@Test

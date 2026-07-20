@@ -14,10 +14,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/** Builds human-readable echo list labels and detail text for {@link WndEchoes}. */
+/**
+ * Builds human-readable echo list labels and detail text for {@link WndEchoes}.
+ */
 public final class EchoDetailsFormatter {
 
-	private EchoDetailsFormatter() {}
+	private EchoDetailsFormatter() {
+	}
 
 	public static String listLabel(Echo echo) {
 		return Messages.get(WndEchoes.class, "list_item", echo.depth, echo.heroClass, echo.lvl);
@@ -36,8 +39,10 @@ public final class EchoDetailsFormatter {
 		appendLine(sb, "level", echo.lvl);
 		appendLine(sb, "hp", echo.hp, echo.ht);
 		appendLine(sb, "game_version", echo.gameVersion);
-		appendLine(sb, "compatible",
-				Messages.get(WndEchoes.class, echo.isCompatibleWith(currentGameVersion) ? "yes" : "no"));
+		// Version gating disabled for now.
+		// appendLine(sb, "compatible",
+		// Messages.get(WndEchoes.class, echo.isCompatibleWith(currentGameVersion) ?
+		// "yes" : "no"));
 
 		if (echo.gameSeed != 0) {
 			appendLine(sb, "seed", DungeonSeed.convertToCode(echo.gameSeed));
@@ -84,7 +89,8 @@ public final class EchoDetailsFormatter {
 	}
 
 	private static void appendLine(StringBuilder sb, String key, Object... args) {
-		if (sb.length() > 0) sb.append('\n');
+		if (sb.length() > 0)
+			sb.append('\n');
 		sb.append(Messages.get(WndEchoes.class, key, args));
 	}
 }

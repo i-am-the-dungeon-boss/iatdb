@@ -52,6 +52,16 @@ public final class EchoClient {
 		}
 	}
 
+	/**
+	 * Ranked echo lookup. Outcomes:
+	 * <ul>
+	 * <li>200 + valid body → {@link EchoLookupStatus#FOUND}</li>
+	 * <li>200 + bad/incomplete body → {@link EchoLookupFailureKind#DECODE}</li>
+	 * <li>404 → {@link EchoLookupStatus#NOT_FOUND} (empty pool)</li>
+	 * <li>other HTTP → {@link EchoLookupFailureKind#SERVER}</li>
+	 * <li>transport throw → {@link EchoLookupFailureKind#NETWORK}</li>
+	 * </ul>
+	 */
 	public EchoLookupOutcome fetchEcho(int depth) {
 		try {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
@@ -63,9 +73,7 @@ public final class EchoClient {
 			if (response.statusCode == 200) {
 				try {
 					return EchoLookupOutcome.found(EchoWireCodec.decodeEchoFetch(response.body));
-				} catch (IllegalArgumentException missingPolicy) {
-					return EchoLookupOutcome.notFound();
-				} catch (Exception decodeError) {
+				} catch (Exception corruptBody) {
 					return EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
 				}
 			}
@@ -80,15 +88,16 @@ public final class EchoClient {
 
 	/**
 	 * Asks the backend to generate a fight policy for a local (solo) echo.
-	 * Returns null on any failure so callers can keep a local/fallback policy.
+	 * Returns null on any failure so callers keep the stored local policy
+	 * (often {@link EchoPolicy#fallback()} from solo capture).
 	 */
-	public EchoPolicy fetchEchoPolicy(String heroClass, int lvl) {
+	public EchoPolicy fetchEchoPolicy(Echo echo) {
 		try {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"POST",
 					baseUrl + "/v1/echoes/policy",
 					jsonHeaders(false),
-					EchoWireCodec.encodeEchoPolicyRequest(heroClass, lvl)));
+					EchoWireCodec.encodeEchoPolicyRequest(EchoPolicyInput.fromEcho(echo))));
 			if (response.statusCode != 200) {
 				return null;
 			}

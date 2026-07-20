@@ -50,7 +50,7 @@ class AutoEchoCaptureTest {
         EchoStorage storage = new EchoStorage();
 
         EchoCaptureTrigger.saveEcho(
-                EchoTestSupport.warriorEcho(5), 5, storage);
+                EchoTestSupport.warriorEchoWithData(5), 5, storage);
 
         Assertions.assertThat(EchoTestSupport.countEchoFiles()).isGreaterThan(0);
         Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))

@@ -61,28 +61,20 @@ public class EchoLeaderboardStorage {
             String[] rows = content.split("\n");
             for (String r : rows) {
                 String[] parts = r.split(",", -1);
-                if (parts.length < 6)
+                // Full format only; legacy 6-column rows omitted player_class and are skipped.
+                if (parts.length < 9 || parts[5].isEmpty()) {
                     continue;
-                if (parts.length >= 9) {
-                    list.add(new EchoFightResult(
-                            emptyToNull(parts[0]),
-                            Boolean.parseBoolean(parts[1]),
-                            Integer.parseInt(parts[2]),
-                            Long.parseLong(parts[3]),
-                            parts[4],
-                            parts[5],
-                            Integer.parseInt(parts[6]),
-                            Integer.parseInt(parts[7]),
-                            Integer.parseInt(parts[8])));
-                } else {
-                    list.add(new EchoFightResult(
-                            Boolean.parseBoolean(parts[0]),
-                            Integer.parseInt(parts[1]),
-                            Long.parseLong(parts[2]),
-                            Integer.parseInt(parts[3]),
-                            Integer.parseInt(parts[4]),
-                            Integer.parseInt(parts[5])));
                 }
+                list.add(new EchoFightResult(
+                        emptyToNull(parts[0]),
+                        Boolean.parseBoolean(parts[1]),
+                        Integer.parseInt(parts[2]),
+                        Long.parseLong(parts[3]),
+                        parts[4],
+                        parts[5],
+                        Integer.parseInt(parts[6]),
+                        Integer.parseInt(parts[7]),
+                        Integer.parseInt(parts[8])));
             }
             return list;
         } catch (Exception e) {
@@ -98,12 +90,15 @@ public class EchoLeaderboardStorage {
         try {
             StringBuilder sb = new StringBuilder();
             for (EchoFightResult r : list) {
+                if (r.playerClass == null || r.playerClass.isEmpty()) {
+                    continue;
+                }
                 sb.append(r.echoId != null ? r.echoId : "").append(',')
                         .append(r.bossWin).append(',')
                         .append(r.depth).append(',')
                         .append(r.timestamp).append(',')
-                        .append(r.gameVersion).append(',')
-                        .append(r.playerClass != null ? r.playerClass : "UNKNOWN").append(',')
+                        .append(r.gameVersion != null ? r.gameVersion : "").append(',')
+                        .append(r.playerClass).append(',')
                         .append(r.damageDealt).append(',')
                         .append(r.damageTaken).append(',')
                         .append(r.turns).append('\n');

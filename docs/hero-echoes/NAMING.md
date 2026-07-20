@@ -39,13 +39,17 @@
 | `EchoLeaderboardStorage`      | Local leaderboard file      |
 | `WndEchoes` / `WndEchoDetail` | Echo browser UI             |
 
-**Planned:**
+**Policy / online:**
 
-| Name                    | Role                            |
-| ----------------------- | ------------------------------- |
-| `EchoClient`            | HTTP client for Hero Echoes API |
-| `EchoPolicy`            | Parsed `echo_policy` from fetch |
-| `EchoPolicyInterpreter` | Evaluates rules each turn       |
+| Name                      | Role                                 |
+| ------------------------- | ------------------------------------ |
+| `EchoClient`              | HTTP client for Hero Echoes API      |
+| `EchoPolicy`              | Parsed role-based `echo_policy` blob |
+| `EchoPolicyStatusBuilder` | Char/Level → per-turn status         |
+| `EchoPolicyMatcher`       | policy + status → chosen role        |
+| `EchoRoleResolver`        | role capability → item id            |
+| `EchoTargetPicker`        | legal aim cell (no UI CellSelector)  |
+| `EchoRoleExecutor`        | drink / throw / zap / move / wait    |
 
 ---
 

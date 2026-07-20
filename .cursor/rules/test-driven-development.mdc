@@ -34,6 +34,35 @@ No production code without a failing test first. If implementation was written b
 - Place tests in `core/src/test/java/` mirroring the production package.
 - Never fix bugs without a failing test that reproduces them first.
 
+## Simulate Real Situations
+
+Tests must exercise the same branches a live fight would. Hollow fixtures that skip
+sprites, FOV, Actor registration, or hit/VFX paths hide production crashes.
+
+For EchoBoss / policy combat, use `EchoTestSupport.installEchoBossLevel` (or extend it):
+
+- Player and boss have **linked** sprites (`sprite.ch` set) — hit VFX calls
+  `attacker.sprite.center()` when `enemy.sprite != null`
+- Phantom `EchoBoss.getEchoHero()` stays **sprite-less** (as in production)
+- Both chars registered with `Actor`; `heroFOV` covers the fight
+- Force the path under test (e.g. guarantee a hit) when asserting combat side effects
+
+```java
+// ✅ GOOD — real hit path (player sprite present → bloodBurstA → attacker.sprite)
+EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
+Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+boss.getEchoHero().invisible = 1; // guarantee hit
+EchoRoleExecutor.execute(...); // must not NPE; HP drops
+
+// ❌ BAD — “spent turn” only; enemy.sprite == null skips the crashing VFX branch
+boss.sprite = new StubCharSprite(); // player has no sprite
+EchoRoleExecutor.execute(...);
+Assertions.assertThat(spent).isTrue(); // green in CI, NPE in game
+```
+
+When a bug is found in play: reproduce with fixtures that match that situation before fixing.
+
 ## Good vs Bad
 
 ```java

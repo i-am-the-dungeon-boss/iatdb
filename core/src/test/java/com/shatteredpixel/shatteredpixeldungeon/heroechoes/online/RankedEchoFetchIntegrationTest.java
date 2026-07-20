@@ -86,12 +86,16 @@ class RankedEchoFetchIntegrationTest {
 	private static String rankedFetchJson(Echo echo) throws Exception {
 		JSONObject json = new JSONObject(EchoWireCodec.encodeEchoUpload(echo, "test-client"));
 		json.put("echo_policy", new JSONObject()
-				.put("policy_schema_version", 1)
-				.put("rules", new JSONArray()
-						.put(new JSONObject()
-								.put("when", new JSONObject())
-								.put("do", new JSONObject().put("action", "MELEE_CHASE"))
-								.put("priority", 0))));
+				.put("policy_schema_version", "0.0.1")
+				.put("capabilities", new JSONObject()
+						.put("MELEE", new JSONObject()
+								.put("pick", "FIRST_LEGAL")
+								.put("items", new JSONArray().put("*melee"))))
+				.put("reactions", new JSONArray())
+				.put("recipes", new JSONArray())
+				.put("selection", new JSONObject()
+						.put("order", new JSONArray().put("default"))
+						.put("default_roles", new JSONArray().put("MELEE"))));
 		return json.toString();
 	}
 }

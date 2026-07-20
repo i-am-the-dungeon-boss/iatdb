@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
@@ -25,9 +26,8 @@ class EchoBossBundlePersistenceTest {
 	@DisplayName("EchoBoss level save restores the same echo after pending echo is cleared")
 	void levelSaveRestoresSameEchoWhenPendingCleared() {
 		Echo saved = mageEchoWithPlate(5);
-		EchoBoss original = new EchoBoss(saved, 5);
+		EchoBoss original = EchoTestSupport.createBoss(saved, 5);
 		original.HP = 40;
-		original.consumeHealingPotion();
 
 		Bundle bundle = new Bundle();
 		original.storeInBundle(bundle);
@@ -43,19 +43,19 @@ class EchoBossBundlePersistenceTest {
 		Assertions.assertThat(restored.getEchoHero().heroClass).isEqualTo(HeroClass.MAGE);
 		Assertions.assertThat(restored.getEchoHero().belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(restored.HP).isEqualTo(40);
-		Assertions.assertThat(restored.healingPotionsUsed()).isEqualTo(1);
 	}
 
 	@Test
 	@DisplayName("EchoBoss level save prefers stored echo over a mismatched pending echo")
 	void levelSavePrefersStoredEchoOverMismatchedPending() {
 		Echo saved = mageEchoWithPlate(5);
-		EchoBoss original = new EchoBoss(saved, 5);
+		EchoBoss original = EchoTestSupport.createBoss(saved, 5);
 
 		Bundle bundle = new Bundle();
 		original.storeInBundle(bundle);
 
 		Echo wrongPending = EchoTestSupport.warriorEchoWithData(5);
+		wrongPending.echoId = "wrong-pending-warrior";
 		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport.outcomeWithPolicy(wrongPending));
 		Dungeon.prefetchEchoBossForDepth(5);
 		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo(wrongPending.echoId);
@@ -72,9 +72,12 @@ class EchoBossBundlePersistenceTest {
 	@DisplayName("EchoBoss level save restores pending policy with the echo")
 	void levelSaveRestoresEchoPolicy() {
 		Echo saved = mageEchoWithPlate(5);
-		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport.outcomeWithPolicy(saved));
+		EchoPolicy policy = EchoTestSupport.roleBasedPolicy();
+		CompositeEchoLookup.setEchoLookupForTests(
+				depth -> EchoTestSupport.outcomeWithPolicy(saved, policy));
 		Dungeon.prefetchEchoBossForDepth(5);
-		Assertions.assertThat(Dungeon.getPendingEchoPolicy()).isNotNull();
+		Assertions.assertThat(Dungeon.getPendingEchoPolicy().root().toString())
+				.isEqualTo(policy.root().toString());
 
 		EchoBoss original = new EchoBoss(saved, 5);
 		Bundle bundle = new Bundle();
@@ -87,9 +90,13 @@ class EchoBossBundlePersistenceTest {
 		restored.restoreFromBundle(bundle);
 
 		Assertions.assertThat(restored.getEcho().echoId).isEqualTo(saved.echoId);
-		// Fallback policy is melee-only; without restored policy, low HP would HEAL.
-		Assertions.assertThat(restored.decideAction(30, true, false, 0))
-				.isEqualTo(EchoBoss.IntendedAction.ATTACK);
+		Assertions.assertThat(restored.getEchoPolicy()).isNotNull();
+		Assertions.assertThat(restored.getEchoPolicy().isSupported()).isTrue();
+		Assertions.assertThat(restored.getEchoPolicy().root().toString())
+				.isEqualTo(policy.root().toString());
+		Assertions.assertThat(restored.getEchoPolicy().root().getJSONObject("capabilities")
+				.getJSONObject("RANGED").getJSONArray("items").getString(0))
+				.isEqualTo("MagesStaff");
 	}
 
 	private static Echo mageEchoWithPlate(int depth) {
@@ -102,6 +109,8 @@ class EchoBossBundlePersistenceTest {
 		PlateArmor armor = new PlateArmor();
 		armor.identify();
 		hero.belongings.armor = armor;
-		return Echo.fromHero(hero, depth, EchoTestSupport.TEST_GAME_VERSION, 1L);
+		Echo echo = Echo.fromHero(hero, depth, EchoTestSupport.TEST_GAME_VERSION, 1L);
+		echo.echoId = "mage-plate-" + depth;
+		return echo;
 	}
 }

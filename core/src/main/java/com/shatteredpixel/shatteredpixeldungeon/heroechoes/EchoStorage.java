@@ -5,7 +5,6 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResul
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
-import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
 
@@ -60,12 +59,12 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
     }
 
     public Optional<Echo> loadForDepth(int depth, String currentGameVersion) {
-        return loadResultForDepth(depth, currentGameVersion).map(result -> result.echo);
+        return loadResultForDepth(depth).map(result -> result.echo);
     }
 
     @Override
     public EchoLookupOutcome findEchoForDepth(int depth) {
-        return loadResultForDepth(depth, Game.version)
+        return loadResultForDepth(depth)
                 .map(EchoLookupOutcome::found)
                 .orElseGet(EchoLookupOutcome::notFound);
     }
@@ -171,11 +170,11 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
                 || name.equals("latest-depth-" + depth + ".dat");
     }
 
-    private Optional<EchoFetchResult> loadResultForDepth(int depth, String currentGameVersion) {
+    private Optional<EchoFetchResult> loadResultForDepth(int depth) {
         String canonical = canonicalPath(depth);
         if (FileUtils.fileExists(canonical)) {
             try {
-                return readResult(canonical, depth, currentGameVersion);
+                return readResult(canonical, depth);
             } catch (Exception ignored) {
             }
             return Optional.empty();
@@ -194,7 +193,7 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
             }
             try {
                 String path = dirName + "/" + name;
-                Optional<EchoFetchResult> loaded = readResult(path, depth, currentGameVersion);
+                Optional<EchoFetchResult> loaded = readResult(path, depth);
                 if (loaded.isEmpty()) {
                     continue;
                 }
@@ -212,17 +211,20 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         return Optional.ofNullable(newest);
     }
 
-    private static Optional<EchoFetchResult> readResult(String path, int depth, String currentGameVersion)
+    private static Optional<EchoFetchResult> readResult(String path, int depth)
             throws IOException {
         Bundle fileBundle = FileUtils.bundleFromFile(path);
         if (!fileBundle.contains(Echo.BUNDLE_KEY) || !fileBundle.contains(POLICY_BUNDLE_KEY)) {
             return Optional.empty();
         }
         Echo loaded = Echo.fromFileBundle(fileBundle);
-        if (loaded.depth != depth || !loaded.isCompatibleWith(currentGameVersion)) {
+        if (loaded.depth != depth || !loaded.hasCombatData()) {
             return Optional.empty();
         }
         EchoPolicy policy = EchoPolicy.fromBundle(fileBundle.getBundle(POLICY_BUNDLE_KEY));
+        if (!policy.isSupported()) {
+            return Optional.empty();
+        }
         return Optional.of(new EchoFetchResult(loaded, policy));
     }
 

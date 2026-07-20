@@ -98,6 +98,33 @@ class LeaderboardFeatureTest {
     }
 
     @Test
+    @DisplayName("EchoLeaderboardStorage skips legacy rows that omit player class")
+    void skipsLegacyRowsWithoutPlayerClass() {
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+        FileUtils.getFileHandle(EchoPlayModePaths.leaderboardFile())
+                .writeBytes("true,5,1000,10,5,20\nid-1,true,5,1001,0.0.1,WARRIOR,40,12,8\n"
+                        .getBytes(), false);
+
+        EchoLeaderboardStorage storage = new EchoLeaderboardStorage();
+        List<EchoFightResult> top = storage.loadTop(10);
+
+        Assertions.assertThat(top).hasSize(1);
+        Assertions.assertThat(top.get(0).playerClass).isEqualTo("WARRIOR");
+    }
+
+    @Test
+    @DisplayName("EchoFightRecorder rejects null player class")
+    void fightRecorderRejectsNullPlayerClass() {
+        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+        EchoFightRecorder recorder = new EchoFightRecorder(new EchoLeaderboardStorage());
+
+        Assertions.assertThatThrownBy(() -> recorder.recordBossVictory(
+                EchoTestSupport.warriorEcho(5), 5, null, "0.0.1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("player_class");
+    }
+
+    @Test
     @DisplayName("solo default boss kill records killer on local leaderboard")
     void soloDefaultBossKillRecordsKillerOnLocalLeaderboard() {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;

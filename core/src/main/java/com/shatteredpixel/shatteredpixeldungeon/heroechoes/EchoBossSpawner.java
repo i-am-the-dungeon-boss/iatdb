@@ -18,7 +18,7 @@ public final class EchoBossSpawner {
 		Echo pending = Dungeon.getPendingEcho();
 		return Dungeon.isEchoBossActive()
 				&& pending != null
-				&& pending.hasCombatData()
+				&& Dungeon.getPendingEchoPolicy() != null
 				&& pending.depth == Dungeon.depth;
 	}
 

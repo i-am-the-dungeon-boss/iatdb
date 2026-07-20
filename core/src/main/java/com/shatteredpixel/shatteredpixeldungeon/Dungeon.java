@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Awareness;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
@@ -448,6 +449,35 @@ public class Dungeon {
 		return echoBossActive;
 	}
 
+	/**
+	 * True when continuing a save mid sealed echo-boss fight — player is sent
+	 * upstairs before the boss floor instead of resuming the arena.
+	 */
+	public static boolean shouldRetreatEchoBossOnContinue(Level level) {
+		return level != null
+				&& level.locked
+				&& echoBossActive
+				&& branch == 0
+				&& bossLevel(depth);
+	}
+
+	/**
+	 * Forgets the current sealed echo-boss floor and clears fight state so the
+	 * next descend regenerates a fresh encounter.
+	 */
+	public static void abandonSealedEchoBossFloor() {
+		int key = depth + 1000 * branch;
+		generatedLevels.remove(Integer.valueOf(key));
+		if (GamesInProgress.curSlot > 0) {
+			FileUtils.deleteFile(GamesInProgress.depthFile(GamesInProgress.curSlot, depth, branch));
+		}
+		clearPendingEcho();
+		echoBossActive = false;
+		if (hero != null && hero.buff(LockedFloor.class) != null) {
+			hero.buff(LockedFloor.class).detach();
+		}
+	}
+
 	public static Echo resolveEcho(int depth) {
 		EchoLookupOutcome outcome = prefetchEchoBossOutcome(depth);
 		return outcome.isFound() ? pendingEcho : null;
@@ -495,9 +525,9 @@ public class Dungeon {
 	 * empty).
 	 */
 	public static EchoLookupOutcome prefetchEchoBossOutcome(int depth) {
-		if (echoBossActive && pendingEcho != null && pendingEcho.depth == depth) {
-			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho,
-					pendingEchoPolicy != null ? pendingEchoPolicy : EchoPolicy.fallback()));
+		if (echoBossActive && pendingEcho != null && pendingEcho.depth == depth
+				&& pendingEchoPolicy != null) {
+			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho, pendingEchoPolicy));
 		}
 		clearPendingEcho();
 		echoBossActive = false;
@@ -507,14 +537,9 @@ public class Dungeon {
 		try {
 			EchoLookupOutcome outcome = CompositeEchoLookup.echoLookup().findEchoForDepth(depth);
 			if (outcome.isFound()) {
-				EchoFetchResult result = outcome.result;
-				if (result.echo != null && result.echo.hasCombatData() && result.policy != null) {
-					pendingEcho = result.echo;
-					pendingEchoPolicy = result.policy;
-					echoBossActive = true;
-					return outcome;
-				}
-				return EchoLookupOutcome.notFound();
+				pendingEcho = outcome.result.echo;
+				pendingEchoPolicy = outcome.result.policy;
+				echoBossActive = true;
 			}
 			return outcome;
 		} catch (Exception unexpected) {
@@ -570,7 +595,13 @@ public class Dungeon {
 		} else {
 			pendingEchoPolicy = null;
 		}
-		// Never carry a pending echo onto non-boss floors (or the wrong boss depth).
+		// Never carry a pending echo without a supported policy, or onto the wrong
+		// floor.
+		if (pendingEcho != null
+				&& (pendingEchoPolicy == null || !pendingEchoPolicy.isSupported())) {
+			clearPendingEcho();
+			echoBossActive = false;
+		}
 		if (!isPendingEchoForCurrentBossFloor()) {
 			clearPendingEcho();
 			echoBossActive = false;
@@ -580,7 +611,7 @@ public class Dungeon {
 	private static boolean isPendingEchoForCurrentBossFloor() {
 		return echoBossActive
 				&& pendingEcho != null
-				&& pendingEcho.hasCombatData()
+				&& pendingEchoPolicy != null
 				&& EchoReplacementDecider.isBossDepth(depth)
 				&& pendingEcho.depth == depth;
 	}

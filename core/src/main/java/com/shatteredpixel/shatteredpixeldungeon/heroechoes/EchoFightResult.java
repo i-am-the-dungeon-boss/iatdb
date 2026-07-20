@@ -12,8 +12,11 @@ public class EchoFightResult {
     public final int turns;
 
     public EchoFightResult(String echoId, boolean bossWin, int depth, long timestamp,
-                            String gameVersion, String playerClass,
-                            int damageDealt, int damageTaken, int turns) {
+            String gameVersion, String playerClass,
+            int damageDealt, int damageTaken, int turns) {
+        if (playerClass == null || playerClass.isEmpty()) {
+            throw new IllegalArgumentException("fight result requires player_class");
+        }
         this.echoId = echoId;
         this.bossWin = bossWin;
         this.depth = depth;
@@ -23,11 +26,5 @@ public class EchoFightResult {
         this.damageDealt = damageDealt;
         this.damageTaken = damageTaken;
         this.turns = turns;
-    }
-
-    /** Legacy constructor for migration from early prototype records. */
-    public EchoFightResult(boolean bossWin, int depth, long timestamp,
-                            int damageDealt, int damageTaken, int turns) {
-        this(null, bossWin, depth, timestamp, "", "UNKNOWN", damageDealt, damageTaken, turns);
     }
 }
