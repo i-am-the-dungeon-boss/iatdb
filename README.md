@@ -29,13 +29,15 @@ It currently builds for **Android**, **desktop**, and **iOS**.
 Alpha and other community builds are published on
 [GitHub Releases](https://github.com/marwanelzainy/iatdb/releases).
 
-To build distributable APK + desktop JAR locally:
+To build and publish a community alpha (tag + GitHub Release):
 
-```bash
-./gradlew prepareRelease
+```powershell
+.\scripts\release.ps1
+# optional native desktop zip:
+.\scripts\release.ps1 -WithJpackage
 ```
 
-Output lands in `dist/<version>/` (see [docs/release/prepare-release.md](docs/release/prepare-release.md)).
+Build-only: `./gradlew prepareRelease` → `dist/<version>/` (see [docs/release/prepare-release.md](docs/release/prepare-release.md)).
 
 Store listings (Google Play, etc.) may come later; until then, treat GitHub as
 the only official distribution channel for this fork.

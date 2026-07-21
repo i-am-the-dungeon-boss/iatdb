@@ -41,10 +41,13 @@ allprojects {
 
 }
 
-// One command for community alpha artifacts:
+// Community alpha artifacts:
 //   ./gradlew prepareRelease
 // Optional Windows/macOS/Linux portable app (slow; downloads a JDK):
 //   ./gradlew prepareRelease -PwithJpackage
+// End-to-end tag + GitHub Release (Windows):
+//   .\scripts\release.ps1
+//   .\scripts\release.ps1 -WithJpackage
 gradle.projectsEvaluated {
     def withJpackage = project.hasProperty('withJpackage')
     def androidProject = findProject(':android')
