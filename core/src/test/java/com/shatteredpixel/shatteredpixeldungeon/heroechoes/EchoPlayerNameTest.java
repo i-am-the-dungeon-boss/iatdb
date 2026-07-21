@@ -22,7 +22,7 @@ class EchoPlayerNameTest {
 	@Test
 	@DisplayName("fromHero captures player name from settings")
 	void fromHeroCapturesPlayerName() {
-		SPDSettings.playerName("  Marwan  ");
+		SPDSettings.playerName("  Alex  ");
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
 		HeroClass.WARRIOR.initHero(hero);
@@ -31,7 +31,7 @@ class EchoPlayerNameTest {
 
 		Echo echo = Echo.fromHero(hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L);
 
-		Assertions.assertThat(echo.userName).isEqualTo("Marwan");
+		Assertions.assertThat(echo.userName).isEqualTo("Alex");
 	}
 
 	@Test
@@ -61,9 +61,9 @@ class EchoPlayerNameTest {
 	@DisplayName("encodeEchoUpload always includes user_name")
 	void encodeEchoUploadAlwaysIncludesUserName() throws Exception {
 		Echo named = EchoTestSupport.warriorEchoWithData(5);
-		named.userName = "Marwan";
+		named.userName = "Alex";
 
 		Assertions.assertThat(EchoWireCodec.encodeEchoUpload(named, "test-client"))
-				.contains("\"user_name\":\"Marwan\"");
+				.contains("\"user_name\":\"Alex\"");
 	}
 }

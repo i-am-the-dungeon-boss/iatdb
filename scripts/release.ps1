@@ -95,6 +95,39 @@ function Get-GradleWrapper {
     return $sh
 }
 
+function Get-ProjectLinks {
+    param([string] $Root)
+
+    $path = Join-Path $Root 'services\src\main\resources\project-links.properties'
+    if (-not (Test-Path -LiteralPath $path)) {
+        throw "Missing project-links.properties at $path"
+    }
+
+    $map = @{}
+    Get-Content -LiteralPath $path | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith('#')) { return }
+        $eq = $line.IndexOf('=')
+        if ($eq -le 0) { return }
+        $key = $line.Substring(0, $eq).Trim()
+        $value = $line.Substring($eq + 1).Trim()
+        $map[$key] = $value
+    }
+
+    foreach ($required in @('github.owner.repo', 'developer.email')) {
+        if (-not $map.ContainsKey($required) -or [string]::IsNullOrWhiteSpace($map[$required])) {
+            throw "Missing required property '$required' in $path"
+        }
+    }
+
+    $ownerRepo = $map['github.owner.repo']
+    return @{
+        GithubOwnerRepo = $ownerRepo
+        GithubRepoUrl   = "https://github.com/$ownerRepo"
+        DeveloperEmail  = $map['developer.email']
+    }
+}
+
 function Get-ReleaseNoteBody {
     param(
         [string] $VersionName,
@@ -102,10 +135,13 @@ function Get-ReleaseNoteBody {
         [string] $TagName,
         [string] $CommitSha,
         [string[]] $AssetNames,
-        [bool] $IncludesJpackage
+        [bool] $IncludesJpackage,
+        [hashtable] $ProjectLinks
     )
 
     $tick = [char]96
+    $repoUrl = $ProjectLinks.GithubRepoUrl
+    $email = $ProjectLinks.DeveloperEmail
     $assetLines = ($AssetNames | ForEach-Object { "- $tick$_$tick" }) -join "`n"
     if ($IncludesJpackage) {
         $desktopInstall = @"
@@ -130,11 +166,11 @@ $assetLines
 
 ### Source
 Tag ${tick}${TagName}${tick} at commit ${tick}${CommitSha}${tick}
-https://github.com/marwanelzainy/iatdb/tree/$TagName
+$repoUrl/tree/$TagName
 
 ### Feedback
-- GitHub Issues: https://github.com/marwanelzainy/iatdb/issues
-- Email: marwan.elzainy@gmail.com
+- GitHub Issues: $repoUrl/issues
+- Email: $email
 
 ### Known issues
 - Alpha build - expect bugs; please report crashes with platform + steps.
@@ -150,6 +186,7 @@ Set-Location -LiteralPath $root
 Assert-Command git
 Assert-Command gh
 
+$projectLinks = Get-ProjectLinks $root
 $versions = Get-AppVersion (Join-Path $root 'build.gradle')
 $versionName = $versions.Name
 $versionCode = $versions.Code
@@ -160,6 +197,7 @@ Write-Host "IATDB release"
 Write-Host "  versionName = $versionName"
 Write-Host "  versionCode = $versionCode"
 Write-Host "  tag         = $tagName"
+Write-Host "  github      = $($projectLinks.GithubOwnerRepo)"
 Write-Host "  withJpackage= $WithJpackage"
 Write-Host "  skipBuild   = $SkipBuild"
 Write-Host "  dryRun      = $DryRun"
@@ -230,7 +268,8 @@ $notesPath = if ($NotesFile) {
         -TagName $tagName `
         -CommitSha $commitSha `
         -AssetNames @($assets | ForEach-Object { Split-Path $_ -Leaf }) `
-        -IncludesJpackage $includesJpackage
+        -IncludesJpackage $includesJpackage `
+        -ProjectLinks $projectLinks
     Set-Content -LiteralPath $generated -Value $body -Encoding utf8
     $generated
 }
@@ -289,5 +328,5 @@ Write-Host ""
 if ($DryRun) {
     Write-Host "Dry run complete - no tag push or GitHub Release created."
 } else {
-    Write-Host "Published: https://github.com/marwanelzainy/iatdb/releases/tag/$tagName"
+    Write-Host "Published: $($projectLinks.GithubRepoUrl)/releases/tag/$tagName"
 }

@@ -18,16 +18,19 @@ must also make the corresponding source available under GPLv3.
 
 ## What this is
 
-A Pixel Dungeon–family roguelike that adds **Hero Echoes**: fallen heroes can
-return as floor bosses, with optional online ranked play via a separate Hero
-Echoes service.
+A Pixel Dungeon–family roguelike that adds **Hero Echoes**: the hero who
+dethrones a boss leaves a legacy that can return as the next floor boss, with
+optional online ranked play via a separate Hero Echoes service.
 
 It currently builds for **Android**, **desktop**, and **iOS**.
 
 ## Downloads
 
 Alpha and other community builds are published on
-[GitHub Releases](https://github.com/marwanelzainy/iatdb/releases).
+[GitHub Releases][github-releases].
+
+Online ranked play and the Hero Echoes service live at the
+[homepage][homepage].
 
 To build and publish a community alpha (tag + GitHub Release):
 
@@ -44,11 +47,11 @@ the only official distribution channel for this fork.
 
 ## Source & attribution
 
-- This repository: https://github.com/marwanelzainy/iatdb
+- This repository: [github-repo][github-repo]
 - Upstream Shattered Pixel Dungeon: https://github.com/00-Evan/shattered-pixel-dungeon
 - Original Pixel Dungeon (gradle port): https://github.com/00-Evan/pixel-dungeon-gradle
 
-In-game **About** credits list IATDB (Marwan Elzainy), then Shattered Pixel
+In-game **About** credits list IATDB (Dungeon Boss), then Shattered Pixel
 Dungeon (Evan Debenham), then Pixel Dungeon (Watabou), plus contributors
 required by GPLv3.
 
@@ -64,3 +67,9 @@ Guides in `/docs`:
 
 Issue reports are welcome. This repository does not currently accept pull
 requests for general contribution.
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[homepage]: https://i-am-the-dungeon-boss.vercel.app
+[github-repo]: https://github.com/i-am-the-dungeon-boss/iatdb
+[github-releases]: https://github.com/i-am-the-dungeon-boss/iatdb/releases

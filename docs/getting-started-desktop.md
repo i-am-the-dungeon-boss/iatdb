@@ -3,9 +3,10 @@
 # Quick Setup
 
 If you merely wish to build the game from source, or make small personal changes to the code, then the project can be built with minimal setup:
+
 - Ensure a [JDK (Java Development Kit)](https://adoptium.net/) is installed on your computer. (Java 21 is recommended, which is the version Android Studio currently uses)
-- Copy the code by pressing the green 'code' button on [this repository's main page](https://github.com/00-Evan/shattered-pixel-dungeon), and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
-    - or optionally use version control (see full setup for details).
+- Copy the code by pressing the green 'code' button on [this repository's main page][github-repo], and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
+  - or optionally use version control (see full setup for details).
 - Open a command prompt from the project's root folder and type `./gradlew desktop:debug` to run the game in debug mode.
 - Type `./gradlew desktop:release` to build a release JAR file, which will be placed in `/desktop/build/libs`.
 
@@ -18,6 +19,7 @@ Performing a full setup is strongly recommended if you wish to make changes to t
 ## Prerequisites
 
 To compile I am the Dungeon Boss for desktop using this guide you will need:
+
 - A computer which meets the system requirements for [Android Studio](https://developer.android.com/studio#get-android-studio) or [Intellij](https://www.jetbrains.com/help/idea/installation-guide.html)
 - (recommended) a GitHub account to fork this repository, if you wish to use version control
 
@@ -33,13 +35,14 @@ It is optional, but strongly recommended, to use version control to manage your 
 
 If you are using version control, fork this repository using the 'fork' button at the top-right of this web page, so that you have your own copy of the code on GitHub.
 
-If you do not wish to use version control, press the green 'code' button on [this repository's main page](https://github.com/00-Evan/shattered-pixel-dungeon), and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
+If you do not wish to use version control, press the green 'code' button on [this repository's main page][github-repo], and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
 
 ## Opening the code in Android Studio
 
 Open Android Studio, you will be greeted with a splash page with a few options.
 
 If you are using version control, you must first tell Android Studio where your installation of Git is located:
+
 - Select 'Configure' then 'Settings'
 - From the settings window, select 'Version Control' then 'Git'
 - If it wasn't auto-detected, Point 'Path to Git executable:' to 'bin/git.exe', which will be located where you installed git.
@@ -52,6 +55,7 @@ If you are not using version control, select 'Import project (Gradle, Eclipse AD
 ## Running the code
 
 Once the code is open, you can run it from Android Studio by specifying the gradle command from the quick guide as a run configuration:
+
 - Select the run configurations dropdown menu on the top right toolbar, and then 'Edit Configurations...'.
 - Click the + icon to add a new configuration, and select 'gradle'.
 - Set 'Gradle project' to 'shattered-pixel-dungeon:desktop', and 'Tasks and arguments' to 'debug'
@@ -74,9 +78,14 @@ I am the Dungeon Boss uses [JPackage](https://dev.java/learn/jpackage/) and [Bad
 Just like with a JAR, generating a platform-specific executable requires a new run configuration. Use 'jpackageimage' instead of 'release'. This may take a bit of time, and will generate an executable file in the `/desktop/build/jpackage` folder. All the specific configurations for badass runtime and jpackage are already set up, but you can view them in the 'runtime' block in [desktop/build.gradle](./desktop/build.gradle).
 
 You will only be able to create an executable that matches the operation system you are currently using:
+
 - If you have a Windows computer, you can generate a folder with a Windows .exe file inside (zip before distributing)
 - If you have a MacOS computer, you can generate a .app file which Mac users can run or place in their applications folder
   - **Note that your .app will probably need to be [notarized](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution) by Apple for users to be able to use it.** The [desktop/notarize.sh](./desktop/notarize.sh) file helps automate this process if you already have notarization set up.
 - If you have a Linux computer, you can generate a folder with a Linux executable inside (zip before distributing)
 
 Note that these tools can also be used to generate platform-specific installers, but this functionality is unused in I am the Dungeon Boss.
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[github-repo]: https://github.com/i-am-the-dungeon-boss/iatdb

@@ -37,6 +37,6 @@ Output under `android/build/outputs/apk/release/`.
 
 | Field | Current | Scheme |
 | --- | --- | --- |
-| `appPackageName` | `com.marwanelzainy.iatdb` | Permanent once people install |
+| `appPackageName` | `com.dungeonboss.iatdb` | Permanent once people install |
 | `appVersionName` | `0.0.1` | `0.0.N` alpha · `0.1.N` beta · `1.0.N` first release |
 | `appVersionCode` | `896` | Integer; bump every published binary |

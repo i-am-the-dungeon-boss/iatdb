@@ -148,8 +148,8 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
-	@DisplayName("solo mode keeps local policy when backend policy fetch fails")
-	void soloModeKeepsLocalPolicyWhenBackendPolicyFetchFails() {
+	@DisplayName("solo mode errors when backend policy fetch fails")
+	void soloModeErrorsWhenBackendPolicyFetchFails() {
 		EchoHttpTransport transport = request -> {
 			throw new RuntimeException("network down");
 		};
@@ -167,9 +167,67 @@ class CompositeEchoLookupTest {
 
 		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
+		Assertions.assertThat(result.isError()).isTrue();
+		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupFailureKind.NETWORK);
+	}
+
+	@Test
+	@DisplayName("solo policy fetch auto-retries once before returning error")
+	void soloPolicyFetchAutoRetriesOnceBeforeError() {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+		transport.enqueue(503, "{}");
+
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
+		EchoStorage local = new EchoStorage();
+		local.save(localEcho);
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
+
+		Assertions.assertThat(result.isError()).isTrue();
+		Assertions.assertThat(transport.requests).hasSize(CompositeEchoLookup.RANKED_ATTEMPTS);
+	}
+
+	@Test
+	@DisplayName("solo policy fetch succeeds on automatic retry")
+	void soloPolicyFetchSucceedsOnAutomaticRetry() {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+		transport.enqueue(200, "{"
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":\"0.0.1\","
+				+ "\"capabilities\":{\"MELEE\":{\"pick\":\"FIRST_LEGAL\",\"items\":[\"*melee\"]}},"
+				+ "\"reactions\":[],"
+				+ "\"recipes\":[],"
+				+ "\"selection\":{\"order\":[\"default\"],\"default_roles\":[\"MELEE\"]}"
+				+ "},"
+				+ "\"base_policy_version\":\"0.0.1\""
+				+ "}");
+
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
+		EchoStorage local = new EchoStorage();
+		local.save(localEcho);
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
+
 		Assertions.assertThat(result.isFound()).isTrue();
-		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(result.result.policy).isNotNull();
+		Assertions.assertThat(transport.requests).hasSize(2);
 	}
 
 	@Test
@@ -236,8 +294,8 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
-	@DisplayName("solo mode keeps local policy when backend is not configured")
-	void soloModeKeepsLocalPolicyWhenUnconfigured() {
+	@DisplayName("solo mode errors when backend is not configured")
+	void soloModeErrorsWhenBackendUnconfigured() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{\"echo_policy\":{\"policy_schema_version\":\"0.0.1\",\"capabilities\":{}}}");
 
@@ -254,9 +312,8 @@ class CompositeEchoLookupTest {
 
 		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
-		Assertions.assertThat(result.isFound()).isTrue();
-		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
-		Assertions.assertThat(result.result.policy).isNotNull();
+		Assertions.assertThat(result.isError()).isTrue();
+		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupFailureKind.UNAVAILABLE);
 		Assertions.assertThat(transport.requests).isEmpty();
 	}
 }

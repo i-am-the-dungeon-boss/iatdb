@@ -18,11 +18,11 @@
 
 ## Player-facing
 
-| Concept       | Name                                      |
-| ------------- | ----------------------------------------- |
-| Mob name      | Fallen Hero                               |
-| Mob i18n keys | `actors.mobs.echoboss.*`                  |
-| Lore term     | echo (e.g. "echo of a fallen adventurer") |
+| Concept       | Name                                                  |
+| ------------- | ----------------------------------------------------- |
+| Mob name      | Hero Echo                                             |
+| Mob i18n keys | `actors.mobs.echoboss.*`                              |
+| Lore term     | echo (e.g. "echo of the hero who claimed this floor") |
 
 ---
 

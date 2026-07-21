@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +24,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
@@ -69,9 +73,9 @@ public class AboutScene extends PixelScene {
 		CreditsBlock iatdb = new CreditsBlock(true, 0xFFAA33,
 				"I am the Dungeon Boss",
 				Icons.IATDB.get(),
-				"Developed by: _Marwan Elzainy_\nBased on Shattered Pixel Dungeon's open source",
-				null,
-				null);
+				"Developed by: _Dungeon Boss_\nBased on Shattered Pixel Dungeon's open source",
+				ProjectLinks.HOMEPAGE_HOST,
+				ProjectLinks.HOMEPAGE_URL);
 		if (landscape()) {
 			iatdb.setRect((w - fullWidth) / 2f - 6, insets.top + 10, 120, 0);
 		} else {

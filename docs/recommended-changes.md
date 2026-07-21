@@ -5,6 +5,7 @@ This guide covers a few technical changes developers will likely want to make wh
 ## Application name, version name, and package name
 
 There are a number of variables defined in the root [build.gradle](/build.gradle) file that you may want to change:
+
 - `appName` defines the user-visible name of your app. You must change this to whatever you wish to call your game.
 - `appPackageName` defines the internal name of your app. Android and iOS use this name to distinguish your app from others and Desktop uses it and appName to determine the game's save directory. You must change this from its initial value. You should use the format `com.<dev name>.<game name>`
 - `appVersionCode` defines the internal version number of your app. You want to increment this whenever releasing a new update. Read the next section for more details on this one.
@@ -46,13 +47,19 @@ I am the Dungeon Boss includes a github-based update notification which likely w
 
 To simply disable the notification change `:services:updates:githubUpdates` to `:services:updates:debugUpdates` for the release configurations in the build.gradle files in the [desktop](/desktop/build.gradle) and [android](/android/build.gradle) modules. The debug updates module does nothing by default and so works just fine in release builds.
 
-To modify the notification to point to your own github releases, go to [GitHubUpdates.java](/services/updates/githubUpdates/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/updates/GitHubUpdates.java) and change the line: `httpGet.setUrl("https://api.github.com/repos/00-Evan/shattered-pixel-dungeon/releases");` to match your own username and repository name. The github updater looks for a title, body of text followed by three dashes, and the phrase \` internal version number: # \` in your release.
+To modify the notification to point to your own github releases, change
+[`github.owner.repo`](/services/src/main/resources/project-links.properties)
+in the project-links properties file.
+[`GitHubUpdates.java`](/services/updates/githubUpdates/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/updates/GitHubUpdates.java)
+reads `ProjectLinks.GITHUB_RELEASES_API_URL` (loaded from that file). The github updater looks for a title, body of text followed by three dashes, and the phrase \` internal version number: # \` in your release.
+
+Note: current desktop/Android release builds use `:services:updates:echoUpdates` (Hero Echoes `/v1/game-version`) rather than githubUpdates.
 
 More advanced developers can change the format for releases if they like, or make entirely new update notification services.
 
 ## News Feed
 
-I am the Dungeon Boss includes a news feed which pulls blog posts from [ShatteredPixel.com](http://ShatteredPixel.com). The articles there may not be useful to you so you may wish to remove them.
+I am the Dungeon Boss includes a news feed module that historically pulled blog posts from [ShatteredPixel.com](http://ShatteredPixel.com). Current desktop/Android builds use `:services:news:debugNews` instead. When you have your own feed, point [`ShatteredNews.java`](/services/news/shatteredNews/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/ShatteredNews.java) at it (or swap the news implementation). In-game “read more” already opens the homepage from [`project-links.properties`](/services/src/main/resources/project-links.properties).
 
 To simply disable news entirely, comment out the line `add(btnNews);` in [TitleScene.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java).
 
@@ -65,6 +72,7 @@ More advanced developers can also write their own news checker services and use 
 I am the Dungeon Boss supporters a number of languages which are translated via a [community translation project](https://www.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
 
 If you plan to add new text to the game, maintaining these translations may be difficult or impossible, and so you may wish to remove them:
+
 - In [Languages.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Languages.java) remove all of the enum constants except for ENGLISH.
 - In the [messages resource folders](/core/src/main/assets/messages) remove all of the .properties files which include an underscore followed by a language code (e.g. remove actors_ru.properties, but not actors.properties)
 - Finally remove the language picker by commenting out the lines `add( langs );` and `add( langsTab );` in [WndSettings.java](/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSettings.java)

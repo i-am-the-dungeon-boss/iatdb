@@ -35,6 +35,18 @@ def quoteBuildConfigString(String value) {
 def echoEnvFile = rootProject.file('.env')
 def echoEnv = loadDotEnvFile(echoEnvFile)
 
+def loadProjectLinksProperties() {
+    def props = new Properties()
+    def file = rootProject.file('services/src/main/resources/project-links.properties')
+    if (file.isFile()) {
+        file.withInputStream { props.load(it) }
+    }
+    return props
+}
+
+def projectLinksProps = loadProjectLinksProperties()
+def projectLinksBackendUrl = (projectLinksProps.getProperty('backend.url') ?: '').trim()
+
 def echoEnvOrProp = { String key ->
     def fromGradle = project.findProperty(key)
     if (fromGradle != null && fromGradle.toString().trim()) {
@@ -56,6 +68,9 @@ def echoDebugApiKey = echoEnvOrProp('ECHO_API_KEY')
 def echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL_RELEASE')
 if (!echoReleaseBackendUrl) {
     echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL')
+}
+if (!echoReleaseBackendUrl) {
+    echoReleaseBackendUrl = projectLinksBackendUrl
 }
 def echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY_RELEASE')
 if (!echoReleaseApiKey) {

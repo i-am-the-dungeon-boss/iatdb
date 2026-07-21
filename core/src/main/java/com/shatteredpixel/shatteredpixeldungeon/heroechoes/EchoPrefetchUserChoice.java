@@ -1,7 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 /**
- * User response when a ranked echo prefetch fails after auto-retries.
+ * User response when an online echo prefetch fails after auto-retries (ranked
+ * or solo).
  */
 public enum EchoPrefetchUserChoice {
 	RETRY,

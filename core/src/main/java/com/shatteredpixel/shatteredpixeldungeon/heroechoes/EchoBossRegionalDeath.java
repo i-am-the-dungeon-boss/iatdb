@@ -1,7 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
-import com.shatteredpixel.shatteredpixeldungeon.Badges;
-import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
@@ -31,11 +29,15 @@ import com.watabou.utils.Random;
 import java.util.function.Supplier;
 
 /**
- * Applies the rewards and progression of the regional floor boss when an echo boss is defeated.
+ * Applies the rewards and progression of the regional floor boss when an echo
+ * boss is defeated.
+ * Regional boss badges stay with the real bosses (Goo, Tengu, etc.), not echo
+ * victories.
  */
 public final class EchoBossRegionalDeath {
 
-	private EchoBossRegionalDeath() {}
+	private EchoBossRegionalDeath() {
+	}
 
 	public static void apply(EchoBoss boss, Object cause) {
 		if (boss == null) {
@@ -133,7 +135,8 @@ public final class EchoBossRegionalDeath {
 
 			Bestiary.skipCountingEncounters = true;
 			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-				if (mob.alignment == boss.alignment && mob != boss && mob.properties().contains(com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS_MINION)) {
+				if (mob.alignment == boss.alignment && mob != boss && mob.properties()
+						.contains(com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS_MINION)) {
 					mob.die(null);
 				}
 			}
@@ -171,28 +174,19 @@ public final class EchoBossRegionalDeath {
 			Dungeon.level.unseal();
 		}
 
-		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) && Statistics.spawnersAlive == 4) {
-			Badges.validateBossChallengeCompleted();
-		} else {
-			Statistics.qualifiedForBossChallengeBadge = false;
-		}
+		Statistics.qualifiedForBossChallengeBadge = false;
 		Statistics.bossScores[4] += 5000 + 1250 * Statistics.spawnersAlive;
-
-		Badges.validateTakingTheMick(cause);
 
 		GLog.n(Messages.get(YogDzewa.class, "defeated"));
 	}
 
 	private static void recordRegionalBossVictory(int regionIndex, int scorePoints) {
-		Badges.validateBossSlain();
-		if (Statistics.qualifiedForBossChallengeBadge) {
-			Badges.validateBossChallengeCompleted();
-		}
+		Statistics.qualifiedForBossChallengeBadge = false;
 		Statistics.bossScores[regionIndex] += scorePoints;
 	}
 
 	private static void dropChanceLoot(int pos, Supplier<Item> itemFactory) {
-		int drops = Random.chances(new float[]{0, 0, 6, 3, 1});
+		int drops = Random.chances(new float[] { 0, 0, 6, 3, 1 });
 		for (int i = 0; i < drops; i++) {
 			int ofs;
 			do {

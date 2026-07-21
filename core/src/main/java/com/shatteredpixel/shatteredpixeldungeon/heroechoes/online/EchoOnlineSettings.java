@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 
 import java.io.BufferedReader;
@@ -20,8 +21,8 @@ import java.util.function.Function;
  */
 public final class EchoOnlineSettings {
 
-	/** Production Hero Echoes host (Vercel). Used as desktop build-default URL. */
-	public static final String PRODUCTION_BACKEND_URL = "https://i-am-the-dungeon-boss.vercel.app";
+	/** Production Hero Echoes host. Used as desktop build-default URL. */
+	public static final String PRODUCTION_BACKEND_URL = ProjectLinks.BACKEND_URL;
 
 	public static final String BACKEND_URL = "ECHO_BACKEND_URL";
 	public static final String API_KEY = "ECHO_API_KEY";

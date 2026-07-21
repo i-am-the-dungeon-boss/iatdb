@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -548,16 +551,18 @@ public class Dungeon {
 	}
 
 	/**
-	 * Prefetch with ranked error recovery: on ERROR while RANKED, ask the user via
+	 * Prefetch with online fetch recovery for ranked and solo: on ERROR, ask the
+	 * user via
 	 * {@code onError} (Retry unlimited times, or Abort). The failed outcome
-	 * is passed so the UI can show why it failed. Abort keeps ranked mode and
-	 * returns the error (no solo / offline fallback).
+	 * is passed so the UI can show why it failed. Abort keeps the current play mode
+	 * and
+	 * returns the error (caller persists the run and returns to the title).
 	 */
 	public static EchoLookupOutcome prefetchEchoBossWithRankedRecovery(
 			int depth, Function<EchoLookupOutcome, EchoPrefetchUserChoice> onError) {
 		while (true) {
 			EchoLookupOutcome outcome = prefetchEchoBossOutcome(depth);
-			if (!outcome.isError() || echoPlayMode != EchoPlayMode.RANKED) {
+			if (!outcome.isError() || !needsOnlineFetchRecovery()) {
 				return outcome;
 			}
 			EchoPrefetchUserChoice choice = onError.apply(outcome);
@@ -566,6 +571,10 @@ public class Dungeon {
 			}
 			// RETRY: loop with a fresh auto-retry cycle
 		}
+	}
+
+	private static boolean needsOnlineFetchRecovery() {
+		return echoPlayMode == EchoPlayMode.RANKED || echoPlayMode == EchoPlayMode.SOLO;
 	}
 
 	public static void storeEchoChoiceInBundle(Bundle bundle) {

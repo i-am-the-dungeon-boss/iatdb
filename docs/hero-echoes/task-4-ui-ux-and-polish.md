@@ -17,17 +17,14 @@
 #### Implementation Steps
 
 1. Messages & Banners:
-
    - Add new localized strings: boss intro line, defeat line, and hints.
-   - On boss level entry, if echo boss is active, show a banner (existing banner system) with the boss name (e.g., the fallen hero’s alias) and subtitle.
+   - On boss level entry, if echo boss is active, show a banner (existing banner system) with the boss name (e.g., the echo hero’s alias) and subtitle.
 
 2. Visuals:
-
    - Ensure `EchoBossSprite` uses hero-alike animations with a distinct tint/aura to distinguish from the player.
    - Optional: add a subtle shader effect or particles on spawn.
 
 3. Settings:
-
    - **Online mode** — ranked play uses Hero Echoes fetch/upload (solo uses local storage)
    - Backend URL + API key in advanced settings or build config (dev builds)
 

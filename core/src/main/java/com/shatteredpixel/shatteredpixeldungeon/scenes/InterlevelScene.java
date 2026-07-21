@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +53,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFetchAbortedException;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
@@ -613,6 +617,13 @@ public class InterlevelScene extends PixelScene {
 				}
 
 				if (error != null) {
+					if (error instanceof EchoFetchAbortedException) {
+						thread = null;
+						error = null;
+						Game.switchScene(TitleScene.class);
+						return;
+					}
+
 					String errorMsg;
 					if (error instanceof FileNotFoundException)
 						errorMsg = Messages.get(this, "file_not_found");
@@ -705,8 +716,13 @@ public class InterlevelScene extends PixelScene {
 		try {
 			EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
 					depth, InterlevelScene::promptEchoFetchFailed);
-			if (outcome != null && outcome.isError() && Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-				throw new IOException("echo fetch aborted");
+			if (outcome != null && outcome.isError()
+					&& (Dungeon.echoPlayMode == EchoPlayMode.RANKED
+							|| Dungeon.echoPlayMode == EchoPlayMode.SOLO)) {
+				if (Dungeon.hero != null) {
+					Dungeon.saveAll();
+				}
+				throw new EchoFetchAbortedException();
 			}
 		} finally {
 			loadingEchoBoss = false;

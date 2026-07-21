@@ -330,7 +330,7 @@ Full hero state is serialized:
 
 17. **Enhance `EchoBossSprite`** — weapon/armor layers from `echoHero.belongings` (or extend `HeroSprite` with tint).
 18. **i18n intro banner** — use `Messages.get(EchoMessages.INTRO_BANNER, ...)` instead of hardcoded string in `EchoMessages.introBannerText`.
-19. **Review `Property.INORGANIC`** — may be wrong for a "fallen hero"; consider removing for bleed/some talent interactions.
+19. **Review `Property.INORGANIC`** — may be wrong for a hero echo; consider removing for bleed/some talent interactions.
 
 ---
 

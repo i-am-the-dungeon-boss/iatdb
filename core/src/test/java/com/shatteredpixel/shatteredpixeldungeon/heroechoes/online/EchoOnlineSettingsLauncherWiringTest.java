@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,16 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
+	@DisplayName("android build.gradle falls back to project-links.properties backend.url")
+	void androidBuildGradleFallsBackToProjectLinksBackend() throws IOException {
+		String source = readSource("android/build.gradle");
+
+		Assertions.assertThat(source).contains("project-links.properties");
+		Assertions.assertThat(source).contains("backend.url");
+		Assertions.assertThat(source).doesNotContain(ProjectLinks.BACKEND_URL);
+	}
+
+	@Test
 	@DisplayName("desktop launcher applies production backend URL when dotenv is empty")
 	void desktopLauncherAppliesProductionBackendDefault() throws IOException {
 		String source = readSource(
@@ -68,10 +80,20 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
-	@DisplayName("production backend URL constant points at IATDB Vercel host")
-	void productionBackendUrlPointsAtIatdbHost() {
+	@DisplayName("production backend URL constant reuses ProjectLinks")
+	void productionBackendUrlReusesProjectLinks() {
 		Assertions.assertThat(EchoOnlineSettings.PRODUCTION_BACKEND_URL)
-				.isEqualTo("https://i-am-the-dungeon-boss.vercel.app");
+				.isEqualTo(ProjectLinks.BACKEND_URL);
+	}
+
+	@Test
+	@DisplayName(".env.example does not hardcode production backend URL")
+	void envExampleDoesNotHardcodeProductionBackend() throws IOException {
+		String source = readSource(".env.example");
+
+		Assertions.assertThat(source).contains("project-links.properties");
+		Assertions.assertThat(source).doesNotContain(ProjectLinks.BACKEND_URL);
+		Assertions.assertThat(source).doesNotContain("ECHO_BACKEND_URL_RELEASE=");
 	}
 
 	private static String readSource(String relativePath) throws IOException {

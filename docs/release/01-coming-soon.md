@@ -9,14 +9,14 @@ Build awareness on Google Play before the game is playable. Users can pre-regist
 
 | Decision                                | Choice                                                                                                           |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `appPackageName` / Play `applicationId` | `com.marwanelzainy.iatdb`                                                                                        |
+| `appPackageName` / Play `applicationId` | `com.dungeonboss.iatdb`                                                                                          |
 | Shared semver                           | `0.0.1` — keep [`hero-echoes/package.json`](../../../../hero-echoes/package.json) `version` === `appVersionName` |
 | `appVersionCode`                        | `1` (Play integer; increment each upload; keep `GAME_VERSION_CODE` in sync)                                      |
 | Release update checker                  | hero-echoes `GET /v1/game-version` via `echoUpdates` (not GitHub/Shattered)                                      |
 | News feed                               | Still stubbed (`debugNews`)                                                                                      |
 | Branding assets (icons, title banner)   | Text title + hero logo animation; launcher icon = About `Icons.IATDB` (tier-6 Cleric)                            |
 | Supporter                               | Play Billing tip ladder (≥ $2.99 SKUs); Patreon stays disabled                                                   |
-| Developer contact email                 | `marwan.elzainy@gmail.com`                                                                                       |
+| Developer contact email                 | [dungeonbossteam@gmail.com][developer-email]                                                                     |
 
 ---
 
@@ -32,7 +32,7 @@ Build awareness on Google Play before the game is playable. Users can pre-regist
 
 ### Legal, identity, and policy
 
-- [x] Finalize application ID (`com.marwanelzainy.iatdb`) — permanent once published
+- [x] Finalize application ID (`com.dungeonboss.iatdb`) — permanent once published
 - [ ] Confirm fork is visually and nominally distinct from Shattered Pixel Dungeon (impersonation risk — see [getting-started-android.md](../getting-started-android.md#distributing-your-app))
 - [ ] Confirm GPLv3 source-availability plan (public fork, attribution, credits)
 - [ ] Draft privacy policy URL (required even if app collects minimal data)
@@ -61,9 +61,9 @@ Build awareness on Google Play before the game is playable. Users can pre-regist
 
 ### Application identity
 
-- [x] Change `appPackageName` from upstream default (see [recommended-changes.md](../recommended-changes.md)) → `com.marwanelzainy.iatdb`
+- [x] Change `appPackageName` from upstream default (see [recommended-changes.md](../recommended-changes.md)) → `com.dungeonboss.iatdb`
 - [x] Set initial `appVersionCode` / `appVersionName` → `1` / `0.0.1` (synced with hero-echoes `package.json`)
-- [x] Replace placeholder developer contact email in crash dialogs → `marwan.elzainy@gmail.com`
+- [x] Replace placeholder developer contact email in crash dialogs → [dungeonbossteam@gmail.com][developer-email]
 
 ### Branding and attribution
 
@@ -96,3 +96,7 @@ Build awareness on Google Play before the game is playable. Users can pre-regist
 - [ ] All [PENDING-LINKS.md](../PENDING-LINKS.md) items affecting public surfaces resolved or deferred with documented rationale
 - [ ] Pre-registration live in chosen regions
 - [ ] Transition plan to early access documented (date, scope, billing readiness)
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[developer-email]: mailto:dungeonbossteam@gmail.com

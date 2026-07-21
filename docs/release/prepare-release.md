@@ -2,7 +2,7 @@
 
 ## End-to-end (recommended)
 
-One command builds binaries, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release](https://github.com/marwanelzainy/iatdb/releases) with APK, JAR, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`).
+One command builds binaries, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] with APK, JAR, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`).
 
 ```powershell
 # APK + desktop JAR
@@ -76,3 +76,7 @@ Adds `iatdb-<version>-desktop-windows.zip` (or `macos` / `linux`) from `desktop/
 - iOS / TestFlight
 - Play Store AAB upload
 - itch.io mirror (optional later via `butler`)
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[github-releases]: https://github.com/i-am-the-dungeon-boss/iatdb/releases

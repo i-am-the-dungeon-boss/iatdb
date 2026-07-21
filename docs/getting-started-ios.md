@@ -3,6 +3,7 @@
 ## Prerequisites
 
 To compile I am the Dungeon Boss for iOS using this guide you will need:
+
 - (required) An Apple computer which meets the system requirements for [Android Studio](https://developer.android.com/studio#get-android-studio) and [Xcode](https://developer.apple.com/xcode/)
 - (recommended) A GitHub account to fork this repository, if you wish to use version control
 
@@ -16,13 +17,14 @@ It is optional, but strongly recommended, to use version control to manage your 
 
 If you are using version control, fork this repository using the 'fork' button at the top-right of this web page, so that you have your own copy of the code on GitHub.
 
-If you do not wish to use version control, press the green 'code' button on [this repository's main page](https://github.com/00-Evan/shattered-pixel-dungeon), and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
+If you do not wish to use version control, press the green 'code' button on [this repository's main page][github-repo], and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
 
 ## Opening the code in Android Studio
 
 Open Android Studio, you will be greeted with a splash page with a few options.
 
 If you are using version control, you must first tell Android Studio where your installation of Git is located:
+
 - Select 'Configure' then 'Settings'
 - From the settings window, select 'Version Control' then 'Git'
 - If it wasn't auto-detected, Point 'Path to Git executable:' to 'bin/git.exe', which will be located where you installed git.
@@ -39,3 +41,7 @@ You have now set up the initial project on your computer. From this point compil
 I'll be frank, I do not have a set-by-step process down for how to get this working from scratch, good luck! A great starting point is: [Deploying your libGDX game to iOS in 2020](https://medium.com/@bschulte19e/deploying-your-libgdx-game-to-ios-in-2020-4ddce8fff26c). Some steps can be skipped as the actual application code is all done for you. Provisioning profiles and Xcode setup are the largest hurdles.
 
 Please contact me if you have any specific questions and I may be able to help, or if you wish to make a version based on I am the Dungeon Boss available on the App Store.
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[github-repo]: https://github.com/i-am-the-dungeon-boss/iatdb

@@ -13,14 +13,16 @@ import java.nio.file.Paths;
 class TitleSceneOnlineOnlyTest {
 
 	@Test
-	@DisplayName("title scene offers ranked play only, not solo")
-	void titleSceneOffersRankedOnlyNotSolo() throws IOException {
+	@DisplayName("title scene offers solo and ranked, both gated on backend online")
+	void titleSceneOffersSoloAndRankedGatedOnOnline() throws IOException {
 		String source = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java");
 
 		Assertions.assertThat(source).contains("EchoPlayMode.RANKED");
-		Assertions.assertThat(source).doesNotContain("EchoPlayMode.SOLO");
-		Assertions.assertThat(source).doesNotContain("btnSolo");
+		Assertions.assertThat(source).contains("EchoPlayMode.SOLO");
+		Assertions.assertThat(source).contains("btnSolo");
+		Assertions.assertThat(source).contains("btnRanked.enable(alpha != 0 && online)");
+		Assertions.assertThat(source).contains("btnSolo.enable(alpha != 0 && online)");
 	}
 
 	private static String readSource(String relativePath) throws IOException {

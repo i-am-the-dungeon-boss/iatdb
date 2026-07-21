@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +53,7 @@ public class WndSupportPrompt extends Window {
 		if (Messages.lang() != Languages.ENGLISH) {
 			message += "\n" + Messages.get(SupporterScene.class, "patreon_english");
 		}
-		message += "\n- Marwan Elzainy";
+		message += "\n- Dungeon Boss";
 
 		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
 		text.text( message, width );

@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +32,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Preferences;
 import com.badlogic.gdx.utils.Architecture;
 import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
@@ -109,7 +113,8 @@ public class DesktopLauncher {
 							title + " was not able to initialize its graphics display, sorry about that!\n\n" +
 									"This usually happens when your graphics card has misconfigured drivers or does not support openGL 2.0+.\n\n"
 									+
-									"If you are certain the game should work on your computer, please message the developer (marwan.elzainy@gmail.com)\n\n"
+									"If you are certain the game should work on your computer, please message the developer ("
+									+ ProjectLinks.DEVELOPER_EMAIL + ")\n\n"
 									+
 									"version: " + Game.version + "\n" +
 									exceptionMsg,
@@ -118,7 +123,8 @@ public class DesktopLauncher {
 					TinyFileDialogs.tinyfd_messageBox(title + " Has Crashed!",
 							title + " has run into an error it cannot recover from and has crashed, sorry about that!\n\n"
 									+
-									"If you could, please email this error message to the developer (marwan.elzainy@gmail.com):\n\n"
+									"If you could, please email this error message to the developer ("
+									+ ProjectLinks.DEVELOPER_EMAIL + "):\n\n"
 									+
 									"version: " + Game.version + "\n" +
 									exceptionMsg,

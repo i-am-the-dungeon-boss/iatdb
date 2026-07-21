@@ -5,6 +5,9 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
+ * I am the Dungeon Boss
+ * Copyright (C) 2026 Dungeon Boss
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -29,6 +32,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.TextView;
+
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 
 public class AndroidMissingNativesHandler extends Activity {
 
@@ -55,7 +60,7 @@ public class AndroidMissingNativesHandler extends Activity {
 
 		String installer;
 		try {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 				installer = getPackageManager().getInstallSourceInfo(getPackageName()).getInstallingPackageName();
 			} else {
 				installer = getPackageManager().getInstallerPackageName(getPackageName());
@@ -66,16 +71,17 @@ public class AndroidMissingNativesHandler extends Activity {
 
 		TextView text = new TextView(this);
 		String message = "I am the Dungeon Boss failed to access some of its internal code and cannot start!\n\n" +
-				"Try downloading the game from an official source if you haven't already. You can also screenshot this debug info and send it to the developer (marwan.elzainy@gmail.com):";
+				"Try downloading the game from an official source if you haven't already. You can also screenshot this debug info and send it to the developer ("
+				+ ProjectLinks.DEVELOPER_EMAIL + "):";
 
 		message += "\n\nPackage: " + getPackageName();
 		message += "\nVersion: " + versionName + " (" + versionCode + ")";
 		message += "\nDevice: " + Build.MODEL;
 		message += "\nInstaller: " + installer;
 
-		if (error != null){
+		if (error != null) {
 			Throwable next = error.getCause();
-			while (next != null){
+			while (next != null) {
 				error = next;
 				next = error.getCause();
 			}

@@ -12,7 +12,7 @@ allprojects {
 
     ext {
         appName = 'I am the Dungeon Boss'
-        appPackageName = 'com.marwanelzainy.iatdb'
+        appPackageName = 'com.dungeonboss.iatdb'
 
         // Versioning: 0.0.N = alpha, 0.1.N = beta, 1.0.N = first public release.
         // Keep appVersionName in sync with hero-echoes package.json when shipping online.

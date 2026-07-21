@@ -88,8 +88,8 @@ public final class EchoClient {
 
 	/**
 	 * Asks the backend to generate a fight policy for a local (solo) echo.
-	 * Returns null on any failure so callers keep the stored local policy
-	 * (often {@link EchoPolicy#fallback()} from solo capture).
+	 * Returns null on any failure; callers must treat that as an error (no
+	 * local-policy fallback).
 	 */
 	public EchoPolicy fetchEchoPolicy(Echo echo) {
 		try {

@@ -3,6 +3,7 @@
 ## Prerequisites
 
 To compile I am the Dungeon Boss for Android using this guide you will need:
+
 - (required) A computer which meets the [system requirements for Android Studio](https://developer.android.com/studio#get-android-studio)
 - (recommended) A GitHub account to fork this repository, if you wish to use version control
 - (recommended) An Android phone to test your build of I am the Dungeon Boss
@@ -17,13 +18,14 @@ It is optional, but strongly recommended, to use version control to manage your 
 
 If you are using version control, fork this repository using the 'fork' button at the top-right of this web page, so that you have your own copy of the code on GitHub.
 
-If you do not wish to use version control, press the green 'code' button on [this repository's main page](https://github.com/00-Evan/shattered-pixel-dungeon), and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
+If you do not wish to use version control, press the green 'code' button on [this repository's main page][github-repo], and then 'Download ZIP'. Unzip the downloaded zip to any directory on your computer you like.
 
 ## Opening the code in Android Studio
 
 Open Android Studio, you will be greeted with a splash page with a few options.
 
 If you are using version control, you must first tell Android Studio where your installation of Git is located:
+
 - Select 'Configure' then 'Settings'
 - From the settings window, select 'Version Control' then 'Git'
 - If it wasn't auto-detected, Point 'Path to Git executable:' to 'bin/git.exe', which will be located where you installed git.
@@ -57,6 +59,11 @@ Additionally, note that by default I am the Dungeon Boss uses R8 on release buil
 
 The Android Studio website includes [a guide for ways to distribute your app.](https://developer.android.com/studio/publish)
 
-Note that by distributing your modification of I am the Dungeon Boss, you are bound by the terms of the GPLv3 license, which requires that you make any modifications you have made open-source. If you followed this guide and are using version control, that is already set up for you as your forked repository is publicly hosted on GitHub.  Just make sure to push any changes you make back to that repository.
+Note that by distributing your modification of I am the Dungeon Boss, you are bound by the terms of the GPLv3 license, which requires that you make any modifications you have made open-source. If you followed this guide and are using version control, that is already set up for you as your forked repository is publicly hosted on GitHub. Just make sure to push any changes you make back to that repository.
 
-**If you intend to make your version of the game available on Google Play PLEASE CONTACT ME AT THE FOLLOWING EMAIL ADDRESS:** Marwan.Elzainy@example.com . There are various aspects of Google's Developer Policies that go beyond the scope of a simple 'how to compile' guide. If you do not take necessary precautions before attempting to publish on Google Play, your version of the game will almost certainly be taken down for impersonating I am the Dungeon Boss or Pixel Dungeon.
+**If you intend to make your version of the game available on Google Play PLEASE CONTACT ME AT THE FOLLOWING EMAIL ADDRESS:** [dungeonbossteam@gmail.com][developer-email] . There are various aspects of Google's Developer Policies that go beyond the scope of a simple 'how to compile' guide. If you do not take necessary precautions before attempting to publish on Google Play, your version of the game will almost certainly be taken down for impersonating I am the Dungeon Boss or Pixel Dungeon.
+
+<!-- Project link refs: keep identical to docs/project-link-refs.md -->
+
+[github-repo]: https://github.com/i-am-the-dungeon-boss/iatdb
+[developer-email]: mailto:dungeonbossteam@gmail.com

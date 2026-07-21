@@ -58,18 +58,33 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 			if (!local.isFound()) {
 				return local;
 			}
-			if (Dungeon.echoPlayMode != EchoPlayMode.SOLO || !EchoOnlineSettings.isConfigured()) {
+			if (Dungeon.echoPlayMode != EchoPlayMode.SOLO) {
 				return local;
+			}
+			if (!EchoOnlineSettings.isConfigured()) {
+				return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
 			}
 			Echo echo = local.result.echo;
-			EchoPolicy remotePolicy = client.fetchEchoPolicy(echo);
-			if (remotePolicy == null || !remotePolicy.isSupported()) {
-				return local;
+			EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+			for (int attempt = 0; attempt < RANKED_ATTEMPTS; attempt++) {
+				if (attempt > 0) {
+					sleepRetryDelay();
+				}
+				EchoPolicy remotePolicy = client.fetchEchoPolicy(echo);
+				if (remotePolicy == null) {
+					last = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+					continue;
+				}
+				if (!remotePolicy.isSupported()) {
+					last = EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
+					continue;
+				}
+				if (localLookup instanceof EchoStorage) {
+					((EchoStorage) localLookup).save(echo, remotePolicy);
+				}
+				return EchoLookupOutcome.found(new EchoFetchResult(echo, remotePolicy));
 			}
-			if (localLookup instanceof EchoStorage) {
-				((EchoStorage) localLookup).save(echo, remotePolicy);
-			}
-			return EchoLookupOutcome.found(new EchoFetchResult(echo, remotePolicy));
+			return last;
 		} catch (Exception unexpected) {
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
 		}

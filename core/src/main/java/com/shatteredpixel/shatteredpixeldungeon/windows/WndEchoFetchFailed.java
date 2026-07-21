@@ -4,7 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 
 /**
- * Ranked echo prefetch failed after auto-retries. User must Retry or Abort.
+ * Echo prefetch failed after auto-retries. User must Retry or Abort.
  */
 public class WndEchoFetchFailed extends WndOptions {
 

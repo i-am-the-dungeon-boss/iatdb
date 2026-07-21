@@ -2,8 +2,11 @@
  * Pixel Dungeon
  * Copyright (C) 2012-2015 Oleg Dolya
  *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2026 Evan Debenham
+ *
  * I am the Dungeon Boss
- * Copyright (C) 2014-2026 Marwan Elzainy
+ * Copyright (C) 2026 Dungeon Boss
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +25,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
@@ -71,18 +75,17 @@ public class NewsScene extends PixelScene {
 		h -= insets.top + insets.bottom;
 
 		int fullWidth = PixelScene.landscape() ? 202 : 100;
-		int left = (int)insets.left + (w - fullWidth)/2;
+		int left = (int) insets.left + (w - fullWidth) / 2;
 
 		ExitButton btnExit = new ExitButton();
 		btnExit.setPos(insets.left + w - btnExit.width(), insets.top);
 		add(btnExit);
 
-		IconTitle title = new IconTitle( Icons.NEWS.get(), Messages.get(this, "title"));
+		IconTitle title = new IconTitle(Icons.NEWS.get(), Messages.get(this, "title"));
 		title.setSize(200, 0);
 		title.setPos(
 				insets.left + (w - title.reqWidth()) / 2f,
-				insets.top + (20 - title.height()) / 2f
-		);
+				insets.top + (20 - title.height()) / 2f);
 		align(title);
 		add(title);
 
@@ -104,12 +107,12 @@ public class NewsScene extends PixelScene {
 
 			float articleSpace = h - top - 2 + insets.top;
 			int rows = articles.size();
-			if (PixelScene.landscape()){
+			if (PixelScene.landscape()) {
 				rows /= 2;
 			}
 			rows++;
 
-			while ((articleSpace) / (BTN_HEIGHT+0.5f) < rows) {
+			while ((articleSpace) / (BTN_HEIGHT + 0.5f) < rows) {
 				articles.remove(articles.size() - 1);
 				if (PixelScene.landscape()) {
 					articles.remove(articles.size() - 1);
@@ -117,7 +120,7 @@ public class NewsScene extends PixelScene {
 				rows--;
 			}
 
-			float gap = ((articleSpace) - (BTN_HEIGHT * rows)) / (float)rows;
+			float gap = ((articleSpace) - (BTN_HEIGHT * rows)) / (float) rows;
 
 			boolean rightCol = false;
 			for (NewsArticle article : articles) {
@@ -125,16 +128,16 @@ public class NewsScene extends PixelScene {
 				b.multiline = true;
 				if (!rightCol) {
 					top += gap;
-					b.setRect( left, top, BTN_WIDTH, BTN_HEIGHT);
+					b.setRect(left, top, BTN_WIDTH, BTN_HEIGHT);
 				} else {
-					b.setRect( left + fullWidth - BTN_WIDTH, top, BTN_WIDTH, BTN_HEIGHT);
+					b.setRect(left + fullWidth - BTN_WIDTH, top, BTN_WIDTH, BTN_HEIGHT);
 				}
 				align(b);
 				add(b);
 				if (!PixelScene.landscape()) {
 					top += BTN_HEIGHT;
 				} else {
-					if (rightCol){
+					if (rightCol) {
 						top += BTN_HEIGHT;
 					}
 					rightCol = !rightCol;
@@ -145,11 +148,11 @@ public class NewsScene extends PixelScene {
 			top += 20;
 		}
 
-		StyledButton btnSite = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "read_more")){
+		StyledButton btnSite = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "read_more")) {
 			@Override
 			protected void onClick() {
 				super.onClick();
-				ShatteredPixelDungeon.platform.openURI("https://ShatteredPixel.com");
+				ShatteredPixelDungeon.platform.openURI(ProjectLinks.HOMEPAGE_URL);
 			}
 		};
 		btnSite.icon(Icons.get(Icons.NEWS));
@@ -161,12 +164,12 @@ public class NewsScene extends PixelScene {
 
 	@Override
 	protected void onBackPressed() {
-		ShatteredPixelDungeon.switchNoFade( TitleScene.class );
+		ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 	}
 
 	@Override
 	public void update() {
-		if (displayingNoArticles && News.articlesAvailable()){
+		if (displayingNoArticles && News.articlesAvailable()) {
 			ShatteredPixelDungeon.seamlessResetScene();
 		}
 		super.update();
@@ -182,14 +185,14 @@ public class NewsScene extends PixelScene {
 		protected void createChildren() {
 			bg = Chrome.get(Chrome.Type.GREY_BUTTON_TR);
 			add(bg);
-			
+
 			String message = "";
 
-			if (Messages.lang() != Languages.ENGLISH){
+			if (Messages.lang() != Languages.ENGLISH) {
 				message += Messages.get(this, "english_warn");
 			}
-			
-			if (!News.articlesAvailable()){
+
+			if (!News.articlesAvailable()) {
 				if (SPDSettings.news()) {
 					if (SPDSettings.WiFi() && !Game.platform.connectedToUnmeteredNetwork()) {
 						message += "\n\n" + Messages.get(this, "metered_network");
@@ -223,8 +226,9 @@ public class NewsScene extends PixelScene {
 				}
 			}
 
-			if (message.startsWith("\n\n")) message = message.replaceFirst("\n\n", "");
-			
+			if (message.startsWith("\n\n"))
+				message = message.replaceFirst("\n\n", "");
+
 			text = PixelScene.renderTextBlock(message, 6);
 			text.hardlight(CharSprite.WARNING);
 			add(text);
@@ -235,17 +239,17 @@ public class NewsScene extends PixelScene {
 			bg.x = x;
 			bg.y = y;
 
-			text.maxWidth((int)width - bg.marginHor());
-			text.setPos(x + bg.marginLeft(), y + bg.marginTop()+1);
+			text.maxWidth((int) width - bg.marginHor());
+			text.setPos(x + bg.marginLeft(), y + bg.marginTop() + 1);
 
 			height = (text.bottom()) - y;
 
-			if (button != null){
+			if (button != null) {
 				height += 4;
 				button.multiline = true;
 				button.setSize(width - bg.marginHor(), 16);
 				button.setSize(width - bg.marginHor(), Math.max(button.reqHeight(), 16));
-				button.setPos(x + (width - button.width())/2, y + height);
+				button.setPos(x + (width - button.width()) / 2, y + height);
 				height = button.bottom() - y;
 			}
 
@@ -272,9 +276,9 @@ public class NewsScene extends PixelScene {
 				textColor(Window.SHPX_COLOR);
 			}
 
-			date = new BitmapText( News.parseArticleDate(article), pixelFont);
+			date = new BitmapText(News.parseArticleDate(article), pixelFont);
 			date.scale.set(PixelScene.align(0.5f));
-			date.hardlight( 0x888888 );
+			date.hardlight(0x888888);
 			date.measure();
 			add(date);
 		}
@@ -283,7 +287,7 @@ public class NewsScene extends PixelScene {
 		protected void layout() {
 			super.layout();
 
-			icon.x = x + bg.marginLeft() + (16-icon.width())/2f;
+			icon.x = x + bg.marginLeft() + (16 - icon.width()) / 2f;
 			PixelScene.align(icon);
 			text.setPos(x + bg.marginLeft() + 18, text.top());
 
@@ -298,7 +302,7 @@ public class NewsScene extends PixelScene {
 		protected void onClick() {
 			super.onClick();
 			textColor(Window.WHITE);
-			if (article.date.getTime() > SPDSettings.newsLastRead()){
+			if (article.date.getTime() > SPDSettings.newsLastRead()) {
 				SPDSettings.newsLastRead(article.date.getTime());
 			}
 			ShatteredPixelDungeon.scene().addToFront(new WndArticle(article));
@@ -307,10 +311,10 @@ public class NewsScene extends PixelScene {
 
 	private static class WndArticle extends WndTitledMessage {
 
-		public WndArticle(NewsArticle article ) {
+		public WndArticle(NewsArticle article) {
 			super(News.parseArticleIcon(article), article.title, article.summary);
 
-			RedButton link = new RedButton(Messages.get(NewsScene.class, "read_more")){
+			RedButton link = new RedButton(Messages.get(NewsScene.class, "read_more")) {
 				@Override
 				protected void onClick() {
 					super.onClick();
@@ -321,7 +325,6 @@ public class NewsScene extends PixelScene {
 			add(link);
 			resize(width, (int) link.bottom());
 		}
-
 
 	}
 

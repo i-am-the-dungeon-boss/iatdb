@@ -92,6 +92,69 @@ class RankedEchoPrefetchRecoveryTest {
 		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.RANKED);
 	}
 
+	@Test
+	@DisplayName("solo mode ERROR prompts for retry or abort")
+	void soloErrorPromptsForRetryOrAbort() {
+		AtomicInteger prompts = new AtomicInteger();
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.error());
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(5, failed -> {
+			prompts.incrementAndGet();
+			return EchoPrefetchUserChoice.ABORT;
+		});
+
+		Assertions.assertThat(prompts.get()).isEqualTo(1);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
+	}
+
+	@Test
+	@DisplayName("user Retry after solo ERROR runs another fetch cycle")
+	void soloUserRetryRunsAnotherFetchCycle() throws Exception {
+		CompositeEchoLookup.rankedRetryDelayMs = 0L;
+		AtomicInteger prompts = new AtomicInteger();
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
+		localEcho.echoId = "solo-local";
+		String policyJson = "{"
+				+ "\"echo_policy\":{"
+				+ "\"policy_schema_version\":\"0.0.1\","
+				+ "\"capabilities\":{\"MELEE\":{\"pick\":\"FIRST_LEGAL\",\"items\":[\"*melee\"]}},"
+				+ "\"reactions\":[],"
+				+ "\"recipes\":[],"
+				+ "\"selection\":{\"order\":[\"default\"],\"default_roles\":[\"MELEE\"]}"
+				+ "},"
+				+ "\"base_policy_version\":\"0.0.1\""
+				+ "}";
+
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		// first cycle: 2 auto policy attempts fail
+		transport.enqueue(503, "{}");
+		transport.enqueue(503, "{}");
+		// second cycle after user Retry: success
+		transport.enqueue(200, policyJson);
+
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+		EchoStorage local = new EchoStorage();
+		local.save(localEcho);
+
+		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local));
+
+		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(5, failed -> {
+			prompts.incrementAndGet();
+			return EchoPrefetchUserChoice.RETRY;
+		});
+
+		Assertions.assertThat(prompts.get()).isEqualTo(1);
+		Assertions.assertThat(outcome.isFound()).isTrue();
+		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo("solo-local");
+		Assertions.assertThat(transport.requests).hasSize(3);
+		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
+	}
+
 	private static String rankedFetchJson(Echo echo) throws Exception {
 		JSONObject json = new JSONObject(EchoWireCodec.encodeEchoUpload(echo, "test-client"));
 		json.put("echo_policy", new JSONObject()
@@ -106,22 +169,5 @@ class RankedEchoPrefetchRecoveryTest {
 						.put("order", new JSONArray().put("default"))
 						.put("default_roles", new JSONArray().put("MELEE"))));
 		return json.toString();
-	}
-
-	@Test
-	@DisplayName("solo mode ERROR does not prompt and leaves echo inactive")
-	void soloErrorDoesNotPrompt() {
-		AtomicInteger prompts = new AtomicInteger();
-		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.error());
-		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-
-		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(5, failed -> {
-			prompts.incrementAndGet();
-			return EchoPrefetchUserChoice.RETRY;
-		});
-
-		Assertions.assertThat(prompts.get()).isZero();
-		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
 	}
 }
