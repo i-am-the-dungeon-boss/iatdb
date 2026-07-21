@@ -62,6 +62,12 @@ if (!echoReleaseApiKey) {
     echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY')
 }
 
+def keystorePropertiesFile = file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace 'com.shatteredpixel.shatteredpixeldungeon.android'
     compileSdk appAndroidCompileSDK
@@ -92,6 +98,17 @@ android {
         buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString('')
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix ".indev"
@@ -113,6 +130,10 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
 
             buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoReleaseBackendUrl)
             buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoReleaseApiKey)

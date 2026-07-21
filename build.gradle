@@ -14,9 +14,12 @@ allprojects {
         appName = 'I am the Dungeon Boss'
         appPackageName = 'com.marwanelzainy.iatdb'
 
-        // Keep at/above Shattered's code so save-compat branches aren't mis-triggered.
-        appVersionCode = 896
+        // Versioning: 0.0.N = alpha, 0.1.N = beta, 1.0.N = first public release.
+        // Keep appVersionName in sync with hero-echoes package.json when shipping online.
         appVersionName = '0.0.1'
+        // Integer for Android/iOS/desktop; must increase for every published binary.
+        // Keep at/above Shattered's baseline so save-compat branches aren't mis-triggered.
+        appVersionCode = 896
 
         appJavaCompatibility = JavaVersion.VERSION_11
 
@@ -36,4 +39,111 @@ allprojects {
         maven { url 'https://central.sonatype.com/repository/maven-snapshots/' }
     }
 
+}
+
+// One command for community alpha artifacts:
+//   ./gradlew prepareRelease
+// Optional Windows/macOS/Linux portable app (slow; downloads a JDK):
+//   ./gradlew prepareRelease -PwithJpackage
+gradle.projectsEvaluated {
+    def withJpackage = project.hasProperty('withJpackage')
+    def androidProject = findProject(':android')
+    def desktopProject = findProject(':desktop')
+
+    tasks.register('prepareRelease') {
+        group = 'distribution'
+        description = 'Build release APK + desktop JAR (and optional jpackage) into dist/<version>/'
+
+        dependsOn ':desktop:release'
+        if (androidProject != null) {
+            dependsOn ':android:assembleRelease'
+        }
+        if (withJpackage) {
+            dependsOn ':desktop:jpackageImage'
+        }
+
+        doFirst {
+            if (androidProject == null) {
+                throw new GradleException(
+                        'prepareRelease needs :android (set sdk.dir in local.properties or ANDROID_HOME).')
+            }
+            def keystoreProps = androidProject.file('keystore.properties')
+            if (!keystoreProps.exists()) {
+                throw new GradleException(
+                        'Missing android/keystore.properties — copy keystore.properties.example and add the release keystore (see docs/release/android-signing.md).')
+            }
+        }
+
+        doLast {
+            def versionName = rootProject.ext.appVersionName
+            def versionCode = rootProject.ext.appVersionCode
+            def outDir = rootProject.file("dist/${versionName}")
+            delete outDir
+            outDir.mkdirs()
+
+            def apkDir = androidProject.file('build/outputs/apk/release')
+            def apk = fileTree(apkDir) {
+                include '*.apk'
+                exclude '*-unsigned.apk'
+            }.files.find { true }
+            if (apk == null || !apk.exists()) {
+                throw new GradleException("No signed release APK found under ${apkDir}")
+            }
+            def apkDest = new File(outDir, "iatdb-${versionName}-android.apk")
+            copy { from apk; into outDir; rename { apkDest.name } }
+
+            def jarDir = desktopProject.file('build/libs')
+            def jar = fileTree(jarDir) {
+                include '*.jar'
+                exclude '*-sources.jar', '*-javadoc.jar'
+            }.files.find { it.name.contains(versionName) } ?: fileTree(jarDir) {
+                include '*.jar'
+            }.files.find { true }
+            if (jar == null || !jar.exists()) {
+                throw new GradleException("No desktop release JAR found under ${jarDir}")
+            }
+            def jarDest = new File(outDir, "iatdb-${versionName}-desktop.jar")
+            copy { from jar; into outDir; rename { jarDest.name } }
+
+            if (withJpackage) {
+                def jpackageDir = desktopProject.file('build/jpackage')
+                if (!jpackageDir.exists()) {
+                    throw new GradleException("jpackage output missing under ${jpackageDir}")
+                }
+                def zipName = "iatdb-${versionName}-desktop-${osFamilySlug()}.zip"
+                ant.zip(destfile: new File(outDir, zipName)) {
+                    fileset(dir: jpackageDir)
+                }
+            }
+
+            def manifest = new File(outDir, 'SHA256SUMS.txt')
+            def lines = new ArrayList()
+            lines.add("appVersionName=${versionName}")
+            lines.add("appVersionCode=${versionCode}")
+            lines.add("builtAt=${new Date()}")
+            lines.add('')
+            outDir.listFiles().findAll { it.isFile() && it.name != 'SHA256SUMS.txt' }.sort { it.name }.each { f ->
+                def hash = java.security.MessageDigest.getInstance('SHA-256')
+                        .digest(f.bytes)
+                        .collect { String.format('%02x', it) }
+                        .join('')
+                lines.add("${hash}  ${f.name}")
+            }
+            manifest.text = lines.join('\n') + '\n'
+
+            logger.lifecycle('')
+            logger.lifecycle("Release artifacts ready in ${outDir}:")
+            outDir.listFiles().sort { it.name }.each { f ->
+                logger.lifecycle("  - ${f.name} (${f.length()} bytes)")
+            }
+        }
+    }
+}
+
+static String osFamilySlug() {
+    def os = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    if (os.contains('win')) return 'windows'
+    if (os.contains('mac')) return 'macos'
+    if (os.contains('linux')) return 'linux'
+    return 'unknown'
 }

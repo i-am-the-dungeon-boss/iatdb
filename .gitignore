@@ -10,7 +10,8 @@
 # Gradle build files
 .gradle/
 build/
-release/
+/release/
+/dist/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -37,3 +38,9 @@ echoes-solo/
 
 # Local secrets (copy from .env.example)
 .env
+
+# Android release signing (never commit; see android/keystore.properties.example)
+android/keystore.properties
+android/*.keystore
+android/*.jks
+android/*.jks.old
