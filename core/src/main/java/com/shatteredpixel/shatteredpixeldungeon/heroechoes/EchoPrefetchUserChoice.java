@@ -5,5 +5,5 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
  */
 public enum EchoPrefetchUserChoice {
 	RETRY,
-	CONTINUE_SOLO
+	ABORT
 }

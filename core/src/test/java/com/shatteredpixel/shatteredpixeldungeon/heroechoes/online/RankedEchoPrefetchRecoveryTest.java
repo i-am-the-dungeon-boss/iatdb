@@ -1,10 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoCaptureTrigger;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
@@ -18,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
@@ -33,74 +29,8 @@ class RankedEchoPrefetchRecoveryTest {
 	}
 
 	@Test
-	@DisplayName("continue solo after ranked ERROR uses solo-local echo when available")
-	void continueSoloUsesLocalEcho() {
-		CompositeEchoLookup.rankedRetryDelayMs = 0L;
-		EchoHttpTransport transport = request -> {
-			throw new RuntimeException("network down");
-		};
-
-		EchoOnlineSettings.setOnlineEnabled(true);
-		EchoOnlineSettings.setBackendUrl("https://echo.test");
-		EchoOnlineSettings.setApiKey("secret");
-
-		// Seed solo storage before the ranked run fails.
-		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
-		localEcho.echoId = "local-after-solo";
-		EchoStorage local = new EchoStorage();
-		local.save(localEcho);
-
-		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
-		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
-				new EchoClient("https://echo.test", "secret", transport),
-				local));
-
-		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
-				5, failed -> EchoPrefetchUserChoice.CONTINUE_SOLO);
-
-		Assertions.assertThat(outcome.isFound()).isTrue();
-		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
-		Assertions.assertThat(Dungeon.getPendingEcho().echoId).isEqualTo("local-after-solo");
-	}
-
-	@Test
-	@DisplayName("continue solo after ranked ERROR still captures boss kill into echoes-solo")
-	void continueSoloStillCapturesBossKillIntoEchoesSolo() {
-		CompositeEchoLookup.rankedRetryDelayMs = 0L;
-		EchoHttpTransport transport = request -> {
-			throw new RuntimeException("network down");
-		};
-
-		EchoOnlineSettings.setOnlineEnabled(true);
-		EchoOnlineSettings.setBackendUrl("https://echo.test");
-		EchoOnlineSettings.setApiKey("secret");
-		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
-
-		CompositeEchoLookup.setEchoLookupForTests(new CompositeEchoLookup(
-				new EchoClient("https://echo.test", "secret", transport),
-				new EchoStorage()));
-
-		Dungeon.prefetchEchoBossWithRankedRecovery(
-				5, failed -> EchoPrefetchUserChoice.CONTINUE_SOLO);
-
-		Hero hero = new Hero();
-		Dungeon.hero = hero;
-		HeroClass.WARRIOR.initHero(hero);
-		Dungeon.depth = 5;
-
-		EchoCaptureTrigger.onBossDefeated();
-
-		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
-		Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
-		Assertions.assertThat(new File("echoes-ranked/depth-5.dat")).doesNotExist();
-		Assertions.assertThat(new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-				.isPresent();
-	}
-
-	@Test
-	@DisplayName("continue solo after ranked ERROR falls back when local echo missing")
-	void continueSoloFallsBackWithoutLocalEcho() {
+	@DisplayName("abort after ranked ERROR keeps ranked mode and returns the error")
+	void abortKeepsRankedAndReturnsError() {
 		CompositeEchoLookup.rankedRetryDelayMs = 0L;
 		EchoHttpTransport transport = request -> {
 			throw new RuntimeException("network down");
@@ -116,10 +46,10 @@ class RankedEchoPrefetchRecoveryTest {
 				new EchoStorage()));
 
 		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
-				5, failed -> EchoPrefetchUserChoice.CONTINUE_SOLO);
+				5, failed -> EchoPrefetchUserChoice.ABORT);
 
-		Assertions.assertThat(outcome.isNotFound()).isTrue();
-		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.SOLO);
+		Assertions.assertThat(outcome.isError()).isTrue();
+		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.RANKED);
 		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
 	}
 

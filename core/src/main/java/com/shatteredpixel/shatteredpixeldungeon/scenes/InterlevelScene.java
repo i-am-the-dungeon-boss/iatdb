@@ -50,6 +50,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -693,7 +694,7 @@ public class InterlevelScene extends PixelScene {
 		align(loadingText);
 	}
 
-	private void prefetchEchoBossIfNeeded(int depth, int branch) {
+	private void prefetchEchoBossIfNeeded(int depth, int branch) throws IOException {
 		if (Dungeon.levelHasBeenGenerated(depth, branch)) {
 			return;
 		}
@@ -702,18 +703,22 @@ public class InterlevelScene extends PixelScene {
 		}
 		loadingEchoBoss = true;
 		try {
-			Dungeon.prefetchEchoBossWithRankedRecovery(depth, InterlevelScene::promptEchoFetchFailed);
+			EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
+					depth, InterlevelScene::promptEchoFetchFailed);
+			if (outcome != null && outcome.isError() && Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
+				throw new IOException("echo fetch aborted");
+			}
 		} finally {
 			loadingEchoBoss = false;
 		}
 	}
 
 	/**
-	 * Blocks the loading thread until the user chooses Retry or Continue solo.
+	 * Blocks the loading thread until the user chooses Retry or Abort.
 	 */
 	private static EchoPrefetchUserChoice promptEchoFetchFailed(EchoLookupOutcome failed) {
 		CountDownLatch latch = new CountDownLatch(1);
-		AtomicReference<EchoPrefetchUserChoice> choice = new AtomicReference<>(EchoPrefetchUserChoice.CONTINUE_SOLO);
+		AtomicReference<EchoPrefetchUserChoice> choice = new AtomicReference<>(EchoPrefetchUserChoice.ABORT);
 		String hint = failed != null ? failed.failureHint() : "";
 		Game.runOnRenderThread(() -> {
 			Game.scene().add(new WndEchoFetchFailed(new WndEchoFetchFailed.Listener() {
@@ -724,8 +729,8 @@ public class InterlevelScene extends PixelScene {
 				}
 
 				@Override
-				public void onContinueSolo() {
-					choice.set(EchoPrefetchUserChoice.CONTINUE_SOLO);
+				public void onAbort() {
+					choice.set(EchoPrefetchUserChoice.ABORT);
 					latch.countDown();
 				}
 			}, hint));
@@ -738,7 +743,7 @@ public class InterlevelScene extends PixelScene {
 		return choice.get();
 	}
 
-	private Level newLevelWithEchoPrefetch(int depth, int branch) {
+	private Level newLevelWithEchoPrefetch(int depth, int branch) throws IOException {
 		prefetchEchoBossIfNeeded(depth, branch);
 		return Dungeon.newLevel();
 	}
@@ -901,7 +906,7 @@ public class InterlevelScene extends PixelScene {
 		GLog.w(Messages.get(EchoBoss.class, "quit_retreat"));
 	}
 
-	private void resurrect() {
+	private void resurrect() throws IOException {
 
 		Mob.holdAllies(Dungeon.level);
 

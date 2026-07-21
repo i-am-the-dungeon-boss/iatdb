@@ -8,6 +8,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @ExtendWith(GdxTestExtension.class)
 class WndEchoFetchFailedTest {
 
@@ -18,7 +24,7 @@ class WndEchoFetchFailedTest {
 		String message = WndEchoFetchFailed.buildMessage(failed.failureHint());
 
 		Assertions.assertThat(message).contains("HTTP 503");
-		Assertions.assertThat(message).containsIgnoringCase("solo");
+		Assertions.assertThat(message).doesNotContainIgnoringCase("solo");
 	}
 
 	@Test
@@ -28,5 +34,28 @@ class WndEchoFetchFailedTest {
 		String message = WndEchoFetchFailed.buildMessage(failed.failureHint());
 
 		Assertions.assertThat(message).containsIgnoringCase("network");
+	}
+
+	@Test
+	@DisplayName("dialog offers retry and abort, not continue solo")
+	void dialogOffersRetryAndAbortNotContinueSolo() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndEchoFetchFailed.java");
+		Assertions.assertThat(source).contains("onAbort");
+		Assertions.assertThat(source).doesNotContain("onContinueSolo");
+		Assertions.assertThat(source).contains("\"abort\"");
+		Assertions.assertThat(source).doesNotContain("continue_solo");
+	}
+
+	private static String readSource(String relativePath) throws IOException {
+		Path dir = Paths.get("").toAbsolutePath();
+		for (int i = 0; i < 8 && dir != null; i++) {
+			Path candidate = dir.resolve(relativePath);
+			if (Files.isRegularFile(candidate)) {
+				return Files.readString(candidate, StandardCharsets.UTF_8);
+			}
+			dir = dir.getParent();
+		}
+		throw new AssertionError("Could not find " + relativePath);
 	}
 }

@@ -148,6 +148,31 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
+	@DisplayName("solo mode keeps local policy when backend policy fetch fails")
+	void soloModeKeepsLocalPolicyWhenBackendPolicyFetchFails() {
+		EchoHttpTransport transport = request -> {
+			throw new RuntimeException("network down");
+		};
+
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
+		EchoStorage local = new EchoStorage();
+		local.save(localEcho);
+
+		CompositeEchoLookup lookup = new CompositeEchoLookup(
+				new EchoClient("https://echo.test", "secret", transport),
+				local);
+
+		EchoLookupOutcome result = lookup.findEchoForDepth(5);
+
+		Assertions.assertThat(result.isFound()).isTrue();
+		Assertions.assertThat(result.result.echo.echoId).isEqualTo(localEcho.echoId);
+		Assertions.assertThat(result.result.policy).isNotNull();
+	}
+
+	@Test
 	@DisplayName("non-ranked mode never fetches online even when backend is configured")
 	void nonRankedNeverFetchesOnline() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();

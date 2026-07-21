@@ -55,6 +55,25 @@ class EchoOnlineSettingsLauncherWiringTest {
 		Assertions.assertThat(source).contains("buildConfig");
 	}
 
+	@Test
+	@DisplayName("desktop launcher applies production backend URL when dotenv is empty")
+	void desktopLauncherAppliesProductionBackendDefault() throws IOException {
+		String source = readSource(
+				"desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoOnlineSettings.PRODUCTION_BACKEND_URL");
+		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+		Assertions.assertThat(source).doesNotContain("releaseApiKey");
+		Assertions.assertThat(source).doesNotContain("ECHO_API_KEY_RELEASE");
+	}
+
+	@Test
+	@DisplayName("production backend URL constant points at IATDB Vercel host")
+	void productionBackendUrlPointsAtIatdbHost() {
+		Assertions.assertThat(EchoOnlineSettings.PRODUCTION_BACKEND_URL)
+				.isEqualTo("https://i-am-the-dungeon-boss.vercel.app");
+	}
+
 	private static String readSource(String relativePath) throws IOException {
 		Path file = findRepoFile(relativePath);
 		return Files.readString(file, StandardCharsets.UTF_8);

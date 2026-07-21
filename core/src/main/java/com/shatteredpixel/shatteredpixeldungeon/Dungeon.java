@@ -549,8 +549,9 @@ public class Dungeon {
 
 	/**
 	 * Prefetch with ranked error recovery: on ERROR while RANKED, ask the user via
-	 * {@code onError} (Retry unlimited times, or Continue solo). The failed outcome
-	 * is passed so the UI can show why it failed.
+	 * {@code onError} (Retry unlimited times, or Abort). The failed outcome
+	 * is passed so the UI can show why it failed. Abort keeps ranked mode and
+	 * returns the error (no solo / offline fallback).
 	 */
 	public static EchoLookupOutcome prefetchEchoBossWithRankedRecovery(
 			int depth, Function<EchoLookupOutcome, EchoPrefetchUserChoice> onError) {
@@ -560,9 +561,8 @@ public class Dungeon {
 				return outcome;
 			}
 			EchoPrefetchUserChoice choice = onError.apply(outcome);
-			if (choice == null || choice == EchoPrefetchUserChoice.CONTINUE_SOLO) {
-				echoPlayMode = EchoPlayMode.SOLO;
-				return prefetchEchoBossOutcome(depth);
+			if (choice == null || choice == EchoPrefetchUserChoice.ABORT) {
+				return outcome;
 			}
 			// RETRY: loop with a fresh auto-retry cycle
 		}

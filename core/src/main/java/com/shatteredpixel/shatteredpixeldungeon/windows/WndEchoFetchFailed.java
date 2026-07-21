@@ -4,15 +4,14 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 
 /**
- * Ranked echo prefetch failed after auto-retries. User must Retry or Continue
- * solo.
+ * Ranked echo prefetch failed after auto-retries. User must Retry or Abort.
  */
 public class WndEchoFetchFailed extends WndOptions {
 
 	public interface Listener {
 		void onRetry();
 
-		void onContinueSolo();
+		void onAbort();
 	}
 
 	private final Listener listener;
@@ -27,7 +26,7 @@ public class WndEchoFetchFailed extends WndOptions {
 				Messages.get(WndEchoFetchFailed.class, "title"),
 				buildMessage(failureHint),
 				Messages.get(WndEchoFetchFailed.class, "retry"),
-				Messages.get(WndEchoFetchFailed.class, "continue_solo"));
+				Messages.get(WndEchoFetchFailed.class, "abort"));
 		this.listener = listener;
 	}
 
@@ -43,7 +42,7 @@ public class WndEchoFetchFailed extends WndOptions {
 		if (index == 0) {
 			listener.onRetry();
 		} else {
-			listener.onContinueSolo();
+			listener.onAbort();
 		}
 	}
 

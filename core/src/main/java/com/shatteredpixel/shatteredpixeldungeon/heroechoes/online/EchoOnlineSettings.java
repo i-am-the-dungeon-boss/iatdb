@@ -20,6 +20,9 @@ import java.util.function.Function;
  */
 public final class EchoOnlineSettings {
 
+	/** Production Hero Echoes host (Vercel). Used as desktop build-default URL. */
+	public static final String PRODUCTION_BACKEND_URL = "https://i-am-the-dungeon-boss.vercel.app";
+
 	public static final String BACKEND_URL = "ECHO_BACKEND_URL";
 	public static final String API_KEY = "ECHO_API_KEY";
 

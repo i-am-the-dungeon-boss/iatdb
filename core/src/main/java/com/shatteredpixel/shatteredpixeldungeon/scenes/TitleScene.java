@@ -80,7 +80,6 @@ public class TitleScene extends PixelScene {
 	private Fireball rightFB;
 
 	private StyledButton btnRanked;
-	private StyledButton btnSolo;
 	private StyledButton btnSupport;
 	private StyledButton btnRankings;
 	private StyledButton btnJournal;
@@ -154,24 +153,6 @@ public class TitleScene extends PixelScene {
 		btnRanked.icon(Icons.get(TitleRankedIcon.type()));
 		add(btnRanked);
 
-		btnSolo = new StyledButton(GREY_TR, Messages.get(this, "solo")) {
-			@Override
-			protected void onClick() {
-				beginEchoRun(EchoPlayMode.SOLO);
-			}
-
-			@Override
-			protected boolean onLongClick() {
-				if (DeviceCompat.isDebug()) {
-					beginEchoRun(EchoPlayMode.SOLO);
-					return true;
-				}
-				return super.onLongClick();
-			}
-		};
-		btnSolo.icon(Icons.get(Icons.ENTER));
-		add(btnSolo);
-
 		if (SupportPrompts.playBillingEnabled()) {
 			btnSupport = new SupportButton(GREY_TR, Messages.get(this, "support"));
 			add(btnSupport);
@@ -229,19 +210,18 @@ public class TitleScene extends PixelScene {
 		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L - 6 : PixelScene.MIN_WIDTH_P - 2;
 		float btnAreaLeft = insets.left + (w - buttonAreaWidth) / 2f;
 		if (landscape()) {
-			btnSolo.setRect(btnAreaLeft, insets.top + reservedTop + GAP, (buttonAreaWidth / 2) - 1, BTN_HEIGHT);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, btnSolo.top(), btnSolo.width(), BTN_HEIGHT);
+			btnRanked.setRect(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
+			align(btnRanked);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnRanked.left(), btnRanked.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
+			float rankingsTop = TitleSupportLayout.rankingsY(btnRanked.bottom(), GAP, supportBottom);
 			float midWidth = feedVisible
 					? (float) (Math.floor(buttonAreaWidth / 3f) - 1)
 					: (buttonAreaWidth / 2) - 1;
-			btnRankings.setRect(btnSolo.left(), rankingsTop, midWidth, BTN_HEIGHT);
+			btnRankings.setRect(btnRanked.left(), rankingsTop, midWidth, BTN_HEIGHT);
 			btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 			if (btnNews != null) {
 				btnNews.setRect(btnJournal.right() + 2, btnJournal.top(), btnRankings.width(), BTN_HEIGHT);
@@ -254,16 +234,15 @@ public class TitleScene extends PixelScene {
 				btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
 			}
 		} else {
-			btnSolo.setRect(btnAreaLeft, insets.top + reservedTop + GAP, (buttonAreaWidth / 2) - 1, BTN_HEIGHT);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, btnSolo.top(), btnSolo.width(), BTN_HEIGHT);
+			btnRanked.setRect(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
+			align(btnRanked);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnRanked.left(), btnRanked.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
-			btnRankings.setRect(btnSolo.left(), rankingsTop, (btnSolo.width()), BTN_HEIGHT);
+			float rankingsTop = TitleSupportLayout.rankingsY(btnRanked.bottom(), GAP, supportBottom);
+			btnRankings.setRect(btnRanked.left(), rankingsTop, (buttonAreaWidth / 2) - 1, BTN_HEIGHT);
 			btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 			Float newsBottom = null;
 			if (btnNews != null && btnChanges != null) {
@@ -389,7 +368,6 @@ public class TitleScene extends PixelScene {
 		rightFB.am = alpha;
 
 		btnRanked.enable(alpha != 0 && online);
-		btnSolo.enable(alpha != 0 && online);
 		if (btnSupport != null)
 			btnSupport.enable(alpha != 0);
 		btnRankings.enable(alpha != 0);
@@ -402,7 +380,6 @@ public class TitleScene extends PixelScene {
 		btnAbout.enable(alpha != 0);
 
 		btnRanked.alpha(alpha);
-		btnSolo.alpha(alpha);
 		if (btnSupport != null)
 			btnSupport.alpha(alpha);
 		btnRankings.alpha(alpha);

@@ -56,6 +56,9 @@ public class DesktopLauncher {
 		}
 
 		EchoOnlineSettings.loadDefaultDotEnv();
+		EchoOnlineSettings.setBuildDefaults(
+				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
+				"");
 
 		// detection for FreeBSD (which is equivalent to linux for us)
 		// TODO might want to merge request this to libGDX

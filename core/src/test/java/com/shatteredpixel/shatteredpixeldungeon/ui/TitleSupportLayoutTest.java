@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test;
 class TitleSupportLayoutTest {
 
 	@Test
-	@DisplayName("title rankings sit under solo when Support is hidden")
-	void rankingsSitUnderSoloWhenSupportHidden() {
-		float soloBottom = 100f;
+	@DisplayName("title rankings sit under play button when Support is hidden")
+	void rankingsSitUnderPlayWhenSupportHidden() {
+		float playBottom = 100f;
 		float gap = 4f;
 
-		Assertions.assertThat(TitleSupportLayout.rankingsY(soloBottom, gap, null))
-				.isEqualTo(soloBottom + gap);
+		Assertions.assertThat(TitleSupportLayout.rankingsY(playBottom, gap, null))
+				.isEqualTo(playBottom + gap);
 	}
 
 	@Test
