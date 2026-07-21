@@ -117,7 +117,7 @@ function Get-ReleaseNoteBody {
     }
 
     return @"
-## I am the Dungeon Boss $VersionName
+## $VersionName — I am the Dungeon Boss
 
 Unofficial Shattered Pixel Dungeon fork / mod (GPLv3). Not affiliated with Shattered Pixel or Watabou.
 
@@ -265,7 +265,8 @@ if (-not $DryRun) {
     if ($LASTEXITCODE -ne 0) { throw "git push tag failed" }
 }
 
-$title = "I am the Dungeon Boss $versionName"
+# Version first: GitHub's release list truncates titles on the left.
+$title = "$versionName — I am the Dungeon Boss"
 $ghArgs = @(
     'release', 'create', $tagName,
     '--title', $title,
