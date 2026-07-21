@@ -1,40 +1,56 @@
 # I am the Dungeon Boss
 
-<!-- PENDING-LINK: see docs/PENDING-LINKS.md (LINK-15) -->
-[I am the Dungeon Boss](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://www.watabou.ru).
+**I am the Dungeon Boss** (IATDB) is an unofficial fork / modification of
+[Shattered Pixel Dungeon](https://github.com/00-Evan/shattered-pixel-dungeon)
+by [Evan Debenham](https://shatteredpixel.com/), which is itself based on
+[Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle) by
+[Watabou](https://watabou.itch.io/).
 
-I am the Dungeon Boss currently compiles for Android, iOS, and Desktop platforms. You can find official releases of the game on:
+This project is **not** affiliated with, endorsed by, or published by Shattered
+Pixel or Watabou.
 
-<!-- PENDING-LINK: LINK-5, LINK-11 -->
-[![Get it on Google Play](https://shatteredpixel.com/assets/images/badges/gplay.png)](https://play.google.com/store/apps/details?id=com.shatteredpixel.shatteredpixeldungeon)
-<!-- PENDING-LINK: LINK-3, LINK-8 -->
-[![Download on the App Store](https://shatteredpixel.com/assets/images/badges/appstore.png)](https://apps.apple.com/app/shattered-pixel-dungeon/id1563121109)
-<!-- PENDING-LINK: LINK-16, LINK-13 -->
-[![Steam](https://shatteredpixel.com/assets/images/badges/steam.png)](https://store.steampowered.com/app/1769170/Shattered_Pixel_Dungeon/)<br>
-<!-- PENDING-LINK: LINK-17, LINK-10 -->
-[![GOG.com](https://shatteredpixel.com/assets/images/badges/gog.png)](https://www.gog.com/game/shattered_pixel_dungeon)
-<!-- PENDING-LINK: LINK-6, LINK-12 -->
-[![Itch.io](https://shatteredpixel.com/assets/images/badges/itch.png)](https://shattered-pixel.itch.io/shattered-pixel-dungeon)
-<!-- PENDING-LINK: LINK-9 — upstream GitHub releases; replace with your repo -->
-[![Github Releases](https://shatteredpixel.com/assets/images/badges/github.png)](https://github.com/00-Evan/shattered-pixel-dungeon/releases)
+## License
 
-<!-- PENDING-LINK: LINK-18 -->
-If you like this game, please consider [supporting me on Patreon](https://www.patreon.com/ShatteredPixel)!
+I am the Dungeon Boss is free software under the
+[GNU General Public License v3.0](LICENSE.txt) (GPLv3), the same license as
+Shattered Pixel Dungeon. If you distribute binaries built from this source, you
+must also make the corresponding source available under GPLv3.
 
-<!-- PENDING-LINK: LINK-19 -->
-There is an official blog for this project at [ShatteredPixel.com](https://www.shatteredpixel.com/blog/).
+## What this is
 
-<!-- PENDING-LINK: LINK-4 -->
-The game also has a translation project hosted on [Transifex](https://explore.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
+A Pixel Dungeon–family roguelike that adds **Hero Echoes**: fallen heroes can
+return as floor bosses, with optional online ranked play via a separate Hero
+Echoes service.
 
-> **Note:** External links above still point at upstream Shattered Pixel Dungeon resources. See [docs/PENDING-LINKS.md](docs/PENDING-LINKS.md) for the full registry and suggested replacements.
+It currently builds for **Android**, **desktop**, and **iOS**.
 
-Note that **this repository does not accept pull requests!** The code here is provided in hopes that others may find it useful for their own projects, not to allow community contribution. Issue reports of all kinds (bug reports, feature requests, etc.) are welcome.
+## Downloads
 
-If you'd like to work with the code, you can find the following guides in `/docs`:
+Alpha and other community builds are published on
+[GitHub Releases](https://github.com/marwanelzainy/iatdb/releases).
 
-- [Compiling for Android.](docs/getting-started-android.md)
-    - **[If you plan to distribute on Google Play please read the end of this guide.](docs/getting-started-android.md#distributing-your-app)**
-- [Compiling for desktop platforms.](docs/getting-started-desktop.md)
-- [Compiling for iOS.](docs/getting-started-ios.md)
-- [Recommended changes for making your own version.](docs/recommended-changes.md)
+Store listings (Google Play, etc.) may come later; until then, treat GitHub as
+the only official distribution channel for this fork.
+
+## Source & attribution
+
+- This repository: https://github.com/marwanelzainy/iatdb
+- Upstream Shattered Pixel Dungeon: https://github.com/00-Evan/shattered-pixel-dungeon
+- Original Pixel Dungeon (gradle port): https://github.com/00-Evan/pixel-dungeon-gradle
+
+In-game **About** credits list IATDB (Marwan Elzainy), then Shattered Pixel
+Dungeon (Evan Debenham), then Pixel Dungeon (Watabou), plus contributors
+required by GPLv3.
+
+## Building
+
+Guides in `/docs`:
+
+- [Compiling for Android](docs/getting-started-android.md)
+  - **[If you plan to distribute on Google Play, read the end of that guide.](docs/getting-started-android.md#distributing-your-app)**
+- [Compiling for desktop](docs/getting-started-desktop.md)
+- [Compiling for iOS](docs/getting-started-ios.md)
+- [Recommended changes for your own fork](docs/recommended-changes.md)
+
+Issue reports are welcome. This repository does not currently accept pull
+requests for general contribution.
