@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -62,9 +63,15 @@ public class WndChallenges extends Window {
 		PixelScene.align(title);
 		add( title );
 
+		RenderedTextBlock disclaimer = PixelScene.renderTextBlock( Messages.get(this, "disclaimer"), 5 );
+		disclaimer.hardlight( CharSprite.WARNING );
+		disclaimer.maxWidth( WIDTH );
+		disclaimer.setPos( 0, TTL_HEIGHT + GAP );
+		add( disclaimer );
+
 		boxes = new ArrayList<>();
 
-		float pos = TTL_HEIGHT;
+		float pos = disclaimer.bottom() + GAP * 2;
 		for (int i=0; i < Challenges.NAME_IDS.length; i++) {
 
 			final String challenge = Challenges.NAME_IDS[i];

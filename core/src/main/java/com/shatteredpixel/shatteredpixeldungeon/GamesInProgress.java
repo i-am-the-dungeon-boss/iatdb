@@ -57,6 +57,7 @@ public class GamesInProgress {
 	public static void selectEchoPlayMode(EchoPlayMode mode) {
 		selectedEchoPlayMode = mode;
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Challenges.clearIfDisallowed(mode);
 		clearSlotCache();
 	}
 
@@ -182,6 +183,7 @@ public class GamesInProgress {
 		info.customSeed = Dungeon.customSeedText;
 		info.daily = Dungeon.daily;
 		info.dailyReplay = Dungeon.dailyReplay;
+		info.easyMode = Dungeon.easyMode;
 		info.echoPlayMode = Dungeon.echoPlayMode;
 
 		info.level = Dungeon.hero.lvl;
@@ -220,6 +222,7 @@ public class GamesInProgress {
 		public String customSeed;
 		public boolean daily;
 		public boolean dailyReplay;
+		public boolean easyMode;
 		public EchoPlayMode echoPlayMode = EchoPlayMode.SOLO;
 		public long lastPlayed;
 

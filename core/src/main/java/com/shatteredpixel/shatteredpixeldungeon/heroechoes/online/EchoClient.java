@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
@@ -66,7 +67,7 @@ public final class EchoClient {
 		try {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"GET",
-					baseUrl + "/v1/echoes/" + depth,
+					baseUrl + "/v1/echoes/" + depth + easyModeQuery(),
 					jsonHeaders(false, false),
 					null));
 
@@ -200,7 +201,7 @@ public final class EchoClient {
 	}
 
 	public List<EchoLeaderboardEntry> fetchLeaderboard(int depth, int limit) throws Exception {
-		String url = baseUrl + "/v1/leaderboard/" + depth + "?limit=" + limit;
+		String url = baseUrl + "/v1/leaderboard/" + depth + "?limit=" + limit + easyModeQueryAmp();
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"GET",
 				url,
@@ -210,6 +211,14 @@ public final class EchoClient {
 			return EchoWireCodec.decodeLeaderboardEntries(response.body);
 		}
 		return List.of();
+	}
+
+	private static String easyModeQuery() {
+		return "?easy_mode=" + Dungeon.easyMode;
+	}
+
+	private static String easyModeQueryAmp() {
+		return "&easy_mode=" + Dungeon.easyMode;
 	}
 
 	private void applySessionJson(String body) throws Exception {

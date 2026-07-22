@@ -113,6 +113,9 @@ public class WndGameInProgress extends Window {
 		} else {
 			statSlot( Messages.get(this, "dungeon_seed"), DungeonSeed.convertToCode(info.seed) );
 		}
+		if (info.easyMode) {
+			statSlot( Messages.get(this, "easy_mode"), Messages.get(this, "easy_mode_on") );
+		}
 		
 		pos += GAP;
 		

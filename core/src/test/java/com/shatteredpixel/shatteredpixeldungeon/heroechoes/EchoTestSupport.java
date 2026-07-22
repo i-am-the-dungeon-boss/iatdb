@@ -52,19 +52,28 @@ public final class EchoTestSupport {
 	public static void resetWorkflowState() {
 		FileUtils.deleteDir("echoes");
 		FileUtils.deleteDir("echoes-solo");
+		FileUtils.deleteDir("echoes-solo-easy");
 		FileUtils.deleteDir("echoes-ranked");
+		FileUtils.deleteDir("echoes-ranked-easy");
 		FileUtils.deleteFile("leaderboard.json");
 		FileUtils.deleteFile("leaderboard-solo.json");
+		FileUtils.deleteFile("leaderboard-solo-easy.json");
 		FileUtils.deleteFile("leaderboard-ranked.json");
+		FileUtils.deleteFile("leaderboard-ranked-easy.json");
 		deleteRecursively(new File("echoes"));
 		deleteRecursively(new File("echoes-solo"));
+		deleteRecursively(new File("echoes-solo-easy"));
 		deleteRecursively(new File("echoes-ranked"));
+		deleteRecursively(new File("echoes-ranked-easy"));
 		new File("leaderboard.json").delete();
 		new File("leaderboard-solo.json").delete();
+		new File("leaderboard-solo-easy.json").delete();
 		new File("leaderboard-ranked.json").delete();
+		new File("leaderboard-ranked-easy.json").delete();
 		Actor.clear();
 		Dungeon.hero = null;
 		Dungeon.level = null;
+		Dungeon.easyMode = false;
 		Dungeon.resetEchoStateForTests();
 		GamesInProgress.clearSlotCache();
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
@@ -72,6 +81,7 @@ public final class EchoTestSupport {
 		DebugSettings.setWeakEchoSnapshots(false);
 		SPDSettings.echoesWeakSnapshots(false);
 		SPDSettings.playerName("");
+		SPDSettings.easyMode(false);
 		EchoOnlineSettings.resetForTests();
 		EchoPlayerSession.resetForTests();
 		CompositeEchoLookup.resetForTests();

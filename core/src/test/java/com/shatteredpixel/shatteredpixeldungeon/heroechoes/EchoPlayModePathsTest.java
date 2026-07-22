@@ -68,6 +68,29 @@ class EchoPlayModePathsTest {
 	}
 
 	@Test
+	@DisplayName("easy mode uses separate echo directories and leaderboard files")
+	void easyModeUsesSeparateEchoDirsAndLeaderboards() {
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+		Dungeon.easyMode = false;
+		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-solo");
+		Assertions.assertThat(EchoPlayModePaths.leaderboardFile()).isEqualTo("leaderboard-solo.json");
+
+		Dungeon.easyMode = true;
+		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-solo-easy");
+		Assertions.assertThat(EchoPlayModePaths.leaderboardFile()).isEqualTo("leaderboard-solo-easy.json");
+		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-solo");
+	}
+
+	@Test
+	@DisplayName("easy ranked mode keeps ranked folder with easy suffix")
+	void easyRankedModeKeepsRankedFolderWithEasySuffix() {
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+		Dungeon.easyMode = true;
+		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-ranked-easy");
+		Assertions.assertThat(EchoPlayModePaths.leaderboardFile()).isEqualTo("leaderboard-ranked-easy.json");
+	}
+
+	@Test
 	@DisplayName("ranked echoes are not visible from solo storage")
 	void rankedEchoesAreNotVisibleFromSoloStorage() {
 		Dungeon.echoPlayMode = EchoPlayMode.RANKED;

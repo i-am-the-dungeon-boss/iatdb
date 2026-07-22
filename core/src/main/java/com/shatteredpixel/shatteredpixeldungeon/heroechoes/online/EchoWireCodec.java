@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
@@ -32,6 +33,7 @@ public final class EchoWireCodec {
 		json.put("timestamp", echo.timestamp > 0 ? echo.timestamp : System.currentTimeMillis());
 		json.put("echo_data_base64", encodeEchoData(echo));
 		json.put("source_client", sourceClient);
+		json.put("easy_mode", Dungeon.easyMode);
 		JSONObject policyInput = EchoPolicyInput.fromEcho(echo).toJson();
 		// Root echo already carries hero_class/lvl; nested kit must not duplicate them.
 		policyInput.remove("hero_class");
@@ -88,6 +90,7 @@ public final class EchoWireCodec {
 		json.put("damage_taken", result.damageTaken);
 		json.put("turns", result.turns);
 		json.put("timestamp", result.timestamp > 0 ? result.timestamp : System.currentTimeMillis());
+		json.put("easy_mode", Dungeon.easyMode);
 		return json.toString();
 	}
 

@@ -55,6 +55,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesi
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
@@ -230,6 +231,7 @@ public class Dungeon {
 
 	public static boolean daily;
 	public static boolean dailyReplay;
+	public static boolean easyMode;
 	public static EchoPlayMode echoPlayMode = EchoPlayMode.NONE;
 	public static String customSeedText = "";
 	public static long seed;
@@ -256,7 +258,8 @@ public class Dungeon {
 	public static void init() {
 
 		initialVersion = version = Game.versionCode;
-		challenges = SPDSettings.challenges();
+		challenges = Challenges.allowedForPlayMode(echoPlayMode) ? SPDSettings.challenges() : 0;
+		easyMode = SPDSettings.easyMode();
 		mobsToChampion = 1;
 
 		Actor.clear();
@@ -317,6 +320,21 @@ public class Dungeon {
 
 	public static boolean isChallenged(int mask) {
 		return (challenges & mask) != 0;
+	}
+
+	/**
+	 * Easy mode: +1 STR and a Scroll of Magic Mapping on each regular floor.
+	 * Skipped for boss floors and quest branches.
+	 */
+	public static void applyEasyModeFloorRewards(Level level) {
+		if (!easyMode || hero == null || level == null) {
+			return;
+		}
+		if (bossLevel() || branch != 0) {
+			return;
+		}
+		hero.STR++;
+		level.addItemToSpawn(new ScrollOfMagicMapping().identify());
 	}
 
 	public static boolean levelHasBeenGenerated(int depth, int branch) {
@@ -490,6 +508,7 @@ public class Dungeon {
 		echoBossActive = false;
 		clearPendingEcho();
 		echoPlayMode = EchoPlayMode.NONE;
+		easyMode = false;
 		CompositeEchoLookup.resetForTests();
 	}
 
@@ -841,6 +860,7 @@ public class Dungeon {
 	private static final String CUSTOM_SEED = "custom_seed";
 	private static final String DAILY = "daily";
 	private static final String DAILY_REPLAY = "daily_replay";
+	private static final String EASY_MODE = "easy_mode";
 	private static final String ECHO_PLAY_MODE = "echo_play_mode";
 	private static final String LAST_PLAYED = "last_played";
 	private static final String CHALLENGES = "challenges";
@@ -869,6 +889,7 @@ public class Dungeon {
 			bundle.put(CUSTOM_SEED, customSeedText);
 			bundle.put(DAILY, daily);
 			bundle.put(DAILY_REPLAY, dailyReplay);
+			bundle.put(EASY_MODE, easyMode);
 			bundle.put(ECHO_PLAY_MODE, echoPlayMode.name());
 			bundle.put(LAST_PLAYED, lastPlayed = Game.realTime);
 			bundle.put(CHALLENGES, challenges);
@@ -971,6 +992,7 @@ public class Dungeon {
 		customSeedText = bundle.getString(CUSTOM_SEED);
 		daily = bundle.getBoolean(DAILY);
 		dailyReplay = bundle.getBoolean(DAILY_REPLAY);
+		easyMode = bundle.getBoolean(EASY_MODE);
 		echoPlayMode = readEchoPlayMode(bundle);
 
 		Actor.clear();
@@ -1106,6 +1128,7 @@ public class Dungeon {
 		info.customSeed = bundle.getString(CUSTOM_SEED);
 		info.daily = bundle.getBoolean(DAILY);
 		info.dailyReplay = bundle.getBoolean(DAILY_REPLAY);
+		info.easyMode = bundle.getBoolean(EASY_MODE);
 		info.echoPlayMode = readEchoPlayMode(bundle);
 		info.lastPlayed = bundle.getLong(LAST_PLAYED);
 

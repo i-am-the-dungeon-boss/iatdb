@@ -237,6 +237,7 @@ class EchoWireCodecTest {
 		Assertions.assertThat(json).contains("\"boss_win\":true");
 		Assertions.assertThat(json).contains("\"player_class\":\"MAGE\"");
 		Assertions.assertThat(json).contains("\"damage_dealt\":40");
+		Assertions.assertThat(json).contains("\"easy_mode\":false");
 	}
 
 	@Test

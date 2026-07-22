@@ -237,7 +237,12 @@ public class HeroSelectScene extends PixelScene {
 			}
 		};
 		updateOptionsColor();
-		btnOptions.visible = btnOptions.active = false;
+		btnOptions.visible = false;
+		if (gameOptionsAllowed(GamesInProgress.selectedEchoPlayMode) && !SPDSettings.intro()) {
+			add(btnOptions);
+		}
+
+		Challenges.clearIfDisallowed(GamesInProgress.selectedEchoPlayMode);
 
 		if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
 			Dungeon.challenges = 0;
@@ -428,8 +433,11 @@ public class HeroSelectScene extends PixelScene {
 	private void updateOptionsColor() {
 		if (!SPDSettings.customSeed().isEmpty()) {
 			btnOptions.icon().hardlight(1f, 1.5f, 0.67f);
-		} else if (SPDSettings.challenges() != 0) {
+		} else if (Challenges.allowedForPlayMode(GamesInProgress.selectedEchoPlayMode)
+				&& SPDSettings.challenges() != 0) {
 			btnOptions.icon().hardlight(2f, 1.33f, 0.5f);
+		} else if (SPDSettings.easyMode()) {
+			btnOptions.icon().hardlight(0.5f, 1.5f, 0.67f);
 		} else {
 			btnOptions.icon().resetColor();
 		}
@@ -478,7 +486,11 @@ public class HeroSelectScene extends PixelScene {
 			infoButton.setPos(heroName.right(), heroName.top() + (heroName.height() - infoButton.height()) / 2f);
 			align(infoButton);
 
-			btnOptions.visible = btnOptions.active = false;
+			btnOptions.visible = btnOptions.active = gameOptionsAllowed(GamesInProgress.selectedEchoPlayMode)
+					&& !SPDSettings.intro();
+			if (!btnOptions.visible) {
+				optionsPane.visible = optionsPane.active = false;
+			}
 
 		} else {
 			title.visible = false;
@@ -500,7 +512,11 @@ public class HeroSelectScene extends PixelScene {
 			infoButton.visible = infoButton.active = true;
 			infoButton.setPos(startBtn.right(), startBtn.top());
 
-			btnOptions.visible = btnOptions.active = false;
+			btnOptions.visible = btnOptions.active = gameOptionsAllowed(GamesInProgress.selectedEchoPlayMode)
+					&& !SPDSettings.intro();
+			if (!btnOptions.visible) {
+				optionsPane.visible = optionsPane.active = false;
+			}
 			btnOptions.setPos(startBtn.left() - btnOptions.width(), startBtn.top());
 
 			optionsPane.setPos(heroBtns.get(0).left(), startBtn.top() - optionsPane.height() - 2);
@@ -541,6 +557,11 @@ public class HeroSelectScene extends PixelScene {
 			return "ranked_desc";
 		}
 		return null;
+	}
+
+	/** Game options (challenges, seeds, etc.) are only available in solo. */
+	public static boolean gameOptionsAllowed(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
 	}
 
 	static int modeDescMaxWidth(float availableWidth) {
@@ -900,32 +921,58 @@ public class HeroSelectScene extends PixelScene {
 			add(dailyButton);
 			buttons.add(dailyButton);
 
-			challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, "title"), 6) {
+			if (Challenges.allowedForPlayMode(GamesInProgress.selectedEchoPlayMode)) {
+				challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, "title"), 6) {
+					@Override
+					protected void onClick() {
+						if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
+							ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
+									Icons.get(Icons.CHALLENGE_GREY),
+									Messages.get(WndChallenges.class, "title"),
+									Messages.get(HeroSelectScene.class, "challenges_nowin")));
+							return;
+						}
+
+						ShatteredPixelDungeon.scene().addToFront(new WndChallenges(SPDSettings.challenges(), true) {
+							public void onBackPressed() {
+								super.onBackPressed();
+								icon(Icons
+										.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR
+												: Icons.CHALLENGE_GREY));
+								updateOptionsColor();
+							}
+						});
+					}
+				};
+				challengeButton.leftJustify = true;
+				challengeButton
+						.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
+				add(challengeButton);
+				buttons.add(challengeButton);
+			}
+
+			StyledButton easyModeButton = new StyledButton(Chrome.Type.BLANK,
+					Messages.get(HeroSelectScene.class, "easy_mode"), 6) {
 				@Override
 				protected void onClick() {
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
-						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
-								Icons.get(Icons.CHALLENGE_GREY),
-								Messages.get(WndChallenges.class, "title"),
-								Messages.get(HeroSelectScene.class, "challenges_nowin")));
-						return;
-					}
+					SPDSettings.easyMode(!SPDSettings.easyMode());
+					icon(Icons.get(SPDSettings.easyMode() ? Icons.CHECKED : Icons.UNCHECKED));
+					updateOptionsColor();
+				}
 
-					ShatteredPixelDungeon.scene().addToFront(new WndChallenges(SPDSettings.challenges(), true) {
-						public void onBackPressed() {
-							super.onBackPressed();
-							icon(Icons
-									.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
-							updateOptionsColor();
-						}
-					});
+				@Override
+				protected boolean onLongClick() {
+					ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
+							Icons.get(Icons.INFO),
+							Messages.get(HeroSelectScene.class, "easy_mode"),
+							Messages.get(HeroSelectScene.class, "easy_mode_desc")));
+					return true;
 				}
 			};
-			challengeButton.leftJustify = true;
-			challengeButton
-					.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
-			add(challengeButton);
-			buttons.add(challengeButton);
+			easyModeButton.leftJustify = true;
+			easyModeButton.icon(Icons.get(SPDSettings.easyMode() ? Icons.CHECKED : Icons.UNCHECKED));
+			add(easyModeButton);
+			buttons.add(easyModeButton);
 
 			int unlockedCount = 0;
 			for (HeroClass cls : HeroClass.values()) {
@@ -974,6 +1021,8 @@ public class HeroSelectScene extends PixelScene {
 			public WndRandomize() {
 				super();
 
+				boolean allowChallenges = Challenges.allowedForPlayMode(GamesInProgress.selectedEchoPlayMode);
+
 				chkHero = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_hero")) {
 					@Override
 					public void checked(boolean value) {
@@ -985,31 +1034,37 @@ public class HeroSelectScene extends PixelScene {
 				chkHero.checked(heroWasRandomized);
 				add(chkHero);
 
-				chkChals = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_chals")) {
-					@Override
-					public void checked(boolean value) {
-						super.checked(value);
-						optChals.enable(value);
-						chalWasRandomized = value;
-					}
-				};
-				chkChals.setRect(0, 20, 120, 16);
-				add(chkChals);
+				float nextY = 20;
+				if (allowChallenges) {
+					chkChals = new CheckBox(Messages.get(HeroSelectScene.class, "randomize_chals")) {
+						@Override
+						public void checked(boolean value) {
+							super.checked(value);
+							optChals.enable(value);
+							chalWasRandomized = value;
+						}
+					};
+					chkChals.setRect(0, nextY, 120, 16);
+					add(chkChals);
 
-				int max = Challenges.MAX_CHALS;
-				optChals = new OptionSlider(Messages.get(HeroSelectScene.class, "randomize_chals_title"), "0",
-						Integer.toString(max), 0, max) {
-					@Override
-					protected void onChange() {
-						// do nothing immediately
-					}
-				};
-				optChals.enable(false);
-				optChals.setSelectedValue(Challenges.activeChallenges(SPDSettings.challenges()));
-				optChals.setRect(0, 38, 120, 22);
-				add(optChals);
+					int max = Challenges.MAX_CHALS;
+					optChals = new OptionSlider(Messages.get(HeroSelectScene.class, "randomize_chals_title"), "0",
+							Integer.toString(max), 0, max) {
+						@Override
+						protected void onChange() {
+							// do nothing immediately
+						}
+					};
+					optChals.enable(false);
+					optChals.setSelectedValue(Challenges.activeChallenges(SPDSettings.challenges()));
+					optChals.setRect(0, nextY + 18, 120, 22);
+					add(optChals);
 
-				chkChals.checked(chalWasRandomized);
+					chkChals.checked(chalWasRandomized);
+					nextY = optChals.bottom() + 4;
+				} else {
+					chalWasRandomized = false;
+				}
 
 				RedButton btnCancel = new RedButton(Messages.get(HeroSelectScene.class, "randomize_cancel")) {
 					@Override
@@ -1018,7 +1073,7 @@ public class HeroSelectScene extends PixelScene {
 						hide();
 					}
 				};
-				btnCancel.setRect(61, 64, 60, 16);
+				btnCancel.setRect(61, nextY, 60, 16);
 				add(btnCancel);
 
 				RedButton btnConfirm = new RedButton(Messages.get(HeroSelectScene.class, "randomize_confirm")) {
@@ -1027,7 +1082,7 @@ public class HeroSelectScene extends PixelScene {
 						super.onClick();
 						hide();
 
-						if (chkChals.checked()) {
+						if (allowChallenges && chkChals != null && chkChals.checked()) {
 							int chals = optChals.getSelectedValue();
 							ArrayList<Integer> chalMasks = new ArrayList<>();
 							for (int i = 0; i < Challenges.MAX_CHALS; i++) {
@@ -1039,8 +1094,11 @@ public class HeroSelectScene extends PixelScene {
 								mask += chalMasks.remove(0);
 							}
 							SPDSettings.challenges(mask);
-							challengeButton.icon(Icons
-									.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
+							if (challengeButton != null) {
+								challengeButton.icon(Icons
+										.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR
+												: Icons.CHALLENGE_GREY));
+							}
 							ShatteredPixelDungeon.scene().addToFront(new WndChallenges(mask, false));
 						}
 
@@ -1056,7 +1114,7 @@ public class HeroSelectScene extends PixelScene {
 						}
 					}
 				};
-				btnConfirm.setRect(0, 64, 60, 16);
+				btnConfirm.setRect(0, nextY, 60, 16);
 				add(btnConfirm);
 
 				resize(120, (int) btnConfirm.bottom());

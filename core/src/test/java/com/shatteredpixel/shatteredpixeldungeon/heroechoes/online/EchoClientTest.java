@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
@@ -18,6 +19,7 @@ public class EchoClientTest {
 
 	@AfterEach
 	void cleanup() {
+		Dungeon.easyMode = false;
 		EchoOnlineSettings.resetForTests();
 		EchoPlayerSession.resetForTests();
 	}
@@ -38,7 +40,7 @@ public class EchoClientTest {
 		Assertions.assertThat(result.result.echo.echoId).isEqualTo("5-99");
 		Assertions.assertThat(result.result.echo.hasCombatData()).isTrue();
 		Assertions.assertThat(result.result.policy.isSupported()).isTrue();
-		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/echoes/5");
+		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/echoes/5?easy_mode=false");
 	}
 
 	@Test
@@ -278,7 +280,22 @@ public class EchoClientTest {
 
 		Assertions.assertThat(entries).hasSize(1);
 		Assertions.assertThat(entries.get(0).echoId).isEqualTo("5-9");
-		Assertions.assertThat(transport.requests.get(0).url).contains("/v1/leaderboard/5?limit=10");
+		Assertions.assertThat(transport.requests.get(0).url)
+				.contains("/v1/leaderboard/5?limit=10&easy_mode=false");
+	}
+
+	@Test
+	@DisplayName("fetchEcho requests easy_mode query from dungeon flag")
+	void fetchEchoRequestsEasyModeQuery() {
+		Dungeon.easyMode = true;
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(404, "");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+		client.fetchEcho(5);
+
+		Assertions.assertThat(transport.requests.get(0).url)
+				.isEqualTo("https://echo.test/v1/echoes/5?easy_mode=true");
 	}
 
 	public static final class FakeEchoHttpTransport implements EchoHttpTransport {

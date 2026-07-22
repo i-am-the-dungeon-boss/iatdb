@@ -231,6 +231,7 @@ public class SPDSettings extends GameSettings {
 
 	public static final String KEY_LAST_CLASS = "last_class";
 	public static final String KEY_CHALLENGES = "challenges";
+	public static final String KEY_EASY_MODE = "easy_mode";
 	public static final String KEY_CUSTOM_SEED = "custom_seed";
 	public static final String KEY_LAST_DAILY = "last_daily";
 	public static final String KEY_INTRO = "intro";
@@ -289,6 +290,14 @@ public class SPDSettings extends GameSettings {
 
 	public static int challenges() {
 		return getInt(KEY_CHALLENGES, 0, 0, Challenges.MAX_VALUE);
+	}
+
+	public static void easyMode(boolean value) {
+		put(KEY_EASY_MODE, value);
+	}
+
+	public static boolean easyMode() {
+		return getBoolean(KEY_EASY_MODE, false);
 	}
 
 	public static void customSeed(String value) {

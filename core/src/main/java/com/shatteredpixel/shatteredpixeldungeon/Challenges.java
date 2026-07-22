@@ -24,24 +24,26 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 
 public class Challenges {
 
-	//Some of these internal IDs are outdated and don't represent what these challenges do
-	public static final int NO_FOOD				= 1;
-	public static final int NO_ARMOR			= 2;
-	public static final int NO_HEALING			= 4;
-	public static final int NO_HERBALISM		= 8;
-	public static final int SWARM_INTELLIGENCE	= 16;
-	public static final int DARKNESS			= 32;
-	public static final int NO_SCROLLS		    = 64;
-	public static final int CHAMPION_ENEMIES	= 128;
-	public static final int STRONGER_BOSSES 	= 256;
+	// Some of these internal IDs are outdated and don't represent what these
+	// challenges do
+	public static final int NO_FOOD = 1;
+	public static final int NO_ARMOR = 2;
+	public static final int NO_HEALING = 4;
+	public static final int NO_HERBALISM = 8;
+	public static final int SWARM_INTELLIGENCE = 16;
+	public static final int DARKNESS = 32;
+	public static final int NO_SCROLLS = 64;
+	public static final int CHAMPION_ENEMIES = 128;
+	public static final int STRONGER_BOSSES = 256;
 
-	public static final int MAX_VALUE           = 511;
-	public static final int MAX_CHALS           = 9;
+	public static final int MAX_VALUE = 511;
+	public static final int MAX_CHALS = 9;
 
 	public static final String[] NAME_IDS = {
 			"champion_enemies",
@@ -56,24 +58,39 @@ public class Challenges {
 	};
 
 	public static final int[] MASKS = {
-			CHAMPION_ENEMIES, STRONGER_BOSSES, NO_FOOD, NO_ARMOR, NO_HEALING, NO_HERBALISM, SWARM_INTELLIGENCE, DARKNESS, NO_SCROLLS
+			CHAMPION_ENEMIES, STRONGER_BOSSES, NO_FOOD, NO_ARMOR, NO_HEALING, NO_HERBALISM, SWARM_INTELLIGENCE,
+			DARKNESS, NO_SCROLLS
 	};
 
-	public static int activeChallenges(){
+	public static int activeChallenges() {
 		return activeChallenges(Dungeon.challenges);
 	}
 
-	public static int activeChallenges(int mask){
+	public static int activeChallenges(int mask) {
 		int chCount = 0;
-		for (int ch : Challenges.MASKS){
-			if ((mask & ch) != 0) chCount++;
+		for (int ch : Challenges.MASKS) {
+			if ((mask & ch) != 0)
+				chCount++;
 		}
 		return chCount;
 	}
 
-	public static boolean isItemBlocked( Item item ){
+	/** Challenges are only offered / applied in solo echo runs. */
+	public static boolean allowedForPlayMode(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
+	}
 
-		if (Dungeon.isChallenged(NO_HERBALISM) && item instanceof Dewdrop){
+	/** Clears run + settings challenges when the play mode disallows them. */
+	public static void clearIfDisallowed(EchoPlayMode mode) {
+		if (!allowedForPlayMode(mode)) {
+			Dungeon.challenges = 0;
+			SPDSettings.challenges(0);
+		}
+	}
+
+	public static boolean isItemBlocked(Item item) {
+
+		if (Dungeon.isChallenged(NO_HERBALISM) && item instanceof Dewdrop) {
 			return true;
 		}
 

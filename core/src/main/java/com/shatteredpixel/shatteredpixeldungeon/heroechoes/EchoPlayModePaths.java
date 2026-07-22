@@ -4,7 +4,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 
 /**
- * File-system namespaces for ranked vs solo hero-echoes data.
+ * File-system namespaces for ranked vs solo hero-echoes data,
+ * with an optional easy-mode suffix so easy and normal pools stay separate.
  */
 public final class EchoPlayModePaths {
 
@@ -22,6 +23,10 @@ public final class EchoPlayModePaths {
 			return GamesInProgress.selectedEchoPlayMode;
 		}
 		return EchoPlayMode.NONE;
+	}
+
+	public static String easySuffix() {
+		return Dungeon.easyMode ? "-easy" : "";
 	}
 
 	public static String gameFolderSuffix(EchoPlayMode mode) {
@@ -42,7 +47,7 @@ public final class EchoPlayModePaths {
 		if (mode == null || mode == EchoPlayMode.NONE) {
 			mode = EchoPlayMode.SOLO;
 		}
-		return ECHOES_BASE + gameFolderSuffix(mode);
+		return ECHOES_BASE + gameFolderSuffix(mode) + easySuffix();
 	}
 
 	public static String echoesDir() {
@@ -50,7 +55,7 @@ public final class EchoPlayModePaths {
 	}
 
 	public static String leaderboardFile(EchoPlayMode mode) {
-		String suffix = gameFolderSuffix(mode);
+		String suffix = gameFolderSuffix(mode) + easySuffix();
 		if (suffix.isEmpty()) {
 			return LEADERBOARD_BASE + ".json";
 		}

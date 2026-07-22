@@ -254,6 +254,8 @@ public abstract class Level implements Bundlable {
 				Dungeon.LimitedDrops.TRINKET_CATA.drop();
 				addItemToSpawn( new TrinketCatalyst());
 			}
+
+			Dungeon.applyEasyModeFloorRewards(this);
 			
 			if (Dungeon.depth > 1) {
 				//50% chance of getting a level feeling

@@ -115,6 +115,7 @@ public enum Rankings {
 		rec.score       = calculateScore();
 		rec.customSeed  = Dungeon.customSeedText;
 		rec.daily       = Dungeon.daily;
+		rec.easyMode    = Dungeon.easyMode;
 
 		Badges.validateHighScore( rec.score );
 		
@@ -156,7 +157,7 @@ public enum Rankings {
 			size = records.size();
 		}
 
-		if (rec.customSeed.isEmpty()) {
+		if (rec.customSeed.isEmpty() && !rec.easyMode) {
 			totalNumber++;
 			if (win) {
 				wonNumber++;
@@ -246,6 +247,7 @@ public enum Rankings {
 	public static final String CUSTOM_SEED	= "custom_seed";
 	public static final String DAILY	    = "daily";
 	public static final String DAILY_REPLAY	= "daily_replay";
+	public static final String EASY_MODE	= "easy_mode";
 
 	public void saveGameData(Record rec){
 		if (Dungeon.hero == null){
@@ -316,6 +318,7 @@ public enum Rankings {
 		rec.gameData.put( CUSTOM_SEED, Dungeon.customSeedText );
 		rec.gameData.put( DAILY, Dungeon.daily );
 		rec.gameData.put( DAILY_REPLAY, Dungeon.dailyReplay );
+		rec.gameData.put( EASY_MODE, Dungeon.easyMode );
 	}
 
 	public void loadGameData(Record rec){
@@ -358,10 +361,12 @@ public enum Rankings {
 			Dungeon.customSeedText = rec.gameData.getString(CUSTOM_SEED);
 			Dungeon.daily = rec.gameData.getBoolean(DAILY);
 			Dungeon.dailyReplay = rec.gameData.getBoolean(DAILY_REPLAY);
+			Dungeon.easyMode = rec.gameData.getBoolean(EASY_MODE);
 		} else {
 			Dungeon.seed = -1;
 			Dungeon.customSeedText = "";
 			Dungeon.daily = Dungeon.dailyReplay = false;
+			Dungeon.easyMode = false;
 		}
 	}
 	
@@ -467,6 +472,7 @@ public enum Rankings {
 		private static final String ID      = "gameID";
 		private static final String SEED    = "custom_seed";
 		private static final String DAILY   = "daily";
+		private static final String EASY_MODE = "easy_mode";
 
 		private static final String DATE    = "date";
 		private static final String VERSION = "version";
@@ -488,6 +494,7 @@ public enum Rankings {
 
 		public String customSeed;
 		public boolean daily;
+		public boolean easyMode;
 
 		public String date;
 		public String version;
@@ -524,6 +531,7 @@ public enum Rankings {
 			score	    = bundle.getInt( SCORE );
 			customSeed  = bundle.getString( SEED );
 			daily       = bundle.getBoolean( DAILY );
+			easyMode    = bundle.getBoolean( EASY_MODE );
 
 			heroClass	= bundle.getEnum( CLASS, HeroClass.class );
 			armorTier	= bundle.getInt( TIER );
@@ -554,6 +562,7 @@ public enum Rankings {
 			bundle.put( SCORE, score );
 			bundle.put( SEED, customSeed );
 			bundle.put( DAILY, daily );
+			bundle.put( EASY_MODE, easyMode );
 
 			bundle.put( CLASS, heroClass );
 			bundle.put( TIER, armorTier );
@@ -572,10 +581,12 @@ public enum Rankings {
 	public static final Comparator<Record> scoreComparator = new Comparator<Rankings.Record>() {
 		@Override
 		public int compare( Record lhs, Record rhs ) {
-			//this covers custom seeded runs and dailies
-			if (rhs.customSeed.isEmpty() && !lhs.customSeed.isEmpty()){
+			//this covers custom seeded runs, easy mode, and dailies
+			boolean lhsSpecial = !lhs.customSeed.isEmpty() || lhs.easyMode;
+			boolean rhsSpecial = !rhs.customSeed.isEmpty() || rhs.easyMode;
+			if (!rhsSpecial && lhsSpecial){
 				return +1;
-			} else if (lhs.customSeed.isEmpty() && !rhs.customSeed.isEmpty()){
+			} else if (!lhsSpecial && rhsSpecial){
 				return -1;
 			}
 
