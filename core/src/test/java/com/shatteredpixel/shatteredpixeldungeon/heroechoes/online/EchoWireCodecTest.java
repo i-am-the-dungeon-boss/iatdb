@@ -28,7 +28,7 @@ class EchoWireCodecTest {
 	}
 
 	@Test
-	@DisplayName("encodes policy_input items and talents from restored echo hero")
+	@DisplayName("encodes upload policy_input kit without duplicating hero_class or lvl")
 	void encodesPolicyInputFromEchoHero() throws Exception {
 		Echo echo = EchoTestSupport.warriorEchoWithData(5);
 
@@ -36,8 +36,10 @@ class EchoWireCodecTest {
 				EchoWireCodec.encodeEchoUpload(echo, "test-client"));
 		org.json.JSONObject policyInput = root.getJSONObject("policy_input");
 
-		Assertions.assertThat(policyInput.getString("hero_class")).isEqualTo("WARRIOR");
-		Assertions.assertThat(policyInput.getInt("lvl")).isEqualTo(6);
+		Assertions.assertThat(root.getString("hero_class")).isEqualTo("WARRIOR");
+		Assertions.assertThat(root.getInt("lvl")).isEqualTo(6);
+		Assertions.assertThat(policyInput.has("hero_class")).isFalse();
+		Assertions.assertThat(policyInput.has("lvl")).isFalse();
 		Assertions.assertThat(policyInput.getString("subclass")).isEqualTo("NONE");
 		Assertions.assertThat(policyInput.getJSONArray("items").length()).isGreaterThan(0);
 		Assertions.assertThat(policyInput.getJSONArray("items").toString())

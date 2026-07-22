@@ -4,6 +4,7 @@ import com.badlogic.gdx.Files;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -149,7 +150,7 @@ class LeaderboardFeatureTest {
         Dungeon.echoPlayMode = EchoPlayMode.SOLO;
         Dungeon.depth = 5;
         Echo local = EchoTestSupport.warriorEchoWithData(5);
-        new EchoStorage().save(local);
+        CompositeEchoLookup.setEchoLookupForTests(d -> EchoTestSupport.outcomeWithPolicy(local));
         Assertions.assertThat(Dungeon.prefetchEchoBossOutcome(5).isFound()).isTrue();
 
         Hero hero = new Hero();

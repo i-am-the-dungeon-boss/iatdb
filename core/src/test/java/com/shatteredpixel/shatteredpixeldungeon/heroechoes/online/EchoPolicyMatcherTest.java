@@ -54,6 +54,7 @@ class EchoPolicyMatcherTest {
 				.put("MAGE", new JSONObject()
 						.put("ideal_distance", 3)
 						.put("if_closer", "KEEP_DISTANCE")
+						.put("if_closer_require_role", "RANGED")
 						.put("if_farther", "CLOSE_IN")));
 		EchoPolicy policy = EchoPolicy.fromJson(root);
 
@@ -69,6 +70,63 @@ class EchoPolicyMatcherTest {
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
+		Assertions.assertThat(choice.layer).isEqualTo("positioning");
+	}
+
+	@Test
+	@DisplayName("positioning skips KEEP_DISTANCE when if_closer_require_role is not ready")
+	void positioningSkipsKeepDistanceWithoutRequiredRole() {
+		JSONObject root = basePolicyJson();
+		root.put("reactions", new JSONArray());
+		root.put("recipes", new JSONArray());
+		root.put("positioning", new JSONObject()
+				.put("MAGE", new JSONObject()
+						.put("ideal_distance", 3)
+						.put("if_closer", "KEEP_DISTANCE")
+						.put("if_closer_require_role", "RANGED")
+						.put("if_farther", "CLOSE_IN")));
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray()
+						.put("reactions").put("recipes").put("positioning")
+						.put("matchups").put("default"))
+				.put("default_roles", new JSONArray().put("MELEE")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.selfClass("MAGE")
+				.rolesReady(set("KEEP_DISTANCE", "MELEE", "CLOSE_IN"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
+		Assertions.assertThat(choice.layer).isEqualTo("default");
+	}
+
+	@Test
+	@DisplayName("positioning still CLOSE_IN when far even if if_closer_require_role is not ready")
+	void positioningCloseInIgnoresCloserRequireRole() {
+		JSONObject root = basePolicyJson();
+		root.put("reactions", new JSONArray());
+		root.put("recipes", new JSONArray());
+		root.put("positioning", new JSONObject()
+				.put("MAGE", new JSONObject()
+						.put("ideal_distance", 3)
+						.put("if_closer", "KEEP_DISTANCE")
+						.put("if_closer_require_role", "RANGED")
+						.put("if_farther", "CLOSE_IN")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(5)
+				.selfClass("MAGE")
+				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
 		Assertions.assertThat(choice.layer).isEqualTo("positioning");
 	}
 

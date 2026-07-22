@@ -1,17 +1,27 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
@@ -109,6 +119,114 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
+	@DisplayName("HASTE drinks PotionOfHaste onto the boss")
+	void hasteDrinksOntoBoss() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfHaste haste = new PotionOfHaste();
+		haste.identify();
+		haste.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, hastePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HASTE")).build(),
+				new EchoPolicyChoice("HASTE", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Haste.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfHaste.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("INVIS drinks PotionOfInvisibility onto the boss")
+	void invisDrinksOntoBoss() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfInvisibility invis = new PotionOfInvisibility();
+		invis.identify();
+		invis.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, invisPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("INVIS")).build(),
+				new EchoPolicyChoice("INVIS", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Invisibility.class)).isNotNull();
+		Assertions.assertThat(boss.invisible).isGreaterThan(0);
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfInvisibility.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("CLEANSE strips poison from the boss")
+	void cleanseStripsPoison() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfCleansing cleansing = new PotionOfCleansing();
+		cleansing.identify();
+		cleansing.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, cleanseDebuffPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		Buff.affect(boss, Poison.class).set(6f);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("CLEANSE")).build(),
+				new EchoPolicyChoice("CLEANSE", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Poison.class)).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfCleansing.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("HEAL drinks PotionOfShielding as barrier on the boss")
+	void healDrinksShieldingAsBarrier() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfShielding shielding = new PotionOfShielding();
+		shielding.identify();
+		shielding.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, shieldingHealPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HEAL")).build(),
+				new EchoPolicyChoice("HEAL", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Barrier.class)).isNotNull();
+		Assertions.assertThat(boss.shielding()).isGreaterThan(0);
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfShielding.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("PURITY drinks blob immunity onto the boss")
+	void purityDrinksBlobImmunity() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfPurity purity = new PotionOfPurity();
+		purity.identify();
+		purity.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, purityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("PURITY")).build(),
+				new EchoPolicyChoice("PURITY", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(BlobImmunity.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfPurity.class)).isNull();
+	}
+
+	@Test
 	@DisplayName("CLEANSE_BURN detaches burning from the boss")
 	void cleanseBurnDetachesBurning() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -155,6 +273,86 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
+	@DisplayName("thrown potion queues MissileSprite showing that potion's image")
+	void thrownPotionMissileUsesPotionImage() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfParalyticGas gas = new PotionOfParalyticGas();
+		gas.identify();
+		gas.collect(hero.belongings.backpack);
+		int expectedImage = gas.image();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, setupCcPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		MissileCaptureGroup stage = new MissileCaptureGroup();
+		stage.add(boss.sprite);
+		stage.add(hero.sprite);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(java.util.Set.of("SETUP_CC"))
+				.safeHazards(java.util.Set.of("SETUP_CC"))
+				.build();
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				status,
+				new EchoPolicyChoice("SETUP_CC", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(stage.lastMissile)
+				.as("thrown potion must play a MissileSprite from the boss")
+				.isNotNull();
+
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
+				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		expected.view(expectedImage, null);
+		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
+		com.watabou.utils.RectF expectedFrame = expected.frame();
+		Assertions.assertThat(missileFrame.left).isEqualTo(expectedFrame.left);
+		Assertions.assertThat(missileFrame.top).isEqualTo(expectedFrame.top);
+		Assertions.assertThat(missileFrame.right).isEqualTo(expectedFrame.right);
+		Assertions.assertThat(missileFrame.bottom).isEqualTo(expectedFrame.bottom);
+	}
+
+	@Test
+	@DisplayName("PAYOFF_AOE MissileSprite uses liquid flame image not a generic projectile")
+	void payoffAoeMissileUsesLiquidFlameImage() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfLiquidFlame flame = new PotionOfLiquidFlame();
+		flame.identify();
+		flame.collect(hero.belongings.backpack);
+		int expectedImage = flame.image();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, payoffPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		MissileCaptureGroup stage = new MissileCaptureGroup();
+		stage.add(boss.sprite);
+		stage.add(hero.sprite);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(java.util.Set.of("PAYOFF_AOE"))
+				.safeHazards(java.util.Set.of("fire_aoe", "PAYOFF_AOE"))
+				.build();
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				status,
+				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(stage.lastMissile).isNotNull();
+
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
+				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		expected.view(expectedImage, null);
+		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
+		com.watabou.utils.RectF expectedFrame = expected.frame();
+		Assertions.assertThat(missileFrame.left).isEqualTo(expectedFrame.left);
+		Assertions.assertThat(missileFrame.top).isEqualTo(expectedFrame.top);
+		Assertions.assertThat(missileFrame.right).isEqualTo(expectedFrame.right);
+		Assertions.assertThat(missileFrame.bottom).isEqualTo(expectedFrame.bottom);
+	}
+
+	@Test
 	@DisplayName("RANGED SpiritBow spends turn and survives a real hit VFX path")
 	void rangedSpiritBowSpendsTurnAndHitsWithSprites() {
 		Hero hero = huntressHero();
@@ -192,11 +390,14 @@ class EchoRoleExecutorTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, rangedBowPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
 
-		com.watabou.noosa.Group stage = new com.watabou.noosa.Group();
+		MissileCaptureGroup stage = new MissileCaptureGroup();
 		stage.add(boss.sprite);
 		stage.add(hero.sprite);
-		int lengthBefore = stage.length;
 		boss.getEchoHero().invisible = 1;
+
+		SpiritBow bow = boss.getEchoHero().belongings.getItem(SpiritBow.class);
+		Assertions.assertThat(bow).isNotNull();
+		int expectedImage = bow.knockArrow().image();
 
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
@@ -205,9 +406,19 @@ class EchoRoleExecutorTest {
 				new EchoPolicyChoice("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
-		Assertions.assertThat(stage.length)
+		Assertions.assertThat(stage.lastMissile)
 				.as("SpiritBow should recycle a MissileSprite onto the boss sprite parent")
-				.isGreaterThan(lengthBefore);
+				.isNotNull();
+
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
+				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		expected.view(expectedImage, null);
+		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
+		com.watabou.utils.RectF expectedFrame = expected.frame();
+		Assertions.assertThat(missileFrame.left).isEqualTo(expectedFrame.left);
+		Assertions.assertThat(missileFrame.top).isEqualTo(expectedFrame.top);
+		Assertions.assertThat(missileFrame.right).isEqualTo(expectedFrame.right);
+		Assertions.assertThat(missileFrame.bottom).isEqualTo(expectedFrame.bottom);
 	}
 
 	@Test
@@ -257,6 +468,49 @@ class EchoRoleExecutorTest {
 				.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
 				.put("MELEE", EchoTestSupport.capability("*melee"))
 				.put("WAIT", EchoTestSupport.capability("*wait")));
+	}
+
+	/** Captures MissileSprites added/recycled onto the boss stage. */
+	private static final class MissileCaptureGroup extends com.watabou.noosa.Group {
+		com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite lastMissile;
+
+		@Override
+		public synchronized com.watabou.noosa.Gizmo add(com.watabou.noosa.Gizmo g) {
+			if (g instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite) {
+				lastMissile = (com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite) g;
+			}
+			return super.add(g);
+		}
+	}
+
+	private static EchoPolicy hastePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("HASTE", EchoTestSupport.capability("PotionOfHaste"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy invisPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("INVIS", EchoTestSupport.capability("PotionOfInvisibility"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy cleanseDebuffPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("CLEANSE", EchoTestSupport.capability("PotionOfCleansing"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy shieldingHealPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("HEAL", EchoTestSupport.capability("PotionOfShielding"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy purityPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("PURITY", EchoTestSupport.capability("PotionOfPurity"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
 	private static EchoPolicy cleansePolicy() {

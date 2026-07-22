@@ -3,19 +3,28 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfHoneyedHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.watabou.utils.Callback;
 import com.watabou.utils.DeviceCompat;
 import org.json.JSONObject;
@@ -103,12 +112,29 @@ public final class EchoRoleExecutor {
 	private static boolean isSelfDrinkPotion(String itemId) {
 		return "PotionOfHealing".equals(itemId)
 				|| "PotionOfShielding".equals(itemId)
+				|| "ElixirOfHoneyedHealing".equals(itemId)
 				|| "PotionOfPurity".equals(itemId)
-				|| "PotionOfFrost".equals(itemId);
+				|| "PotionOfFrost".equals(itemId)
+				|| "PotionOfHaste".equals(itemId)
+				|| "PotionOfStamina".equals(itemId)
+				|| "PotionOfInvisibility".equals(itemId)
+				|| "PotionOfCleansing".equals(itemId)
+				|| "PotionOfLevitation".equals(itemId);
+	}
+
+	private static boolean isSelfDrinkRole(String role) {
+		return "HEAL".equals(role)
+				|| "CLEANSE_BURN".equals(role)
+				|| "CLEANSE".equals(role)
+				|| "PURITY".equals(role)
+				|| "HASTE".equals(role)
+				|| "INVIS".equals(role)
+				|| "LEVITATE".equals(role);
 	}
 
 	private static boolean needsAimCell(String itemId) {
-		return itemId.startsWith("PotionOf") && !isSelfDrinkPotion(itemId);
+		return (itemId.startsWith("PotionOf") || itemId.startsWith("ElixirOf"))
+				&& !isSelfDrinkPotion(itemId);
 	}
 
 	private static boolean executeVirtual(EchoBoss boss, EchoPolicyStatus status, String tag) {
@@ -135,16 +161,13 @@ public final class EchoRoleExecutor {
 
 	/**
 	 * Shared potion pattern: detach from echo inventory → self-apply on boss or
-	 * throw at cell.
+	 * throw at cell via {@link Item#castVisual}.
 	 */
 	private static boolean executePotion(EchoBoss boss, Potion potion, String role, int cell) {
 		Hero echoHero = boss.getEchoHero();
 
-		boolean selfDrink = "HEAL".equals(role) || "CLEANSE_BURN".equals(role);
+		boolean selfDrink = isSelfDrinkRole(role);
 		if (!selfDrink && (cell < 0 || Dungeon.level == null)) {
-			return false;
-		}
-		if ("HEAL".equals(role) && !(potion instanceof PotionOfHealing)) {
 			return false;
 		}
 
@@ -152,18 +175,48 @@ public final class EchoRoleExecutor {
 		if (selfDrink) {
 			return applySelfDrink(boss, echoHero, potion, role);
 		}
+		return throwPotion(boss, echoHero, potion, cell);
+	}
+
+	/**
+	 * Uses {@link Item#castVisual} (same missile path as hero {@link Item#cast}),
+	 * then {@link Item#onThrow} on arrival. Instant when boss sprite is off-stage.
+	 */
+	private static boolean throwPotion(EchoBoss boss, Hero echoHero, Potion potion, int cell) {
 		potion.setCurrent(echoHero);
-		Dungeon.level.pressCell(cell);
-		AiItemActions.withUser(echoHero, potion, () -> potion.shatter(cell));
+		Callback shatter = () -> AiItemActions.withUser(echoHero, potion,
+				() -> AiItemActions.onThrow(potion, cell));
+
+		if (!canPlayThrowVisual(boss, cell)) {
+			shatter.call();
+			return true;
+		}
+		potion.castVisual(boss.sprite, boss.pos, cell, shatter);
 		return true;
+	}
+
+	private static boolean canPlayThrowVisual(EchoBoss boss, int cell) {
+		return boss.sprite != null
+				&& boss.sprite.parent != null
+				&& (boss.sprite.visible
+						|| (Dungeon.level != null && cell >= 0
+								&& cell < Dungeon.level.heroFOV.length
+								&& Dungeon.level.heroFOV[cell]));
 	}
 
 	/** Effects target the EchoBoss mob, not the phantom echo hero. */
 	private static boolean applySelfDrink(EchoBoss boss, Hero echoHero, Potion potion, String role) {
 		if ("HEAL".equals(role)) {
-			PotionOfHealing.cure(boss);
-			PotionOfHealing.heal(boss);
-			return true;
+			if (potion instanceof PotionOfShielding) {
+				Buff.affect(boss, Barrier.class).setShield((int) (0.6f * boss.HT + 10));
+				return true;
+			}
+			if (potion instanceof PotionOfHealing || potion instanceof ElixirOfHoneyedHealing) {
+				PotionOfHealing.cure(boss);
+				PotionOfHealing.heal(boss);
+				return true;
+			}
+			return false;
 		}
 		if ("CLEANSE_BURN".equals(role)) {
 			Buff.detach(boss, Burning.class);
@@ -171,12 +224,36 @@ public final class EchoRoleExecutor {
 			AiItemActions.withUser(echoHero, potion, () -> potion.shatter(boss.pos));
 			return true;
 		}
+		if ("CLEANSE".equals(role)) {
+			PotionOfCleansing.cleanse(boss);
+			return true;
+		}
+		if ("PURITY".equals(role)) {
+			Buff.prolong(boss, BlobImmunity.class, BlobImmunity.DURATION);
+			return true;
+		}
+		if ("HASTE".equals(role)) {
+			if (potion instanceof PotionOfStamina) {
+				Buff.prolong(boss, Stamina.class, Stamina.DURATION);
+			} else {
+				Buff.prolong(boss, Haste.class, Haste.DURATION);
+			}
+			return true;
+		}
+		if ("INVIS".equals(role)) {
+			Buff.prolong(boss, Invisibility.class, Invisibility.DURATION);
+			return true;
+		}
+		if ("LEVITATE".equals(role)) {
+			Buff.prolong(boss, Levitation.class, Levitation.DURATION);
+			return true;
+		}
 		return false;
 	}
 
 	/**
 	 * Shoot without {@link SpiritBow.SpiritArrow#cast} (that path uses hero
-	 * {@code spendAndNext}). Plays a {@link MissileSprite} from the boss when
+	 * {@code spendAndNext}). Uses {@link Item#castVisual} from the boss when
 	 * on-stage; otherwise applies the hit immediately (tests / off-screen).
 	 */
 	private static boolean executeSpiritBow(EchoBoss boss, SpiritBow bow, int cell) {
@@ -185,43 +262,24 @@ public final class EchoRoleExecutor {
 		if (enemy == null || Dungeon.level == null || cell < 0)
 			return false;
 
-		int savedPos = echoHero.pos;
-		echoHero.pos = boss.pos;
-		SpiritBow.SpiritArrow arrow;
-		int throwCell;
-		Char target;
-		try {
-			arrow = bow.knockArrow();
-			throwCell = arrow.throwPos(echoHero, cell);
-			Char found = Actor.findChar(throwCell);
-			if (found == null && throwCell == enemy.pos) {
-				found = enemy;
-			}
-			if (found == null || found == echoHero || found == boss)
-				return false;
-			target = found;
-		} finally {
-			echoHero.pos = savedPos;
+		SpiritBow.SpiritArrow arrow = bow.knockArrow();
+		int throwCell = arrow.throwPos(boss.pos, cell);
+		Char found = Actor.findChar(throwCell);
+		if (found == null && throwCell == enemy.pos) {
+			found = enemy;
 		}
+		if (found == null || found == echoHero || found == boss)
+			return false;
+
+		final Char target = found;
+		Callback onArrive = () -> applySpiritBowShot(boss, arrow, target);
 
 		if (boss.sprite != null && boss.sprite.parent != null
 				&& (boss.sprite.visible || (target.sprite != null && target.sprite.visible))) {
-			final Char shotTarget = target;
-			final SpiritBow.SpiritArrow shotArrow = arrow;
-			arrow.throwSound();
-			boss.sprite.zap(throwCell);
-			Callback onArrive = () -> applySpiritBowShot(boss, shotArrow, shotTarget);
-			if (target.sprite != null) {
-				((MissileSprite) boss.sprite.parent.recycle(MissileSprite.class))
-						.reset(boss.sprite, target.sprite, arrow, onArrive);
-			} else {
-				((MissileSprite) boss.sprite.parent.recycle(MissileSprite.class))
-						.reset(boss.sprite, throwCell, arrow, onArrive);
-			}
-			return true;
+			arrow.castVisual(boss.sprite, boss.pos, cell, onArrive);
+		} else {
+			onArrive.call();
 		}
-
-		applySpiritBowShot(boss, arrow, target);
 		return true;
 	}
 

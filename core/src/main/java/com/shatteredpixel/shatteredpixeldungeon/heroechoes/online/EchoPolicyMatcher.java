@@ -152,6 +152,10 @@ public final class EchoPolicyMatcher {
 		String role = null;
 		if (status.distance < ideal) {
 			role = optRole(stance, "if_closer");
+			String requireRole = stance.optString("if_closer_require_role", "");
+			if (!requireRole.isEmpty() && !status.isRoleReady(requireRole)) {
+				role = null;
+			}
 		} else if (status.distance > ideal) {
 			role = optRole(stance, "if_farther");
 		} else {

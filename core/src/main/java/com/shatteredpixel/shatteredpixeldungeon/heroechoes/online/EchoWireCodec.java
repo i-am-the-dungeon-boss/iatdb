@@ -32,7 +32,11 @@ public final class EchoWireCodec {
 		json.put("timestamp", echo.timestamp > 0 ? echo.timestamp : System.currentTimeMillis());
 		json.put("echo_data_base64", encodeEchoData(echo));
 		json.put("source_client", sourceClient);
-		json.put("policy_input", EchoPolicyInput.fromEcho(echo).toJson());
+		JSONObject policyInput = EchoPolicyInput.fromEcho(echo).toJson();
+		// Root echo already carries hero_class/lvl; nested kit must not duplicate them.
+		policyInput.remove("hero_class");
+		policyInput.remove("lvl");
+		json.put("policy_input", policyInput);
 		return json.toString();
 	}
 

@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.junit.jupiter.api.DisplayName;
@@ -58,6 +59,20 @@ class EchoInventoryTest {
 		Assertions.assertThat(EchoInventory.availableIds(hero))
 				.contains("PotionOfHealing")
 				.doesNotContain("WandOfMagicMissile");
+	}
+
+	@Test
+	@DisplayName("availableIds omits mage staff when imbued wand has no charges")
+	void availableIdsOmitsEmptyMagesStaff() {
+		Hero hero = EchoTestSupport.warriorHero();
+		WandOfMagicMissile wand = new WandOfMagicMissile();
+		wand.identify();
+		MagesStaff staff = new MagesStaff(wand);
+		staff.setWandCharges(0);
+		hero.belongings.weapon = staff;
+
+		Assertions.assertThat(staff.canZap()).isFalse();
+		Assertions.assertThat(EchoInventory.availableIds(hero)).doesNotContain("MagesStaff");
 	}
 
 	@Test

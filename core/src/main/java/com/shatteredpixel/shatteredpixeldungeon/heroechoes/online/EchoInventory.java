@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import org.json.JSONArray;
 
 import java.util.HashSet;
@@ -24,6 +25,9 @@ public final class EchoInventory {
 			return ids;
 		for (Item item : echoHero.belongings) {
 			if (item instanceof Wand && ((Wand) item).curCharges <= 0) {
+				continue;
+			}
+			if (item instanceof MagesStaff && !((MagesStaff) item).canZap()) {
 				continue;
 			}
 			ids.add(itemId(item));
