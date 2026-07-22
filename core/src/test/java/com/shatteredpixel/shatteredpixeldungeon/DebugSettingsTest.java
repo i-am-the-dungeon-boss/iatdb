@@ -50,9 +50,9 @@ class DebugSettingsTest {
 	}
 
 	@Test
-	@DisplayName("debug start depth is the amulet floor")
-	void debugStartDepthIsAmuletFloor() {
-		Assertions.assertThat(DebugSettings.START_DEPTH).isEqualTo(26);
+	@DisplayName("debug start depth is the floor before the first boss")
+	void debugStartDepthIsBeforeFirstBoss() {
+		Assertions.assertThat(DebugSettings.START_DEPTH).isEqualTo(4);
 	}
 
 	@Test

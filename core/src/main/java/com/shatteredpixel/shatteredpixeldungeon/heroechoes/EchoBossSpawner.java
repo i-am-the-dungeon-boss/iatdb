@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -44,6 +45,22 @@ public final class EchoBossSpawner {
 		if (echo == null) {
 			return Messages.get(EchoBoss.class, "intro_default");
 		}
-		return Messages.get(EchoBoss.class, "intro", echo.heroClass, echo.lvl);
+		return Messages.get(
+				EchoBoss.class,
+				"intro",
+				Echo.resolveUserName(echo.userName, echo.heroClass),
+				heroClassTitle(echo.heroClass),
+				Math.max(0, echo.killCount));
+	}
+
+	static String heroClassTitle(String heroClass) {
+		if (heroClass == null || heroClass.isEmpty()) {
+			return Messages.get(EchoBoss.class, "name");
+		}
+		try {
+			return HeroClass.valueOf(heroClass).title();
+		} catch (IllegalArgumentException ignored) {
+			return heroClass;
+		}
 	}
 }

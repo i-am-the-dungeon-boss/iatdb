@@ -94,6 +94,19 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("Bundle round-trip preserves username and kill count")
+    void bundleRoundTripPreservesUserNameAndKillCount() {
+        Echo original = EchoTestSupport.warriorEcho(5);
+        original.userName = "Marwan";
+        original.killCount = 4;
+
+        Echo restored = Echo.fromBundle(original.toBundle());
+
+        Assertions.assertThat(restored.userName).isEqualTo("Marwan");
+        Assertions.assertThat(restored.killCount).isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("isCompatibleWith currently always accepts (version gating off)")
     void versionCompatibilityUsesMajorVersion() {
         Echo snap = EchoTestSupport.warriorEcho(5);

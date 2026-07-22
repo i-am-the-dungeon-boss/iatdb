@@ -16,10 +16,10 @@ allprojects {
 
         // Versioning: 0.0.N = alpha, 0.1.N = beta, 1.0.N = first public release.
         // Keep appVersionName in sync with hero-echoes package.json when shipping online.
-        appVersionName = '0.0.1'
+        appVersionName = '0.0.2'
         // Integer for Android/iOS/desktop; must increase for every published binary.
         // Keep at/above Shattered's baseline so save-compat branches aren't mis-triggered.
-        appVersionCode = 896
+        appVersionCode = 897
 
         appJavaCompatibility = JavaVersion.VERSION_11
 

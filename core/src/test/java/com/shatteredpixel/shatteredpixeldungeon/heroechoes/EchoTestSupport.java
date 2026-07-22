@@ -465,6 +465,8 @@ public final class EchoTestSupport {
 		org.json.JSONObject json = new org.json.JSONObject(
 				EchoWireCodec.encodeEchoUpload(echo, "test-client"));
 		json.put("echo_policy", policy.root());
+		json.put("user_name", Echo.resolveUserName(echo.userName, echo.heroClass));
+		json.put("kill_count", Math.max(0, echo.killCount));
 		return json.toString();
 	}
 

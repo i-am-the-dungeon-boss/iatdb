@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
@@ -24,6 +25,9 @@ public class WndLeaderboard extends Window {
 	private final OnlineFetchLifecycle onlineFetch = new OnlineFetchLifecycle();
 
 	public static void show() {
+		if (!DebugSettings.isDebugBuild()) {
+			return;
+		}
 		GameScene.show(new WndLeaderboard(Dungeon.depth));
 	}
 
@@ -44,9 +48,8 @@ public class WndLeaderboard extends Window {
 					List<EchoLeaderboardEntry> online = EchoClient.createDefault()
 							.fetchLeaderboard(depth, 25);
 					if (!online.isEmpty() && onlineFetch.isActive()) {
-						Game.runOnRenderThread(() ->
-								applyOnlineLeaderboard(onlineFetch, list, depth, online, WndLeaderboard.this)
-						);
+						Game.runOnRenderThread(
+								() -> applyOnlineLeaderboard(onlineFetch, list, depth, online, WndLeaderboard.this));
 					}
 				} catch (Exception ignored) {
 				}
@@ -68,8 +71,7 @@ public class WndLeaderboard extends Window {
 			ScrollingListPane list,
 			int depth,
 			List<EchoLeaderboardEntry> online,
-			WndLeaderboard window
-	) {
+			WndLeaderboard window) {
 		if (!lifecycle.isActive()) {
 			return;
 		}
@@ -118,8 +120,7 @@ public class WndLeaderboard extends Window {
 					entry.playerClass,
 					entry.bossWin ? Messages.get(this, "win") : Messages.get(this, "loss"),
 					entry.damageDealt,
-					entry.turns
-			);
+					entry.turns);
 			list.addItem(new ScrollingListPane.ListItem(null, null, label));
 		}
 	}

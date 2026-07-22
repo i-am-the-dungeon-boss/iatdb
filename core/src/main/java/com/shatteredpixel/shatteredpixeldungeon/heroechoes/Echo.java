@@ -16,6 +16,7 @@ public class Echo {
     public int depth;
     public String heroClass;
     public String userName = DEFAULT_USER_NAME;
+    public int killCount;
     public int lvl;
     public int hp;
     public int ht;
@@ -118,6 +119,7 @@ public class Echo {
         b.put("depth", depth);
         b.put("hero_class", heroClass);
         b.put("user_name", resolveUserName(userName, heroClass));
+        b.put("kill_count", Math.max(0, killCount));
         b.put("lvl", lvl);
         b.put("hp", hp);
         b.put("ht", ht);
@@ -140,6 +142,7 @@ public class Echo {
         s.userName = resolveUserName(
                 b.contains("user_name") ? b.getString("user_name") : null,
                 s.heroClass);
+        s.killCount = b.contains("kill_count") ? Math.max(0, b.getInt("kill_count")) : 0;
         s.lvl = b.getInt("lvl");
         s.hp = b.getInt("hp");
         s.ht = b.getInt("ht");

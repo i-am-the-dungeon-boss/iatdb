@@ -55,7 +55,7 @@ public final class EchoWireCodec {
 	/**
 	 * Parses GET /v1/echoes/{depth} body. Required: echo_id, depth, game_version,
 	 * echo_data_base64 (combat bundle), echo_policy (supported). Optional:
-	 * user_name.
+	 * user_name, kill_count.
 	 */
 	public static EchoFetchResult decodeEchoFetch(String json) throws Exception {
 		JSONObject root = new JSONObject(json);
@@ -65,7 +65,8 @@ public final class EchoWireCodec {
 		echo.echoId = requireNonEmptyString(root, "echo_id");
 		echo.depth = root.getInt("depth");
 		echo.gameVersion = requireString(root, "game_version");
-		echo.userName = root.optString("user_name", "");
+		echo.userName = Echo.resolveUserName(root.optString("user_name", null), echo.heroClass);
+		echo.killCount = Math.max(0, root.optInt("kill_count", 0));
 
 		EchoPolicy policy = parseSupportedPolicy(requireObject(root, "echo_policy"));
 		return new EchoFetchResult(echo, policy);

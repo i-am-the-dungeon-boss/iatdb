@@ -78,6 +78,35 @@ class EchoWireCodecTest {
 	}
 
 	@Test
+	@DisplayName("decodes user_name and kill_count from echo fetch response")
+	void decodesUserNameAndKillCountFromFetch() throws Exception {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		echo.echoId = "5-1";
+		echo.userName = "Alex";
+		echo.killCount = 7;
+		String json = EchoTestSupport.fetchResponseJson(echo, EchoPolicy.fallback());
+
+		EchoFetchResult result = EchoWireCodec.decodeEchoFetch(json);
+
+		Assertions.assertThat(result.echo.userName).isEqualTo("Alex");
+		Assertions.assertThat(result.echo.killCount).isEqualTo(7);
+	}
+
+	@Test
+	@DisplayName("defaults kill_count to zero when fetch omits it")
+	void defaultsKillCountWhenFetchOmitsIt() throws Exception {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		echo.echoId = "5-1";
+		org.json.JSONObject root = new org.json.JSONObject(
+				EchoTestSupport.fetchResponseJson(echo, EchoPolicy.fallback()));
+		root.remove("kill_count");
+
+		EchoFetchResult result = EchoWireCodec.decodeEchoFetch(root.toString());
+
+		Assertions.assertThat(result.echo.killCount).isZero();
+	}
+
+	@Test
 	@DisplayName("keeps role-based echo_policy on fetch")
 	void keepsRoleBasedPolicyOnFetch() throws Exception {
 		Echo echo = EchoTestSupport.warriorEchoWithData(5);

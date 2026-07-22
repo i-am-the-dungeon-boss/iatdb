@@ -30,6 +30,20 @@ class UiUxAndPolishTest {
     }
 
     @Test
+    @DisplayName("Intro banner text includes username, class name, and kill count")
+    void introBannerTextIncludesUsernameClassAndKillCount() {
+        Echo echo = EchoTestSupport.warriorEcho(5);
+        echo.userName = "Marwan";
+        echo.killCount = 12;
+
+        String text = EchoBossSpawner.introBannerText(echo);
+
+        Assertions.assertThat(text).contains("Marwan");
+        Assertions.assertThat(text.toLowerCase()).contains("warrior");
+        Assertions.assertThat(text).contains("12");
+    }
+
+    @Test
     @DisplayName("EchoBossSprite resolves armor tier from echo hero equipment")
     void resolvesArmorTierFromEchoHero() {
         Hero hero = new Hero();

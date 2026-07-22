@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 import java.io.IOException;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -108,40 +109,41 @@ public class WndGame extends Window {
 			curBtn.icon(Icons.get(Icons.RANKINGS));
 		}
 
-		// Main menu
-		RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
-			@Override
-			protected void onClick() {
-				String timestamp = String.format("%d", System.currentTimeMillis());
-				Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.version, Dungeon.seed);
-				EchoSnapshotDebug.applyIfEnabled(echo);
-				echo.echoId = "manual-" + timestamp;
-				if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
-					saveRankedEcho(echo);
-				} else {
-					saveLocalEcho(echo);
+		if (showsEchoDebugTools()) {
+			RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
+				@Override
+				protected void onClick() {
+					String timestamp = String.format("%d", System.currentTimeMillis());
+					Echo echo = Echo.fromHero(Dungeon.hero, Dungeon.depth, Game.version, Dungeon.seed);
+					EchoSnapshotDebug.applyIfEnabled(echo);
+					echo.echoId = "manual-" + timestamp;
+					if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
+						saveRankedEcho(echo);
+					} else {
+						saveLocalEcho(echo);
+					}
+					GLog.p(Messages.get(WndGame.class, "echo_saved"));
 				}
-				GLog.p(Messages.get(WndGame.class, "echo_saved"));
-			}
-		};
-		addButton(saveEcho);
-		saveEcho.icon(Icons.get(Icons.ENTER));
+			};
+			addButton(saveEcho);
+			saveEcho.icon(Icons.get(Icons.ENTER));
 
-		addButton(curBtn = new RedButton(Messages.get(this, "view_echoes")) {
-			@Override
-			protected void onClick() {
-				WndEchoes.show();
-			}
-		});
-		curBtn.icon(Icons.get(Icons.ENTER));
+			addButton(curBtn = new RedButton(Messages.get(this, "view_echoes")) {
+				@Override
+				protected void onClick() {
+					WndEchoes.show();
+				}
+			});
+			curBtn.icon(Icons.get(Icons.ENTER));
 
-		addButton(curBtn = new RedButton(Messages.get(this, "view_leaderboard")) {
-			@Override
-			protected void onClick() {
-				WndLeaderboard.show();
-			}
-		});
-		curBtn.icon(Icons.get(Icons.ENTER));
+			addButton(curBtn = new RedButton(Messages.get(this, "view_leaderboard")) {
+				@Override
+				protected void onClick() {
+					WndLeaderboard.show();
+				}
+			});
+			curBtn.icon(Icons.get(Icons.ENTER));
+		}
 
 		addButton(curBtn = new RedButton(Messages.get(this, "menu")) {
 			@Override
@@ -160,6 +162,11 @@ public class WndGame extends Window {
 			curBtn.enable(false);
 
 		resize(WIDTH, pos);
+	}
+
+	/** Save echo / view echoes / leaderboard — debug builds only. */
+	public static boolean showsEchoDebugTools() {
+		return DebugSettings.isDebugBuild();
 	}
 
 	/**
