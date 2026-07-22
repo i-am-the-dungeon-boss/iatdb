@@ -10,7 +10,7 @@ Build awareness on Google Play before the game is playable. Users can pre-regist
 | Decision                                | Choice                                                                                                           |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `appPackageName` / Play `applicationId` | `com.dungeonboss.iatdb`                                                                                          |
-| Shared semver                           | `0.0.1` — keep [`hero-echoes/package.json`](../../../../hero-echoes/package.json) `version` === `appVersionName` |
+| Shared semver                           | `0.0.2` — keep [`hero-echoes/package.json`](../../../../hero-echoes/package.json) `version` === `appVersionName` |
 | `appVersionCode`                        | `1` (Play integer; increment each upload; keep `GAME_VERSION_CODE` in sync)                                      |
 | Release update checker                  | hero-echoes `GET /v1/game-version` via `echoUpdates` (not GitHub/Shattered)                                      |
 | News feed                               | Still stubbed (`debugNews`)                                                                                      |
