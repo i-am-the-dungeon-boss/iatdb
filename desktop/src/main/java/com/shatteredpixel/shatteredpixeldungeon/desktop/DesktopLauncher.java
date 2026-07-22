@@ -51,6 +51,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
 
+import io.sentry.Sentry;
+
 public class DesktopLauncher {
 
 	public static void main(String[] args) {
@@ -63,6 +65,11 @@ public class DesktopLauncher {
 		EchoOnlineSettings.setBuildDefaults(
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
 				"");
+
+		Sentry.init(options -> {
+			options.setEnableExternalConfiguration(true);
+			options.setTag("platform", "desktop");
+		});
 
 		// detection for FreeBSD (which is equivalent to linux for us)
 		// TODO might want to merge request this to libGDX
@@ -143,6 +150,13 @@ public class DesktopLauncher {
 			Game.versionCode = Integer.parseInt(DesktopLauncher.class.getPackage().getImplementationVersion());
 		} catch (NumberFormatException e) {
 			Game.versionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
+		}
+
+		if (Game.version != null) {
+			Sentry.configureScope(scope -> {
+				scope.setTag("app.version", Game.version);
+				scope.setTag("app.version_code", String.valueOf(Game.versionCode));
+			});
 		}
 
 		if (UpdateImpl.supportsUpdates()) {

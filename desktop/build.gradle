@@ -8,6 +8,7 @@ java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
 ext.appMainClass = "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher"
 application.mainClass = appMainClass
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from new File(project(':core').projectDir, "/src/main/assets")
     from new File(project(':desktop').projectDir,"/src/main/assets")
 }

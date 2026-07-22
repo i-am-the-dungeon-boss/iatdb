@@ -57,6 +57,8 @@ import com.watabou.input.KeyEvent;
 import com.watabou.noosa.Game;
 import com.watabou.utils.FileUtils;
 
+import io.sentry.Sentry;
+
 public class AndroidLauncher extends AndroidApplication {
 
 	public static AndroidApplication instance;
@@ -96,6 +98,14 @@ public class AndroidLauncher extends AndroidApplication {
 			} catch (PackageManager.NameNotFoundException e) {
 				Game.versionCode = 0;
 			}
+
+			Sentry.configureScope(scope -> {
+				scope.setTag("platform", "android");
+				if (Game.version != null) {
+					scope.setTag("app.version", Game.version);
+					scope.setTag("app.version_code", String.valueOf(Game.versionCode));
+				}
+			});
 
 			Gdx.app = this;
 			EchoOnlineSettings.loadDefaultDotEnv();

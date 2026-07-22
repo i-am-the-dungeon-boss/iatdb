@@ -39,6 +39,13 @@ echoes-solo/
 # Local secrets (copy from .env.example)
 .env
 
+# Sentry auth / CLI (never commit tokens). Desktop DSN file under
+# desktop/src/main/resources/sentry.properties is intentionally committed.
+/sentry.properties
+android/sentry.properties
+.sentryclirc
+.env.sentry-build-plugin
+
 # Android release signing (never commit; see android/keystore.properties.example)
 android/keystore.properties
 android/*.keystore

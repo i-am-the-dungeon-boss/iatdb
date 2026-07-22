@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.sentry.android.gradle'
 
 def loadDotEnvFile(File file) {
     def values = [:]
@@ -77,6 +78,16 @@ if (!echoReleaseApiKey) {
     echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY')
 }
 
+def sentryDsn = echoEnvOrProp('SENTRY_DSN')
+def sentryOrg = echoEnvOrProp('SENTRY_ORG')
+if (!sentryOrg) {
+    sentryOrg = 'dungeonboss'
+}
+def sentryProject = echoEnvOrProp('SENTRY_PROJECT')
+if (!sentryProject) {
+    sentryProject = 'android'
+}
+
 def keystorePropertiesFile = file('keystore.properties')
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
@@ -100,7 +111,11 @@ android {
     }
 
     defaultConfig {
-        manifestPlaceholders = [appName:appName, usesCleartextTraffic: 'false']
+        manifestPlaceholders = [
+                appName: appName,
+                usesCleartextTraffic: 'false',
+                sentryDsn: sentryDsn
+        ]
         applicationId appPackageName
 
         versionCode appVersionCode
@@ -111,6 +126,7 @@ android {
 
         buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString('')
         buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString('')
+        buildConfigField 'String', 'SENTRY_DSN', quoteBuildConfigString(sentryDsn)
     }
 
     signingConfigs {
@@ -169,6 +185,16 @@ android {
 }
 
 configurations { natives }
+
+sentry {
+    includeSourceContext = true
+    org = sentryOrg
+    projectName = sentryProject
+    authToken = System.getenv('SENTRY_AUTH_TOKEN')
+    autoInstallation {
+        enabled = true
+    }
+}
 
 dependencies {
     implementation project(':core')
