@@ -55,6 +55,7 @@ public final class EchoTestSupport {
 		FileUtils.deleteDir("echoes-solo-easy");
 		FileUtils.deleteDir("echoes-ranked");
 		FileUtils.deleteDir("echoes-ranked-easy");
+		FileUtils.deleteDir("echoes-debug");
 		FileUtils.deleteFile("leaderboard.json");
 		FileUtils.deleteFile("leaderboard-solo.json");
 		FileUtils.deleteFile("leaderboard-solo-easy.json");
@@ -65,6 +66,7 @@ public final class EchoTestSupport {
 		deleteRecursively(new File("echoes-solo-easy"));
 		deleteRecursively(new File("echoes-ranked"));
 		deleteRecursively(new File("echoes-ranked-easy"));
+		deleteRecursively(new File("echoes-debug"));
 		new File("leaderboard.json").delete();
 		new File("leaderboard-solo.json").delete();
 		new File("leaderboard-solo-easy.json").delete();
@@ -170,6 +172,8 @@ public final class EchoTestSupport {
 		level.plants = new SparseArray<>();
 		level.traps = new SparseArray<>();
 		level.buildFlagMaps();
+		level.discoverable = new boolean[level.length()];
+		Arrays.fill(level.discoverable, true);
 		Arrays.fill(level.heroFOV, true);
 
 		int center = 3 * level.width() + 3;

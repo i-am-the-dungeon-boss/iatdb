@@ -75,7 +75,7 @@ public class ShieldOfLight extends TargetedClericSpell {
 		boolean inFov = ctx.body.fieldOfView != null && target < ctx.body.fieldOfView.length
 				? ctx.body.fieldOfView[target]
 				: Dungeon.level.heroFOV[target];
-		if (ch == null || ch.alignment == Char.Alignment.ALLY || !inFov) {
+		if (ch == null || ch.alignment == ctx.body.alignment || !inFov) {
 			return false;
 		}
 

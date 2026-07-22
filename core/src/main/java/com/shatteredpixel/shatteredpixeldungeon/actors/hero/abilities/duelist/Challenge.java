@@ -110,7 +110,7 @@ public class Challenge extends ArmorAbility {
 			return;
 		}
 
-		if (targetCh.alignment != Char.Alignment.ENEMY
+		if (targetCh.alignment == body.alignment
 				&& !(targetCh instanceof Mimic && targetCh.alignment == Char.Alignment.NEUTRAL)) {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "ally_target"));

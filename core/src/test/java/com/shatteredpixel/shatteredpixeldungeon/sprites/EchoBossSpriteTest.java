@@ -9,6 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.PointF;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -105,6 +106,93 @@ class EchoBossSpriteTest {
 		Assertions.assertThat(read.get(sprite))
 				.as("read pose is required so scroll readAnimation matches Hero")
 				.isNotNull();
+	}
+
+	@Test
+	@DisplayName("invisible EchoBossSprite is fully hidden from the hero")
+	void invisibleFullyHiddenFromHero() {
+		EchoBossSprite sprite = new EchoBossSprite();
+		sprite.visible = true;
+		sprite.alpha(1f);
+
+		sprite.add(CharSprite.State.INVISIBLE);
+		sprite.update();
+
+		Assertions.assertThat(sprite.alpha())
+				.as("Echo invisibility must not leave a translucent silhouette")
+				.isZero();
+		Assertions.assertThat(sprite.visible)
+				.as("Echo must not be rendered while invisible")
+				.isFalse();
+	}
+
+	@Test
+	@DisplayName("EchoBossSprite stays fully hidden after resetColor while invisible")
+	void staysHiddenAfterResetColorWhileInvisible() {
+		EchoBossSprite sprite = new EchoBossSprite();
+		sprite.add(CharSprite.State.INVISIBLE);
+		sprite.update();
+
+		sprite.resetColor();
+
+		Assertions.assertThat(sprite.alpha()).isZero();
+	}
+
+	@Test
+	@DisplayName("invisible EchoBossSprite hides attached status effects despite FOV")
+	void invisibleHidesAttachedEffectsDespiteFov() {
+		EchoBossSprite sprite = new EchoBossSprite();
+		sprite.burning = new Emitter();
+		sprite.burning.visible = true;
+		sprite.healing = new Emitter();
+		sprite.healing.visible = true;
+		sprite.add(CharSprite.State.INVISIBLE);
+		sprite.update();
+
+		// GameScene.afterObserve / Char.move flip this back on while still in FOV
+		sprite.visible = true;
+		sprite.burning.visible = true;
+		sprite.healing.visible = true;
+		sprite.update();
+
+		Assertions.assertThat(sprite.visible).isFalse();
+		Assertions.assertThat(sprite.burning.visible)
+				.as("burning must not reveal an invisible Echo")
+				.isFalse();
+		Assertions.assertThat(sprite.healing.visible)
+				.as("healing must not reveal an invisible Echo")
+				.isFalse();
+	}
+
+	@Test
+	@DisplayName("EchoBossSprite reappears in FOV when invisibility ends")
+	void reappearsInFovWhenInvisibilityEnds() {
+		Hero player = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+		boss.state = boss.HUNTING; // avoid sleep emo (needs GameScene)
+
+		EchoBossSprite sprite = new EchoBossSprite() {
+			@Override
+			public PointF worldToCamera(int cell) {
+				return new PointF(cell, 0);
+			}
+		};
+		sprite.ch = boss;
+		boss.sprite = sprite;
+		sprite.visible = true;
+		sprite.add(CharSprite.State.INVISIBLE);
+		sprite.update();
+		Assertions.assertThat(sprite.visible).isFalse();
+
+		sprite.remove(CharSprite.State.INVISIBLE);
+		sprite.update();
+
+		Assertions.assertThat(sprite.alpha()).isEqualTo(1f);
+		Assertions.assertThat(sprite.visible)
+				.as("Echo in hero FOV must render again after invisibility")
+				.isTrue();
 	}
 
 	@Test

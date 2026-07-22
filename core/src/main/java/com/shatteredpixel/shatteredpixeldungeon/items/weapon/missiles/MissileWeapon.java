@@ -421,7 +421,9 @@ abstract public class MissileWeapon extends Weapon {
 		decrementDurability();
 		if (durability > 0 && !spawnedForEffect) {
 			// attempt to stick the missile weapon to the enemy, just drop it if we can't.
-			if (sticky && enemy != null && enemy.isActive() && enemy.alignment != Char.Alignment.ALLY) {
+			// Hostility is relative to the thrower body (Hero ALLY vs EchoBoss ENEMY at
+			// kit.pos).
+			if (sticky && enemy != null && enemy.isActive() && enemy.alignment != throwerAlignment()) {
 				PinCushion p = Buff.affect(enemy, PinCushion.class);
 				if (p.target == enemy) {
 					p.stick(this);
@@ -433,6 +435,21 @@ abstract public class MissileWeapon extends Weapon {
 				heap.sprite.drop();
 			}
 		}
+	}
+
+	/**
+	 * Alignment of the live thrower body; during Echo borrow {@link #curUser} sits
+	 * on the boss cell.
+	 */
+	protected static Char.Alignment throwerAlignment() {
+		if (curUser != null) {
+			Char body = Actor.findChar(curUser.pos);
+			if (body != null) {
+				return body.alignment;
+			}
+			return curUser.alignment;
+		}
+		return Char.Alignment.ALLY;
 	}
 
 	protected void rangedMiss(int cell) {

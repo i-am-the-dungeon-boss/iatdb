@@ -194,6 +194,9 @@ public final class EchoRoleExecutor {
 	 * {@link Potion#AC_DRINK} (not must-throw / choose).
 	 */
 	private static boolean shouldSelfDrink(Potion potion, String role) {
+		if (isThrowRole(role)) {
+			return false;
+		}
 		if (isSelfDrinkRole(role)) {
 			return true;
 		}
@@ -206,12 +209,20 @@ public final class EchoRoleExecutor {
 	 */
 	private static boolean isSelfDrinkRole(String role) {
 		return "HEAL".equals(role)
+				|| "DRINK".equals(role)
 				|| "CLEANSE_BURN".equals(role)
 				|| "CLEANSE".equals(role)
 				|| "PURITY".equals(role)
 				|| "HASTE".equals(role)
 				|| "INVIS".equals(role)
 				|| "LEVITATE".equals(role);
+	}
+
+	/** Force shatter / throw regardless of potion default action. */
+	private static boolean isThrowRole(String role) {
+		return "THROW".equals(role)
+				|| "THROW_POTION".equals(role)
+				|| "GAS".equals(role);
 	}
 
 	/**

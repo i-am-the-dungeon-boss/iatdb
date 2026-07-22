@@ -17,7 +17,7 @@ allprojects {
 
         // Versioning: 0.0.N = alpha, 0.1.N = beta, 1.0.N = first public release.
         // Keep appVersionName in sync with hero-echoes package.json when shipping online.
-        appVersionName = '0.0.2'
+        appVersionName = '0.0.3'
         // Match Shattered's versionCode for save-compat branches. Do not bump on our own
         // releases — only raise this when upstream Shattered Pixel increases theirs.
         appVersionCode = 896

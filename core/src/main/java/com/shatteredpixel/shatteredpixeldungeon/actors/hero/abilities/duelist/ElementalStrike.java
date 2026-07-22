@@ -205,7 +205,7 @@ public class ElementalStrike extends ArmorAbility {
 						}
 					}
 
-					preAttackEffect(cone, kit, finalEnchantment);
+					preAttackEffect(cone, kit, body, finalEnchantment);
 
 					if (enemy != null) {
 						if (ctx.heroFX) {
@@ -219,9 +219,9 @@ public class ElementalStrike extends ArmorAbility {
 						}
 					}
 
-					perCellEffect(cone, finalEnchantment);
+					perCellEffect(cone, body, finalEnchantment);
 
-					perCharEffect(cone, kit, enemy, finalEnchantment);
+					perCharEffect(cone, kit, body, enemy, finalEnchantment);
 
 					Invisibility.dispel(body);
 					ctx.turns.spendAfterThrow(kit.attackDelay());
@@ -253,11 +253,11 @@ public class ElementalStrike extends ArmorAbility {
 	}
 
 	// effects that trigger before the attack
-	private void preAttackEffect(ConeAOE cone, Hero hero, Weapon.Enchantment ench) {
+	private void preAttackEffect(ConeAOE cone, Hero hero, Char body, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
 		for (Char ch : Actor.chars()) {
-			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)) {
+			if (ch.alignment != body.alignment && cone.cells.contains(ch.pos)) {
 				targetsHit++;
 			}
 		}
@@ -317,11 +317,11 @@ public class ElementalStrike extends ArmorAbility {
 	};
 
 	// effects that affect the cells of the environment themselves
-	private void perCellEffect(ConeAOE cone, Weapon.Enchantment ench) {
+	private void perCellEffect(ConeAOE cone, Char body, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
 		for (Char ch : Actor.chars()) {
-			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)) {
+			if (ch.alignment != body.alignment && cone.cells.contains(ch.pos)) {
 				targetsHit++;
 			}
 		}
@@ -388,14 +388,14 @@ public class ElementalStrike extends ArmorAbility {
 	private int oldEnemyPos;
 
 	// effects that affect the characters within the cone AOE
-	private void perCharEffect(ConeAOE cone, Hero hero, Char primaryTarget, Weapon.Enchantment ench) {
+	private void perCharEffect(ConeAOE cone, Hero hero, Char body, Char primaryTarget, Weapon.Enchantment ench) {
 
 		float powerMulti = 1f + 0.30f * Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
 
 		ArrayList<Char> affected = new ArrayList<>();
 
 		for (Char ch : Actor.chars()) {
-			if (ch.alignment != Char.Alignment.ALLY && cone.cells.contains(ch.pos)) {
+			if (ch.alignment != body.alignment && cone.cells.contains(ch.pos)) {
 				affected.add(ch);
 			}
 		}
@@ -455,7 +455,7 @@ public class ElementalStrike extends ArmorAbility {
 			// *** Lucky ***
 		} else if (ench instanceof Lucky) {
 			for (Char ch : affected) {
-				if (ch.alignment == Char.Alignment.ENEMY
+				if (ch.alignment != body.alignment
 						&& Random.Float() < 0.125f * powerMulti
 						&& ch.buff(ElementalStrikeLuckyTracker.class) == null) {
 					Dungeon.level.drop(Lucky.genLoot(), ch.pos).sprite.drop();

@@ -100,13 +100,13 @@ public class MnemonicPrayer extends TargetedClericSpell {
 			return false;
 		}
 		float extension = 2 + ctx.kit.pointsInTalent(Talent.MNEMONIC_PRAYER);
-		affectChar(ch, extension);
+		affectChar(ch, extension, ch.alignment == ctx.body.alignment);
 		Char ally = PowerOfMany.getPoweredAlly();
 		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
 			if (ch == ctx.body) {
-				affectChar(ally, extension);
+				affectChar(ally, extension, ally.alignment == ctx.body.alignment);
 			} else if (ch == ally) {
-				affectChar(ctx.body, extension);
+				affectChar(ctx.body, extension, true);
 			}
 		}
 		onSpellCast(ctx, tome);
@@ -130,14 +130,14 @@ public class MnemonicPrayer extends TargetedClericSpell {
 		QuickSlotButton.target(ch);
 
 		float extension = 2 + hero.pointsInTalent(Talent.MNEMONIC_PRAYER);
-		affectChar(ch, extension);
+		affectChar(ch, extension, ch.alignment == hero.alignment);
 
 		Char ally = PowerOfMany.getPoweredAlly();
 		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
 			if (ch == hero) {
-				affectChar(ally, extension); // if cast on hero, duplicate to ally
+				affectChar(ally, extension, true); // if cast on hero, duplicate to ally
 			} else if (ch == ally) {
-				affectChar(hero, extension); // if cast on ally, duplicate to hero
+				affectChar(hero, extension, true); // if cast on ally, duplicate to hero
 			}
 		}
 
@@ -153,12 +153,15 @@ public class MnemonicPrayer extends TargetedClericSpell {
 
 	}
 
-	private void affectChar(Char ch, float extension) {
-		if (ch.alignment == Char.Alignment.ALLY) {
+	private void affectChar(Char ch, float extension, boolean allyOfCaster) {
+		if (allyOfCaster) {
 
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
 			if (ch.sprite != null) {
-				ch.sprite.emitter().start(Speck.factory(Speck.UP), 0.15f, 4);
+				com.watabou.noosa.particles.Emitter e = ch.sprite.emitter();
+				if (e != null) {
+					e.start(Speck.factory(Speck.UP), 0.15f, 4);
+				}
 			}
 
 			for (Buff b : ch.buffs()) {
@@ -213,7 +216,12 @@ public class MnemonicPrayer extends TargetedClericSpell {
 		} else {
 
 			Sample.INSTANCE.play(Assets.Sounds.DEBUFF);
-			ch.sprite.emitter().start(Speck.factory(Speck.DOWN), 0.15f, 4);
+			if (ch.sprite != null) {
+				com.watabou.noosa.particles.Emitter e = ch.sprite.emitter();
+				if (e != null) {
+					e.start(Speck.factory(Speck.DOWN), 0.15f, 4);
+				}
+			}
 
 			Buff.affect(ch, GuidingLight.Illuminated.class);
 

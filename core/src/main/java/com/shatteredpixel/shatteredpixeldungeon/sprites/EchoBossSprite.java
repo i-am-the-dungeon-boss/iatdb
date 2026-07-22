@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
@@ -7,6 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.windows.EchoHeroLoader;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.tweeners.AlphaTweener;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PointF;
 
@@ -159,5 +161,64 @@ public class EchoBossSprite extends MobSprite {
     @Override
     public void bloodBurstA(PointF from, int damage) {
         // Match HeroSprite: no blood burst on human-like echoes.
+    }
+
+    /**
+     * Hero sees themselves at 0.4α while invisible; Echo is an enemy, so from the
+     * player's camera it must fully disappear — not leave a translucent silhouette.
+     */
+    @Override
+    protected synchronized void processStateAddition(State state) {
+        if (state == State.INVISIBLE) {
+            if (invisible != null) {
+                invisible.killAndErase();
+            }
+            invisible = new AlphaTweener(this, 0f, 0.4f);
+            if (parent != null) {
+                parent.add(invisible);
+            } else {
+                alpha(0f);
+            }
+            // Before CharSprite syncs emitters/halos this frame.
+            visible = false;
+            return;
+        }
+        super.processStateAddition(state);
+    }
+
+    @Override
+    protected synchronized void processStateRemoval(State state) {
+        super.processStateRemoval(state);
+        if (state == State.INVISIBLE) {
+            restoreFovVisibility();
+        }
+    }
+
+    @Override
+    public void resetColor() {
+        super.resetColor();
+        if (invisible != null) {
+            alpha(0f);
+        }
+    }
+
+    @Override
+    public void update() {
+        // Must be false before super so CharSprite hides emitters/ice/aura/emo
+        // (FOV may have flipped visible back on since last frame).
+        if (invisible != null) {
+            visible = false;
+        }
+        super.update();
+    }
+
+    private void restoreFovVisibility() {
+        if (ch == null || Dungeon.level == null || Dungeon.level.heroFOV == null) {
+            return;
+        }
+        int pos = ch.pos;
+        if (pos >= 0 && pos < Dungeon.level.heroFOV.length) {
+            visible = Dungeon.level.heroFOV[pos];
+        }
     }
 }

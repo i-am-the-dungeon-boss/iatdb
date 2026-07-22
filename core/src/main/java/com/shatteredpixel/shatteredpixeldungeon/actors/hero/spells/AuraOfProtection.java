@@ -109,7 +109,13 @@ public class AuraOfProtection extends ClericSpell {
 		@Override
 		public void fx(boolean on) {
 			if (on && (particles == null || particles.parent == null)) {
+				if (target.sprite == null) {
+					return;
+				}
 				particles = target.sprite.emitter(); // emitter is much bigger than char so it needs to manage itself
+				if (particles == null) {
+					return;
+				}
 				particles.pos(target.sprite, -32, -32, 80, 80);
 				particles.fillTarget = false;
 				particles.pour(Speck.factory(Speck.LIGHT), 0.02f);

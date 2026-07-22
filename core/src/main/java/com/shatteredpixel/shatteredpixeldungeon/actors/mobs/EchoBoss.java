@@ -64,6 +64,15 @@ public class EchoBoss extends Mob {
         return echoPolicy;
     }
 
+    /** Debug/sandbox: swap the live policy (e.g. arsenal cycle). */
+    public void replacePolicy(EchoPolicy policy) {
+        if (policy == null || !policy.isSupported()) {
+            throw new IllegalArgumentException("echo boss requires a supported echo_policy");
+        }
+        echoPolicy = policy;
+        recipeSteps.clear();
+    }
+
     public Hero getEchoHero() {
         return echoHero;
     }
@@ -411,6 +420,31 @@ public class EchoBoss extends Mob {
         if (DeviceCompat.isDebug()) {
             DeviceCompat.log("EchoBoss", message);
         }
+    }
+
+    /**
+     * Debug/sandbox: leave combat AI. {@link Mob#aggro} ignores PASSIVE, so hits
+     * will not restart hunting.
+     */
+    public void stopHunting() {
+        enemy = null;
+        enemySeen = false;
+        state = PASSIVE;
+    }
+
+    /** Pacifies every living {@link EchoBoss} on the current level. */
+    public static int stopAllHunting() {
+        if (Dungeon.level == null) {
+            return 0;
+        }
+        int stopped = 0;
+        for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+            if (mob instanceof EchoBoss && mob.isAlive()) {
+                ((EchoBoss) mob).stopHunting();
+                stopped++;
+            }
+        }
+        return stopped;
     }
 
     @Override

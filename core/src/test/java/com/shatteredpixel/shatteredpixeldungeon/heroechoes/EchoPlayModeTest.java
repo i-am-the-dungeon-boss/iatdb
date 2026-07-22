@@ -57,4 +57,53 @@ class EchoPlayModeTest {
 
 		Assertions.assertThat(EchoOnlineSettings.isOnlineEnabled()).isFalse();
 	}
+
+	@Test
+	@DisplayName("debug mode keeps online sync disabled")
+	void debugModeUsesLocalEchoesOnly() {
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
+
+		Assertions.assertThat(EchoOnlineSettings.isOnlineEnabled()).isFalse();
+	}
+
+	@Test
+	@DisplayName("debug mode does not persist leaderboard locally")
+	void debugModeSkipsLocalLeaderboard() {
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
+
+		Assertions.assertThat(EchoPlayModePaths.persistsLeaderboardLocally()).isFalse();
+	}
+
+	@Test
+	@DisplayName("debug play mode is allowed only in debug builds")
+	void debugPlayModeAllowedOnlyInDebugBuilds() {
+		com.shatteredpixel.shatteredpixeldungeon.DebugSettings.setDebugBuildOverride(true);
+		Assertions.assertThat(EchoPlayMode.isAllowed(EchoPlayMode.DEBUG)).isTrue();
+
+		com.shatteredpixel.shatteredpixeldungeon.DebugSettings.setDebugBuildOverride(false);
+		Assertions.assertThat(EchoPlayMode.isAllowed(EchoPlayMode.DEBUG)).isFalse();
+		Assertions.assertThat(EchoPlayMode.isAllowed(EchoPlayMode.SOLO)).isTrue();
+		Assertions.assertThat(EchoPlayMode.isAllowed(EchoPlayMode.RANKED)).isTrue();
+	}
+
+	@Test
+	@DisplayName("selecting debug mode is ignored outside debug builds")
+	void selectingDebugModeIgnoredOutsideDebugBuilds() {
+		com.shatteredpixel.shatteredpixeldungeon.DebugSettings.setDebugBuildOverride(false);
+
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.DEBUG);
+
+		Assertions.assertThat(GamesInProgress.selectedEchoPlayMode).isNotEqualTo(EchoPlayMode.DEBUG);
+	}
+
+	@Test
+	@DisplayName("release builds never route to DebugArenaLevel even if mode is DEBUG")
+	void releaseBuildsNeverRouteToDebugArena() {
+		com.shatteredpixel.shatteredpixeldungeon.DebugSettings.setDebugBuildOverride(false);
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
+
+		Assertions.assertThat(Dungeon.levelClassForDepth(1, 0))
+				.isNotEqualTo(com.shatteredpixel.shatteredpixeldungeon.levels.DebugArenaLevel.class);
+	}
 }

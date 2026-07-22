@@ -29,6 +29,18 @@ class EchoPlayModePathsTest {
 	}
 
 	@Test
+	@DisplayName("debug mode uses a separate echo directory and save folder")
+	void debugModeUsesSeparateEchoDirAndSaveFolder() {
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
+		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-debug");
+		Assertions.assertThat(EchoPlayModePaths.gameFolderSuffix()).isEqualTo("-debug");
+
+		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.DEBUG;
+		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-debug");
+	}
+
+	@Test
 	@DisplayName("unset play mode uses solo echo directory, not legacy echoes/")
 	void unsetPlayModeUsesSoloEchoDir() {
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;

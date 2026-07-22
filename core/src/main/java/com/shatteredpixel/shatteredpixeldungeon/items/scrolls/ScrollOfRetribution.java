@@ -26,10 +26,10 @@ package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -65,18 +65,13 @@ public class ScrollOfRetribution extends Scroll {
 		float hpPercent = (ctx.body.HT - ctx.body.HP) / (float) (ctx.body.HT);
 		float power = Math.min(4f, 4.45f * hpPercent);
 
-		ArrayList<Mob> targets = new ArrayList<>();
+		ArrayList<Char> targets = new ArrayList<>();
+		ctx.forEachVisibleHostile(targets::add);
 
-		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-			if (Dungeon.level.heroFOV[mob.pos]) {
-				targets.add(mob);
-			}
-		}
-
-		for (Mob mob : targets) {
-			mob.damage(Math.round(mob.HT / 10f + (mob.HP * power * 0.225f)), this);
-			if (mob.isAlive()) {
-				Buff.prolong(mob, Blindness.class, Blindness.DURATION);
+		for (Char ch : targets) {
+			ch.damage(Math.round(ch.HT / 10f + (ch.HP * power * 0.225f)), this);
+			if (ch.isAlive()) {
+				Buff.prolong(ch, Blindness.class, Blindness.DURATION);
 			}
 		}
 

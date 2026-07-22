@@ -32,6 +32,9 @@ import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.DebugArenaItems;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.DebugEchoArsenal;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoSnapshotDebug;
@@ -143,6 +146,48 @@ public class WndGame extends Window {
 				}
 			});
 			curBtn.icon(Icons.get(Icons.ENTER));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "stop_echo_hunting")) {
+				@Override
+				protected void onClick() {
+					int stopped = EchoBoss.stopAllHunting();
+					hide();
+					if (stopped > 0) {
+						GLog.p(Messages.get(WndGame.class, "echo_hunting_stopped"));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "echo_hunting_none"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.SKULL));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "restock_ground_items")) {
+				@Override
+				protected void onClick() {
+					int dropped = DebugArenaItems.restockGround();
+					hide();
+					if (dropped > 0) {
+						GLog.p(Messages.get(WndGame.class, "ground_items_restocked", dropped));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "ground_items_restock_failed"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.MAGNIFY));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "give_echo_arsenal")) {
+				@Override
+				protected void onClick() {
+					int updated = DebugEchoArsenal.grantAndCycleAll();
+					hide();
+					if (updated > 0) {
+						GLog.p(Messages.get(WndGame.class, "echo_arsenal_granted", updated));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "echo_arsenal_none"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.TALENT));
 		}
 
 		addButton(curBtn = new RedButton(Messages.get(this, "menu")) {

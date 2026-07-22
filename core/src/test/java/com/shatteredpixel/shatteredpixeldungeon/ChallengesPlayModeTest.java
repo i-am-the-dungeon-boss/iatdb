@@ -36,6 +36,7 @@ class ChallengesPlayModeTest {
 	void gameOptionsShownInSoloOnly() {
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.SOLO)).isTrue();
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.RANKED)).isFalse();
+		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.DEBUG)).isFalse();
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.NONE)).isFalse();
 	}
 

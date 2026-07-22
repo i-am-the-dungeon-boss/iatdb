@@ -55,16 +55,17 @@ public class GamesInProgress {
 	 * listing and loading use the selected mode's folder, not a prior run's.
 	 */
 	public static void selectEchoPlayMode(EchoPlayMode mode) {
-		selectedEchoPlayMode = mode;
+		EchoPlayMode allowed = EchoPlayMode.sanitize(mode == null ? EchoPlayMode.NONE : mode);
+		selectedEchoPlayMode = allowed;
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
-		Challenges.clearIfDisallowed(mode);
-		SPDSettings.clearEasyModeIfDisallowed(mode);
+		Challenges.clearIfDisallowed(allowed);
+		SPDSettings.clearEasyModeIfDisallowed(allowed);
 		clearSlotCache();
 	}
 
 	public static void applySelectedEchoPlayMode() {
 		if (selectedEchoPlayMode != EchoPlayMode.NONE) {
-			Dungeon.echoPlayMode = selectedEchoPlayMode;
+			Dungeon.echoPlayMode = EchoPlayMode.sanitize(selectedEchoPlayMode);
 		}
 	}
 

@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
@@ -86,6 +87,7 @@ public class TitleScene extends PixelScene {
 
 	private StyledButton btnRanked;
 	private StyledButton btnSolo;
+	private StyledButton btnDebug;
 	private StyledButton btnSupport;
 	private StyledButton btnRankings;
 	private StyledButton btnJournal;
@@ -177,6 +179,17 @@ public class TitleScene extends PixelScene {
 		btnSolo.icon(Icons.get(Icons.ENTER));
 		add(btnSolo);
 
+		if (DebugSettings.isDebugBuild()) {
+			btnDebug = new StyledButton(GREY_TR, Messages.get(this, "debug")) {
+				@Override
+				protected void onClick() {
+					beginDebugRun();
+				}
+			};
+			btnDebug.icon(Icons.get(Icons.MAGNIFY));
+			add(btnDebug);
+		}
+
 		if (SupportPrompts.playBillingEnabled()) {
 			btnSupport = new SupportButton(GREY_TR, Messages.get(this, "support"));
 			add(btnSupport);
@@ -234,9 +247,7 @@ public class TitleScene extends PixelScene {
 		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L - 6 : PixelScene.MIN_WIDTH_P - 2;
 		float btnAreaLeft = insets.left + (w - buttonAreaWidth) / 2f;
 		if (landscape()) {
-			btnSolo.setRect(btnAreaLeft, insets.top + reservedTop + GAP, (buttonAreaWidth / 2) - 1, BTN_HEIGHT);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, btnSolo.top(), btnSolo.width(), BTN_HEIGHT);
+			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
 			Float supportBottom = null;
 			if (btnSupport != null) {
 				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
@@ -259,9 +270,7 @@ public class TitleScene extends PixelScene {
 				btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
 			}
 		} else {
-			btnSolo.setRect(btnAreaLeft, insets.top + reservedTop + GAP, (buttonAreaWidth / 2) - 1, BTN_HEIGHT);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, btnSolo.top(), btnSolo.width(), BTN_HEIGHT);
+			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
 			Float supportBottom = null;
 			if (btnSupport != null) {
 				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
@@ -424,6 +433,9 @@ public class TitleScene extends PixelScene {
 
 		btnRanked.enable(alpha != 0 && online);
 		btnSolo.enable(alpha != 0 && online);
+		if (btnDebug != null) {
+			btnDebug.enable(alpha != 0);
+		}
 		if (btnSupport != null)
 			btnSupport.enable(alpha != 0);
 		btnRankings.enable(alpha != 0);
@@ -437,6 +449,9 @@ public class TitleScene extends PixelScene {
 
 		btnRanked.alpha(alpha);
 		btnSolo.alpha(alpha);
+		if (btnDebug != null) {
+			btnDebug.alpha(alpha);
+		}
 		if (btnSupport != null)
 			btnSupport.alpha(alpha);
 		btnRankings.alpha(alpha);
@@ -457,6 +472,20 @@ public class TitleScene extends PixelScene {
 
 	}
 
+	private void layoutPlayModeButtons(float left, float top, float areaWidth, float height) {
+		if (btnDebug != null) {
+			float third = (areaWidth - 4) / 3f;
+			btnSolo.setRect(left, top, third, height);
+			align(btnSolo);
+			btnRanked.setRect(btnSolo.right() + 2, top, third, height);
+			btnDebug.setRect(btnRanked.right() + 2, top, third, height);
+		} else {
+			btnSolo.setRect(left, top, (areaWidth / 2) - 1, height);
+			align(btnSolo);
+			btnRanked.setRect(btnSolo.right() + 2, top, btnSolo.width(), height);
+		}
+	}
+
 	private void beginEchoRun(EchoPlayMode mode) {
 		if (!EchoBackendProbe.isOnlineReady()) {
 			showOfflineConnectionDialog();
@@ -475,6 +504,21 @@ public class TitleScene extends PixelScene {
 		};
 
 		EchoPlayerAuthGate.ensureReadyThen(start::run);
+	}
+
+	/** Debug arena: no backend / auth gate. Debug builds only. */
+	private void beginDebugRun() {
+		if (!DebugSettings.isDebugBuild()) {
+			return;
+		}
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.DEBUG);
+		GamesInProgress.selectedClass = null;
+		if (GamesInProgress.checkAll().size() == 0) {
+			GamesInProgress.curSlot = 1;
+			ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
+		} else {
+			ShatteredPixelDungeon.switchNoFade(StartScene.class);
+		}
 	}
 
 	static float torchLeftX(float titleLeft, float outset) {

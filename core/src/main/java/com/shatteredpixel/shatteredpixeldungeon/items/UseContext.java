@@ -1,9 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+
+import java.util.function.Consumer;
 
 /**
  * Call-site context for shared item execute APIs ({@link Item#throwAs},
@@ -58,6 +62,29 @@ public final class UseContext {
 	 */
 	public static boolean canWorldFx(Char ch) {
 		return ch != null && ch.sprite != null && ch.sprite.parent != null;
+	}
+
+	/**
+	 * Visible chars hostile to {@link #body} — includes the living Hero when an
+	 * Echo reads/casts AoE that should hit the player.
+	 */
+	public void forEachVisibleHostile(Consumer<Char> effect) {
+		if (effect == null || body == null || Dungeon.level == null) {
+			return;
+		}
+		boolean[] fov = body.fieldOfView != null ? body.fieldOfView : Dungeon.level.heroFOV;
+		if (fov == null) {
+			return;
+		}
+		for (Char ch : Actor.chars()) {
+			if (ch == null || ch == body || ch.alignment == body.alignment) {
+				continue;
+			}
+			if (ch.pos < 0 || ch.pos >= fov.length || !fov[ch.pos]) {
+				continue;
+			}
+			effect.accept(ch);
+		}
 	}
 
 	/** Turn ownership for throw/zap/activate spend. */

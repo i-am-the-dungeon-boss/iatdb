@@ -266,7 +266,8 @@ public class ElementalBlast extends ArmorAbility {
 							* effectMulti
 							* damageFactors.get(finalWandCls));
 
-					if (mob != null && damage > 0 && mob.alignment != Char.Alignment.ALLY) {
+					// Hostility is relative to the casting body (Hero ALLY vs EchoBoss ENEMY)
+					if (mob != null && damage > 0 && mob.alignment != body.alignment) {
 						mob.damage(damage, Reflection.newInstance(finalWandCls));
 						charsHit++;
 					}
@@ -275,26 +276,26 @@ public class ElementalBlast extends ArmorAbility {
 					if (mob != null && mob != body) {
 						// *** Wand of Lightning ***
 						if (finalWandCls == WandOfLightning.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.affect(mob, Paralysis.class, effectMulti * Paralysis.DURATION / 2);
 							}
 
 							// *** Wand of Fireblast ***
 						} else if (finalWandCls == WandOfFireblast.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.affect(mob, Burning.class).reignite(mob);
 							}
 
 							// *** Wand of Corrosion ***
 						} else if (finalWandCls == WandOfCorrosion.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.affect(mob, Corrosion.class).set(4, Math.round(6 * effectMulti));
 								charsHit++;
 							}
 
 							// *** Wand of Blast Wave ***
 						} else if (finalWandCls == WandOfBlastWave.class) {
-							if (mob.alignment != Char.Alignment.ALLY) {
+							if (mob.alignment != body.alignment) {
 								Ballistica blastAim = new Ballistica(body.pos, mob.pos, Ballistica.WONT_STOP);
 								int knockback = aoeSize + 1 - (int) Dungeon.level.trueDistance(body.pos, mob.pos);
 								knockback *= effectMulti;
@@ -308,13 +309,13 @@ public class ElementalBlast extends ArmorAbility {
 
 							// *** Wand of Frost ***
 						} else if (finalWandCls == WandOfFrost.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.affect(mob, Frost.class, effectMulti * Frost.DURATION);
 							}
 
 							// *** Wand of Prismatic Light ***
 						} else if (finalWandCls == WandOfPrismaticLight.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.prolong(mob, Blindness.class, effectMulti * Blindness.DURATION / 2);
 								charsHit++;
 							}
@@ -328,7 +329,7 @@ public class ElementalBlast extends ArmorAbility {
 
 							// *** Wand of Transfusion ***
 						} else if (finalWandCls == WandOfTransfusion.class) {
-							if (mob.alignment == Char.Alignment.ALLY || mob.buff(Charm.class) != null) {
+							if (mob.alignment == body.alignment || mob.buff(Charm.class) != null) {
 								int healing = Math.round(10 * effectMulti);
 								int shielding = (mob.HP + healing) - mob.HT;
 								if (shielding > 0) {
@@ -371,14 +372,14 @@ public class ElementalBlast extends ArmorAbility {
 
 							// *** Wand of Corruption ***
 						} else if (finalWandCls == WandOfCorruption.class) {
-							if (mob.isAlive() && mob.alignment != Char.Alignment.ALLY) {
+							if (mob.isAlive() && mob.alignment != body.alignment) {
 								Buff.prolong(mob, Amok.class, effectMulti * 5f);
 								charsHit++;
 							}
 
 							// *** Wand of Regrowth ***
 						} else if (finalWandCls == WandOfRegrowth.class) {
-							if (mob.alignment != Char.Alignment.ALLY) {
+							if (mob.alignment != body.alignment) {
 								Buff.prolong(mob, Roots.class, effectMulti * Roots.DURATION);
 								charsHit++;
 							}

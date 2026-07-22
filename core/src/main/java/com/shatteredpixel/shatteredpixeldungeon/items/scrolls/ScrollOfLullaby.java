@@ -52,30 +52,43 @@ public class ScrollOfLullaby extends Scroll {
 		detach(ctx.kit.belongings.backpack);
 
 		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
-			Sample.INSTANCE.play( Assets.Sounds.LULLABY );
+			ctx.body.sprite.centerEmitter().start(Speck.factory(Speck.NOTE), 0.3f, 5);
+			Sample.INSTANCE.play(Assets.Sounds.LULLABY);
 		}
 
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (Dungeon.level.heroFOV[mob.pos]) {
-				Buff.affect( mob, Drowsy.class, Drowsy.DURATION );
+				Buff.affect(mob, Drowsy.class, Drowsy.DURATION);
 				if (UseContext.canWorldFx(mob)) {
-					mob.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+					mob.sprite.centerEmitter().start(Speck.factory(Speck.NOTE), 0.3f, 5);
 				}
 			}
 		}
+		// Echo: also soothe the opposing Hero (not in level.mobs)
+		ctx.forEachVisibleHostile(ch -> {
+			if (ch instanceof Mob) {
+				return; // already handled
+			}
+			Buff.affect(ch, Drowsy.class, Drowsy.DURATION);
+			if (UseContext.canWorldFx(ch)) {
+				com.watabou.noosa.particles.Emitter e = ch.sprite.centerEmitter();
+				if (e != null) {
+					e.start(Speck.factory(Speck.NOTE), 0.3f, 5);
+				}
+			}
+		});
 
-		Buff.affect( ctx.body, Drowsy.class, Drowsy.DURATION );
+		Buff.affect(ctx.body, Drowsy.class, Drowsy.DURATION);
 
 		if (ctx.heroFX) {
-			GLog.i( Messages.get(this, "sooth") );
+			GLog.i(Messages.get(this, "sooth"));
 			identify();
 		}
 
 		readAnimation(ctx);
 		return true;
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

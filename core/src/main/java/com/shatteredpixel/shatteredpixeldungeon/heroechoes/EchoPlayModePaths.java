@@ -36,6 +36,9 @@ public final class EchoPlayModePaths {
 		if (mode == EchoPlayMode.SOLO) {
 			return "-solo";
 		}
+		if (mode == EchoPlayMode.DEBUG) {
+			return "-debug";
+		}
 		return "";
 	}
 
@@ -67,7 +70,7 @@ public final class EchoPlayModePaths {
 	}
 
 	public static boolean persistsLeaderboardLocally(EchoPlayMode mode) {
-		return mode != EchoPlayMode.RANKED;
+		return mode != EchoPlayMode.RANKED && mode != EchoPlayMode.DEBUG;
 	}
 
 	public static boolean persistsLeaderboardLocally() {

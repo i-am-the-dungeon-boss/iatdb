@@ -64,6 +64,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.DebugArenaLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
@@ -388,6 +389,9 @@ public class Dungeon {
 
 	// Pure helper for routing, to enable test coverage
 	public static Class<? extends Level> levelClassForDepth(int depth, int branch) {
+		if (echoPlayMode == EchoPlayMode.DEBUG && EchoPlayMode.isAllowed(EchoPlayMode.DEBUG)) {
+			return DebugArenaLevel.class;
+		}
 		if (branch == 0) {
 			switch (depth) {
 				case 1:
@@ -467,6 +471,21 @@ public class Dungeon {
 		pendingEchoPolicy = null;
 	}
 
+	/**
+	 * Arms a pending echo boss without a lookup (debug arena mirror spawn).
+	 */
+	public static void armPendingEchoBoss(Echo echo, EchoPolicy policy) {
+		if (echo == null || !echo.hasCombatData()) {
+			throw new IllegalArgumentException("pending echo requires combat data");
+		}
+		if (policy == null || !policy.isSupported()) {
+			throw new IllegalArgumentException("pending echo requires a supported echo_policy");
+		}
+		pendingEcho = echo;
+		pendingEchoPolicy = policy;
+		echoBossActive = true;
+	}
+
 	public static boolean isEchoBossActive() {
 		return echoBossActive;
 	}
@@ -520,7 +539,10 @@ public class Dungeon {
 		}
 		try {
 			EchoPlayMode mode = EchoPlayMode.valueOf(raw);
-			return mode == EchoPlayMode.NONE ? EchoPlayMode.SOLO : mode;
+			if (mode == EchoPlayMode.NONE) {
+				return EchoPlayMode.SOLO;
+			}
+			return EchoPlayMode.sanitize(mode);
 		} catch (IllegalArgumentException ignored) {
 			return EchoPlayMode.SOLO;
 		}

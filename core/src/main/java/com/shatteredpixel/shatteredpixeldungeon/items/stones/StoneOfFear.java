@@ -25,7 +25,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.stones;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
-import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -36,23 +35,31 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.watabou.noosa.audio.Sample;
 
 public class StoneOfFear extends Runestone {
-	
+
 	{
 		image = ItemSpriteSheet.STONE_FEAR;
 	}
-	
+
 	@Override
 	protected void activate(int cell) {
 
-		Char ch = Actor.findChar( cell );
-
-		if (ch != null && ch.alignment != Char.Alignment.ALLY ){
-			Buff.affect( ch, Terror.class, Terror.DURATION ).object = curUser.id();
+		Char ch = Actor.findChar(cell);
+		// Echo throwAs borrows kit onto body — hostility vs the live body Char.
+		Char source = Actor.findChar(curUser.pos);
+		if (source == null) {
+			source = curUser;
 		}
 
-		new Flare( 5, 16 ).color( 0xFF0000, true ).show(Dungeon.hero.sprite.parent, DungeonTilemap.tileCenterToWorld(cell), 2f );
-		Sample.INSTANCE.play( Assets.Sounds.READ );
-		
+		if (ch != null && ch.alignment != source.alignment) {
+			Buff.affect(ch, Terror.class, Terror.DURATION).object = source.id();
+		}
+
+		if (curUser != null && curUser.sprite != null && curUser.sprite.parent != null) {
+			new Flare(5, 16).color(0xFF0000, true).show(curUser.sprite.parent, DungeonTilemap.tileCenterToWorld(cell),
+					2f);
+		}
+		Sample.INSTANCE.play(Assets.Sounds.READ);
+
 	}
-	
+
 }
