@@ -45,6 +45,7 @@ public class WndTextInput extends Window {
 	private static final int BUTTON_HEIGHT = 16;
 
 	protected TextInput textBox;
+	protected TextInput secondaryBox;
 
 	protected RedButton btnCopy;
 	protected RedButton btnPaste;
@@ -57,6 +58,23 @@ public class WndTextInput extends Window {
 	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
 			final boolean multiLine, final String posTxt, final String negTxt,
 			final String errorMessage) {
+		this(title, body, initialValue, maxLength, multiLine, posTxt, negTxt, errorMessage,
+				null, null, 0, false);
+	}
+
+	/**
+	 * @param secondaryHint      small label above the secondary box; null to omit
+	 * @param secondaryInitial   initial secondary text; pass null and
+	 *                           secondaryMaxLength &lt;= 0 to omit the box
+	 * @param secondaryMaxLength max length for secondary; &lt;= 0 omits the
+	 *                           secondary box
+	 * @param secondaryPassword  when true, masks secondary input
+	 */
+	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
+			final boolean multiLine, final String posTxt, final String negTxt,
+			final String errorMessage,
+			final String secondaryHint, final String secondaryInitial, final int secondaryMaxLength,
+			final boolean secondaryPassword) {
 		super();
 
 		final int width;
@@ -92,7 +110,7 @@ public class WndTextInput extends Window {
 			@Override
 			public void enterPressed() {
 				// triggers positive action on enter pressed, only with non-multiline though.
-				onSelect(true, getText());
+				onSelect(true, getText(), secondaryText());
 				hide();
 			}
 
@@ -183,6 +201,34 @@ public class WndTextInput extends Window {
 
 		pos += inputHeight + MARGIN;
 
+		if (secondaryMaxLength > 0) {
+			if (secondaryHint != null && !secondaryHint.isBlank()) {
+				final RenderedTextBlock txtHint = PixelScene.renderTextBlock(secondaryHint, 6);
+				txtHint.maxWidth(width);
+				txtHint.setPos(0, pos);
+				add(txtHint);
+				pos = txtHint.bottom() + MARGIN;
+			}
+
+			secondaryBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), false, textSize) {
+				@Override
+				public void enterPressed() {
+					onSelect(true, textBox.getText(), getText());
+					hide();
+				}
+			};
+			if (secondaryInitial != null) {
+				secondaryBox.setText(secondaryInitial);
+			}
+			secondaryBox.setMaxLength(secondaryMaxLength);
+			if (secondaryPassword) {
+				secondaryBox.setPasswordMode(true);
+			}
+			add(secondaryBox);
+			secondaryBox.setRect(MARGIN, pos, textBoxWidth, BUTTON_HEIGHT);
+			pos += BUTTON_HEIGHT + MARGIN;
+		}
+
 		if (errorMessage != null && !errorMessage.isBlank()) {
 			final RenderedTextBlock txtError = PixelScene.renderTextBlock(errorMessage, 6);
 			txtError.maxWidth(width);
@@ -195,7 +241,7 @@ public class WndTextInput extends Window {
 		final RedButton positiveBtn = new RedButton(posTxt) {
 			@Override
 			protected void onClick() {
-				onSelect(true, textBox.getText());
+				onSelect(true, textBox.getText(), secondaryText());
 				hide();
 			}
 		};
@@ -205,7 +251,7 @@ public class WndTextInput extends Window {
 			negativeBtn = new RedButton(negTxt) {
 				@Override
 				protected void onClick() {
-					onSelect(false, textBox.getText());
+					onSelect(false, textBox.getText(), secondaryText());
 					hide();
 				}
 			};
@@ -237,9 +283,16 @@ public class WndTextInput extends Window {
 		}
 
 		textBox.setRect(MARGIN, textBox.top(), textBoxWidth, inputHeight);
+		if (secondaryBox != null) {
+			secondaryBox.setRect(MARGIN, secondaryBox.top(), textBoxWidth, BUTTON_HEIGHT);
+		}
 
 		PointerEvent.clearKeyboardThisPress = false;
 
+	}
+
+	private String secondaryText() {
+		return secondaryBox != null ? secondaryBox.getText() : "";
 	}
 
 	@Override
@@ -248,9 +301,22 @@ public class WndTextInput extends Window {
 		if (textBox != null) {
 			textBox.setRect(textBox.left(), textBox.top(), textBox.width(), textBox.height());
 		}
+		if (secondaryBox != null) {
+			secondaryBox.setRect(secondaryBox.left(), secondaryBox.top(), secondaryBox.width(), secondaryBox.height());
+		}
+	}
+
+	public void setPasswordMode(boolean passwordMode) {
+		if (textBox != null) {
+			textBox.setPasswordMode(passwordMode);
+		}
 	}
 
 	public void onSelect(boolean positive, String text) {
+	}
+
+	public void onSelect(boolean positive, String text, String secondary) {
+		onSelect(positive, text);
 	}
 
 	@Override

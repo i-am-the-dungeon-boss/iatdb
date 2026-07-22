@@ -59,18 +59,20 @@ public class TextInput extends Component {
 
 	private NinePatch bg;
 
-	public TextInput( NinePatch bg, boolean multiline, int size ){
+	public TextInput(NinePatch bg, boolean multiline, int size) {
 		super();
 		this.bg = bg;
 		add(bg);
 
-		//use a custom viewport here to ensure stage camera matches game camera
-		Viewport viewport = new Viewport() {};
+		// use a custom viewport here to ensure stage camera matches game camera
+		Viewport viewport = new Viewport() {
+		};
 		viewport.setWorldSize(Game.width, Game.height);
 		viewport.setScreenBounds(0, 0, Game.width, Game.height);
 		viewport.setCamera(new OrthographicCamera());
-		//TODO this is needed for the moment as Spritebatch switched to using VAOs in libGDX v1.13.1
-		//  This results in HARD crashes atm, whereas old vertex arrays work fine
+		// TODO this is needed for the moment as Spritebatch switched to using VAOs in
+		// libGDX v1.13.1
+		// This results in HARD crashes atm, whereas old vertex arrays work fine
 		SpriteBatch.overrideVertexType = Mesh.VertexDataType.VertexArray;
 		stage = new Stage(viewport);
 		Game.inputHandler.addInputProcessor(stage);
@@ -84,8 +86,8 @@ public class TextInput extends Component {
 		TextField.TextFieldStyle style = skin.get(TextField.TextFieldStyle.class);
 		style.font = Game.platform.getFont(size, "", false, false);
 		style.background = null;
-		if (multiline){
-			textField = new TextArea("", style){
+		if (multiline) {
+			textField = new TextArea("", style) {
 				@Override
 				public void cut() {
 					super.cut();
@@ -99,7 +101,7 @@ public class TextInput extends Component {
 				}
 			};
 		} else {
-			textField = new TextField("", style){
+			textField = new TextField("", style) {
 				@Override
 				public void cut() {
 					super.cut();
@@ -115,14 +117,15 @@ public class TextInput extends Component {
 		}
 		textField.setProgrammaticChangeEvents(true);
 
-		if (!multiline) textField.setAlignment(Align.center);
+		if (!multiline)
+			textField.setAlignment(Align.center);
 
 		textField.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				BitmapFont f = Game.platform.getFont(size, textField.getText(), false, false);
 				TextField.TextFieldStyle style = textField.getStyle();
-				if (f != style.font){
+				if (f != style.font) {
 					style.font = f;
 					textField.setStyle(style);
 				}
@@ -130,10 +133,10 @@ public class TextInput extends Component {
 			}
 		});
 
-		if (!multiline){
-			textField.setTextFieldListener(new TextField.TextFieldListener(){
-				public void keyTyped (TextField textField, char c){
-					if (c == '\r' || c == '\n'){
+		if (!multiline) {
+			textField.setTextFieldListener(new TextField.TextFieldListener() {
+				public void keyTyped(TextField textField, char c) {
+					if (c == '\r' || c == '\n') {
 						enterPressed();
 					}
 				}
@@ -153,32 +156,38 @@ public class TextInput extends Component {
 		Game.platform.setOnscreenKeyboardVisible(true, multiline);
 	}
 
-	public void enterPressed(){
-		//fires any time enter is pressed, do nothing by default
+	public void enterPressed() {
+		// fires any time enter is pressed, do nothing by default
 	};
 
-	public void onChanged(){
-		//fires any time the text box is changed, do nothing by default
+	public void onChanged() {
+		// fires any time the text box is changed, do nothing by default
 	}
 
-	public void onClipBoardUpdate(){
-		//fires any time the clipboard is updated via cut or copy, do nothing by default
+	public void onClipBoardUpdate() {
+		// fires any time the clipboard is updated via cut or copy, do nothing by
+		// default
 	}
 
-	public void setText(String text){
+	public void setText(String text) {
 		textField.setText(text);
 		textField.setCursorPosition(textField.getText().length());
 	}
 
-	public void setMaxLength(int maxLength){
+	public void setMaxLength(int maxLength) {
 		textField.setMaxLength(maxLength);
 	}
 
-	public String getText(){
+	public void setPasswordMode(boolean passwordMode) {
+		textField.setPasswordMode(passwordMode);
+		textField.setPasswordCharacter('*');
+	}
+
+	public String getText() {
 		return textField.getText();
 	}
 
-	public void copyToClipboard(){
+	public void copyToClipboard() {
 		if (textField.getSelection().isEmpty()) {
 			textField.selectAll();
 		}
@@ -186,12 +195,13 @@ public class TextInput extends Component {
 		textField.copy();
 	}
 
-	public void pasteFromClipboard(){
+	public void pasteFromClipboard() {
 		String contents = Gdx.app.getClipboard().getContents();
-		if (contents == null) return;
+		if (contents == null)
+			return;
 
-		if (!textField.getSelection().isEmpty()){
-			//just use cut, but override clipboard
+		if (!textField.getSelection().isEmpty()) {
+			// just use cut, but override clipboard
 			textField.cut();
 			Gdx.app.getClipboard().setContents(contents);
 		}
@@ -212,7 +222,7 @@ public class TextInput extends Component {
 		float contW = width;
 		float contH = height;
 
-		if (bg != null){
+		if (bg != null) {
 			bg.x = x;
 			bg.y = y;
 			bg.size(width, height);
@@ -225,16 +235,16 @@ public class TextInput extends Component {
 
 		float zoom = Camera.main.zoom;
 		Camera c = camera();
-		if (c != null){
+		if (c != null) {
 			zoom = c.zoom;
 			Point p = c.cameraToScreen(contX, contY);
-			contX = p.x/zoom;
-			contY = p.y/zoom;
+			contX = p.x / zoom;
+			contY = p.y / zoom;
 		}
 
 		container.align(Align.topLeft);
-		container.setPosition(contX*zoom, (Game.height-(contY*zoom)));
-		container.size(contW*zoom, contH*zoom);
+		container.setPosition(contX * zoom, (Game.height - (contY * zoom)));
+		container.size(contW * zoom, contH * zoom);
 	}
 
 	@Override
@@ -262,7 +272,8 @@ public class TextInput extends Component {
 			skin.dispose();
 			Game.inputHandler.removeInputProcessor(stage);
 			Game.platform.setOnscreenKeyboardVisible(false, false);
-			if (!DeviceCompat.isDesktop()) Game.platform.updateSystemUI();
+			if (!DeviceCompat.isDesktop())
+				Game.platform.updateSystemUI();
 		}
 	}
 }
