@@ -8,6 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
@@ -115,6 +116,47 @@ class PrisonBossEchoSplitTest {
 		} finally {
 			Game.versionCode = priorVersionCode;
 		}
+	}
+
+	@Test
+	@DisplayName("progress starts EchoBoss after pending was cleared post-create if echo is re-prefetched")
+	void progressStartsEchoAfterReprefetchWhenPendingWasCleared() {
+		PrisonBossLevel level = createPrisonBossLevelWithPendingEcho();
+		Assertions.assertThat(level.tengu()).isNull();
+
+		// Later depth prefetch / leaving the boss floor clears pending while the
+		// pre-generated prison level stays on disk (debug start does this).
+		Dungeon.clearPendingEcho();
+		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isFalse();
+
+		Dungeon.prefetchEchoBossForDepth(10);
+		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
+
+		level.progress();
+
+		Assertions.assertThat(level.state()).isEqualTo(PrisonBossLevel.State.ECHO_BOSS);
+		Assertions.assertThat(findMob(level, EchoBoss.class)).isNotNull();
+		Assertions.assertThat(findMob(level, Tengu.class)).isNull();
+		Assertions.assertThat(level.tengu()).isNull();
+	}
+
+	@Test
+	@DisplayName("progress starts EchoBoss even if Tengu was prepared when create had no pending echo")
+	void progressStartsEchoInsteadOfPreparedTenguAfterLatePrefetch() {
+		PrisonBossLevel level = createPrisonBossLevelWithoutEcho();
+		Assertions.assertThat(level.tengu()).isNotNull();
+
+		Echo echo = EchoTestSupport.warriorEchoWithData(10);
+		CompositeEchoLookup.setEchoLookupForTests(d -> EchoTestSupport.outcomeWithPolicy(echo));
+		Dungeon.prefetchEchoBossForDepth(10);
+		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
+
+		level.progress();
+
+		Assertions.assertThat(level.state()).isEqualTo(PrisonBossLevel.State.ECHO_BOSS);
+		Assertions.assertThat(findMob(level, EchoBoss.class)).isNotNull();
+		Assertions.assertThat(findMob(level, Tengu.class)).isNull();
+		Assertions.assertThat(level.tengu()).isNull();
 	}
 
 	private static PrisonBossLevel createPrisonBossLevelWithPendingEcho() {

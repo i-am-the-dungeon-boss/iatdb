@@ -5,12 +5,14 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,6 +24,7 @@ public class EchoClientTest {
 		Dungeon.easyMode = false;
 		EchoOnlineSettings.resetForTests();
 		EchoPlayerSession.resetForTests();
+		SentryCrashReporting.resetReporter();
 	}
 
 	@Test
@@ -130,6 +133,78 @@ public class EchoClientTest {
 		EchoLookupOutcome outcome = client.fetchEcho(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
 		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.NETWORK);
+	}
+
+	@Test
+	@DisplayName("fetchEcho reports network failure to Sentry")
+	void fetchEchoReportsNetworkFailureToSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+		RuntimeException networkDown = new RuntimeException("network down");
+		EchoHttpTransport transport = request -> {
+			throw networkDown;
+		};
+
+		new EchoClient("https://echo.test", "secret", transport).fetchEcho(5);
+
+		Assertions.assertThat(captured).containsExactly(networkDown);
+	}
+
+	@Test
+	@DisplayName("fetchEcho reports server failure to Sentry")
+	void fetchEchoReportsServerFailureToSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(503, "{\"error\":\"busy\"}");
+
+		new EchoClient("https://echo.test", "secret", transport).fetchEcho(5);
+
+		Assertions.assertThat(captured).hasSize(1);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
+		Assertions.assertThat(((EchoHttpException) captured.get(0)).statusCode).isEqualTo(503);
+	}
+
+	@Test
+	@DisplayName("fetchEcho reports decode failure to Sentry")
+	void fetchEchoReportsDecodeFailureToSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "not-json");
+
+		new EchoClient("https://echo.test", "secret", transport).fetchEcho(5);
+
+		Assertions.assertThat(captured).hasSize(1);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(Exception.class);
+	}
+
+	@Test
+	@DisplayName("fetchEcho does not report 404 empty pool to Sentry")
+	void fetchEchoDoesNotReportNotFoundToSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(404, "{\"error\":\"missing\"}");
+
+		new EchoClient("https://echo.test", "secret", transport).fetchEcho(5);
+
+		Assertions.assertThat(captured).isEmpty();
+	}
+
+	@Test
+	@DisplayName("fetchEchoPolicy reports failure to Sentry")
+	void fetchEchoPolicyReportsFailureToSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(503, "{}");
+
+		new EchoClient("https://echo.test", "secret", transport)
+				.fetchEchoPolicy(EchoTestSupport.warriorEchoWithData(5));
+
+		Assertions.assertThat(captured).hasSize(1);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
 	}
 
 	@Test

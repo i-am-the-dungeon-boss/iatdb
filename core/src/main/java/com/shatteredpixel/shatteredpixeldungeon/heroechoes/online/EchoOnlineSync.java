@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
-import com.watabou.noosa.Game;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,7 @@ public final class EchoOnlineSync {
 				// Display name is set server-side from the player JWT.
 				client.uploadEcho(echo);
 			} catch (Exception e) {
-				Game.reportException(e);
+				SentryCrashReporting.report(e);
 			}
 		});
 	}
@@ -70,7 +70,7 @@ public final class EchoOnlineSync {
 				}
 				client.postLeaderboardResult(result);
 			} catch (Exception e) {
-				Game.reportException(e);
+				SentryCrashReporting.report(e);
 			}
 		});
 	}

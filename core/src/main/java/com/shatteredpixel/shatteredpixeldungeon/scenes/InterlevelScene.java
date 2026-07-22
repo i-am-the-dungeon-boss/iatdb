@@ -706,9 +706,9 @@ public class InterlevelScene extends PixelScene {
 	}
 
 	private void prefetchEchoBossIfNeeded(int depth, int branch) throws IOException {
-		if (Dungeon.levelHasBeenGenerated(depth, branch)) {
-			return;
-		}
+		// Boss floors must re-resolve pending echo even when the level was already
+		// generated (debug start pregenerates 1..N; later depths clear pending).
+		// Skipping left Prison/etc. with shouldSpawn() false → regional boss.
 		if (!Dungeon.shouldPrefetchEchoBoss(depth, branch)) {
 			return;
 		}

@@ -30,17 +30,24 @@ class UiUxAndPolishTest {
     }
 
     @Test
-    @DisplayName("Intro banner text includes username, class name, and kill count")
-    void introBannerTextIncludesUsernameClassAndKillCount() {
+    @DisplayName("Defeat banner text includes the echo username")
+    void defeatBannerTextIncludesUsername() {
         Echo echo = EchoTestSupport.warriorEcho(5);
         echo.userName = "Marwan";
-        echo.killCount = 12;
 
-        String text = EchoBossSpawner.introBannerText(echo);
+        String text = EchoBossSpawner.defeatBannerText(echo);
 
         Assertions.assertThat(text).contains("Marwan");
-        Assertions.assertThat(text.toLowerCase()).contains("warrior");
-        Assertions.assertThat(text).contains("12");
+        Assertions.assertThat(text.toLowerCase()).contains("defeated");
+    }
+
+    @Test
+    @DisplayName("Defeat banner text falls back when echo is missing")
+    void defeatBannerTextFallsBackWithoutEcho() {
+        String text = EchoBossSpawner.defeatBannerText(null);
+
+        Assertions.assertThat(text).isNotBlank();
+        Assertions.assertThat(text.toLowerCase()).contains("defeated");
     }
 
     @Test

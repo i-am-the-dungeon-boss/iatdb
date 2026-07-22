@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -19,6 +20,7 @@ class EasyModeTest {
 	@AfterEach
 	void cleanup() {
 		SPDSettings.easyMode(false);
+		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 		EchoTestSupport.resetWorkflowState();
 	}
 
@@ -29,15 +31,73 @@ class EasyModeTest {
 	}
 
 	@Test
-	@DisplayName("Dungeon.init copies easy mode from settings")
-	void initCopiesEasyModeFromSettings() {
+	@DisplayName("easy mode is allowed in solo mode only")
+	void easyModeAllowedInSoloOnly() {
+		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.SOLO)).isTrue();
+		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.RANKED)).isFalse();
+		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.NONE)).isFalse();
+	}
+
+	@Test
+	@DisplayName("ranked mode clears applied easy mode settings")
+	void rankedModeClearsAppliedEasyModeSettings() {
+		SPDSettings.easyMode(true);
+		Dungeon.easyMode = true;
+
+		SPDSettings.clearEasyModeIfDisallowed(EchoPlayMode.RANKED);
+
+		Assertions.assertThat(SPDSettings.easyMode()).isFalse();
+		Assertions.assertThat(Dungeon.easyMode).isFalse();
+	}
+
+	@Test
+	@DisplayName("solo mode keeps applied easy mode settings")
+	void soloModeKeepsAppliedEasyModeSettings() {
+		SPDSettings.easyMode(true);
+		Dungeon.easyMode = true;
+
+		SPDSettings.clearEasyModeIfDisallowed(EchoPlayMode.SOLO);
+
+		Assertions.assertThat(SPDSettings.easyMode()).isTrue();
+		Assertions.assertThat(Dungeon.easyMode).isTrue();
+	}
+
+	@Test
+	@DisplayName("selecting ranked mode clears applied easy mode settings")
+	void selectingRankedModeClearsAppliedEasyModeSettings() {
+		SPDSettings.easyMode(true);
+		Dungeon.easyMode = true;
+
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
+
+		Assertions.assertThat(SPDSettings.easyMode()).isFalse();
+		Assertions.assertThat(Dungeon.easyMode).isFalse();
+	}
+
+	@Test
+	@DisplayName("Dungeon.init copies easy mode from settings in solo")
+	void initCopiesEasyModeFromSettingsInSolo() {
 		SPDSettings.easyMode(true);
 		GamesInProgress.selectedClass = HeroClass.WARRIOR;
 		Dungeon.seed = 1L;
 		Dungeon.daily = false;
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 		Dungeon.init();
 
 		Assertions.assertThat(Dungeon.easyMode).isTrue();
+	}
+
+	@Test
+	@DisplayName("Dungeon.init clears easy mode outside solo")
+	void initClearsEasyModeOutsideSolo() {
+		SPDSettings.easyMode(true);
+		GamesInProgress.selectedClass = HeroClass.WARRIOR;
+		Dungeon.seed = 1L;
+		Dungeon.daily = false;
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+		Dungeon.init();
+
+		Assertions.assertThat(Dungeon.easyMode).isFalse();
 	}
 
 	@Test

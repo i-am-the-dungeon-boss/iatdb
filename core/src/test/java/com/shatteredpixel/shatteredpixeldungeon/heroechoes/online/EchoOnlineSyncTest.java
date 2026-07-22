@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import java.util.ArrayList;
+import java.util.List;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoOnlineSyncTest {
@@ -20,6 +23,7 @@ class EchoOnlineSyncTest {
 	void cleanup() {
 		EchoOnlineSettings.resetForTests();
 		EchoPlayerSession.resetForTests();
+		SentryCrashReporting.resetReporter();
 	}
 
 	@Test
@@ -91,5 +95,28 @@ class EchoOnlineSyncTest {
 
 		Assertions.assertThat(transport.requests).hasSize(1);
 		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/leaderboard/results");
+	}
+
+	@Test
+	@DisplayName("uploadEchoAsync reports upload failure to Sentry")
+	void uploadEchoAsyncReportsFailureToSentry() throws Exception {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(500, "{\"error\":\"nope\"}");
+		EchoOnlineSync sync = new EchoOnlineSync(new EchoClient("https://echo.test", "secret", transport));
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
+
+		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
+		sync.awaitBackgroundTasksForTests();
+
+		Assertions.assertThat(captured).hasSize(1);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
+		Assertions.assertThat(((EchoHttpException) captured.get(0)).statusCode).isEqualTo(500);
 	}
 }

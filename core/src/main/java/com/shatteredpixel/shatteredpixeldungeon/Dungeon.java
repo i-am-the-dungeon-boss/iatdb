@@ -82,6 +82,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
@@ -259,7 +260,7 @@ public class Dungeon {
 
 		initialVersion = version = Game.versionCode;
 		challenges = Challenges.allowedForPlayMode(echoPlayMode) ? SPDSettings.challenges() : 0;
-		easyMode = SPDSettings.easyMode();
+		easyMode = SPDSettings.easyModeAllowedForPlayMode(echoPlayMode) && SPDSettings.easyMode();
 		mobsToChampion = 1;
 
 		Actor.clear();
@@ -565,6 +566,7 @@ public class Dungeon {
 			}
 			return outcome;
 		} catch (Exception unexpected) {
+			SentryCrashReporting.report(unexpected);
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
 		}
 	}

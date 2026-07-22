@@ -58,6 +58,7 @@ public class GamesInProgress {
 		selectedEchoPlayMode = mode;
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 		Challenges.clearIfDisallowed(mode);
+		SPDSettings.clearEasyModeIfDisallowed(mode);
 		clearSlotCache();
 	}
 

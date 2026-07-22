@@ -84,6 +84,20 @@ public final class EchoBossSpawner {
 				Math.max(0, echo.killCount));
 	}
 
+	/**
+	 * Defeat line shown when an echo boss falls — always names the echo by
+	 * username.
+	 */
+	public static String defeatBannerText(Echo echo) {
+		if (echo == null) {
+			return Messages.get(EchoBoss.class, "defeated_default");
+		}
+		return Messages.get(
+				EchoBoss.class,
+				"defeated",
+				Echo.resolveUserName(echo.userName, echo.heroClass));
+	}
+
 	static String heroClassTitle(String heroClass) {
 		if (heroClass == null || heroClass.isEmpty()) {
 			return Messages.get(EchoBoss.class, "name");

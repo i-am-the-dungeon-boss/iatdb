@@ -4,6 +4,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+import com.watabou.utils.DeviceCompat;
 
 import org.json.JSONObject;
 
@@ -64,25 +66,37 @@ public final class EchoClient {
 	 * </ul>
 	 */
 	public EchoLookupOutcome fetchEcho(int depth) {
+		String url = baseUrl + "/v1/echoes/" + depth + easyModeQuery();
+		logFetch("GET " + url);
 		try {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"GET",
-					baseUrl + "/v1/echoes/" + depth + easyModeQuery(),
+					url,
 					jsonHeaders(false, false),
 					null));
 
 			if (response.statusCode == 200) {
 				try {
-					return EchoLookupOutcome.found(EchoWireCodec.decodeEchoFetch(response.body));
+					EchoFetchResult decoded = EchoWireCodec.decodeEchoFetch(response.body);
+					logFetch("depth=" + depth + " status=200 FOUND echo_id="
+							+ (decoded.echo != null ? decoded.echo.echoId : "?"));
+					return EchoLookupOutcome.found(decoded);
 				} catch (Exception corruptBody) {
+					logFetch("depth=" + depth + " status=200 DECODE: " + corruptBody.getMessage());
+					SentryCrashReporting.report(corruptBody);
 					return EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
 				}
 			}
 			if (response.statusCode == 404) {
+				logFetch("depth=" + depth + " status=404 NOT_FOUND");
 				return EchoLookupOutcome.notFound();
 			}
+			logFetch("depth=" + depth + " status=" + response.statusCode + " SERVER");
+			SentryCrashReporting.report(new EchoHttpException(response.statusCode, response.body));
 			return EchoLookupOutcome.error(EchoLookupFailureKind.SERVER, response.statusCode);
 		} catch (Exception networkError) {
+			logFetch("depth=" + depth + " NETWORK: " + networkError.getMessage());
+			SentryCrashReporting.report(networkError);
 			return EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
 		}
 	}
@@ -93,6 +107,8 @@ public final class EchoClient {
 	 * local-policy fallback).
 	 */
 	public EchoPolicy fetchEchoPolicy(Echo echo) {
+		String echoId = echo != null ? echo.echoId : null;
+		logFetch("POST policy echo_id=" + echoId);
 		try {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"POST",
@@ -100,12 +116,23 @@ public final class EchoClient {
 					jsonHeaders(true, true),
 					EchoWireCodec.encodeEchoPolicyRequest(EchoPolicyInput.fromEcho(echo))));
 			if (response.statusCode != 200) {
+				logFetch("policy echo_id=" + echoId + " status=" + response.statusCode + " FAIL");
+				SentryCrashReporting.report(new EchoHttpException(response.statusCode, response.body));
 				return null;
 			}
-			return EchoWireCodec.decodeEchoPolicyResponse(response.body);
-		} catch (Exception ignored) {
+			EchoPolicy policy = EchoWireCodec.decodeEchoPolicyResponse(response.body);
+			logFetch("policy echo_id=" + echoId + " status=200"
+					+ (policy != null && policy.isSupported() ? " OK" : " UNSUPPORTED"));
+			return policy;
+		} catch (Exception failure) {
+			logFetch("policy echo_id=" + echoId + " ERROR: " + failure.getMessage());
+			SentryCrashReporting.report(failure);
 			return null;
 		}
+	}
+
+	private static void logFetch(String message) {
+		DeviceCompat.log("EchoFetch", message);
 	}
 
 	/**

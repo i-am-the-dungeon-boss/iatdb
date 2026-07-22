@@ -243,6 +243,7 @@ public class HeroSelectScene extends PixelScene {
 		}
 
 		Challenges.clearIfDisallowed(GamesInProgress.selectedEchoPlayMode);
+		SPDSettings.clearEasyModeIfDisallowed(GamesInProgress.selectedEchoPlayMode);
 
 		if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
 			Dungeon.challenges = 0;

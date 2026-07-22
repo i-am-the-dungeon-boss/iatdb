@@ -326,9 +326,15 @@ public class HallsBossLevel extends Level {
 		set(exit(), Terrain.EXIT);
 		GameScene.updateMap(exit());
 
-		CellEmitter.get(exit() - 1).burst(ShadowParticle.UP, 25);
-		CellEmitter.get(exit()).burst(ShadowParticle.UP, 100);
-		CellEmitter.get(exit() + 1).burst(ShadowParticle.UP, 25);
+		Emitter left = CellEmitter.get(exit() - 1);
+		if (left != null)
+			left.burst(ShadowParticle.UP, 25);
+		Emitter center = CellEmitter.get(exit());
+		if (center != null)
+			center.burst(ShadowParticle.UP, 100);
+		Emitter right = CellEmitter.get(exit() + 1);
+		if (right != null)
+			right.burst(ShadowParticle.UP, 25);
 		for (CustomTilemap t : customTiles) {
 			if (t instanceof CenterPieceVisuals) {
 				((CenterPieceVisuals) t).updateState();

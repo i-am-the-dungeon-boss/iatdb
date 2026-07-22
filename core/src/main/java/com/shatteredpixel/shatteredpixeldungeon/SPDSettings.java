@@ -24,6 +24,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -308,6 +309,19 @@ public class SPDSettings extends GameSettings {
 
 	public static boolean easyMode() {
 		return getBoolean(KEY_EASY_MODE, false);
+	}
+
+	/** Easy mode is only offered / applied in solo echo runs. */
+	public static boolean easyModeAllowedForPlayMode(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
+	}
+
+	/** Clears run + settings easy mode when the play mode disallows it. */
+	public static void clearEasyModeIfDisallowed(EchoPlayMode mode) {
+		if (!easyModeAllowedForPlayMode(mode)) {
+			Dungeon.easyMode = false;
+			easyMode(false);
+		}
 	}
 
 	public static void customSeed(String value) {

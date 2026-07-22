@@ -307,6 +307,7 @@ public class PrisonBossLevel extends Level {
 
 		Painter.fill(this, 0, 0, 32, 32, Terrain.WALL);
 
+		transitions.clear();
 		setMapStart();
 
 		for (Heap h : heaps.valueList()) {
@@ -475,9 +476,10 @@ public class PrisonBossLevel extends Level {
 				tengu.state = tengu.HUNTING;
 				tengu.pos = (arena.left + arena.width() / 2) + width() * (arena.top + 2);
 				GameScene.add(tengu, 1);
-				tengu.notice();
-
-				CellEmitter.get(tengu.pos).burst(Speck.factory(Speck.WOOL), 6);
+				if (tengu.sprite != null) {
+					tengu.notice();
+				}
+				playBossAppearFx(tengu.pos);
 
 				GameScene.flash(0x80FFFFFF);
 				Sample.INSTANCE.play(Assets.Sounds.BLAST);
@@ -558,6 +560,10 @@ public class PrisonBossLevel extends Level {
 	 * Does not enter Tengu's FIGHT_* phases.
 	 */
 	private void startEchoFight(int spawnPos) {
+		// Levelgen may have prepared Tengu when no echo was pending yet (e.g. pending
+		// cleared by a later depth's prefetch during debug start). Drop him so echo
+		// does not share the arena with a leftover Tengu reference.
+		tengu = null;
 		EchoBoss echoBoss = EchoBossSpawner.create(Dungeon.depth);
 		presentFightBoss(echoBoss, spawnPos);
 		EchoBossSpawner.announceIntro();
@@ -637,8 +643,21 @@ public class PrisonBossLevel extends Level {
 		}
 
 		unseal();
-		set(pointToCell(tenguCellDoor), Terrain.DOOR);
-		GameScene.updateMap(pointToCell(tenguCellDoor));
+
+		if (Dungeon.hero != null) {
+			Dungeon.hero.interrupt();
+			Dungeon.hero.pos = tenguCell.left + 4 + (tenguCell.top + 2) * width();
+			if (Dungeon.hero.sprite != null) {
+				Dungeon.hero.sprite.interruptMotion();
+				Dungeon.hero.sprite.place(Dungeon.hero.pos);
+				if (Camera.main != null) {
+					Camera.main.snapTo(Dungeon.hero.sprite.center());
+				}
+			}
+		}
+
+		setMapEnd();
+		cleanMapState();
 
 		state = State.WON;
 

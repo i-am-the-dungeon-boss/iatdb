@@ -4,7 +4,9 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
+import com.watabou.utils.DeviceCompat;
 
 public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLookup {
 
@@ -46,6 +48,7 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 
 	@Override
 	public EchoLookupOutcome findEchoForDepth(int depth) {
+		DeviceCompat.log("EchoFetch", "lookup depth=" + depth + " mode=" + Dungeon.echoPlayMode);
 		if (Dungeon.echoPlayMode == EchoPlayMode.RANKED) {
 			return fetchRankedEcho(depth);
 		}
@@ -56,12 +59,15 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 		try {
 			EchoLookupOutcome local = localLookup.findEchoForDepth(depth);
 			if (!local.isFound()) {
+				DeviceCompat.log("EchoFetch", "local depth=" + depth + " " + local.status);
 				return local;
 			}
 			if (Dungeon.echoPlayMode != EchoPlayMode.SOLO) {
+				DeviceCompat.log("EchoFetch", "local depth=" + depth + " FOUND (no remote policy)");
 				return local;
 			}
 			if (!EchoOnlineSettings.isConfigured()) {
+				DeviceCompat.log("EchoFetch", "local depth=" + depth + " UNAVAILABLE (online not configured)");
 				return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
 			}
 			Echo echo = local.result.echo;
@@ -70,6 +76,8 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 				if (attempt > 0) {
 					sleepRetryDelay();
 				}
+				DeviceCompat.log("EchoFetch", "solo policy attempt " + (attempt + 1)
+						+ "/" + RANKED_ATTEMPTS + " echo_id=" + echo.echoId);
 				EchoPolicy remotePolicy = client.fetchEchoPolicy(echo);
 				if (remotePolicy == null) {
 					last = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
@@ -82,16 +90,21 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 				if (localLookup instanceof EchoStorage) {
 					((EchoStorage) localLookup).save(echo, remotePolicy);
 				}
+				DeviceCompat.log("EchoFetch", "solo depth=" + depth + " FOUND echo_id=" + echo.echoId);
 				return EchoLookupOutcome.found(new EchoFetchResult(echo, remotePolicy));
 			}
+			DeviceCompat.log("EchoFetch", "solo depth=" + depth + " ERROR " + last.failureKind);
 			return last;
 		} catch (Exception unexpected) {
+			DeviceCompat.log("EchoFetch", "local depth=" + depth + " UNKNOWN: " + unexpected.getMessage());
+			SentryCrashReporting.report(unexpected);
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
 		}
 	}
 
 	private EchoLookupOutcome fetchRankedEcho(int depth) {
 		if (!EchoOnlineSettings.canSyncOnline()) {
+			DeviceCompat.log("EchoFetch", "ranked depth=" + depth + " UNAVAILABLE (cannot sync)");
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
 		}
 		EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
@@ -99,11 +112,15 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 			if (attempt > 0) {
 				sleepRetryDelay();
 			}
+			DeviceCompat.log("EchoFetch", "ranked attempt " + (attempt + 1)
+					+ "/" + RANKED_ATTEMPTS + " depth=" + depth);
 			last = client.fetchEcho(depth);
 			if (!last.isError()) {
 				return last;
 			}
 		}
+		DeviceCompat.log("EchoFetch", "ranked depth=" + depth + " ERROR " + last.failureKind
+				+ (last.httpStatus > 0 ? " http=" + last.httpStatus : ""));
 		return last;
 	}
 

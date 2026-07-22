@@ -5,9 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -21,7 +19,6 @@ import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonBossLevel;
-import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.PathFinder;
@@ -69,7 +66,12 @@ public final class EchoBossRegionalDeath {
 				break;
 		}
 
+		announceDefeat(boss);
 		EchoCaptureTrigger.onBossDefeated();
+	}
+
+	private static void announceDefeat(EchoBoss boss) {
+		GLog.n(EchoBossSpawner.defeatBannerText(boss.getEcho()));
 	}
 
 	private static void applySewerBoss(EchoBoss boss) {
@@ -81,7 +83,6 @@ public final class EchoBossRegionalDeath {
 		}
 
 		recordRegionalBossVictory(0, 1000);
-		GLog.n(Messages.get(Goo.class, "defeated"));
 	}
 
 	private static void applyPrisonBoss(EchoBoss boss) {
@@ -99,7 +100,6 @@ public final class EchoBossRegionalDeath {
 
 		recordRegionalBossVictory(1, 2000);
 		upgradeLloydsBeacon();
-		GLog.n(Messages.get(Tengu.class, "defeated"));
 	}
 
 	private static void applyCavesBoss(EchoBoss boss) {
@@ -115,7 +115,6 @@ public final class EchoBossRegionalDeath {
 
 		recordRegionalBossVictory(2, 3000);
 		upgradeLloydsBeacon();
-		GLog.n(Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300.class, "defeated"));
 	}
 
 	private static void applyCityBoss(EchoBoss boss, Object cause) {
@@ -154,8 +153,6 @@ public final class EchoBossRegionalDeath {
 		if (Dungeon.hero != null && Dungeon.hero.buff(Degrade.class) != null) {
 			Dungeon.hero.buff(Degrade.class).detach();
 		}
-
-		GLog.n(Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing.class, "defeated"));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -181,8 +178,6 @@ public final class EchoBossRegionalDeath {
 
 		Statistics.qualifiedForBossChallengeBadge = false;
 		Statistics.bossScores[4] += 5000 + 1250 * Statistics.spawnersAlive;
-
-		GLog.n(Messages.get(YogDzewa.class, "defeated"));
 	}
 
 	private static void recordRegionalBossVictory(int regionIndex, int scorePoints) {
