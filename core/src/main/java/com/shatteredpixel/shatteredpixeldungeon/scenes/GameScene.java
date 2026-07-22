@@ -1598,35 +1598,57 @@ public class GameScene extends PixelScene {
 		if (Dungeon.hero.isAlive()) {
 			Banner bossSlain = new Banner(BannerSprites.get(BannerSprites.Type.BOSS_SLAIN));
 			bossSlain.show(0xFFFFFF, 0.3f, 5f);
-			scene.showBanner(bossSlain);
+			if (scene != null) {
+				scene.showBanner(bossSlain);
+			}
 
 			if (showsFloorBossClaim(Dungeon.depth, true)) {
-				int zoom = renderTextZoom(defaultZoom, DeviceCompat.getRealPixelScaleX());
-				RenderedTextBlock claim = new RenderedTextBlock(floorBossClaimMessage(Dungeon.depth), 9 * zoom) {
+				// RenderedText measurement is render-thread only; boss deaths run on the actor
+				// thread.
+				final Banner banner = bossSlain;
+				final String claimMessage = floorBossClaimMessage(Dungeon.depth);
+				ShatteredPixelDungeon.runOnRenderThread(new Callback() {
 					@Override
-					public void update() {
-						if (!bossSlain.alive) {
-							killAndErase();
-							return;
-						}
-						alpha(bossSlain.am);
-						super.update();
+					public void call() {
+						addFloorBossClaimSubtitle(banner, claimMessage);
 					}
-				};
-				claim.zoom(1f / zoom);
-				claim.hardlight(0xFFFFFF);
-				claim.align(RenderedTextBlock.CENTER_ALIGN);
-				claim.maxWidth((int) (uiCamera.width * 0.9f));
-				claim.alpha(0);
-				claim.camera = uiCamera;
-				claim.setPos(
-						align(uiCamera, (uiCamera.width - claim.width()) / 2),
-						align(uiCamera, bossSlain.y + bossSlain.height + 6));
-				scene.addToFront(claim);
+				});
 			}
 
 			Sample.INSTANCE.play(Assets.Sounds.BOSS);
 		}
+	}
+
+	/**
+	 * Adds the floor-boss claim subtitle under an existing Boss Slain banner.
+	 * Render thread only.
+	 */
+	static void addFloorBossClaimSubtitle(Banner bossSlain, String claimMessage) {
+		if (scene == null || bossSlain == null || claimMessage == null) {
+			return;
+		}
+		int zoom = renderTextZoom(defaultZoom, DeviceCompat.getRealPixelScaleX());
+		RenderedTextBlock claim = new RenderedTextBlock(claimMessage, 9 * zoom) {
+			@Override
+			public void update() {
+				if (!bossSlain.alive) {
+					killAndErase();
+					return;
+				}
+				alpha(bossSlain.am);
+				super.update();
+			}
+		};
+		claim.zoom(1f / zoom);
+		claim.hardlight(0xFFFFFF);
+		claim.align(RenderedTextBlock.CENTER_ALIGN);
+		claim.maxWidth((int) (uiCamera.width * 0.9f));
+		claim.alpha(0);
+		claim.camera = uiCamera;
+		claim.setPos(
+				align(uiCamera, (uiCamera.width - claim.width()) / 2),
+				align(uiCamera, bossSlain.y + bossSlain.height + 6));
+		scene.addToFront(claim);
 	}
 
 	/** Subtitle under Boss Slain when the player claims this floor as echo boss. */

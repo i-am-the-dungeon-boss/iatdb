@@ -1,7 +1,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +14,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 @ExtendWith(GdxTestExtension.class)
 class GameSceneBossSlainSubtitleTest {
+
+	@AfterEach
+	void cleanup() {
+		EchoTestSupport.resetWorkflowState();
+	}
 
 	@ParameterizedTest
 	@CsvSource({
@@ -40,5 +49,22 @@ class GameSceneBossSlainSubtitleTest {
 	@DisplayName("boss slain subtitle is hidden on non-boss depths")
 	void bossSlainSubtitleHiddenOnNonBossDepths() {
 		Assertions.assertThat(GameScene.showsFloorBossClaim(4, true)).isFalse();
+	}
+
+	@Test
+	@DisplayName("bossSlain does not measure claim text on the actor thread")
+	void bossSlainDoesNotMeasureClaimTextOnActorThread() {
+		Hero hero = EchoTestSupport.warriorHero();
+		Dungeon.depth = 10;
+		Assertions.assertThat(GameScene.showsFloorBossClaim(Dungeon.depth, hero.isAlive())).isTrue();
+
+		String priorName = Thread.currentThread().getName();
+		Thread.currentThread().setName("SHPD Actor Thread");
+		try {
+			Assertions.assertThatCode(GameScene::bossSlain)
+					.doesNotThrowAnyException();
+		} finally {
+			Thread.currentThread().setName(priorName);
+		}
 	}
 }
