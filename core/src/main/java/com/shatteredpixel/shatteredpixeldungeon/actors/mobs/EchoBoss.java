@@ -17,6 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStat
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossRegionalDeath;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
@@ -65,6 +66,17 @@ public class EchoBoss extends Mob {
 
     public Hero getEchoHero() {
         return echoHero;
+    }
+
+    /**
+     * BossHealthBar, WndInfoMob, and examine menus call this without
+     * {@link CharSprite#link}; apply echo hero class/tier via linkVisuals.
+     */
+    @Override
+    public CharSprite sprite() {
+        CharSprite s = super.sprite();
+        s.linkVisuals(this);
+        return s;
     }
 
     /**

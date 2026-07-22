@@ -3,8 +3,10 @@ package com.shatteredpixel.shatteredpixeldungeon.sprites;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.MovieClip;
 import com.watabou.utils.PointF;
@@ -23,6 +25,44 @@ class EchoBossSpriteTest {
 	void cleanup() {
 		com.shatteredpixel.shatteredpixeldungeon.Dungeon.level = null;
 		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Test
+	@DisplayName("EchoBoss.sprite() uses echo hero class for boss bar and info icons")
+	void spriteFactoryUsesEchoHeroClass() {
+		EchoBoss boss = huntressEchoBoss();
+
+		CharSprite icon = boss.sprite();
+
+		Assertions.assertThat(icon).isInstanceOf(EchoBossSprite.class);
+		Assertions.assertThat(icon.texture)
+				.as("BossHealthBar / WndInfoMob use Mob.sprite() without link()")
+				.isSameAs(TextureCache.get(HeroClass.HUNTRESS.spritesheet()));
+	}
+
+	@Test
+	@DisplayName("EchoBossSprite.linkVisuals uses echo hero class for attack target icon")
+	void linkVisualsUsesEchoHeroClass() {
+		EchoBoss boss = huntressEchoBoss();
+		EchoBossSprite sprite = new EchoBossSprite();
+
+		sprite.linkVisuals(boss);
+
+		Assertions.assertThat(sprite.texture)
+				.as("AttackIndicator builds via Reflection + linkVisuals, not Mob.sprite()")
+				.isSameAs(TextureCache.get(HeroClass.HUNTRESS.spritesheet()));
+	}
+
+	private static EchoBoss huntressEchoBoss() {
+		Hero hero = new Hero();
+		com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero = hero;
+		HeroClass.HUNTRESS.initHero(hero);
+		hero.lvl = 6;
+		hero.HP = hero.HT = 30;
+		Echo echo = Echo.create(
+				5, EchoTestSupport.TEST_GAME_VERSION, 1L,
+				"HUNTRESS", 6, 30, 30, EchoTestSupport.bundleHero(hero));
+		return EchoTestSupport.createBoss(echo, 5);
 	}
 
 	@Test

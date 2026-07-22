@@ -83,9 +83,14 @@ public class EchoBossSprite extends MobSprite {
         }
     }
 
+    /**
+     * Boss bar / WndInfoMob use {@link EchoBoss#sprite()}; AttackIndicator uses
+     * Reflection + {@code linkVisuals}. Both must show the echo hero class/tier —
+     * not the Warrior default from the constructor.
+     */
     @Override
-    public void link(Char ch) {
-        super.link(ch);
+    public void linkVisuals(Char ch) {
+        super.linkVisuals(ch);
         if (!(ch instanceof EchoBoss)) {
             return;
         }
