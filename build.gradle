@@ -19,7 +19,7 @@ allprojects {
         appVersionName = '0.0.1'
         // Integer for Android/iOS/desktop; must increase for every published binary.
         // Keep at/above Shattered's baseline so save-compat branches aren't mis-triggered.
-        appVersionCode = 897
+        appVersionCode = 898
 
         appJavaCompatibility = JavaVersion.VERSION_11
 
