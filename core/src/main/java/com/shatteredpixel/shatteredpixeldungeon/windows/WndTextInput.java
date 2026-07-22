@@ -285,6 +285,9 @@ public class WndTextInput extends Window {
 		textBox.setRect(MARGIN, textBox.top(), textBoxWidth, inputHeight);
 		if (secondaryBox != null) {
 			secondaryBox.setRect(MARGIN, secondaryBox.top(), textBoxWidth, BUTTON_HEIGHT);
+			// Secondary TextInput steals Stage keyboard focus on construct; give it
+			// back to the primary field so the player can type a username first.
+			textBox.claimKeyboardFocus();
 		}
 
 		PointerEvent.clearKeyboardThisPress = false;

@@ -29,14 +29,32 @@ class EchoPlayerAuthGateTest {
 	}
 
 	@Test
-	@DisplayName("auth prompt includes optional email field under username")
-	void authPromptIncludesOptionalEmail() throws IOException {
+	@DisplayName("auth prompt includes optional email and never asks for password")
+	void authPromptIncludesOptionalEmailWithoutPassword() throws IOException {
 		String source = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/online/EchoPlayerAuthGate.java");
 
 		Assertions.assertThat(source).contains("auth_email_hint");
 		Assertions.assertThat(source).contains("onSelect(boolean positive, String text, String email)");
-		Assertions.assertThat(source).contains("setCredentials");
+		Assertions.assertThat(source).doesNotContain("promptForPassword");
+		Assertions.assertThat(source).doesNotContain("setCredentials");
+		Assertions.assertThat(source).doesNotContain("auth_password");
+	}
+
+	@Test
+	@DisplayName("accepts emails with local part, at-sign, and dotted domain")
+	void looksLikeEmailAcceptsBasicAddresses() {
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("a@b.co")).isTrue();
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("hero@example.com")).isTrue();
+	}
+
+	@Test
+	@DisplayName("rejects blank or malformed emails")
+	void looksLikeEmailRejectsInvalid() {
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("")).isFalse();
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("not-an-email")).isFalse();
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("@missing.local")).isFalse();
+		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("no@tld")).isFalse();
 	}
 
 	@Test
@@ -60,33 +78,22 @@ class EchoPlayerAuthGateTest {
 	}
 
 	@Test
-	@DisplayName("accepts emails with local part, at-sign, and dotted domain")
-	void looksLikeEmailAcceptsBasicAddresses() {
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("a@b.co")).isTrue();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("hero@example.com")).isTrue();
+	@DisplayName("TextInput claimKeyboardFocus clears the previous owner's stage focus")
+	void textInputClaimKeyboardFocusClearsPreviousOwner() throws IOException {
+		String source = readSource("SPD-classes/src/main/java/com/watabou/noosa/TextInput.java");
+
+		Assertions.assertThat(source).contains("claimKeyboardFocus");
+		Assertions.assertThat(source).contains("setKeyboardFocus(null)");
+		Assertions.assertThat(source).contains("FocusListener");
 	}
 
 	@Test
-	@DisplayName("rejects blank or malformed emails")
-	void looksLikeEmailRejectsInvalid() {
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("not-an-email")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("@missing.local")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("no@tld")).isFalse();
-	}
+	@DisplayName("auth secondary field does not keep keyboard focus when the dialog opens")
+	void secondaryFieldDoesNotStealInitialFocus() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTextInput.java");
 
-	@Test
-	@DisplayName("detects email field errors from 422 credential responses")
-	void isEmailTakenReadsDetail() {
-		Assertions.assertThat(EchoPlayerAuthGate.isEmailTaken(
-				new EchoHttpException(422, "{\"detail\":{\"email\":[\"email is already taken\"]}}")))
-				.isTrue();
-		Assertions.assertThat(EchoPlayerAuthGate.isEmailTaken(
-				new EchoHttpException(422, "{\"detail\":{\"username\":[\"taken\"]}}")))
-				.isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.isEmailTaken(
-				new EchoHttpException(500, "{\"detail\":{\"email\":[\"x\"]}}")))
-				.isFalse();
+		Assertions.assertThat(source).contains("textBox.claimKeyboardFocus()");
 	}
 
 	private static String readSource(String relativePath) throws IOException {

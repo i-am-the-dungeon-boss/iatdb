@@ -37,6 +37,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.watabou.glscripts.Script;
@@ -51,6 +52,10 @@ import com.watabou.utils.Point;
 //essentially contains a libGDX text input field, plus a PD-rendered background
 public class TextInput extends Component {
 
+	// Each TextInput owns a Stage. InputMultiplexer delivers keys to the first
+	// stage with keyboard focus, so only one TextInput may keep focus at a time.
+	private static TextInput keyboardOwner;
+
 	private Stage stage;
 	private Container container;
 	private TextField textField;
@@ -59,9 +64,12 @@ public class TextInput extends Component {
 
 	private NinePatch bg;
 
+	private boolean multiline;
+
 	public TextInput(NinePatch bg, boolean multiline, int size) {
 		super();
 		this.bg = bg;
+		this.multiline = multiline;
 		add(bg);
 
 		// use a custom viewport here to ensure stage camera matches game camera
@@ -152,7 +160,33 @@ public class TextInput extends Component {
 		});
 
 		container.setActor(textField);
-		stage.setKeyboardFocus(textField);
+		textField.addListener(new FocusListener() {
+			@Override
+			public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
+				if (focused) {
+					claimKeyboardFocus();
+				}
+			}
+		});
+		claimKeyboardFocus();
+		Game.platform.setOnscreenKeyboardVisible(true, multiline);
+	}
+
+	/**
+	 * Makes this field the only TextInput that receives typed keys. Required when
+	 * multiple TextInputs are on screen (each has its own Stage).
+	 */
+	public void claimKeyboardFocus() {
+		if (stage == null || textField == null) {
+			return;
+		}
+		if (keyboardOwner != null && keyboardOwner != this && keyboardOwner.stage != null) {
+			keyboardOwner.stage.setKeyboardFocus(null);
+		}
+		keyboardOwner = this;
+		if (stage.getKeyboardFocus() != textField) {
+			stage.setKeyboardFocus(textField);
+		}
 		Game.platform.setOnscreenKeyboardVisible(true, multiline);
 	}
 
@@ -268,6 +302,9 @@ public class TextInput extends Component {
 	public synchronized void destroy() {
 		super.destroy();
 		if (stage != null) {
+			if (keyboardOwner == this) {
+				keyboardOwner = null;
+			}
 			stage.dispose();
 			skin.dispose();
 			Game.inputHandler.removeInputProcessor(stage);
