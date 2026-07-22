@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResul
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoWireCodec;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -65,6 +66,7 @@ public final class EchoTestSupport {
 		SPDSettings.echoesWeakSnapshots(false);
 		SPDSettings.playerName("");
 		EchoOnlineSettings.resetForTests();
+		EchoPlayerSession.resetForTests();
 		CompositeEchoLookup.resetForTests();
 	}
 

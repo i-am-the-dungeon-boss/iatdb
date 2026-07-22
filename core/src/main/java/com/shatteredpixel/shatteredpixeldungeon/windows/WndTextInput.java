@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
@@ -39,7 +40,7 @@ import com.watabou.utils.DeviceCompat;
 public class WndTextInput extends Window {
 
 	private static final int WIDTH = 135;
-	private static final int W_LAND_EXTRA = 220; //extra width is sometimes used in landscape
+	private static final int W_LAND_EXTRA = 220; // extra width is sometimes used in landscape
 	private static final int MARGIN = 1;
 	private static final int BUTTON_HEIGHT = 16;
 
@@ -49,12 +50,18 @@ public class WndTextInput extends Window {
 	protected RedButton btnPaste;
 
 	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
-	                           final boolean multiLine, final String posTxt, final String negTxt) {
+			final boolean multiLine, final String posTxt, final String negTxt) {
+		this(title, body, initialValue, maxLength, multiLine, posTxt, negTxt, null);
+	}
+
+	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
+			final boolean multiLine, final String posTxt, final String negTxt,
+			final String errorMessage) {
 		super();
 
 		final int width;
 		if (PixelScene.landscape() && (multiLine || body != null)) {
-			width = W_LAND_EXTRA; //more space for landscape users
+			width = W_LAND_EXTRA; // more space for landscape users
 		} else {
 			width = WIDTH;
 		}
@@ -80,11 +87,11 @@ public class WndTextInput extends Window {
 			pos = txtBody.bottom() + 2 * MARGIN;
 		}
 
-		int textSize = (int)PixelScene.uiCamera.zoom * (multiLine ? 6 : 9);
-		textBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), multiLine, textSize){
+		int textSize = (int) PixelScene.uiCamera.zoom * (multiLine ? 6 : 9);
+		textBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), multiLine, textSize) {
 			@Override
 			public void enterPressed() {
-				//triggers positive action on enter pressed, only with non-multiline though.
+				// triggers positive action on enter pressed, only with non-multiline though.
 				onSelect(true, getText());
 				hide();
 			}
@@ -92,7 +99,8 @@ public class WndTextInput extends Window {
 			@Override
 			public void onChanged() {
 				super.onChanged();
-				if (btnCopy != null) btnCopy.enable(!getText().isEmpty());
+				if (btnCopy != null)
+					btnCopy.enable(!getText().isEmpty());
 			}
 
 			@Override
@@ -101,23 +109,25 @@ public class WndTextInput extends Window {
 				btnPaste.enable(Gdx.app.getClipboard().hasContents());
 			}
 		};
-		if (initialValue != null) textBox.setText(initialValue);
+		if (initialValue != null)
+			textBox.setText(initialValue);
 		textBox.setMaxLength(maxLength);
 
-		//sets different height depending on whether this is a single or multi line input.
+		// sets different height depending on whether this is a single or multi line
+		// input.
 		final float inputHeight;
 		if (multiLine) {
-			inputHeight = 64; //~8 lines of text
+			inputHeight = 64; // ~8 lines of text
 		} else {
 			inputHeight = 16;
 		}
 
-		float textBoxWidth = width-3*MARGIN-BUTTON_HEIGHT;
+		float textBoxWidth = width - 3 * MARGIN - BUTTON_HEIGHT;
 
 		add(textBox);
 		textBox.setRect(MARGIN, pos, textBoxWidth, inputHeight);
 
-		btnCopy = new RedButton(""){
+		btnCopy = new RedButton("") {
 			@Override
 			protected void onPointerDown() {
 				super.onPointerDown();
@@ -140,7 +150,7 @@ public class WndTextInput extends Window {
 		btnCopy.enable(!textBox.getText().isEmpty());
 		add(btnCopy);
 
-		btnPaste = new RedButton(""){
+		btnPaste = new RedButton("") {
 			@Override
 			protected void onPointerDown() {
 				super.onPointerDown();
@@ -168,10 +178,19 @@ public class WndTextInput extends Window {
 		btnPaste.enable(Gdx.app.getClipboard().hasContents());
 		add(btnPaste);
 
-		btnCopy.setRect(textBoxWidth + 2*MARGIN, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
-		btnPaste.setRect(textBoxWidth + 2*MARGIN, btnCopy.bottom()+MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT);
+		btnCopy.setRect(textBoxWidth + 2 * MARGIN, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
+		btnPaste.setRect(textBoxWidth + 2 * MARGIN, btnCopy.bottom() + MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT);
 
 		pos += inputHeight + MARGIN;
+
+		if (errorMessage != null && !errorMessage.isBlank()) {
+			final RenderedTextBlock txtError = PixelScene.renderTextBlock(errorMessage, 6);
+			txtError.maxWidth(width);
+			txtError.hardlight(CharSprite.NEGATIVE);
+			txtError.setPos(0, pos);
+			add(txtError);
+			pos = txtError.bottom() + 2 * MARGIN;
+		}
 
 		final RedButton positiveBtn = new RedButton(posTxt) {
 			@Override
@@ -194,7 +213,7 @@ public class WndTextInput extends Window {
 			negativeBtn = null;
 		}
 
-		float btnWidth = multiLine ? width-2*MARGIN : textBoxWidth;
+		float btnWidth = multiLine ? width - 2 * MARGIN : textBoxWidth;
 		if (negTxt != null) {
 			positiveBtn.setRect(MARGIN, pos, (btnWidth - MARGIN) / 2, BUTTON_HEIGHT);
 			add(positiveBtn);
@@ -207,12 +226,13 @@ public class WndTextInput extends Window {
 
 		pos += BUTTON_HEIGHT;
 
-		//need to resize first before laying out the text box, as it depends on the window's camera
+		// need to resize first before laying out the text box, as it depends on the
+		// window's camera
 		resize(width, (int) pos);
 
-		//offset 50% up to give space for the soft keyboard
+		// offset 50% up to give space for the soft keyboard
 		if (!DeviceCompat.hasHardKeyboard()) {
-			offset(0, -(int)(Game.height/(4*camera.zoom)));
+			offset(0, -(int) (Game.height / (4 * camera.zoom)));
 			boundOffsetWithMargin(0);
 		}
 
@@ -225,15 +245,16 @@ public class WndTextInput extends Window {
 	@Override
 	public void offset(int xOffset, int yOffset) {
 		super.offset(xOffset, yOffset);
-		if (textBox != null){
+		if (textBox != null) {
 			textBox.setRect(textBox.left(), textBox.top(), textBox.width(), textBox.height());
 		}
 	}
 
-	public void onSelect(boolean positive, String text){ }
+	public void onSelect(boolean positive, String text) {
+	}
 
 	@Override
 	public void onBackPressed() {
-		//Do nothing, prevents accidentally losing writing
+		// Do nothing, prevents accidentally losing writing
 	}
 }

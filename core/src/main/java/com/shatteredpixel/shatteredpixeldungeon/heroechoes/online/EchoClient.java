@@ -35,7 +35,7 @@ public final class EchoClient {
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"GET",
 				baseUrl + "/health",
-				jsonHeaders(false),
+				jsonHeaders(false, false),
 				null));
 		return isHealthy(response.statusCode, response.body);
 	}
@@ -67,7 +67,7 @@ public final class EchoClient {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"GET",
 					baseUrl + "/v1/echoes/" + depth,
-					jsonHeaders(false),
+					jsonHeaders(false, false),
 					null));
 
 			if (response.statusCode == 200) {
@@ -96,7 +96,7 @@ public final class EchoClient {
 			EchoHttpResponse response = transport.send(new EchoHttpRequest(
 					"POST",
 					baseUrl + "/v1/echoes/policy",
-					jsonHeaders(false),
+					jsonHeaders(true, true),
 					EchoWireCodec.encodeEchoPolicyRequest(EchoPolicyInput.fromEcho(echo))));
 			if (response.statusCode != 200) {
 				return null;
@@ -107,12 +107,84 @@ public final class EchoClient {
 		}
 	}
 
+	/**
+	 * Validates the current Bearer JWT. Updates cached profile fields on success.
+	 *
+	 * @return true when the token is accepted by the server
+	 */
+	public boolean fetchMe() throws Exception {
+		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+				"GET",
+				baseUrl + "/v1/auth/me",
+				jsonHeaders(true, true),
+				null));
+		if (response.statusCode == 401 || response.statusCode == 403) {
+			return false;
+		}
+		ensureSuccess(response);
+		JSONObject json = new JSONObject(response.body);
+		String name = json.optString("username", EchoPlayerSession.username());
+		boolean credentials = json.optBoolean("has_credentials", false);
+		String linkedEmail = json.has("email") ? json.optString("email", "") : "";
+		// Keep existing JWT; only refresh profile metadata.
+		EchoPlayerSession.applyAuthResponse(EchoPlayerSession.jwt(), name, credentials, linkedEmail);
+		return true;
+	}
+
+	/**
+	 * Registers or re-authenticates this device. Persists session on success.
+	 *
+	 * @return true if a session is available afterward
+	 */
+	public boolean authenticateDevice(String deviceId, String username) throws Exception {
+		JSONObject body = new JSONObject();
+		body.put("device_id", deviceId);
+		if (username != null && !username.isBlank()) {
+			body.put("username", username.trim());
+		}
+		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+				"POST",
+				baseUrl + "/v1/auth/device",
+				jsonHeaders(true, false),
+				body.toString()));
+		if (response.statusCode != 200 && response.statusCode != 201) {
+			throw new EchoHttpException(response.statusCode, response.body);
+		}
+		applySessionJson(response.body);
+		return EchoPlayerSession.hasSession();
+	}
+
+	public void changeUsername(String username) throws Exception {
+		JSONObject body = new JSONObject();
+		body.put("username", username != null ? username.trim() : "");
+		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+				"PATCH",
+				baseUrl + "/v1/auth/username",
+				jsonHeaders(true, true),
+				body.toString()));
+		ensureSuccess(response);
+		applySessionJson(response.body);
+	}
+
+	public void setCredentials(String email, String password) throws Exception {
+		JSONObject body = new JSONObject();
+		body.put("email", email != null ? email.trim() : "");
+		body.put("password", password != null ? password : "");
+		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+				"PUT",
+				baseUrl + "/v1/auth/credentials",
+				jsonHeaders(true, true),
+				body.toString()));
+		ensureSuccess(response);
+		applySessionJson(response.body);
+	}
+
 	public void uploadEcho(Echo echo) throws Exception {
 		String body = EchoWireCodec.encodeEchoUpload(echo, SOURCE_CLIENT);
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"POST",
 				baseUrl + "/v1/echoes",
-				jsonHeaders(true),
+				jsonHeaders(true, true),
 				body));
 		ensureSuccess(response);
 	}
@@ -122,7 +194,7 @@ public final class EchoClient {
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"POST",
 				baseUrl + "/v1/leaderboard/results",
-				jsonHeaders(true),
+				jsonHeaders(true, true),
 				body));
 		ensureSuccess(response);
 	}
@@ -132,7 +204,7 @@ public final class EchoClient {
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
 				"GET",
 				url,
-				jsonHeaders(false),
+				jsonHeaders(false, false),
 				null));
 		if (response.statusCode == 200) {
 			return EchoWireCodec.decodeLeaderboardEntries(response.body);
@@ -140,12 +212,27 @@ public final class EchoClient {
 		return List.of();
 	}
 
-	private Map<String, String> jsonHeaders(boolean includeApiKey) {
+	private void applySessionJson(String body) throws Exception {
+		JSONObject json = new JSONObject(body);
+		String token = json.optString("token", "");
+		String name = json.optString("username", "");
+		boolean credentials = json.optBoolean("has_credentials", false);
+		String linkedEmail = json.has("email") ? json.optString("email", "") : "";
+		EchoPlayerSession.applyAuthResponse(token, name, credentials, linkedEmail);
+	}
+
+	private Map<String, String> jsonHeaders(boolean includeApiKey, boolean includeBearer) {
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json");
 		headers.put("Accept", "application/json");
 		if (includeApiKey && !apiKey.isEmpty()) {
 			headers.put("X-API-Key", apiKey);
+		}
+		if (includeBearer) {
+			String token = EchoPlayerSession.jwt();
+			if (!token.isEmpty()) {
+				headers.put("Authorization", "Bearer " + token);
+			}
 		}
 		return headers;
 	}

@@ -64,12 +64,21 @@ public class Echo {
             throw new IllegalArgumentException("echo requires hero_class");
         }
         Bundle data = EchoHeroSnapshot.captureFromHero(hero);
+        String userName = SPDSettings.playerName();
+        try {
+            String sessionName = com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession
+                    .username();
+            if (sessionName != null && !sessionName.isBlank()) {
+                userName = sessionName;
+            }
+        } catch (Exception ignored) {
+        }
         return create(
                 depth,
                 gameVersion,
                 gameSeed,
                 hero.heroClass.name(),
-                SPDSettings.playerName(),
+                userName,
                 hero.lvl,
                 Math.max(0, hero.HP),
                 Math.max(1, hero.HT),

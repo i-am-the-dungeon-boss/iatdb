@@ -25,7 +25,6 @@ public final class EchoWireCodec {
 		json.put("depth", echo.depth);
 		json.put("game_version", gameVersionForUpload(echo));
 		json.put("hero_class", echo.heroClass);
-		json.put("user_name", Echo.resolveUserName(echo.userName, echo.heroClass));
 		json.put("lvl", echo.lvl);
 		json.put("hp", echo.hp);
 		json.put("ht", echo.ht);

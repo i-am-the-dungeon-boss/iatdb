@@ -23,6 +23,8 @@ class TitleSceneOnlineOnlyTest {
 		Assertions.assertThat(source).contains("btnSolo");
 		Assertions.assertThat(source).contains("btnRanked.enable(alpha != 0 && online)");
 		Assertions.assertThat(source).contains("btnSolo.enable(alpha != 0 && online)");
+		Assertions.assertThat(source).contains("EchoPlayerAuthGate.ensureReadyThen");
+		Assertions.assertThat(source).doesNotContain("mode == EchoPlayMode.RANKED");
 	}
 
 	private static String readSource(String relativePath) throws IOException {

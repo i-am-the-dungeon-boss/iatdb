@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,9 +15,30 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 @ExtendWith(GdxTestExtension.class)
 class EchoOnlineSyncTest {
 
+	@BeforeEach
 	@AfterEach
 	void cleanup() {
 		EchoOnlineSettings.resetForTests();
+		EchoPlayerSession.resetForTests();
+	}
+
+	@Test
+	@DisplayName("does not recreate player from cached local name when session is missing")
+	void doesNotRecreateWhenSessionMissing() throws Exception {
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(201, "{}");
+		EchoOnlineSync sync = new EchoOnlineSync(new EchoClient("https://echo.test", "secret", transport));
+
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		com.shatteredpixel.shatteredpixeldungeon.SPDSettings.playerName("CachedHero");
+
+		Assertions.assertThat(EchoPlayerSession.hasSession()).isFalse();
+		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
+		sync.awaitBackgroundTasksForTests();
+
+		Assertions.assertThat(transport.requests).isEmpty();
 	}
 
 	@Test
@@ -43,6 +65,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
 
 		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
 		sync.awaitBackgroundTasksForTests();
@@ -60,6 +83,7 @@ class EchoOnlineSyncTest {
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
 
 		sync.postLeaderboardResultAsync(new EchoFightResult(
 				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8));

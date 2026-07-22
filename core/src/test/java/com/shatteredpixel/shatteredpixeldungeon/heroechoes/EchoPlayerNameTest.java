@@ -58,12 +58,12 @@ class EchoPlayerNameTest {
 	}
 
 	@Test
-	@DisplayName("encodeEchoUpload always includes user_name")
-	void encodeEchoUploadAlwaysIncludesUserName() throws Exception {
+	@DisplayName("encodeEchoUpload omits user_name; server sets it from player JWT")
+	void encodeEchoUploadOmitsUserName() throws Exception {
 		Echo named = EchoTestSupport.warriorEchoWithData(5);
 		named.userName = "Alex";
 
 		Assertions.assertThat(EchoWireCodec.encodeEchoUpload(named, "test-client"))
-				.contains("\"user_name\":\"Alex\"");
+				.doesNotContain("user_name");
 	}
 }

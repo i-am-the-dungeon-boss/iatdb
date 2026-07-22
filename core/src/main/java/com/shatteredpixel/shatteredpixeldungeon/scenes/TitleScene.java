@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoBackendProbe;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerAuthGate;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Fireball;
@@ -432,14 +433,18 @@ public class TitleScene extends PixelScene {
 			return;
 		}
 
-		GamesInProgress.selectEchoPlayMode(mode);
-		GamesInProgress.selectedClass = null;
-		if (GamesInProgress.checkAll().size() == 0) {
-			GamesInProgress.curSlot = 1;
-			ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-		} else {
-			ShatteredPixelDungeon.switchNoFade(StartScene.class);
-		}
+		Runnable start = () -> {
+			GamesInProgress.selectEchoPlayMode(mode);
+			GamesInProgress.selectedClass = null;
+			if (GamesInProgress.checkAll().size() == 0) {
+				GamesInProgress.curSlot = 1;
+				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
+			} else {
+				ShatteredPixelDungeon.switchNoFade(StartScene.class);
+			}
+		};
+
+		EchoPlayerAuthGate.ensureReadyThen(start::run);
 	}
 
 	static float torchLeftX(float titleLeft, float outset) {

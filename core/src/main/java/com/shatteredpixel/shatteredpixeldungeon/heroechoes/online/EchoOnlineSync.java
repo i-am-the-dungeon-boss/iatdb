@@ -48,6 +48,10 @@ public final class EchoOnlineSync {
 		}
 		submit(() -> {
 			try {
+				if (!ensurePlayerSession()) {
+					return;
+				}
+				// Display name is set server-side from the player JWT.
 				client.uploadEcho(echo);
 			} catch (Exception e) {
 				Game.reportException(e);
@@ -61,11 +65,20 @@ public final class EchoOnlineSync {
 		}
 		submit(() -> {
 			try {
+				if (!ensurePlayerSession()) {
+					return;
+				}
 				client.postLeaderboardResult(result);
 			} catch (Exception e) {
 				Game.reportException(e);
 			}
 		});
+	}
+
+	private boolean ensurePlayerSession() {
+		// Never create accounts from background sync — that recreates deleted players
+		// from SPDSettings.playerName. Auth gate must establish the session first.
+		return EchoPlayerSession.hasSession();
 	}
 
 	private boolean shouldSync() {

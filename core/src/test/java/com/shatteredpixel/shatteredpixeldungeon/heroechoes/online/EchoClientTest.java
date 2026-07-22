@@ -19,6 +19,7 @@ public class EchoClientTest {
 	@AfterEach
 	void cleanup() {
 		EchoOnlineSettings.resetForTests();
+		EchoPlayerSession.resetForTests();
 	}
 
 	@Test
@@ -132,6 +133,7 @@ public class EchoClientTest {
 	@Test
 	@DisplayName("fetchEchoPolicy posts policy_input and returns decoded policy")
 	void fetchEchoPolicyReturnsPolicy() {
+		EchoPlayerSession.applyAuthResponse("policy-jwt", "Hero", false, null);
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_policy\":{"
@@ -158,7 +160,8 @@ public class EchoClientTest {
 		Assertions.assertThat(request.body).contains("\"hero_class\":\"WARRIOR\"");
 		Assertions.assertThat(request.body).contains("\"items\":");
 		Assertions.assertThat(request.body).contains("\"talents\":");
-		Assertions.assertThat(request.headers.get("X-API-Key")).isNull();
+		Assertions.assertThat(request.headers.get("X-API-Key")).isEqualTo("secret");
+		Assertions.assertThat(request.headers.get("Authorization")).isEqualTo("Bearer policy-jwt");
 	}
 
 	@Test
@@ -201,6 +204,42 @@ public class EchoClientTest {
 		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes");
 		Assertions.assertThat(request.headers.get("X-API-Key")).isEqualTo("secret-key");
 		Assertions.assertThat(request.body).contains(echo.echoId);
+	}
+
+	@Test
+	@DisplayName("uploadEcho includes Bearer token when session present")
+	void uploadEchoIncludesBearerWhenSessionPresent() throws Exception {
+		EchoPlayerSession.applyAuthResponse("player-jwt", "Hero", false, null);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{}");
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		client.uploadEcho(echo);
+
+		Assertions.assertThat(transport.requests.get(0).headers.get("Authorization"))
+				.isEqualTo("Bearer player-jwt");
+	}
+
+	@Test
+	@DisplayName("authenticateDevice persists session from response")
+	void authenticateDevicePersistsSession() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{"
+				+ "\"token\":\"new-jwt\","
+				+ "\"exp\":123,"
+				+ "\"username\":\"Named\","
+				+ "\"has_credentials\":false"
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		boolean ok = client.authenticateDevice("device-0123456789ab", "Named");
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(EchoPlayerSession.jwt()).isEqualTo("new-jwt");
+		Assertions.assertThat(EchoPlayerSession.username()).isEqualTo("Named");
+		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/auth/device");
+		Assertions.assertThat(transport.requests.get(0).headers.get("Authorization")).isNull();
 	}
 
 	@Test

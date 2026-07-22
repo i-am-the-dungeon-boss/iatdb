@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoClient;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoClientTest;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -51,6 +52,7 @@ class WndGameEchoSaveTest {
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
 		EchoOnlineSync sync = new EchoOnlineSync(
 				new EchoClient("https://echo.test", "secret", transport));
 		EchoOnlineSync.setDefaultForTests(sync);

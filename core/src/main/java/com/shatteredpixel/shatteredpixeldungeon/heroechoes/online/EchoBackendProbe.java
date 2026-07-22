@@ -46,8 +46,12 @@ public final class EchoBackendProbe {
 
 		lastReachable = null;
 		new Thread(() -> {
-			boolean healthy = checkHealthWithRetry(EchoClient.createDefault());
+			EchoClient client = EchoClient.createDefault();
+			boolean healthy = checkHealthWithRetry(client);
 			lastReachable = healthy;
+			if (healthy) {
+				EchoPlayerAuth.validateOrRefreshOnLaunch(client);
+			}
 			runOnRenderThread(onComplete);
 		}, "echo-backend-probe").start();
 	}
