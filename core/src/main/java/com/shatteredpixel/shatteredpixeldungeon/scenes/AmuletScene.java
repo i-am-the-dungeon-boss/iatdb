@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
@@ -48,14 +49,14 @@ import com.watabou.utils.Random;
 import com.watabou.utils.RectF;
 
 public class AmuletScene extends PixelScene {
-	
-	private static final int WIDTH			= 120;
-	private static final int BTN_HEIGHT		= 20;
-	private static final float SMALL_GAP	= 2;
-	private static final float LARGE_GAP	= 8;
-	
+
+	private static final int WIDTH = 120;
+	private static final int BTN_HEIGHT = 20;
+	private static final float SMALL_GAP = 2;
+	private static final float LARGE_GAP = 8;
+
 	public static boolean noText = false;
-	
+
 	private Image amulet;
 
 	{
@@ -64,83 +65,92 @@ public class AmuletScene extends PixelScene {
 
 	StyledButton btnExit = null;
 	StyledButton btnStay = null;
-	
+
 	@Override
 	public void create() {
 		super.create();
-		
+
 		RenderedTextBlock text = null;
 		if (!noText) {
-			text = renderTextBlock( Messages.get(this, "text"), 8 );
-			text.maxWidth( PixelScene.landscape() ? 2*WIDTH-4 : WIDTH);
+			text = renderTextBlock(Messages.get(this, "text"), 8);
+			text.maxWidth(PixelScene.landscape() ? 2 * WIDTH - 4 : WIDTH);
 		}
-		
-		amulet = new Image( Assets.Sprites.AMULET );
-		add( amulet );
 
-		btnExit = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "exit") ) {
+		amulet = new Image(Assets.Sprites.AMULET);
+		add(amulet);
+
+		boolean stayAllowed = AscensionChallenge.enabled();
+
+		btnExit = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "exit")) {
 			@Override
 			protected void onClick() {
-				Dungeon.win( Amulet.class );
-				Dungeon.deleteGame( GamesInProgress.curSlot, true );
+				Dungeon.win(Amulet.class);
+				Dungeon.deleteGame(GamesInProgress.curSlot, true);
 				Badges.saveGlobal();
 				btnExit.enable(false);
-				btnStay.enable(false);
+				if (btnStay != null) {
+					btnStay.enable(false);
+				}
 
-				AmuletScene.this.add(new Delayer(0.1f){
+				AmuletScene.this.add(new Delayer(0.1f) {
 					@Override
 					protected void onComplete() {
-						if (BadgeBanner.isShowingBadges()){
-							AmuletScene.this.add(new Delayer(3f){
+						if (BadgeBanner.isShowingBadges()) {
+							AmuletScene.this.add(new Delayer(3f) {
 								@Override
 								protected void onComplete() {
-									Game.switchScene( RankingsScene.class );
+									Game.switchScene(RankingsScene.class);
 								}
 							});
 						} else {
-							Game.switchScene( RankingsScene.class );
+							Game.switchScene(RankingsScene.class);
 						}
 					}
 				});
 				Music.INSTANCE.playTracks(
-						new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
-						new float[]{1, 1},
+						new String[] { Assets.Music.THEME_2, Assets.Music.THEME_1 },
+						new float[] { 1, 1 },
 						false);
 			}
 		};
 		btnExit.icon(new ItemSprite(ItemSpriteSheet.AMULET));
-		btnExit.setSize( WIDTH, BTN_HEIGHT );
-		add( btnExit );
-		
-		btnStay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "stay") ) {
-			@Override
-			protected void onClick() {
-				onBackPressed();
-				btnExit.enable(false);
-				btnStay.enable(false);
-			}
-		};
-		btnStay.icon(Icons.CLOSE.get());
-		btnStay.setSize( WIDTH, BTN_HEIGHT );
-		add( btnStay );
+		btnExit.setSize(WIDTH, BTN_HEIGHT);
+		add(btnExit);
+
+		if (stayAllowed) {
+			btnStay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "stay")) {
+				@Override
+				protected void onClick() {
+					onBackPressed();
+					btnExit.enable(false);
+					btnStay.enable(false);
+				}
+			};
+			btnStay.icon(Icons.CLOSE.get());
+			btnStay.setSize(WIDTH, BTN_HEIGHT);
+			add(btnStay);
+		}
 
 		RectF insets = getCommonInsets();
 		int w = (int) (Camera.main.width - insets.left + insets.right);
 		int h = (int) (Camera.main.height - insets.top + insets.bottom);
 
+		float stayHeight = stayAllowed ? (SMALL_GAP + btnStay.height()) : 0;
 		float height;
 		if (noText) {
-			height = amulet.height + LARGE_GAP + btnExit.height() + SMALL_GAP + btnStay.height();
-			
+			height = amulet.height + LARGE_GAP + btnExit.height() + stayHeight;
+
 			amulet.x = insets.left + (w - amulet.width) / 2;
 			amulet.y = insets.top + (h - height) / 2;
 			align(amulet);
 
-			btnExit.setPos( insets.left + (w - btnExit.width()) / 2, amulet.y + amulet.height + LARGE_GAP );
-			btnStay.setPos( btnExit.left(), btnExit.bottom() + SMALL_GAP );
-			
+			btnExit.setPos(insets.left + (w - btnExit.width()) / 2, amulet.y + amulet.height + LARGE_GAP);
+			if (stayAllowed) {
+				btnStay.setPos(btnExit.left(), btnExit.bottom() + SMALL_GAP);
+			}
+
 		} else {
-			height = amulet.height + LARGE_GAP + text.height() + LARGE_GAP + btnExit.height() + SMALL_GAP + btnStay.height();
+			height = amulet.height + LARGE_GAP + text.height() + LARGE_GAP + btnExit.height() + stayHeight;
 
 			amulet.x = insets.left + (w - amulet.width) / 2;
 			amulet.y = insets.top + (h - height) / 2;
@@ -150,35 +160,38 @@ public class AmuletScene extends PixelScene {
 			align(text);
 			add(text);
 
-			btnExit.setPos( insets.left + (w - btnExit.width()) / 2, text.top() + text.height() + LARGE_GAP );
-			btnStay.setPos( btnExit.left(), btnExit.bottom() + SMALL_GAP );
+			btnExit.setPos(insets.left + (w - btnExit.width()) / 2, text.top() + text.height() + LARGE_GAP);
+			if (stayAllowed) {
+				btnStay.setPos(btnExit.left(), btnExit.bottom() + SMALL_GAP);
+			}
 		}
 
-		new Flare( 8, 48 ).color( 0xFFDDBB, true ).show( amulet, 0 ).angularSpeed = +30;
-		
+		new Flare(8, 48).color(0xFFDDBB, true).show(amulet, 0).angularSpeed = +30;
+
 		fadeIn();
 	}
-	
+
 	@Override
 	protected void onBackPressed() {
-		if (btnExit.isActive()) {
+		// Stay / back continues into ascent; blocked when ascension is disabled.
+		if (AscensionChallenge.enabled() && btnExit.isActive()) {
 			InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
 			Game.switchScene(InterlevelScene.class);
 		}
 	}
-	
+
 	private float timer = 0;
-	
+
 	@Override
 	public void update() {
 		super.update();
-		
+
 		if ((timer -= Game.elapsed) < 0) {
-			timer = Random.Float( 0.5f, 5f );
-			
-			Speck star = (Speck)recycle( Speck.class );
-			star.reset( 0, amulet.x + 10.5f, amulet.y + 5.5f, Speck.DISCOVER );
-			add( star );
+			timer = Random.Float(0.5f, 5f);
+
+			Speck star = (Speck) recycle(Speck.class);
+			star.reset(0, amulet.x + 10.5f, amulet.y + 5.5f, Speck.DISCOVER);
+			add(star);
 		}
 	}
 }

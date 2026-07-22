@@ -338,9 +338,7 @@ public class HallsBossLevel extends Level {
 
 	@Override
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
-		if (transition.type == LevelTransition.Type.REGULAR_ENTRANCE
-				&& hero.belongings.getItem(Amulet.class) != null
-				&& hero.buff(AscensionChallenge.class) == null) {
+		if (AscensionChallenge.shouldOfferAscent(hero, transition.type)) {
 
 			Game.runOnRenderThread(new Callback() {
 				@Override

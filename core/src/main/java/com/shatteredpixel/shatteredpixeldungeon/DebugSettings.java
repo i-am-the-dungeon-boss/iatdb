@@ -6,8 +6,8 @@ import com.watabou.utils.DeviceCompat;
 /** Debug-only toggles for quick testing in INDEV / desktop:debug builds. */
 public final class DebugSettings {
 
-	/** Floor before the first boss so descending triggers a real echo prefetch. */
-	public static final int START_DEPTH = 4;
+	/** Amulet floor for endgame testing (ascension is blocked). */
+	public static final int START_DEPTH = 26;
 	public static final int START_LEVEL = 50;
 	public static final int START_STR = 50;
 	/**
