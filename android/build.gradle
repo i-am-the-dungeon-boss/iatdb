@@ -114,7 +114,8 @@ android {
         manifestPlaceholders = [
                 appName: appName,
                 usesCleartextTraffic: 'false',
-                sentryDsn: sentryDsn
+                sentryDsn: sentryDsn,
+                sentryAutoInit: 'true'
         ]
         applicationId appPackageName
 
@@ -145,8 +146,12 @@ android {
             applicationIdSuffix ".indev"
             versionNameSuffix '-INDEV'
             manifestPlaceholders.usesCleartextTraffic = 'true'
+            // Dev builds must not report crashes to Sentry.
+            manifestPlaceholders.sentryDsn = ''
+            manifestPlaceholders.sentryAutoInit = 'false'
             buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoDebugBackendUrl)
             buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoDebugApiKey)
+            buildConfigField 'String', 'SENTRY_DSN', quoteBuildConfigString('')
             dependencies {
                 debugImplementation project(':services:updates:echoUpdates')
                 debugImplementation project(':services:news:debugNews')
@@ -186,11 +191,16 @@ android {
 
 configurations { natives }
 
+def sentryAuthToken = System.getenv('SENTRY_AUTH_TOKEN')
+def sentryCanUpload = sentryAuthToken != null && !sentryAuthToken.trim().isEmpty()
+
 sentry {
-    includeSourceContext = true
+    // Uploads need SENTRY_AUTH_TOKEN; skip when absent so release builds still succeed.
+    includeSourceContext = sentryCanUpload
+    autoUploadProguardMapping = sentryCanUpload
     org = sentryOrg
     projectName = sentryProject
-    authToken = System.getenv('SENTRY_AUTH_TOKEN')
+    authToken = sentryAuthToken
     autoInstallation {
         enabled = true
     }

@@ -41,7 +41,7 @@
 			android:value="true" />
 		<meta-data
 			android:name="io.sentry.auto-init"
-			android:value="true" />
+			android:value="${sentryAutoInit}" />
 		<activity
 			android:name=".AndroidLauncher"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"

@@ -18,11 +18,13 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.watabou.noosa.Game;
 import io.sentry.Sentry;
 
 /**
  * Thin hook from {@link com.watabou.noosa.Game#reportException} to Sentry.
  * Capture without {@link Sentry#init} is a no-op (e.g. iOS until wired).
+ * INDEV / debug builds never report.
  */
 public final class SentryCrashReporting {
 
@@ -47,9 +49,17 @@ public final class SentryCrashReporting {
 	}
 
 	public static void report(Throwable throwable) {
-		if (throwable == null) {
+		if (throwable == null || isDevBuild()) {
 			return;
 		}
 		reporter.report(throwable);
+	}
+
+	/**
+	 * Matches {@link com.watabou.utils.DeviceCompat#isDebug()} without NPE on null
+	 * version.
+	 */
+	static boolean isDevBuild() {
+		return Game.version != null && Game.version.contains("INDEV");
 	}
 }

@@ -99,13 +99,15 @@ public class AndroidLauncher extends AndroidApplication {
 				Game.versionCode = 0;
 			}
 
-			Sentry.configureScope(scope -> {
-				scope.setTag("platform", "android");
-				if (Game.version != null) {
-					scope.setTag("app.version", Game.version);
-					scope.setTag("app.version_code", String.valueOf(Game.versionCode));
-				}
-			});
+			if (!BuildConfig.DEBUG) {
+				Sentry.configureScope(scope -> {
+					scope.setTag("platform", "android");
+					if (Game.version != null) {
+						scope.setTag("app.version", Game.version);
+						scope.setTag("app.version_code", String.valueOf(Game.versionCode));
+					}
+				});
+			}
 
 			Gdx.app = this;
 			EchoOnlineSettings.loadDefaultDotEnv();

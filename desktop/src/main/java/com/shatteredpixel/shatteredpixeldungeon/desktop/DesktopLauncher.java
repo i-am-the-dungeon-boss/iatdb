@@ -66,10 +66,17 @@ public class DesktopLauncher {
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
 				"");
 
-		Sentry.init(options -> {
-			options.setEnableExternalConfiguration(true);
-			options.setTag("platform", "desktop");
-		});
+		String earlyVersion = DesktopLauncher.class.getPackage().getSpecificationVersion();
+		if (earlyVersion == null) {
+			earlyVersion = System.getProperty("Specification-Version");
+		}
+		boolean indev = earlyVersion != null && earlyVersion.contains("INDEV");
+		if (!indev) {
+			Sentry.init(options -> {
+				options.setEnableExternalConfiguration(true);
+				options.setTag("platform", "desktop");
+			});
+		}
 
 		// detection for FreeBSD (which is equivalent to linux for us)
 		// TODO might want to merge request this to libGDX
@@ -152,7 +159,7 @@ public class DesktopLauncher {
 			Game.versionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
 		}
 
-		if (Game.version != null) {
+		if (Game.version != null && !Game.version.contains("INDEV")) {
 			Sentry.configureScope(scope -> {
 				scope.setTag("app.version", Game.version);
 				scope.setTag("app.version_code", String.valueOf(Game.versionCode));
