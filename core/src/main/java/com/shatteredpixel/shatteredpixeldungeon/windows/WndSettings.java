@@ -29,9 +29,11 @@ import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
@@ -383,6 +385,7 @@ public class WndSettings extends WndTabbed {
 		CheckBox chkFont;
 		CheckBox chkVibrate;
 		CheckBox chkDebugStart;
+		OptionSlider optDebugStartDepth;
 		CheckBox chkWeakEchoSnapshots;
 
 		@Override
@@ -628,10 +631,31 @@ public class WndSettings extends WndTabbed {
 					protected void onClick() {
 						super.onClick();
 						DebugSettings.setDebugStart(checked());
+						optDebugStartDepth.enable(DebugSettings.depthSliderEnabled());
 					}
 				};
 				chkDebugStart.checked(DebugSettings.debugStart());
 				add(chkDebugStart);
+
+				optDebugStartDepth = new OptionSlider(
+						DebugSettings.depthSliderTitle(DebugSettings.depthSliderValue()),
+						String.valueOf(DebugSettings.MIN_START_DEPTH),
+						String.valueOf(DebugSettings.MAX_START_DEPTH),
+						DebugSettings.MIN_START_DEPTH,
+						DebugSettings.MAX_START_DEPTH) {
+					@Override
+					protected void onChange() {
+						int depth = getSelectedValue();
+						setTitleText(DebugSettings.depthSliderTitle(depth));
+						if (DebugSettings.applyDepthSlider(depth)) {
+							Level.beforeTransition();
+							Game.switchScene(InterlevelScene.class);
+						}
+					}
+				};
+				optDebugStartDepth.setSelectedValue(DebugSettings.depthSliderValue());
+				optDebugStartDepth.enable(DebugSettings.depthSliderEnabled());
+				add(optDebugStartDepth);
 
 				chkWeakEchoSnapshots = new CheckBox(Messages.get(this, "debug_weak_echo_snapshots")) {
 					@Override
@@ -694,6 +718,9 @@ public class WndSettings extends WndTabbed {
 			if (DebugSettings.isDebugBuild()) {
 				chkDebugStart.setRect(0, height + GAP, width, BTN_HEIGHT);
 				height = chkDebugStart.bottom();
+
+				optDebugStartDepth.setRect(0, height + GAP, width, SLIDER_HEIGHT);
+				height = optDebugStartDepth.bottom();
 
 				chkWeakEchoSnapshots.setRect(0, height + GAP, width, BTN_HEIGHT);
 				height = chkWeakEchoSnapshots.bottom();
