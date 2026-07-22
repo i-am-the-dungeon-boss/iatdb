@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
@@ -40,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.ItemStatusHandler;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.AquaBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfHoneyedHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
@@ -84,121 +86,129 @@ import java.util.LinkedHashMap;
 public class Potion extends Item {
 
 	public static final String AC_DRINK = "DRINK";
-	
-	//used internally for potions that can be drunk or thrown
+
+	// used internally for potions that can be drunk or thrown
 	public static final String AC_CHOOSE = "CHOOSE";
 
 	private static final float TIME_TO_DRINK = 1f;
 
 	private static final LinkedHashMap<String, Integer> colors = new LinkedHashMap<String, Integer>() {
 		{
-			put("crimson",ItemSpriteSheet.POTION_CRIMSON);
-			put("amber",ItemSpriteSheet.POTION_AMBER);
-			put("golden",ItemSpriteSheet.POTION_GOLDEN);
-			put("jade",ItemSpriteSheet.POTION_JADE);
-			put("turquoise",ItemSpriteSheet.POTION_TURQUOISE);
-			put("azure",ItemSpriteSheet.POTION_AZURE);
-			put("indigo",ItemSpriteSheet.POTION_INDIGO);
-			put("magenta",ItemSpriteSheet.POTION_MAGENTA);
-			put("bistre",ItemSpriteSheet.POTION_BISTRE);
-			put("charcoal",ItemSpriteSheet.POTION_CHARCOAL);
-			put("silver",ItemSpriteSheet.POTION_SILVER);
-			put("ivory",ItemSpriteSheet.POTION_IVORY);
+			put("crimson", ItemSpriteSheet.POTION_CRIMSON);
+			put("amber", ItemSpriteSheet.POTION_AMBER);
+			put("golden", ItemSpriteSheet.POTION_GOLDEN);
+			put("jade", ItemSpriteSheet.POTION_JADE);
+			put("turquoise", ItemSpriteSheet.POTION_TURQUOISE);
+			put("azure", ItemSpriteSheet.POTION_AZURE);
+			put("indigo", ItemSpriteSheet.POTION_INDIGO);
+			put("magenta", ItemSpriteSheet.POTION_MAGENTA);
+			put("bistre", ItemSpriteSheet.POTION_BISTRE);
+			put("charcoal", ItemSpriteSheet.POTION_CHARCOAL);
+			put("silver", ItemSpriteSheet.POTION_SILVER);
+			put("ivory", ItemSpriteSheet.POTION_IVORY);
 		}
 	};
 
-	protected static final HashSet<Class<?extends Potion>> mustThrowPots = new HashSet<>();
-	static{
+	protected static final HashSet<Class<? extends Potion>> mustThrowPots = new HashSet<>();
+	static {
 		mustThrowPots.add(PotionOfToxicGas.class);
 		mustThrowPots.add(PotionOfLiquidFlame.class);
 		mustThrowPots.add(PotionOfParalyticGas.class);
 		mustThrowPots.add(PotionOfFrost.class);
-		
-		//exotic
+
+		// exotic
 		mustThrowPots.add(PotionOfCorrosiveGas.class);
 		mustThrowPots.add(PotionOfSnapFreeze.class);
 		mustThrowPots.add(PotionOfShroudingFog.class);
 		mustThrowPots.add(PotionOfStormClouds.class);
-		
-		//also all brews except unstable, hardcoded
+
+		// also all brews except unstable, hardcoded
 	}
-	
-	protected static final HashSet<Class<?extends Potion>> canThrowPots = new HashSet<>();
-	static{
+
+	protected static final HashSet<Class<? extends Potion>> canThrowPots = new HashSet<>();
+	static {
 		canThrowPots.add(PotionOfPurity.class);
 		canThrowPots.add(PotionOfLevitation.class);
-		
-		//exotic
+
+		// exotic
 		canThrowPots.add(PotionOfCleansing.class);
-		
-		//elixirs
+
+		// elixirs
 		canThrowPots.add(ElixirOfHoneyedHealing.class);
 	}
-	
+
 	protected static ItemStatusHandler<Potion> handler;
-	
+
 	protected String color;
 
-	//affects how strongly on-potion talents trigger from this potion
+	// affects how strongly on-potion talents trigger from this potion
 	protected float talentFactor = 1;
-	//the chance (0-1) of whether on-potion talents trigger from this potion
+	// the chance (0-1) of whether on-potion talents trigger from this potion
 	protected float talentChance = 1;
-	
+
 	{
 		stackable = true;
 		defaultAction = AC_DRINK;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void initColors() {
-		handler = new ItemStatusHandler<>( (Class<? extends Potion>[])Generator.Category.POTION.classes, colors );
+		handler = new ItemStatusHandler<>((Class<? extends Potion>[]) Generator.Category.POTION.classes, colors);
 	}
 
 	public static void clearColors() {
 		handler = null;
 	}
-	
-	public static void save( Bundle bundle ) {
-		handler.save( bundle );
+
+	public static void save(Bundle bundle) {
+		handler.save(bundle);
 	}
 
-	public static void saveSelectively( Bundle bundle, ArrayList<Item> items ) {
-		ArrayList<Class<?extends Item>> classes = new ArrayList<>();
-		for (Item i : items){
-			if (i instanceof ExoticPotion){
-				if (!classes.contains(ExoticPotion.exoToReg.get(i.getClass()))){
+	public static void saveSelectively(Bundle bundle, ArrayList<Item> items) {
+		ArrayList<Class<? extends Item>> classes = new ArrayList<>();
+		for (Item i : items) {
+			if (i instanceof ExoticPotion) {
+				if (!classes.contains(ExoticPotion.exoToReg.get(i.getClass()))) {
 					classes.add(ExoticPotion.exoToReg.get(i.getClass()));
 				}
-			} else if (i instanceof Potion){
-				if (!classes.contains(i.getClass())){
+			} else if (i instanceof Potion) {
+				if (!classes.contains(i.getClass())) {
 					classes.add(i.getClass());
 				}
 			}
 		}
-		handler.saveClassesSelectively( bundle, classes );
+		handler.saveClassesSelectively(bundle, classes);
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public static void restore( Bundle bundle ) {
-		handler = new ItemStatusHandler<>( (Class<? extends Potion>[])Generator.Category.POTION.classes, colors, bundle );
+	public static void restore(Bundle bundle) {
+		handler = new ItemStatusHandler<>((Class<? extends Potion>[]) Generator.Category.POTION.classes, colors,
+				bundle);
 	}
-	
+
 	public Potion() {
 		super();
 		reset();
 	}
-	
-	//anonymous potions are always IDed, do not affect ID status,
-	//and their sprite is replaced by a placeholder if they are not known,
-	//useful for items that appear in UIs, or which are only spawned for their effects
+
+	// anonymous potions are always IDed, do not affect ID status,
+	// and their sprite is replaced by a placeholder if they are not known,
+	// useful for items that appear in UIs, or which are only spawned for their
+	// effects
+	// anonymous potions are always IDed, do not affect ID status,
+	// and their sprite is replaced by a placeholder if they are not known,
+	// useful for items that appear in UIs, or which are only spawned for their
+	// effects
 	protected boolean anonymous = false;
-	public void anonymize(){
-		if (!isKnown()) image = ItemSpriteSheet.POTION_HOLDER;
+
+	public void anonymize() {
+		if (!isKnown())
+			image = ItemSpriteSheet.POTION_HOLDER;
 		anonymous = true;
 	}
 
 	@Override
-	public void reset(){
+	public void reset() {
 		super.reset();
 		if (handler != null && handler.contains(this)) {
 			image = handler.image(this);
@@ -213,113 +223,126 @@ public class Potion extends Item {
 	public String defaultAction() {
 		if (isKnown() && mustThrowPots.contains(this.getClass())) {
 			return AC_THROW;
-		} else if (isKnown() &&canThrowPots.contains(this.getClass())){
+		} else if (isKnown() && canThrowPots.contains(this.getClass())) {
 			return AC_CHOOSE;
 		} else {
 			return AC_DRINK;
 		}
 	}
-	
+
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		actions.add( AC_DRINK );
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		actions.add(AC_DRINK);
 		return actions;
 	}
-	
-	@Override
-	public void execute( final Hero hero, String action ) {
 
-		super.execute( hero, action );
-		
-		if (action.equals( AC_CHOOSE )){
-			
-			GameScene.show(new WndUseItem(null, this) );
-			
-		} else if (action.equals( AC_DRINK )) {
-			
+	@Override
+	public void execute(final Hero hero, String action) {
+
+		super.execute(hero, action);
+
+		if (action.equals(AC_CHOOSE)) {
+
+			GameScene.show(new WndUseItem(null, this));
+
+		} else if (action.equals(AC_DRINK)) {
+
 			if (isKnown() && mustThrowPots.contains(getClass())) {
-				
-					GameScene.show(
+
+				GameScene.show(
 						new WndOptions(new ItemSprite(this),
 								Messages.get(Potion.class, "harmful"),
 								Messages.get(Potion.class, "sure_drink"),
-								Messages.get(Potion.class, "yes"), Messages.get(Potion.class, "no") ) {
+								Messages.get(Potion.class, "yes"), Messages.get(Potion.class, "no")) {
 							@Override
 							protected void onSelect(int index) {
 								if (index == 0) {
-									drink( hero );
+									drink(hero);
 								}
 							}
-						}
-					);
-					
-				} else {
-					drink( hero );
-				}
-			
+						});
+
+			} else {
+				drink(hero);
+			}
+
 		}
 	}
-	
+
 	@Override
-	public void doThrow( final Hero hero ) {
+	public void doThrow(final Hero hero) {
 
 		if (isKnown()
 				&& !mustThrowPots.contains(this.getClass())
 				&& !canThrowPots.contains(this.getClass())) {
-		
+
 			GameScene.show(
-				new WndOptions(new ItemSprite(this),
-						Messages.get(Potion.class, "beneficial"),
-						Messages.get(Potion.class, "sure_throw"),
-						Messages.get(Potion.class, "yes"), Messages.get(Potion.class, "no") ) {
-					@Override
-					protected void onSelect(int index) {
-						if (index == 0) {
-							Potion.super.doThrow( hero );
+					new WndOptions(new ItemSprite(this),
+							Messages.get(Potion.class, "beneficial"),
+							Messages.get(Potion.class, "sure_throw"),
+							Messages.get(Potion.class, "yes"), Messages.get(Potion.class, "no")) {
+						@Override
+						protected void onSelect(int index) {
+							if (index == 0) {
+								Potion.super.doThrow(hero);
+							}
 						}
-					}
-				}
-			);
-			
+					});
+
 		} else {
-			super.doThrow( hero );
+			super.doThrow(hero);
 		}
 	}
-	
-	protected void drink( Hero hero ) {
-		
-		detach( hero.belongings.backpack );
-		
-		hero.spend( TIME_TO_DRINK );
-		hero.busy();
-		apply( hero );
-		
-		Sample.INSTANCE.play( Assets.Sounds.DRINK );
-		
-		hero.sprite.operate( hero.pos );
 
-		if (!anonymous) {
-			Catalog.countUse(getClass());
-			if (Random.Float() < talentChance) {
-				Talent.onPotionUsed(curUser, curUser.pos, talentFactor);
+	protected void drink(Hero hero) {
+		drinkAs(UseContext.hero(hero));
+	}
+
+	/**
+	 * Shared self-drink for Hero and Echo. Effects apply to {@code ctx.body}
+	 * via {@link #apply(Char)}; inventory comes from {@code ctx.kit}.
+	 */
+	public boolean drinkAs(UseContext ctx) {
+		detach(ctx.kit.belongings.backpack);
+		setCurrent(ctx.kit);
+
+		if (ctx.heroFX) {
+			ctx.kit.spend(TIME_TO_DRINK);
+			ctx.turns.busy();
+		}
+
+		apply(ctx.body);
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			Sample.INSTANCE.play(Assets.Sounds.DRINK);
+			ctx.body.sprite.operate(ctx.body.pos);
+		}
+		if (ctx.heroFX) {
+			if (!anonymous) {
+				Catalog.countUse(getClass());
+				if (Random.Float() < talentChance) {
+					Talent.onPotionUsed(ctx.kit, ctx.kit.pos, talentFactor);
+				}
 			}
 		}
+		return true;
 	}
-	
+
 	@Override
-	protected void onThrow( int cell ) {
+	protected void onThrow(int cell) {
 		if (Dungeon.level.map[cell] == Terrain.WELL || Dungeon.level.pit[cell]) {
-			
-			super.onThrow( cell );
-			
-		} else  {
 
-			//aqua brew and storm clouds specifically don't press cells, so they can disarm traps
-			if (!(this instanceof AquaBrew) && !(this instanceof PotionOfStormClouds)){
-				Dungeon.level.pressCell( cell );
+			super.onThrow(cell);
+
+		} else {
+
+			// aqua brew and storm clouds specifically don't press cells, so they can disarm
+			// traps
+			if (!(this instanceof AquaBrew) && !(this instanceof PotionOfStormClouds)) {
+				Dungeon.level.pressCell(cell);
 			}
-			shatter( cell );
+			shatter(cell);
 
 			if (!anonymous) {
 				Catalog.countUse(getClass());
@@ -327,47 +350,47 @@ public class Potion extends Item {
 					Talent.onPotionUsed(curUser, cell, talentFactor);
 				}
 			}
-			
+
 		}
 	}
-	
-	public void apply( Hero hero ) {
-		shatter( hero.pos );
+
+	public void apply(Char ch) {
+		shatter(ch.pos);
 	}
-	
-	public void shatter( int cell ) {
-		splash( cell );
+
+	public void shatter(int cell) {
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
-			GLog.i( Messages.get(Potion.class, "shatter") );
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+			GLog.i(Messages.get(Potion.class, "shatter"));
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		}
 	}
 
 	@Override
-	public void cast( final Hero user, int dst ) {
-			super.cast(user, dst);
+	public void cast(final Hero user, int dst) {
+		super.cast(user, dst);
 	}
-	
+
 	public boolean isKnown() {
-		return anonymous || (handler != null && handler.isKnown( this ));
+		return anonymous || (handler != null && handler.isKnown(this));
 	}
-	
+
 	public void setKnown() {
 		if (!anonymous) {
 			if (!isKnown()) {
 				handler.know(this);
 				updateQuickslot();
 			}
-			
+
 			if (Dungeon.hero.isAlive()) {
 				Catalog.setSeen(getClass());
 				Statistics.itemTypesDiscovered.add(getClass());
 			}
 		}
 	}
-	
+
 	@Override
-	public Item identify( boolean byHero ) {
+	public Item identify(boolean byHero) {
 		super.identify(byHero);
 
 		if (!isKnown()) {
@@ -375,7 +398,7 @@ public class Potion extends Item {
 		}
 		return this;
 	}
-	
+
 	@Override
 	public String name() {
 		return isKnown() ? super.name() : Messages.get(this, color);
@@ -383,43 +406,43 @@ public class Potion extends Item {
 
 	@Override
 	public String info() {
-		//skip custom notes if anonymized and un-Ided
-		return (anonymous && (handler == null || !handler.isKnown( this ))) ? desc() : super.info();
+		// skip custom notes if anonymized and un-Ided
+		return (anonymous && (handler == null || !handler.isKnown(this))) ? desc() : super.info();
 	}
 
 	@Override
 	public String desc() {
 		return isKnown() ? super.desc() : Messages.get(this, "unknown_desc");
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return isKnown();
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	public static HashSet<Class<? extends Potion>> getKnown() {
 		return handler.known();
 	}
-	
+
 	public static HashSet<Class<? extends Potion>> getUnknown() {
 		return handler.unknown();
 	}
-	
+
 	public static boolean allKnown() {
 		return handler != null && handler.known().size() == Generator.Category.POTION.classes.length;
 	}
-	
-	protected int splashColor(){
-		return anonymous ? 0x00AAFF : ItemSprite.pick( image, 5, 9 );
+
+	protected int splashColor() {
+		return anonymous ? 0x00AAFF : ItemSprite.pick(image, 5, 9);
 	}
-	
-	protected void splash( int cell ) {
-		Fire fire = (Fire)Dungeon.level.blobs.get( Fire.class );
+
+	protected void splash(int cell) {
+		Fire fire = (Fire) Dungeon.level.blobs.get(Fire.class);
 		if (fire != null) {
 			fire.clear(cell);
 		}
@@ -438,7 +461,7 @@ public class Potion extends Item {
 			}
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return 30 * quantity;
@@ -450,90 +473,91 @@ public class Potion extends Item {
 	}
 
 	public static class PlaceHolder extends Potion {
-		
+
 		{
 			image = ItemSpriteSheet.POTION_HOLDER;
 		}
-		
+
 		@Override
 		public boolean isSimilar(Item item) {
 			return ExoticPotion.regToExo.containsKey(item.getClass())
 					|| ExoticPotion.regToExo.containsValue(item.getClass());
 		}
-		
+
 		@Override
 		public String info() {
 			return "";
 		}
 	}
-	
+
 	public static class SeedToPotion extends Recipe {
-		
-		public static HashMap<Class<?extends Plant.Seed>, Class<?extends Potion>> types = new HashMap<>();
+
+		public static HashMap<Class<? extends Plant.Seed>, Class<? extends Potion>> types = new HashMap<>();
 		static {
-			types.put(Blindweed.Seed.class,     PotionOfInvisibility.class);
-			types.put(Mageroyal.Seed.class,     PotionOfPurity.class);
-			types.put(Earthroot.Seed.class,     PotionOfParalyticGas.class);
-			types.put(Fadeleaf.Seed.class,      PotionOfMindVision.class);
-			types.put(Firebloom.Seed.class,     PotionOfLiquidFlame.class);
-			types.put(Icecap.Seed.class,        PotionOfFrost.class);
-			types.put(Rotberry.Seed.class,      PotionOfStrength.class);
-			types.put(Sorrowmoss.Seed.class,    PotionOfToxicGas.class);
-			types.put(Starflower.Seed.class,    PotionOfExperience.class);
-			types.put(Stormvine.Seed.class,     PotionOfLevitation.class);
-			types.put(Sungrass.Seed.class,      PotionOfHealing.class);
-			types.put(Swiftthistle.Seed.class,  PotionOfHaste.class);
+			types.put(Blindweed.Seed.class, PotionOfInvisibility.class);
+			types.put(Mageroyal.Seed.class, PotionOfPurity.class);
+			types.put(Earthroot.Seed.class, PotionOfParalyticGas.class);
+			types.put(Fadeleaf.Seed.class, PotionOfMindVision.class);
+			types.put(Firebloom.Seed.class, PotionOfLiquidFlame.class);
+			types.put(Icecap.Seed.class, PotionOfFrost.class);
+			types.put(Rotberry.Seed.class, PotionOfStrength.class);
+			types.put(Sorrowmoss.Seed.class, PotionOfToxicGas.class);
+			types.put(Starflower.Seed.class, PotionOfExperience.class);
+			types.put(Stormvine.Seed.class, PotionOfLevitation.class);
+			types.put(Sungrass.Seed.class, PotionOfHealing.class);
+			types.put(Swiftthistle.Seed.class, PotionOfHaste.class);
 		}
-		
+
 		@Override
 		public boolean testIngredients(ArrayList<Item> ingredients) {
 			if (ingredients.size() != 3) {
 				return false;
 			}
-			
-			for (Item ingredient : ingredients){
+
+			for (Item ingredient : ingredients) {
 				if (!(ingredient instanceof Plant.Seed
 						&& ingredient.quantity() >= 1
-						&& types.containsKey(ingredient.getClass()))){
+						&& types.containsKey(ingredient.getClass()))) {
 					return false;
 				}
 			}
 			return true;
 		}
-		
+
 		@Override
 		public int cost(ArrayList<Item> ingredients) {
 			return 0;
 		}
-		
+
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
-			if (!testIngredients(ingredients)) return null;
-			
-			for (Item ingredient : ingredients){
+			if (!testIngredients(ingredients))
+				return null;
+
+			for (Item ingredient : ingredients) {
 				ingredient.quantity(ingredient.quantity() - 1);
 			}
-			
-			ArrayList<Class<?extends Plant.Seed>> seeds = new ArrayList<>();
+
+			ArrayList<Class<? extends Plant.Seed>> seeds = new ArrayList<>();
 			for (Item i : ingredients) {
 				if (!seeds.contains(i.getClass())) {
 					seeds.add((Class<? extends Plant.Seed>) i.getClass());
 				}
 			}
-			
+
 			Potion result;
-			
-			if ( (seeds.size() == 2 && Random.Int(4) == 0)
+
+			if ((seeds.size() == 2 && Random.Int(4) == 0)
 					|| (seeds.size() == 3 && Random.Int(2) == 0)) {
-				
-				result = (Potion) Generator.randomUsingDefaults( Generator.Category.POTION );
-				
+
+				result = (Potion) Generator.randomUsingDefaults(Generator.Category.POTION);
+
 			} else {
 				result = Reflection.newInstance(types.get(Random.element(ingredients).getClass()));
-				
+
 			}
-			
-			if (seeds.size() == 1){
+
+			if (seeds.size() == 1) {
 				result.identify();
 			}
 
@@ -542,23 +566,23 @@ public class Potion extends Item {
 
 				result = (Potion) Generator.randomUsingDefaults(Generator.Category.POTION);
 			}
-			
+
 			if (result instanceof PotionOfHealing) {
 				Dungeon.LimitedDrops.COOKING_HP.count++;
 			}
-			
+
 			return result;
 		}
-		
+
 		@Override
 		public Item sampleOutput(ArrayList<Item> ingredients) {
-			return new WndBag.Placeholder(ItemSpriteSheet.POTION_HOLDER){
+			return new WndBag.Placeholder(ItemSpriteSheet.POTION_HOLDER) {
 
 				@Override
 				public String name() {
 					return Messages.get(Potion.SeedToPotion.class, "name");
 				}
-				
+
 				@Override
 				public String info() {
 					return "";

@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ConfusionGas;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -58,10 +59,12 @@ public class PotionOfLevitation extends Potion {
 	}
 	
 	@Override
-	public void apply( Hero hero ) {
-		identify();
-		Buff.prolong( hero, Levitation.class, Levitation.DURATION );
-		GLog.i( Messages.get(this, "float") );
+	public void apply( Char ch ) {
+		if (ch instanceof Hero) {
+			identify();
+			GLog.i( Messages.get(this, "float") );
+		}
+		Buff.prolong( ch, Levitation.class, Levitation.DURATION );
 	}
 	
 	@Override

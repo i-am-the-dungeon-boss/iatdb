@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -54,10 +55,14 @@ public class Gloves extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		//+(3+0.75*lvl) damage, roughly +100% base damage, +100% scaling
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
 		int dmgBoost = augment.damageFactor(3 + buffedLvl());
-		Sai.comboStrikeAbility(hero, target, 0, dmgBoost, this);
+		return Sai.comboStrikeAbility(ctx, target, 0, dmgBoost, this);
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override

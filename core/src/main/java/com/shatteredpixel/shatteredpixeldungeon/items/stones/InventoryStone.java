@@ -28,7 +28,9 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -38,58 +40,110 @@ import com.watabou.noosa.audio.Sample;
 import java.util.ArrayList;
 
 public abstract class InventoryStone extends Runestone {
-	
+
 	{
 		defaultAction = AC_USE;
 	}
-	
-	public static final String AC_USE	= "USE";
-	
+
+	public static final String AC_USE = "USE";
+
 	@Override
 	public ArrayList<String> actions(Hero hero) {
-		ArrayList<String> actions = super.actions( hero );
-		actions.add( AC_USE );
+		ArrayList<String> actions = super.actions(hero);
+		actions.add(AC_USE);
 		return actions;
 	}
-	
+
 	@Override
 	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
-		if (action.equals(AC_USE) && hero.buff(MagicImmune.class) == null){
-			activate(curUser.pos);
+		if (action.equals(AC_USE) && hero.buff(MagicImmune.class) == null) {
+			useAs(UseContext.hero(hero));
 		}
 	}
-	
+
+	/**
+	 * Self-activate. Hero opens bag UI; Echo auto-picks the first usable kit item.
+	 */
+	public boolean useAs(UseContext ctx) {
+		if (ctx == null || ctx.body == null || ctx.kit == null) {
+			return false;
+		}
+		if (ctx.kit.buff(MagicImmune.class) != null) {
+			return false;
+		}
+		if (ctx.heroFX) {
+			AiItemActions.withUser(ctx.kit, this, () -> activate(ctx.body.pos));
+			return true;
+		}
+		Item pick = firstUsableItem(ctx.kit);
+		if (pick == null) {
+			return false;
+		}
+		return onItemSelectedAs(ctx, pick);
+	}
+
+	/** First backpack/equip item this stone can affect. */
+	protected Item firstUsableItem(Hero kit) {
+		for (Item item : kit.belongings) {
+			if (item != this && usableOnItem(item)) {
+				return item;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Apply stone to a chosen item. Default bridges to
+	 * {@link #onItemSelected(Item)}
+	 * with {@code curUser}/{@code curItem} set for legacy callers.
+	 */
+	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
+		Hero prevUser = curUser;
+		Item prevItem = curItem;
+		curUser = ctx.kit;
+		curItem = this;
+		try {
+			onItemSelected(item);
+			return true;
+		} finally {
+			curUser = prevUser;
+			curItem = prevItem;
+		}
+	}
+
 	@Override
 	protected void activate(int cell) {
-		GameScene.selectItem( itemSelector );
+		GameScene.selectItem(itemSelector);
 	}
 
-	public void directActivate(){
-		GameScene.selectItem( itemSelector );
+	public void directActivate() {
+		GameScene.selectItem(itemSelector);
 	}
-	
+
 	protected void useAnimation() {
-		curUser.spend( 1f );
+		curUser.spend(1f);
 		curUser.busy();
-		curUser.sprite.operate(curUser.pos);
+		if (curUser.sprite != null) {
+			curUser.sprite.operate(curUser.pos);
+		}
 
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 		Invisibility.dispel();
 	}
 
-	private String inventoryTitle(){
+	private String inventoryTitle() {
 		return Messages.get(this, "inv_title");
 	}
 
-	protected Class<?extends Bag> preferredBag = null;
+	protected Class<? extends Bag> preferredBag = null;
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
-	
-	protected abstract void onItemSelected( Item item );
-	
+
+	protected abstract void onItemSelected(Item item);
+
 	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {
 
 		@Override
@@ -108,20 +162,20 @@ public abstract class InventoryStone extends Runestone {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
-			
-			//FIXME this safety check shouldn't be necessary
-			//it would be better to eliminate the curItem static variable.
-			if (!(curItem instanceof InventoryStone)){
+		public void onSelect(Item item) {
+
+			// FIXME this safety check shouldn't be necessary
+			// it would be better to eliminate the curItem static variable.
+			if (!(curItem instanceof InventoryStone)) {
 				return;
 			}
-			
+
 			if (item != null) {
 
-				((InventoryStone)curItem).onItemSelected( item );
-				
+				((InventoryStone) curItem).onItemSelected(item);
+
 			}
 		}
 	};
-	
+
 }

@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
@@ -38,7 +39,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 public class StoneOfEnchantment extends InventoryStone {
-	
+
 	{
 		preferredBag = Belongings.Backpack.class;
 		image = ItemSpriteSheet.STONE_ENCHANT;
@@ -50,38 +51,42 @@ public class StoneOfEnchantment extends InventoryStone {
 	protected boolean usableOnItem(Item item) {
 		return ScrollOfEnchantment.enchantable(item);
 	}
-	
+
+	@Override
+	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
+		if (!anonymous) {
+			detach(ctx.kit.belongings.backpack);
+			Catalog.countUse(getClass());
+			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
+		}
+
+		if (item instanceof Weapon) {
+			((Weapon) item).enchant();
+		} else {
+			((Armor) item).inscribe();
+		}
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			ctx.body.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.1f, 5);
+			Enchanting.show(ctx.kit, item);
+		}
+		if (ctx.heroFX) {
+			if (item instanceof Weapon) {
+				GLog.p(Messages.get(this, "weapon"));
+			} else {
+				GLog.p(Messages.get(this, "armor"));
+			}
+			curUser = ctx.kit;
+			useAnimation();
+		}
+		return true;
+	}
+
 	@Override
 	protected void onItemSelected(Item item) {
-		if (!anonymous) {
-			curItem.detach(curUser.belongings.backpack);
-			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
-		}
-		
-		if (item instanceof Weapon) {
-			
-			((Weapon)item).enchant();
-			
-		} else {
-			
-			((Armor)item).inscribe();
-			
-		}
-		
-		curUser.sprite.emitter().start( Speck.factory( Speck.LIGHT ), 0.1f, 5 );
-		Enchanting.show( curUser, item );
-		
-		if (item instanceof Weapon) {
-			GLog.p(Messages.get(this, "weapon"));
-		} else {
-			GLog.p(Messages.get(this, "armor"));
-		}
-		
-		useAnimation();
-		
+		onItemSelectedAs(UseContext.hero(curUser), item);
 	}
-	
+
 	@Override
 	public int value() {
 		return 30 * quantity;

@@ -32,7 +32,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -47,13 +49,13 @@ public class Sickle extends MeleeWeapon {
 		hitSoundPitch = 1f;
 
 		tier = 2;
-		ACC = 0.68f; //32% penalty to accuracy
+		ACC = 0.68f; // 32% penalty to accuracy
 	}
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(6.67f*(tier+1)) +    //20 base, up from 15
-				lvl*(tier+1);                   //scaling unchanged
+		return Math.round(6.67f * (tier + 1)) + // 20 base, up from 15
+				lvl * (tier + 1); // scaling unchanged
 	}
 
 	@Override
@@ -62,16 +64,20 @@ public class Sickle extends MeleeWeapon {
 	}
 
 	@Override
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		int bleedAmt = augment.damageFactor(Math.round(15f + 2.5f * buffedLvl()));
+		return harvestAbility(ctx, target, 0f, bleedAmt, this);
+	}
+
+	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		//replaces damage with 15+2.5*lvl bleed, roughly 138% avg base dmg, 125% avg scaling
-		int bleedAmt = augment.damageFactor(Math.round(15f + 2.5f*buffedLvl()));
-		Sickle.harvestAbility(hero, target, 0f, bleedAmt, this);
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override
 	public String abilityInfo() {
-		int bleedAmt = levelKnown ? Math.round(15f + 2.5f*buffedLvl()) : 15;
-		if (levelKnown){
+		int bleedAmt = levelKnown ? Math.round(15f + 2.5f * buffedLvl()) : 15;
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(bleedAmt));
 		} else {
 			return Messages.get(this, "typical_ability_desc", bleedAmt);
@@ -80,51 +86,100 @@ public class Sickle extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return Integer.toString(augment.damageFactor(Math.round(15f + 2.5f*level)));
+		return Integer.toString(augment.damageFactor(Math.round(15f + 2.5f * level)));
 	}
 
-	public static void harvestAbility(Hero hero, Integer target, float bleedMulti, int bleedBoost, MeleeWeapon wep){
+	public static boolean harvestAbility(UseContext ctx, Integer target, float bleedMulti, int bleedBoost,
+			MeleeWeapon wep) {
 
 		if (target == null) {
-			return;
+			return false;
 		}
+
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
-			GLog.w(Messages.get(wep, "ability_no_target"));
-			return;
-		}
-
-		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy)){
-			GLog.w(Messages.get(wep, "ability_target_range"));
-			hero.belongings.abilityWeapon = null;
-			return;
-		}
-		hero.belongings.abilityWeapon = null;
-
-		hero.sprite.attack(enemy.pos, new Callback() {
-			@Override
-			public void call() {
-				wep.beforeAbilityUsed(hero, enemy);
-				AttackIndicator.target(enemy);
-
-				Buff.affect(enemy, HarvestBleedTracker.class, 0);
-				if (hero.attack(enemy, bleedMulti, bleedBoost, Char.INFINITE_ACCURACY)){
-					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-				}
-
-				Invisibility.dispel();
-				hero.spendAndNext(hero.attackDelay());
-				if (!enemy.isAlive()){
-					wep.onAbilityKill(hero, enemy);
-				}
-				wep.afterAbilityUsed(hero);
+		boolean inFov = body.fieldOfView != null && target < body.fieldOfView.length
+				? body.fieldOfView[target]
+				: Dungeon.level.heroFOV[target];
+		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(wep, "ability_no_target"));
 			}
-		});
+			return false;
+		}
+
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
+		}
+		try {
+			kit.belongings.abilityWeapon = wep;
+			if (!kit.canAttack(enemy)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(wep, "ability_target_range"));
+				}
+				kit.belongings.abilityWeapon = null;
+				return false;
+			}
+			kit.belongings.abilityWeapon = null;
+
+			Callback doHit = new Callback() {
+				@Override
+				public void call() {
+					wep.beforeAbilityUsed(ctx, enemy);
+					if (ctx.heroFX) {
+						AttackIndicator.target(enemy);
+					}
+
+					Buff.affect(enemy, HarvestBleedTracker.class, 0);
+					if (kit.attack(enemy, bleedMulti, bleedBoost, Char.INFINITE_ACCURACY)) {
+						if (UseContext.canWorldFx(kit)) {
+							Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+						}
+					}
+
+					Invisibility.dispel(body);
+					if (ctx.heroFX) {
+						kit.spendAndNext(kit.attackDelay());
+					}
+					if (!enemy.isAlive()) {
+						wep.onAbilityKill(kit, enemy);
+					}
+					wep.afterAbilityUsed(ctx);
+				}
+			};
+
+			if (ctx.heroFX) {
+				ctx.turns.busy();
+			}
+			if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+				kit.sprite.attack(enemy.pos, doHit);
+			} else {
+				if (UseContext.canWorldFx(kit)) {
+					kit.sprite.attack(enemy.pos);
+				}
+				doHit.call();
+			}
+			return true;
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
 
 	}
 
-	public static class HarvestBleedTracker extends FlavourBuff{};
+	public static void harvestAbility(Hero hero, Integer target, float bleedMulti, int bleedBoost, MeleeWeapon wep) {
+		harvestAbility(UseContext.hero(hero), target, bleedMulti, bleedBoost, wep);
+	}
+
+	public static class HarvestBleedTracker extends FlavourBuff {
+	};
 
 }

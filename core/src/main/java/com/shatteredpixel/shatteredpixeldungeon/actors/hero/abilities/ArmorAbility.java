@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -40,14 +41,16 @@ public abstract class ArmorAbility implements Bundlable {
 
 	protected float baseChargeUse = 35;
 
-	public void use( ClassArmor armor, Hero hero ){
-		if (targetingPrompt() == null){
-			activate(armor, hero, hero.pos);
+	public void use(ClassArmor armor, Hero hero) {
+		if (targetingPrompt() == null) {
+			activateAs(UseContext.hero(hero), armor, hero.pos);
 		} else {
 			GameScene.selectCell(new CellSelector.Listener() {
 				@Override
 				public void onSelect(Integer cell) {
-					activate(armor, hero, cell);
+					if (cell != null) {
+						activateAs(UseContext.hero(hero), armor, cell);
+					}
 				}
 
 				@Override
@@ -58,25 +61,47 @@ public abstract class ArmorAbility implements Bundlable {
 		}
 	}
 
-	//leave null for no targeting
-	public String targetingPrompt(){
+	/**
+	 * Shared armor-ability execute (cell already chosen). Self-effects target
+	 * {@code ctx.body}; charge/talents use {@code ctx.kit}; turn via
+	 * {@code ctx.turns}.
+	 */
+	public boolean activateAs(UseContext ctx, ClassArmor armor, Integer target) {
+		if (armor == null) {
+			return false;
+		}
+		if (targetingPrompt() != null && target == null) {
+			return false;
+		}
+		if (armor.charge < chargeUse(ctx.kit)) {
+			return false;
+		}
+		int cell = target != null ? target : ctx.body.pos;
+		ctx.turns.busy();
+		activate(armor, ctx, cell);
+		return true;
+	}
+
+	// leave null for no targeting
+	public String targetingPrompt() {
 		return null;
 	}
 
-	public boolean useTargeting(){
+	public boolean useTargeting() {
 		return targetingPrompt() != null;
 	}
 
-	public int targetedPos( Char user, int dst ){
-		return new Ballistica( user.pos, dst, Ballistica.PROJECTILE ).collisionPos;
+	public int targetedPos(Char user, int dst) {
+		return new Ballistica(user.pos, dst, Ballistica.PROJECTILE).collisionPos;
 	}
 
-	public float chargeUse( Hero hero ){
+	public float chargeUse(Hero hero) {
 		float chargeUse = baseChargeUse;
-		if (hero.hasTalent(Talent.HEROIC_ENERGY)){
-			//reduced charge use by 12%/23%/32%/40%
-			switch (hero.pointsInTalent(Talent.HEROIC_ENERGY)){
-				case 1: default:
+		if (hero.hasTalent(Talent.HEROIC_ENERGY)) {
+			// reduced charge use by 12%/23%/32%/40%
+			switch (hero.pointsInTalent(Talent.HEROIC_ENERGY)) {
+				case 1:
+				default:
 					chargeUse *= 0.88f;
 					break;
 				case 2:
@@ -93,21 +118,21 @@ public abstract class ArmorAbility implements Bundlable {
 		return chargeUse;
 	}
 
-	protected abstract void activate( ClassArmor armor, Hero hero, Integer target );
+	protected abstract void activate(ClassArmor armor, UseContext ctx, Integer target);
 
-	public String name(){
+	public String name() {
 		return Messages.get(this, "name");
 	}
 
-	public String shortDesc(){
+	public String shortDesc() {
 		return Messages.get(this, "short_desc");
 	}
 
-	public String desc(){
-		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "cost", (int)baseChargeUse);
+	public String desc() {
+		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "cost", (int) baseChargeUse);
 	}
 
-	public int icon(){
+	public int icon() {
 		return HeroIcon.NONE;
 	}
 

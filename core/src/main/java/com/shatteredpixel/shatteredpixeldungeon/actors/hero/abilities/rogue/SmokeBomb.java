@@ -45,7 +45,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -64,6 +64,7 @@ public class SmokeBomb extends ArmorAbility {
 
 	{
 		baseChargeUse = 50;
+		// do nothing
 	}
 
 	@Override
@@ -78,79 +79,92 @@ public class SmokeBomb extends ArmorAbility {
 
 	@Override
 	public float chargeUse(Hero hero) {
-		if (!hero.hasTalent(Talent.SHADOW_STEP) || hero.invisible <= 0){
+		if (!hero.hasTalent(Talent.SHADOW_STEP) || hero.invisible <= 0) {
 			return super.chargeUse(hero);
 		} else {
-			//reduced charge use by 16%/30%/41%/50%
-			return (float)(super.chargeUse(hero) * Math.pow(0.84, hero.pointsInTalent(Talent.SHADOW_STEP)));
+			// reduced charge use by 16%/30%/41%/50%
+			return (float) (super.chargeUse(hero) * Math.pow(0.84, hero.pointsInTalent(Talent.SHADOW_STEP)));
 		}
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
 		if (target != null) {
 
-			if (target != hero.pos && hero.rooted){
-				PixelScene.shake( 1, 1f );
+			if (target != body.pos && body.rooted) {
+				if (ctx.heroFX) {
+					PixelScene.shake(1, 1f);
+				}
 				return;
 			}
 
-			PathFinder.buildDistanceMap(hero.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), 6);
+			PathFinder.buildDistanceMap(body.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), 6);
 
-			if ( PathFinder.distance[target] == Integer.MAX_VALUE ||
+			if (PathFinder.distance[target] == Integer.MAX_VALUE ||
 					!Dungeon.level.heroFOV[target] ||
-					(target != hero.pos && Actor.findChar( target ) != null)) {
+					(target != body.pos && Actor.findChar(target) != null)) {
 
-				GLog.w( Messages.get(this, "fov") );
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(this, "fov"));
+				}
 				return;
 			}
 
-			armor.charge -= chargeUse(hero);
-			Item.updateQuickslot();
+			armor.charge -= chargeUse(kit);
+			armor.updateQuickslot();
 
-			boolean shadowStepping = hero.invisible > 0 && hero.hasTalent(Talent.SHADOW_STEP);
+			boolean shadowStepping = kit.invisible > 0 && kit.hasTalent(Talent.SHADOW_STEP);
 
 			if (!shadowStepping) {
 				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-					if (Dungeon.level.adjacent(mob.pos, hero.pos) && mob.alignment != Char.Alignment.ALLY) {
+					if (Dungeon.level.adjacent(mob.pos, body.pos) && mob.alignment != Char.Alignment.ALLY) {
 						Buff.prolong(mob, Blindness.class, Blindness.DURATION / 2f);
-						if (mob.state == mob.HUNTING) mob.state = mob.WANDERING;
-						mob.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);
+						if (mob.state == mob.HUNTING)
+							mob.state = mob.WANDERING;
+						if (UseContext.canWorldFx(mob)) {
+							mob.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);
+						}
 					}
 				}
 
-				if (hero.hasTalent(Talent.BODY_REPLACEMENT)) {
-					for (Char ch : Actor.chars()){
-						if (ch instanceof NinjaLog){
+				if (kit.hasTalent(Talent.BODY_REPLACEMENT)) {
+					for (Char ch : Actor.chars()) {
+						if (ch instanceof NinjaLog) {
 							ch.die(null);
 						}
 					}
 
 					NinjaLog n = new NinjaLog();
-					n.pos = hero.pos;
+					n.pos = body.pos;
 					GameScene.add(n);
 					Dungeon.level.occupyCell(n);
 				}
 
-				if (hero.hasTalent(Talent.HASTY_RETREAT)){
-					//effectively 1/2/3/4 turns
-					float duration = 0.67f + hero.pointsInTalent(Talent.HASTY_RETREAT);
-					Buff.affect(hero, Haste.class, duration);
-					Buff.affect(hero, Invisibility.class, duration);
+				if (kit.hasTalent(Talent.HASTY_RETREAT)) {
+					// effectively 1/2/3/4 turns
+					float duration = 0.67f + kit.pointsInTalent(Talent.HASTY_RETREAT);
+					Buff.affect(body, Haste.class, duration);
+					Buff.affect(body, Invisibility.class, duration);
 				}
 			}
 
-			CellEmitter.get( hero.pos ).burst( Speck.factory( Speck.WOOL ), 10 );
-			ScrollOfTeleportation.appear( hero, target );
-			Sample.INSTANCE.play( Assets.Sounds.PUFF );
-			Dungeon.level.occupyCell( hero );
+			if (UseContext.canWorldFx(body)) {
+				CellEmitter.get(body.pos).burst(Speck.factory(Speck.WOOL), 10);
+				Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			}
+			ScrollOfTeleportation.appear(body, target);
+			Dungeon.level.occupyCell(body);
 			Dungeon.observe();
-			GameScene.updateFog();
+			if (ctx.heroFX) {
+				GameScene.updateFog();
+			}
 
 			if (!shadowStepping) {
-				hero.spendAndNext(Actor.TICK);
-			} else {
-				hero.next();
+				ctx.turns.spendAfterThrow(Actor.TICK);
+			} else if (ctx.heroFX) {
+				kit.next();
 			}
 		}
 	}
@@ -162,7 +176,7 @@ public class SmokeBomb extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.HASTY_RETREAT, Talent.BODY_REPLACEMENT, Talent.SHADOW_STEP, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.HASTY_RETREAT, Talent.BODY_REPLACEMENT, Talent.SHADOW_STEP, Talent.HEROIC_ENERGY };
 	}
 
 	public static class NinjaLog extends NPC {
@@ -171,12 +185,13 @@ public class SmokeBomb extends ArmorAbility {
 			spriteClass = NinjaLogSprite.class;
 			defenseSkill = 0;
 
-			properties.add(Property.INORGANIC); //wood is organic, but this is accurate for game logic
+			properties.add(Property.INORGANIC); // wood is organic, but this is accurate for game logic
 
 			alignment = Alignment.ALLY;
 
 			HT = 20;
-			if (Dungeon.hero != null) HT *= Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT);
+			if (Dungeon.hero != null)
+				HT *= Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT);
 			HP = HT;
 		}
 
@@ -185,48 +200,48 @@ public class SmokeBomb extends ArmorAbility {
 			int dr = super.drRoll();
 
 			dr += Random.NormalIntRange(Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT),
-					3*Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT));
+					3 * Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT));
 
 			return dr;
 		}
 
 		{
-			immunities.add( Dread.class );
-			immunities.add( Terror.class );
-			immunities.add( Amok.class );
-			immunities.add( Charm.class );
-			immunities.add( Sleep.class );
-			immunities.add( AllyBuff.class );
+			immunities.add(Dread.class);
+			immunities.add(Terror.class);
+			immunities.add(Amok.class);
+			immunities.add(Charm.class);
+			immunities.add(Sleep.class);
+			immunities.add(AllyBuff.class);
 		}
 
 	}
 
 	public static class NinjaLogSprite extends MobSprite {
 
-		public NinjaLogSprite(){
+		public NinjaLogSprite() {
 			super();
 
-			texture( Assets.Sprites.NINJA_LOG );
+			texture(Assets.Sprites.NINJA_LOG);
 
-			TextureFilm frames = new TextureFilm( texture, 11, 12 );
+			TextureFilm frames = new TextureFilm(texture, 11, 12);
 
-			idle = new Animation( 0, true );
-			idle.frames( frames, 0 );
+			idle = new Animation(0, true);
+			idle.frames(frames, 0);
 
 			run = idle.clone();
 			attack = idle.clone();
 			zap = attack.clone();
 
-			die = new Animation( 12, false );
-			die.frames( frames, 1, 2, 3, 4 );
+			die = new Animation(12, false);
+			die.frames(frames, 1, 2, 3, 4);
 
-			play( idle );
+			play(idle);
 
 		}
 
 		@Override
 		public void showAlert() {
-			//do nothing
+			// do nothing
 		}
 
 		@Override

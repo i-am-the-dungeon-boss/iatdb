@@ -35,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -65,14 +66,40 @@ public class ShieldOfLight extends TargetedClericSpell {
 	}
 
 	@Override
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		if (target == null || Dungeon.level == null) {
+			return false;
+		}
+
+		Char ch = Actor.findChar(target);
+		boolean inFov = ctx.body.fieldOfView != null && target < ctx.body.fieldOfView.length
+				? ctx.body.fieldOfView[target]
+				: Dungeon.level.heroFOV[target];
+		if (ch == null || ch.alignment == Char.Alignment.ALLY || !inFov) {
+			return false;
+		}
+
+		Buff.prolong(ctx.body, ShieldOfLightTracker.class, 4f).object = ch.id();
+		if (ctx.kit.subClass == HeroSubClass.PRIEST) {
+			Buff.affect(ch, GuidingLight.Illuminated.class);
+		}
+		Char ally = PowerOfMany.getPoweredAlly();
+		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
+			Buff.prolong(ally, ShieldOfLightTracker.class, 3f).object = ch.id();
+		}
+		onSpellCast(ctx, tome);
+		return true;
+	}
+
+	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
 
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		Char ch = Actor.findChar(target);
-		if (ch == null || ch.alignment == Char.Alignment.ALLY || !Dungeon.level.heroFOV[target]){
+		if (ch == null || ch.alignment == Char.Alignment.ALLY || !Dungeon.level.heroFOV[target]) {
 			GLog.w(Messages.get(this, "no_target"));
 			return;
 		}
@@ -82,8 +109,8 @@ public class ShieldOfLight extends TargetedClericSpell {
 		Sample.INSTANCE.play(Assets.Sounds.READ);
 		hero.sprite.operate(hero.pos);
 
-		//1 turn less as the casting is instant
-		Buff.prolong( hero, ShieldOfLightTracker.class, 4f).object = ch.id();
+		// 1 turn less as the casting is instant
+		Buff.prolong(hero, ShieldOfLightTracker.class, 4f).object = ch.id();
 
 		if (hero.subClass == HeroSubClass.PRIEST) {
 			Buff.affect(ch, GuidingLight.Illuminated.class);
@@ -94,8 +121,8 @@ public class ShieldOfLight extends TargetedClericSpell {
 		hero.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.15f, 6);
 
 		Char ally = PowerOfMany.getPoweredAlly();
-		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
-			Buff.prolong( ally, ShieldOfLightTracker.class, 3f).object = ch.id();
+		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
+			Buff.prolong(ally, ShieldOfLightTracker.class, 3f).object = ch.id();
 			ally.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.15f, 6);
 		}
 
@@ -106,8 +133,9 @@ public class ShieldOfLight extends TargetedClericSpell {
 	@Override
 	public String desc() {
 		int min = 1 + Dungeon.hero.pointsInTalent(Talent.SHIELD_OF_LIGHT);
-		int max = 2*min;
-		return Messages.get(this, "desc", min, max) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		int max = 2 * min;
+		return Messages.get(this, "desc", min, max) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	public static class ShieldOfLightTracker extends FlavourBuff {
@@ -130,18 +158,18 @@ public class ShieldOfLight extends TargetedClericSpell {
 			return Math.max(0, (DURATION - visualcooldown()) / DURATION);
 		}
 
-		private static final String OBJECT  = "object";
+		private static final String OBJECT = "object";
 
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			super.storeInBundle( bundle );
-			bundle.put( OBJECT, object );
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put(OBJECT, object);
 		}
 
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
-			super.restoreFromBundle( bundle );
-			object = bundle.getInt( OBJECT );
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			object = bundle.getInt(OBJECT);
 		}
 
 	}

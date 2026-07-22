@@ -25,6 +25,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.potions;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -40,11 +41,13 @@ public class PotionOfInvisibility extends Potion {
 	}
 
 	@Override
-	public void apply( Hero hero ) {
-		identify();
-		Buff.prolong( hero, Invisibility.class, Invisibility.DURATION );
-		GLog.i( Messages.get(this, "invisible") );
-		Sample.INSTANCE.play( Assets.Sounds.MELD );
+	public void apply( Char ch ) {
+		if (ch instanceof Hero) {
+			identify();
+			GLog.i( Messages.get(this, "invisible") );
+			Sample.INSTANCE.play( Assets.Sounds.MELD );
+		}
+		Buff.prolong( ch, Invisibility.class, Invisibility.DURATION );
 	}
 	
 	@Override

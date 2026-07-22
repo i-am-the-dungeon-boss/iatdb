@@ -34,6 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
@@ -58,16 +59,66 @@ public class GuidingLight extends TargetedClericSpell {
 		return HeroIcon.GUIDING_LIGHT;
 	}
 
+	/**
+	 * Shared targeted cast for Echo and headless callers. Fires MagicMissile when
+	 * the body sprite has a scene parent; otherwise applies the hit immediately.
+	 */
+	@Override
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		if (target == null || Dungeon.level == null) {
+			return false;
+		}
+
+		Ballistica aim = new Ballistica(ctx.body.pos, target, targetingFlags());
+
+		if (Actor.findChar(aim.collisionPos) == ctx.body) {
+			return false;
+		}
+
+		Runnable applyHit = () -> {
+			Char ch = Actor.findChar(aim.collisionPos);
+			if (ch != null) {
+				ch.damage(Hero.heroDamageIntRange(2, 8), this);
+				if (UseContext.canWorldFx(ch)) {
+					Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f));
+					ch.sprite.burst(0xFFFFFF44, 3);
+				}
+				if (ch.isAlive()) {
+					Buff.affect(ch, Illuminated.class);
+					Buff.affect(ch, WasIlluminatedTracker.class);
+				}
+			} else {
+				Dungeon.level.pressCell(aim.collisionPos);
+			}
+
+			onSpellCast(ctx, tome);
+			if (ctx.kit.subClass == HeroSubClass.PRIEST
+					&& ctx.kit.buff(GuidingLightPriestCooldown.class) == null) {
+				Buff.prolong(ctx.kit, GuidingLightPriestCooldown.class, 50f);
+			}
+		};
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			Sample.INSTANCE.play(Assets.Sounds.ZAP);
+			ctx.body.sprite.zap(target);
+			MagicMissile.boltFromChar(ctx.body.sprite.parent, MagicMissile.LIGHT_MISSILE, ctx.body.sprite,
+					aim.collisionPos, applyHit::run);
+		} else {
+			applyHit.run();
+		}
+		return true;
+	}
+
 	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());
 
-		if (Actor.findChar( aim.collisionPos ) == hero){
-			GLog.i( Messages.get(Wand.class, "self_target") );
+		if (Actor.findChar(aim.collisionPos) == hero) {
+			GLog.i(Messages.get(Wand.class, "self_target"));
 			return;
 		}
 
@@ -78,54 +129,56 @@ public class GuidingLight extends TargetedClericSpell {
 		}
 
 		hero.busy();
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 		hero.sprite.zap(target);
-		MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.LIGHT_MISSILE, hero.sprite, aim.collisionPos, new Callback() {
-			@Override
-			public void call() {
+		MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.LIGHT_MISSILE, hero.sprite, aim.collisionPos,
+				new Callback() {
+					@Override
+					public void call() {
 
-				Char ch = Actor.findChar( aim.collisionPos );
-				if (ch != null) {
-					ch.damage(Hero.heroDamageIntRange(2, 8), GuidingLight.this);
-					Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f));
-					ch.sprite.burst(0xFFFFFF44, 3);
-					if (ch.isAlive()){
-						Buff.affect(ch, Illuminated.class);
-						Buff.affect(ch, WasIlluminatedTracker.class);
+						Char ch = Actor.findChar(aim.collisionPos);
+						if (ch != null) {
+							ch.damage(Hero.heroDamageIntRange(2, 8), GuidingLight.this);
+							Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f));
+							ch.sprite.burst(0xFFFFFF44, 3);
+							if (ch.isAlive()) {
+								Buff.affect(ch, Illuminated.class);
+								Buff.affect(ch, WasIlluminatedTracker.class);
+							}
+						} else {
+							Dungeon.level.pressCell(aim.collisionPos);
+						}
+
+						hero.spend(1f);
+						hero.next();
+
+						onSpellCast(tome, hero);
+						if (hero.subClass == HeroSubClass.PRIEST
+								&& hero.buff(GuidingLightPriestCooldown.class) == null) {
+							Buff.prolong(hero, GuidingLightPriestCooldown.class, 50f);
+							ActionIndicator.refresh();
+						}
+
 					}
-				} else {
-					Dungeon.level.pressCell(aim.collisionPos);
-				}
-
-				hero.spend( 1f );
-				hero.next();
-
-				onSpellCast(tome, hero);
-				if (hero.subClass == HeroSubClass.PRIEST && hero.buff(GuidingLightPriestCooldown.class) == null) {
-					Buff.prolong(hero, GuidingLightPriestCooldown.class, 50f);
-					ActionIndicator.refresh();
-				}
-
-			}
-		});
+				});
 	}
 
 	@Override
 	public float chargeUse(Hero hero) {
 		if (hero.subClass == HeroSubClass.PRIEST
-			&& hero.buff(GuidingLightPriestCooldown.class) == null){
+				&& hero.buff(GuidingLightPriestCooldown.class) == null) {
 			return 0;
 		} else {
 			return 1;
 		}
 	}
 
-	public String desc(){
+	public String desc() {
 		String desc = Messages.get(this, "desc");
-		if (Dungeon.hero.subClass == HeroSubClass.PRIEST){
+		if (Dungeon.hero.subClass == HeroSubClass.PRIEST) {
 			desc += "\n\n" + Messages.get(this, "desc_priest");
 		}
-		return desc + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return desc + "\n\n" + Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	public static class GuidingLightPriestCooldown extends FlavourBuff {
@@ -140,7 +193,9 @@ public class GuidingLight extends TargetedClericSpell {
 			icon.brightness(0.5f);
 		}
 
-		public float iconFadePercent() { return Math.max(0, visualcooldown() / 50); }
+		public float iconFadePercent() {
+			return Math.max(0, visualcooldown() / 50);
+		}
 
 		@Override
 		public void detach() {
@@ -162,17 +217,19 @@ public class GuidingLight extends TargetedClericSpell {
 
 		@Override
 		public void fx(boolean on) {
-			if (on) target.sprite.add(CharSprite.State.ILLUMINATED);
-			else target.sprite.remove(CharSprite.State.ILLUMINATED);
+			if (on)
+				target.sprite.add(CharSprite.State.ILLUMINATED);
+			else
+				target.sprite.remove(CharSprite.State.ILLUMINATED);
 		}
 
 		@Override
 		public String desc() {
 			String desc = super.desc();
 
-			if (Dungeon.hero.subClass == HeroSubClass.PRIEST){
+			if (Dungeon.hero.subClass == HeroSubClass.PRIEST) {
 				desc += "\n\n" + Messages.get(this, "desc_priest");
-			} else if (Dungeon.hero.heroClass != HeroClass.CLERIC){
+			} else if (Dungeon.hero.heroClass != HeroClass.CLERIC) {
 				desc += "\n\n" + Messages.get(this, "desc_generic");
 			}
 
@@ -180,5 +237,6 @@ public class GuidingLight extends TargetedClericSpell {
 		}
 	}
 
-	public static class WasIlluminatedTracker extends Buff {}
+	public static class WasIlluminatedTracker extends Buff {
+	}
 }

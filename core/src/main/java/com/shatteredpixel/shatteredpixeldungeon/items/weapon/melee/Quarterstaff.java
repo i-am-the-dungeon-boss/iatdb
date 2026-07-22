@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -55,13 +56,23 @@ public class Quarterstaff extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		beforeAbilityUsed(hero, null);
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		beforeAbilityUsed(ctx, null);
 		//1 turn less as using the ability is instant
-		Buff.prolong(hero, DefensiveStance.class, 3 + buffedLvl());
-		hero.sprite.operate(hero.pos);
-		hero.next();
-		afterAbilityUsed(hero);
+		Buff.prolong(ctx.body, DefensiveStance.class, 3 + buffedLvl());
+		if (UseContext.canWorldFx(ctx.body)) {
+			ctx.body.sprite.operate(ctx.body.pos);
+		}
+		if (ctx.body instanceof Hero) {
+			((Hero) ctx.body).next();
+		}
+		afterAbilityUsed(ctx);
+		return true;
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override

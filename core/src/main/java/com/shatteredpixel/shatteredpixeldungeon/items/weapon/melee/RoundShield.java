@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -75,8 +76,13 @@ public class RoundShield extends MeleeWeapon {
 	}
 
 	@Override
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		return RoundShield.guardAbility(ctx, 5 + buffedLvl(), this);
+	}
+
+	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		RoundShield.guardAbility(hero, 5+buffedLvl(), this);
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override
@@ -93,12 +99,23 @@ public class RoundShield extends MeleeWeapon {
 		return Integer.toString(5 + level);
 	}
 
+	public static boolean guardAbility(UseContext ctx, int duration, MeleeWeapon wep){
+		wep.beforeAbilityUsed(ctx, null);
+		Buff.prolong(ctx.body, GuardTracker.class, duration).hasBlocked = false;
+		if (UseContext.canWorldFx(ctx.body)) {
+			ctx.body.sprite.operate(ctx.body.pos);
+		}
+		if (ctx.heroFX) {
+			ctx.kit.spendAndNext(Actor.TICK);
+		}
+		wep.afterAbilityUsed(ctx);
+		return true;
+	}
+
+	/** @deprecated use {@link #guardAbility(UseContext, int, MeleeWeapon)} */
+	@Deprecated
 	public static void guardAbility(Hero hero, int duration, MeleeWeapon wep){
-		wep.beforeAbilityUsed(hero, null);
-		Buff.prolong(hero, GuardTracker.class, duration).hasBlocked = false;
-		hero.sprite.operate(hero.pos);
-		hero.spendAndNext(Actor.TICK);
-		wep.afterAbilityUsed(hero);
+		guardAbility(UseContext.hero(hero), duration, wep);
 	}
 
 	public static class GuardTracker extends FlavourBuff {

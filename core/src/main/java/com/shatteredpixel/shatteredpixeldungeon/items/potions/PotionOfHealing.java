@@ -52,10 +52,12 @@ public class PotionOfHealing extends Potion {
 	}
 	
 	@Override
-	public void apply( Hero hero ) {
-		identify();
-		cure( hero );
-		heal( hero );
+	public void apply( Char ch ) {
+		if (ch instanceof Hero) {
+			identify();
+		}
+		cure( ch );
+		heal( ch );
 	}
 
 	public static void heal( Char ch ){

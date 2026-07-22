@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -49,9 +50,10 @@ public class AuraOfProtection extends ClericSpell {
 
 	@Override
 	public String desc() {
-		int dmgReduction = 10 + 10*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
-		int glyphPow = 25 + 25*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
-		return Messages.get(this, "desc", dmgReduction, glyphPow) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		int dmgReduction = 10 + 10 * Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+		int glyphPow = 25 + 25 * Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+		return Messages.get(this, "desc", dmgReduction, glyphPow) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -66,17 +68,27 @@ public class AuraOfProtection extends ClericSpell {
 
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
+		castAs(UseContext.hero(hero), tome, null);
+	}
 
-		Buff.affect(hero,AuraBuff.class, AuraBuff.DURATION);
+	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx == null || ctx.body == null || ctx.kit == null || tome == null) {
+			return false;
+		}
 
-		Sample.INSTANCE.play(Assets.Sounds.READ);
+		Buff.affect(ctx.body, AuraBuff.class, AuraBuff.DURATION);
 
-		hero.spend( 1f );
-		hero.busy();
-		hero.sprite.operate(hero.pos);
+		if (UseContext.canWorldFx(ctx.body)) {
+			Sample.INSTANCE.play(Assets.Sounds.READ);
+			ctx.body.sprite.operate(ctx.body.pos);
+		}
+		if (ctx.heroFX) {
+			ctx.turns.spendAfterThrow(1f);
+		}
 
-		onSpellCast(tome, hero);
-
+		onSpellCast(ctx, tome);
+		return true;
 	}
 
 	public static class AuraBuff extends FlavourBuff {
@@ -96,12 +108,12 @@ public class AuraOfProtection extends ClericSpell {
 
 		@Override
 		public void fx(boolean on) {
-			if (on && (particles == null || particles.parent == null)){
-				particles = target.sprite.emitter(); //emitter is much bigger than char so it needs to manage itself
+			if (on && (particles == null || particles.parent == null)) {
+				particles = target.sprite.emitter(); // emitter is much bigger than char so it needs to manage itself
 				particles.pos(target.sprite, -32, -32, 80, 80);
 				particles.fillTarget = false;
 				particles.pour(Speck.factory(Speck.LIGHT), 0.02f);
-			} else if (!on && particles != null){
+			} else if (!on && particles != null) {
 				particles.on = false;
 			}
 		}

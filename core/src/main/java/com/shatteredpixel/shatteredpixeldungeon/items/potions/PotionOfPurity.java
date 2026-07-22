@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -93,11 +94,13 @@ public class PotionOfPurity extends Potion {
 	}
 	
 	@Override
-	public void apply( Hero hero ) {
-		GLog.w( Messages.get(this, "protected") );
-		Buff.prolong( hero, BlobImmunity.class, BlobImmunity.DURATION );
-		SpellSprite.show(hero, SpellSprite.PURITY);
-		identify();
+	public void apply( Char ch ) {
+		if (ch instanceof Hero) {
+			GLog.w( Messages.get(this, "protected") );
+			SpellSprite.show(ch, SpellSprite.PURITY);
+			identify();
+		}
+		Buff.prolong( ch, BlobImmunity.class, BlobImmunity.DURATION );
 	}
 	
 	@Override

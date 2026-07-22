@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -142,17 +143,32 @@ public class Crossbow extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		if (hero.buff(ChargedShot.class) != null){
-			GLog.w(Messages.get(this, "ability_cant_use"));
-			return;
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		Hero kit = ctx.kit;
+		Char body = ctx.body;
+
+		if (kit.buff(ChargedShot.class) != null){
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "ability_cant_use"));
+			}
+			return false;
 		}
 
-		beforeAbilityUsed(hero, null);
-		Buff.affect(hero, ChargedShot.class);
-		hero.sprite.operate(hero.pos);
-		hero.next();
-		afterAbilityUsed(hero);
+		beforeAbilityUsed(ctx, null);
+		Buff.affect(kit, ChargedShot.class);
+		if (UseContext.canWorldFx(body)) {
+			body.sprite.operate(body.pos);
+		}
+		if (body instanceof Hero) {
+			((Hero) body).next();
+		}
+		afterAbilityUsed(ctx);
+		return true;
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override

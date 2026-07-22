@@ -24,6 +24,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -36,24 +38,25 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import java.util.ArrayList;
 
 public class ElixirOfArcaneArmor extends Elixir {
-	
+
 	{
 		image = ItemSpriteSheet.ELIXIR_ARCANE;
 	}
-	
+
 	@Override
-	public void apply(Hero hero) {
-		Buff.affect(hero, ArcaneArmor.class).set(5 + hero.lvl/2, 80);
+	public void apply(Char ch) {
+		int lvl = (ch instanceof Hero) ? ((Hero) ch).lvl : Math.max(1, Dungeon.depth);
+		Buff.affect(ch, ArcaneArmor.class).set(5 + lvl / 2, 80);
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
-		
+
 		{
-			inputs =  new Class[]{PotionOfEarthenArmor.class, GooBlob.class};
-			inQuantity = new int[]{1, 1};
-			
+			inputs = new Class[] { PotionOfEarthenArmor.class, GooBlob.class };
+			inQuantity = new int[] { 1, 1 };
+
 			cost = 8;
-			
+
 			output = ElixirOfArcaneArmor.class;
 			outQuantity = 1;
 		}

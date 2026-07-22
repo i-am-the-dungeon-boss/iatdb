@@ -34,6 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
@@ -60,19 +61,30 @@ public class Radiance extends ClericSpell {
 
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
+		castAs(UseContext.hero(hero), tome, null);
+	}
 
-		GameScene.flash( 0x80FFFFFF );
-		Sample.INSTANCE.play(Assets.Sounds.BLAST);
-
-		if (Dungeon.level.viewDistance < 6 ){
-			Buff.prolong(hero, Light.class, Dungeon.isChallenged(Challenges.DARKNESS) ? 20 : 100);
+	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx == null || ctx.body == null || ctx.kit == null || tome == null) {
+			return false;
 		}
 
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+		if (UseContext.canWorldFx(ctx.body)) {
+			GameScene.flash(0x80FFFFFF);
+			Sample.INSTANCE.play(Assets.Sounds.BLAST);
+			ctx.body.sprite.operate(ctx.body.pos);
+		}
+
+		if (Dungeon.level.viewDistance < 6) {
+			Buff.prolong(ctx.body, Light.class, Dungeon.isChallenged(Challenges.DARKNESS) ? 20 : 100);
+		}
+
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
 
-				if (mob.buff(GuidingLight.Illuminated.class) != null){
-					mob.damage(hero.lvl+5, GuidingLight.class);
+				if (mob.buff(GuidingLight.Illuminated.class) != null) {
+					mob.damage(ctx.kit.lvl + 5, GuidingLight.class);
 				} else {
 					Buff.affect(mob, GuidingLight.Illuminated.class);
 					Buff.affect(mob, GuidingLight.WasIlluminatedTracker.class);
@@ -83,11 +95,11 @@ public class Radiance extends ClericSpell {
 			}
 		}
 
-		hero.spend( 1f );
-		hero.busy();
-		hero.sprite.operate(hero.pos);
+		if (ctx.heroFX) {
+			ctx.turns.spendAfterThrow(1f);
+		}
 
-		onSpellCast(tome, hero);
-
+		onSpellCast(ctx, tome);
+		return true;
 	}
 }

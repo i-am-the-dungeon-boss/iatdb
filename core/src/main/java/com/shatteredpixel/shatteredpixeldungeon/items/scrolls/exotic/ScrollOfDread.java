@@ -32,34 +32,45 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.watabou.noosa.audio.Sample;
 
 public class ScrollOfDread extends ExoticScroll {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.SCROLL_DREAD;
 	}
-	
+
 	@Override
 	public void doRead() {
+		doReadAs(UseContext.hero(curUser));
+	}
 
-		detach(curUser.belongings.backpack);
-		new Flare( 5, 32 ).color( 0xFF0000, true ).show( curUser.sprite, 2f );
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+	@Override
+	protected boolean doReadAs(UseContext ctx) {
+		detach(ctx.kit.belongings.backpack);
 
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+		if (UseContext.canWorldFx(ctx.body)) {
+			new Flare(5, 32).color(0xFF0000, true).show(ctx.body.sprite, 2f);
+			Sample.INSTANCE.play(Assets.Sounds.READ);
+		}
+
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
-				if (!mob.isImmune(Dread.class)){
-					Buff.affect( mob, Dread.class ).object = curUser.id();
+				if (!mob.isImmune(Dread.class)) {
+					Buff.affect(mob, Dread.class).object = ctx.body.id();
 				} else {
-					Buff.affect( mob, Terror.class, Terror.DURATION ).object = curUser.id();
+					Buff.affect(mob, Terror.class, Terror.DURATION).object = ctx.body.id();
 				}
 			}
 		}
 
-		identify();
-		
-		readAnimation();
+		if (ctx.heroFX) {
+			identify();
+		}
+
+		readAnimation(ctx);
+		return true;
 	}
 }

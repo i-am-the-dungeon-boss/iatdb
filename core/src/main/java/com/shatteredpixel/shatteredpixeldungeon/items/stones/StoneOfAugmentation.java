@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.stones;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment;
@@ -42,7 +43,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
 
 public class StoneOfAugmentation extends InventoryStone {
-	
+
 	{
 		preferredBag = Belongings.Backpack.class;
 		image = ItemSpriteSheet.STONE_AUGMENTATION;
@@ -54,36 +55,59 @@ public class StoneOfAugmentation extends InventoryStone {
 	}
 
 	@Override
+	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
+		// Echo: no WndAugment — default SPEED / EVASION
+		if (item instanceof Weapon) {
+			applyAs(ctx, (Weapon) item, Weapon.Augment.SPEED);
+		} else if (item instanceof Armor) {
+			applyAs(ctx, (Armor) item, Armor.Augment.EVASION);
+		} else {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
 	protected void onItemSelected(Item item) {
-		
-		GameScene.show(new WndAugment( item));
-		
+		GameScene.show(new WndAugment(item));
 	}
-	
-	public void apply( Weapon weapon, Weapon.Augment augment ) {
-		
+
+	public void apply(Weapon weapon, Weapon.Augment augment) {
+		applyAs(UseContext.hero(curUser), weapon, augment);
+	}
+
+	public void apply(Armor armor, Armor.Augment augment) {
+		applyAs(UseContext.hero(curUser), armor, augment);
+	}
+
+	private void applyAs(UseContext ctx, Weapon weapon, Weapon.Augment augment) {
 		weapon.augment = augment;
-		useAnimation();
-		ScrollOfUpgrade.upgrade(curUser);
+		if (ctx.heroFX) {
+			curUser = ctx.kit;
+			useAnimation();
+			ScrollOfUpgrade.upgrade(ctx.kit);
+		}
 		if (!anonymous) {
-			curItem.detach(curUser.belongings.backpack);
+			detach(ctx.kit.belongings.backpack);
 			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
+			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
 		}
 	}
-	
-	public void apply( Armor armor, Armor.Augment augment ) {
-		
+
+	private void applyAs(UseContext ctx, Armor armor, Armor.Augment augment) {
 		armor.augment = augment;
-		useAnimation();
-		ScrollOfUpgrade.upgrade(curUser);
+		if (ctx.heroFX) {
+			curUser = ctx.kit;
+			useAnimation();
+			ScrollOfUpgrade.upgrade(ctx.kit);
+		}
 		if (!anonymous) {
-			curItem.detach(curUser.belongings.backpack);
+			detach(ctx.kit.belongings.backpack);
 			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
+			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return 30 * quantity;
@@ -93,79 +117,81 @@ public class StoneOfAugmentation extends InventoryStone {
 	public int energyVal() {
 		return 5 * quantity;
 	}
-	
+
 	public class WndAugment extends Window {
-		
-		private static final int WIDTH			= 120;
-		private static final int MARGIN 		= 2;
-		private static final int BUTTON_WIDTH	= WIDTH - MARGIN * 2;
-		private static final int BUTTON_HEIGHT	= 20;
-		
-		public WndAugment( final Item toAugment ) {
+
+		private static final int WIDTH = 120;
+		private static final int MARGIN = 2;
+		private static final int BUTTON_WIDTH = WIDTH - MARGIN * 2;
+		private static final int BUTTON_HEIGHT = 20;
+
+		public WndAugment(final Item toAugment) {
 			super();
-			
-			IconTitle titlebar = new IconTitle( toAugment );
-			titlebar.setRect( 0, 0, WIDTH, 0 );
-			add( titlebar );
-			
-			RenderedTextBlock tfMesage = PixelScene.renderTextBlock( Messages.get(this, "choice"), 8 );
+
+			IconTitle titlebar = new IconTitle(toAugment);
+			titlebar.setRect(0, 0, WIDTH, 0);
+			add(titlebar);
+
+			RenderedTextBlock tfMesage = PixelScene.renderTextBlock(Messages.get(this, "choice"), 8);
 			tfMesage.maxWidth(WIDTH - MARGIN * 2);
 			tfMesage.setPos(MARGIN, titlebar.bottom() + MARGIN);
-			add( tfMesage );
-			
+			add(tfMesage);
+
 			float pos = tfMesage.top() + tfMesage.height();
-			
-			if (toAugment instanceof Weapon){
-				for (final Weapon.Augment aug : Weapon.Augment.values()){
-					if (((Weapon) toAugment).augment != aug){
-						RedButton btnSpeed = new RedButton( Messages.get(this, aug.name()) ) {
+
+			if (toAugment instanceof Weapon) {
+				for (final Weapon.Augment aug : Weapon.Augment.values()) {
+					if (((Weapon) toAugment).augment != aug) {
+						RedButton btnSpeed = new RedButton(Messages.get(this, aug.name())) {
 							@Override
 							protected void onClick() {
 								hide();
-								StoneOfAugmentation.this.apply( (Weapon)toAugment, aug );
+								StoneOfAugmentation.this.apply((Weapon) toAugment, aug);
 							}
 						};
-						btnSpeed.setRect( MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT );
-						add( btnSpeed );
-						
+						btnSpeed.setRect(MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+						add(btnSpeed);
+
 						pos = btnSpeed.bottom();
 					}
 				}
-				
-			} else if (toAugment instanceof Armor){
-				for (final Armor.Augment aug : Armor.Augment.values()){
-					if (((Armor) toAugment).augment != aug){
-						RedButton btnSpeed = new RedButton( Messages.get(this, aug.name()) ) {
+
+			} else if (toAugment instanceof Armor) {
+				for (final Armor.Augment aug : Armor.Augment.values()) {
+					if (((Armor) toAugment).augment != aug) {
+						RedButton btnSpeed = new RedButton(Messages.get(this, aug.name())) {
 							@Override
 							protected void onClick() {
 								hide();
-								StoneOfAugmentation.this.apply( (Armor) toAugment, aug );
+								StoneOfAugmentation.this.apply((Armor) toAugment, aug);
 							}
 						};
-						btnSpeed.setRect( MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT );
-						add( btnSpeed );
-						
+						btnSpeed.setRect(MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+						add(btnSpeed);
+
 						pos = btnSpeed.bottom();
 					}
 				}
 			}
-			
-			RedButton btnCancel = new RedButton( Messages.get(this, "cancel") ) {
+
+			RedButton btnCancel = new RedButton(Messages.get(this, "cancel")) {
 				@Override
 				protected void onClick() {
 					hide();
-					if (!anonymous) StoneOfAugmentation.this.collect();
+					if (!anonymous)
+						StoneOfAugmentation.this.collect();
 				}
 			};
-			btnCancel.setRect( MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT );
-			add( btnCancel );
-			
-			resize( WIDTH, (int)btnCancel.bottom() + MARGIN );
+			btnCancel.setRect(MARGIN, pos + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+			add(btnCancel);
+
+			resize(WIDTH, (int) btnCancel.bottom() + MARGIN);
 		}
-		
+
 		@Override
 		public void onBackPressed() {
-			if (!anonymous) StoneOfAugmentation.this.collect();
+			if (!anonymous)
+				StoneOfAugmentation.this.collect();
 			super.onBackPressed();
 		}
 	}

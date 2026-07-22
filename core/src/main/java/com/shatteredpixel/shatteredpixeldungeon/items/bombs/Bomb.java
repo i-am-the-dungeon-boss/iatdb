@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -114,6 +115,16 @@ public class Bomb extends Item {
 			lightingFuse = false;
 
 		super.execute(hero, action);
+	}
+
+	/**
+	 * Shared throw path lights the fuse (same as {@link #AC_LIGHTTHROW}) so Hero
+	 * and Echo both get a live bomb without CellSelector.
+	 */
+	@Override
+	public boolean throwAs(UseContext ctx, int dst) {
+		lightingFuse = true;
+		return super.throwAs(ctx, dst);
 	}
 
 	protected Fuse createFuse(){

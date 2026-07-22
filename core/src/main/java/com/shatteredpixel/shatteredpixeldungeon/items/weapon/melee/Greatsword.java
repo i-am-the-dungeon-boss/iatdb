@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -55,10 +56,14 @@ public class Greatsword extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		//+(7+lvl) damage, roughly +40% base dmg, +30% scaling
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
 		int dmgBoost = augment.damageFactor(7 + buffedLvl());
-		Sword.cleaveAbility(hero, target, 1, dmgBoost, this);
+		return Sword.cleaveAbility(ctx, target, 1, dmgBoost, this);
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override

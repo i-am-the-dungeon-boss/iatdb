@@ -30,9 +30,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineIntervention;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
@@ -50,17 +50,20 @@ public class AscendedForm extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+		Char body = ctx.body;
 
-		Buff.affect(hero, AscendBuff.class).reset();
-		hero.sprite.operate(hero.pos);
-		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-		new Flare(6, 48).color(0xFFFF00, true).show(hero.sprite, 2f);
+		Buff.affect(body, AscendBuff.class).reset();
+		if (UseContext.canWorldFx(body)) {
+			body.sprite.operate(body.pos);
+			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
+			new Flare(6, 48).color(0xFFFF00, true).show(body.sprite, 2f);
+		}
 
-		armor.charge -= chargeUse(hero);
+		armor.charge -= chargeUse(ctx.kit);
 		armor.updateQuickslot();
-		Invisibility.dispel();
-		hero.spendAndNext(Actor.TICK);
+		Invisibility.dispel(body);
+		ctx.turns.spendAfterThrow(Actor.TICK);
 
 	}
 
@@ -71,7 +74,7 @@ public class AscendedForm extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.DIVINE_INTERVENTION, Talent.JUDGEMENT, Talent.FLASH, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.DIVINE_INTERVENTION, Talent.JUDGEMENT, Talent.FLASH, Talent.HEROIC_ENERGY };
 	}
 
 	public static class AscendBuff extends ShieldBuff {
@@ -97,13 +100,15 @@ public class AscendedForm extends ArmorAbility {
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)left);
+			return Integer.toString((int) left);
 		}
 
 		@Override
 		public void fx(boolean on) {
-			if (on) target.sprite.add(CharSprite.State.GLOWING);
-			else    target.sprite.remove(CharSprite.State.GLOWING);
+			if (on)
+				target.sprite.add(CharSprite.State.GLOWING);
+			else
+				target.sprite.remove(CharSprite.State.GLOWING);
 		}
 
 		public int left = 10;
@@ -111,22 +116,22 @@ public class AscendedForm extends ArmorAbility {
 		public int flashCasts = 0;
 		public boolean divineInverventionCast = false;
 
-		public void reset(){
+		public void reset() {
 			setShield(30);
-			left = (int)DURATION;
+			left = (int) DURATION;
 		}
 
-		public void extend( int amt ){
+		public void extend(int amt) {
 			left += amt;
 		}
 
 		@Override
 		public boolean act() {
 			left--;
-			if (left <= 0){
+			if (left <= 0) {
 				detach();
-				for (Char ch : Actor.chars()){
-					if (ch.buff(DivineIntervention.DivineShield.class) != null){
+				for (Char ch : Actor.chars()) {
+					if (ch.buff(DivineIntervention.DivineShield.class) != null) {
 						ch.buff(DivineIntervention.DivineShield.class).detach();
 					}
 				}

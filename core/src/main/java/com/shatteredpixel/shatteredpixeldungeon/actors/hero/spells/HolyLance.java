@@ -35,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
@@ -63,9 +64,10 @@ public class HolyLance extends TargetedClericSpell {
 
 	@Override
 	public String desc() {
-		int min = 15 + 15*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);
-		int max = Math.round(27.5f + 27.5f*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));
-		return Messages.get(this, "desc", min, max) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		int min = 15 + 15 * Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);
+		int max = Math.round(27.5f + 27.5f * Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));
+		return Messages.get(this, "desc", min, max) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -86,15 +88,66 @@ public class HolyLance extends TargetedClericSpell {
 	}
 
 	@Override
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		if (target == null || Dungeon.level == null) {
+			return false;
+		}
+		Ballistica aim = new Ballistica(ctx.body.pos, target, targetingFlags());
+		if (Actor.findChar(aim.collisionPos) == ctx.body) {
+			return false;
+		}
+
+		Runnable applyHit = () -> {
+			Char enemy = Actor.findChar(aim.collisionPos);
+			if (enemy != null) {
+				int min = 15 + 15 * ctx.kit.pointsInTalent(Talent.HOLY_LANCE);
+				int max = Math.round(27.5f + 27.5f * ctx.kit.pointsInTalent(Talent.HOLY_LANCE));
+				if (Char.hasProp(enemy, Char.Property.UNDEAD) || Char.hasProp(enemy, Char.Property.DEMONIC)) {
+					min = max;
+				}
+				enemy.damage(Hero.heroDamageIntRange(min, max), HolyLance.this);
+				if (UseContext.canWorldFx(enemy)) {
+					Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.8f, 1f));
+					Sample.INSTANCE.play(Assets.Sounds.HIT_STAB, 1, Random.Float(0.8f, 1f));
+					enemy.sprite.burst(0xFFFFFFFF, 10);
+				}
+				if (enemy.isActive()) {
+					Buff.affect(enemy, GuidingLight.Illuminated.class);
+				}
+			} else {
+				Dungeon.level.pressCell(aim.collisionPos);
+			}
+			FlavourBuff.affect(ctx.kit, LanceCooldown.class, 30f);
+			onSpellCast(ctx, tome);
+		};
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			Sample.INSTANCE.play(Assets.Sounds.ZAP);
+			ctx.body.sprite.zap(target);
+			Char enemy = Actor.findChar(aim.collisionPos);
+			if (enemy != null && enemy.sprite != null) {
+				((MissileSprite) ctx.body.sprite.parent.recycle(MissileSprite.class)).reset(
+						ctx.body.sprite, enemy.sprite, new HolyLanceVFX(), applyHit::run);
+			} else {
+				((MissileSprite) ctx.body.sprite.parent.recycle(MissileSprite.class)).reset(
+						ctx.body.sprite, target, new HolyLanceVFX(), applyHit::run);
+			}
+		} else {
+			applyHit.run();
+		}
+		return true;
+	}
+
+	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());
 
-		if (Actor.findChar( aim.collisionPos ) == hero){
-			GLog.i( Messages.get(Wand.class, "self_target") );
+		if (Actor.findChar(aim.collisionPos) == hero) {
+			GLog.i(Messages.get(Wand.class, "self_target"));
 			return;
 		}
 
@@ -104,54 +157,53 @@ public class HolyLance extends TargetedClericSpell {
 			QuickSlotButton.target(Actor.findChar(target));
 		}
 
-		hero.sprite.zap( target );
+		hero.sprite.zap(target);
 		hero.busy();
 
 		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 
 		Char enemy = Actor.findChar(aim.collisionPos);
 		if (enemy != null) {
-			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).
-					reset(hero.sprite,
-							enemy.sprite,
-							new HolyLanceVFX(),
-							new Callback() {
-								@Override
-								public void call() {
-									int min = 15 + 15*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);
-									int max = Math.round(27.5f + 27.5f*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));
-									if (Char.hasProp(enemy, Char.Property.UNDEAD) || Char.hasProp(enemy, Char.Property.DEMONIC)){
-										min = max;
-									}
-									enemy.damage(Hero.heroDamageIntRange(min, max), HolyLance.this);
-									Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.8f, 1f) );
-									Sample.INSTANCE.play( Assets.Sounds.HIT_STAB, 1, Random.Float(0.8f, 1f) );
+			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).reset(hero.sprite,
+					enemy.sprite,
+					new HolyLanceVFX(),
+					new Callback() {
+						@Override
+						public void call() {
+							int min = 15 + 15 * Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);
+							int max = Math.round(27.5f + 27.5f * Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));
+							if (Char.hasProp(enemy, Char.Property.UNDEAD)
+									|| Char.hasProp(enemy, Char.Property.DEMONIC)) {
+								min = max;
+							}
+							enemy.damage(Hero.heroDamageIntRange(min, max), HolyLance.this);
+							Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.8f, 1f));
+							Sample.INSTANCE.play(Assets.Sounds.HIT_STAB, 1, Random.Float(0.8f, 1f));
 
-									if (enemy.isActive()){
-										Buff.affect(enemy, GuidingLight.Illuminated.class);
-									}
+							if (enemy.isActive()) {
+								Buff.affect(enemy, GuidingLight.Illuminated.class);
+							}
 
-									enemy.sprite.burst(0xFFFFFFFF, 10);
-									hero.spendAndNext(1f);
-									onSpellCast(tome, hero);
-									FlavourBuff.affect(hero, LanceCooldown.class, 30f);
-								}
-							});
+							enemy.sprite.burst(0xFFFFFFFF, 10);
+							hero.spendAndNext(1f);
+							onSpellCast(tome, hero);
+							FlavourBuff.affect(hero, LanceCooldown.class, 30f);
+						}
+					});
 		} else {
-			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).
-					reset(hero.sprite,
-							target,
-							new HolyLanceVFX(),
-							new Callback() {
-								@Override
-								public void call() {
-									Splash.at(target, 0xFFFFFFFF, 10);
-									Dungeon.level.pressCell(aim.collisionPos);
-									hero.spendAndNext(1f);
-									onSpellCast(tome, hero);
-									FlavourBuff.affect(hero, LanceCooldown.class, 30f);
-								}
-							});
+			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).reset(hero.sprite,
+					target,
+					new HolyLanceVFX(),
+					new Callback() {
+						@Override
+						public void call() {
+							Splash.at(target, 0xFFFFFFFF, 10);
+							Dungeon.level.pressCell(aim.collisionPos);
+							hero.spendAndNext(1f);
+							onSpellCast(tome, hero);
+							FlavourBuff.affect(hero, LanceCooldown.class, 30f);
+						}
+					});
 		}
 
 	}
@@ -170,7 +222,7 @@ public class HolyLance extends TargetedClericSpell {
 		@Override
 		public Emitter emitter() {
 			Emitter emitter = new Emitter();
-			emitter.pos( 5, 5, 0, 0);
+			emitter.pos(5, 5, 0, 0);
 			emitter.fillTarget = false;
 			emitter.pour(SparkParticle.FACTORY, 0.025f);
 			return emitter;
@@ -189,6 +241,8 @@ public class HolyLance extends TargetedClericSpell {
 			icon.hardlight(0.67f, 0.67f, 0);
 		}
 
-		public float iconFadePercent() { return Math.max(0, visualcooldown() / 30); }
+		public float iconFadePercent() {
+			return Math.max(0, visualcooldown() / 30);
+		}
 	}
 }

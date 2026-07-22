@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Transmuting;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
@@ -61,10 +62,10 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.Reflection;
 
 public class ScrollOfTransmutation extends InventoryScroll {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.SCROLL_TRANSMUTE;
-		
+
 		bones = true;
 
 		talentFactor = 2f;
@@ -72,122 +73,126 @@ public class ScrollOfTransmutation extends InventoryScroll {
 
 	@Override
 	protected boolean usableOnItem(Item item) {
-		//all melee weapons, except pickaxe when in a mining level
-		if (item instanceof MeleeWeapon){
+		// all melee weapons, except pickaxe when in a mining level
+		if (item instanceof MeleeWeapon) {
 			return !(item instanceof Pickaxe && Dungeon.level instanceof MiningLevel);
 
-		//all missile weapons except untipped darts
-		} else if (item instanceof MissileWeapon){
+			// all missile weapons except untipped darts
+		} else if (item instanceof MissileWeapon) {
 			return item.getClass() != Dart.class;
 
-		//all regular or exotic potions. No brews or elixirs
-		} else if (item instanceof Potion){
+			// all regular or exotic potions. No brews or elixirs
+		} else if (item instanceof Potion) {
 			return !(item instanceof Elixir || item instanceof Brew);
 
-		//all regular or exotic scrolls, except itself (unless un-ided, in which case it was already consumed)
+			// all regular or exotic scrolls, except itself (unless un-ided, in which case
+			// it was already consumed)
 		} else if (item instanceof Scroll) {
 			return item != this || item.quantity() > 1 || identifiedByUse;
 
-		//all non-unique artifacts (no holy tome or cloak of shadows, basically)
+			// all non-unique artifacts (no holy tome or cloak of shadows, basically)
 		} else if (item instanceof Artifact) {
 			return !item.unique;
 
-		//all rings, wands, trinkets, seeds, and runestones
+			// all rings, wands, trinkets, seeds, and runestones
 		} else {
 			return item instanceof Ring || item instanceof Wand || item instanceof Trinket
 					|| item instanceof Plant.Seed || item instanceof Runestone;
 		}
 	}
-	
+
 	@Override
 	protected void onItemSelected(Item item) {
-		
+
 		Item result = changeItem(item);
-		
-		if (result == null){
-			//This shouldn't ever trigger
-			GLog.n( Messages.get(this, "nothing") );
-			curItem.collect( curUser.belongings.backpack );
+		Hero owner = curUser;
+
+		if (result == null) {
+			// This shouldn't ever trigger
+			GLog.n(Messages.get(this, "nothing"));
+			curItem.collect(owner.belongings.backpack);
 		} else {
 			if (result != item) {
 				int slot = Dungeon.quickslot.getSlot(item);
-				if (item.isEquipped(Dungeon.hero)) {
-					item.cursed = false; //to allow it to be unequipped
-					if (item instanceof Artifact && result instanceof Ring){
-						//if we turned an equipped artifact into a ring, ring goes into inventory
-						((EquipableItem) item).doUnequip(Dungeon.hero, false);
-						if (!result.collect()){
-							Dungeon.level.drop(result, curUser.pos).sprite.drop();
+				if (item.isEquipped(owner)) {
+					item.cursed = false; // to allow it to be unequipped
+					if (item instanceof Artifact && result instanceof Ring) {
+						// if we turned an equipped artifact into a ring, ring goes into inventory
+						((EquipableItem) item).doUnequip(owner, false);
+						if (!result.collect()) {
+							Dungeon.level.drop(result, owner.pos).sprite.drop();
 						}
-					} else if (item instanceof KindOfWeapon && Dungeon.hero.belongings.secondWep() == item){
-						((EquipableItem) item).doUnequip(Dungeon.hero, false);
-						((KindOfWeapon) result).equipSecondary(Dungeon.hero);
+					} else if (item instanceof KindOfWeapon && owner.belongings.secondWep() == item) {
+						((EquipableItem) item).doUnequip(owner, false);
+						((KindOfWeapon) result).equipSecondary(owner);
 					} else {
-						((EquipableItem) item).doUnequip(Dungeon.hero, false);
-						((EquipableItem) result).doEquip(Dungeon.hero);
+						((EquipableItem) item).doUnequip(owner, false);
+						((EquipableItem) result).doEquip(owner);
 					}
-					Dungeon.hero.spend(-Dungeon.hero.cooldown()); //cancel equip/unequip time
+					owner.spend(-owner.cooldown()); // cancel equip/unequip time
 				} else {
-					if (item instanceof MissileWeapon && !(item instanceof TippedDart)){
-						item.detachAll(Dungeon.hero.belongings.backpack);
+					if (item instanceof MissileWeapon && !(item instanceof TippedDart)) {
+						item.detachAll(owner.belongings.backpack);
 					} else {
-						item.detach(Dungeon.hero.belongings.backpack);
+						item.detach(owner.belongings.backpack);
 					}
 					if (!result.collect()) {
-						Dungeon.level.drop(result, curUser.pos).sprite.drop();
-					} else if (result.stackable && Dungeon.hero.belongings.getSimilar(result) != null){
-						result = Dungeon.hero.belongings.getSimilar(result);
+						Dungeon.level.drop(result, owner.pos).sprite.drop();
+					} else if (result.stackable && owner.belongings.getSimilar(result) != null) {
+						result = owner.belongings.getSimilar(result);
 					}
 				}
 				if (slot != -1
 						&& result.defaultAction() != null
 						&& !Dungeon.quickslot.isNonePlaceholder(slot)
-						&& Dungeon.hero.belongings.contains(result)){
+						&& owner.belongings.contains(result)) {
 					Dungeon.quickslot.setSlot(slot, result);
 				}
 			}
-			if (result.isIdentified()){
+			if (result.isIdentified()) {
 				Catalog.setSeen(result.getClass());
 				Statistics.itemTypesDiscovered.add(result.getClass());
 			}
 			Transmuting.show(curUser, item, result);
-			curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);
-			GLog.p( Messages.get(this, "morph") );
+			if (curUser.sprite != null) {
+				curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);
+			}
+			GLog.p(Messages.get(this, "morph"));
 		}
-		
+
 	}
 
-	public static Item changeItem( Item item ){
+	public static Item changeItem(Item item) {
 		if (item instanceof MagesStaff) {
 			return changeStaff((MagesStaff) item);
-		}else if (item instanceof TippedDart){
-			return changeTippedDart( (TippedDart)item );
+		} else if (item instanceof TippedDart) {
+			return changeTippedDart((TippedDart) item);
 		} else if (item instanceof MeleeWeapon || item instanceof MissileWeapon) {
-			return changeWeapon( (Weapon)item );
+			return changeWeapon((Weapon) item);
 		} else if (item instanceof Scroll) {
-			return changeScroll( (Scroll)item );
+			return changeScroll((Scroll) item);
 		} else if (item instanceof Potion) {
-			return changePotion( (Potion)item );
+			return changePotion((Potion) item);
 		} else if (item instanceof Ring) {
-			return changeRing( (Ring)item );
+			return changeRing((Ring) item);
 		} else if (item instanceof Wand) {
-			return changeWand( (Wand)item );
+			return changeWand((Wand) item);
 		} else if (item instanceof Plant.Seed) {
 			return changeSeed((Plant.Seed) item);
 		} else if (item instanceof Runestone) {
 			return changeStone((Runestone) item);
 		} else if (item instanceof Artifact) {
-			Artifact a = changeArtifact( (Artifact)item );
-			if (a == null){
-				//if no artifacts are left, generate a random ring with shared ID/curse state
-				//artifact and ring levels are not exactly equivalent, give the ring up to +2
+			Artifact a = changeArtifact((Artifact) item);
+			if (a == null) {
+				// if no artifacts are left, generate a random ring with shared ID/curse state
+				// artifact and ring levels are not exactly equivalent, give the ring up to +2
 				Item result = Generator.randomUsingDefaults(Generator.Category.RING);
 				result.levelKnown = item.levelKnown;
 				result.cursed = item.cursed;
 				result.cursedKnown = item.cursedKnown;
-				if (item.visiblyUpgraded() == 10){
+				if (item.visiblyUpgraded() == 10) {
 					result.level(2);
-				} else if (item.visiblyUpgraded() >= 5){
+				} else if (item.visiblyUpgraded() >= 5) {
 					result.level(1);
 				} else {
 					result.level(0);
@@ -197,16 +202,16 @@ public class ScrollOfTransmutation extends InventoryScroll {
 				return a;
 			}
 		} else if (item instanceof Trinket) {
-			return changeTrinket( (Trinket)item );
+			return changeTrinket((Trinket) item);
 		} else {
 			return null;
 		}
 	}
-	
-	private static MagesStaff changeStaff( MagesStaff staff ){
-		Class<?extends Wand> wandClass = staff.wandClass();
-		
-		if (wandClass == null){
+
+	private static MagesStaff changeStaff(MagesStaff staff) {
+		Class<? extends Wand> wandClass = staff.wandClass();
+
+		if (wandClass == null) {
 			return null;
 		} else {
 			Wand n;
@@ -218,11 +223,11 @@ public class ScrollOfTransmutation extends InventoryScroll {
 			n.identify();
 			staff.imbueWand(n, null);
 		}
-		
+
 		return staff;
 	}
 
-	private static TippedDart changeTippedDart( TippedDart dart ){
+	private static TippedDart changeTippedDart(TippedDart dart) {
 		TippedDart n;
 		do {
 			n = TippedDart.randomTipped(1);
@@ -230,29 +235,29 @@ public class ScrollOfTransmutation extends InventoryScroll {
 
 		return n;
 	}
-	
-	private static Weapon changeWeapon( Weapon w ) {
+
+	private static Weapon changeWeapon(Weapon w) {
 		Weapon n;
 		Generator.Category c;
 		if (w instanceof MeleeWeapon) {
-			c = Generator.wepTiers[((MeleeWeapon)w).tier - 1];
+			c = Generator.wepTiers[((MeleeWeapon) w).tier - 1];
 		} else {
-			c = Generator.misTiers[((MissileWeapon)w).tier - 1];
+			c = Generator.misTiers[((MissileWeapon) w).tier - 1];
 		}
-		
+
 		do {
-			n = (Weapon)Generator.randomUsingDefaults(c);
+			n = (Weapon) Generator.randomUsingDefaults(c);
 		} while (Challenges.isItemBlocked(n) || n.getClass() == w.getClass());
 
 		n.level(0);
 		n.quantity(w.quantity());
 		int level = w.trueLevel();
 		if (level > 0) {
-			n.upgrade( level );
+			n.upgrade(level);
 		} else if (level < 0) {
-			n.degrade( -level );
+			n.degrade(-level);
 		}
-		
+
 		n.enchantment = w.enchantment;
 		n.curseInfusionBonus = w.curseInfusionBonus;
 		n.masteryPotionBonus = w.masteryPotionBonus;
@@ -262,52 +267,53 @@ public class ScrollOfTransmutation extends InventoryScroll {
 		n.augment = w.augment;
 		n.enchantHardened = w.enchantHardened;
 
-		//technically a new set, ensure old one is destroyed (except for darts)
-		if (w instanceof MissileWeapon && w.isUpgradable()){
-			Buff.affect(Dungeon.hero, MissileWeapon.UpgradedSetTracker.class).levelThresholds.put(((MissileWeapon) w).setID, Integer.MAX_VALUE);
-			//also extra missile weapon properties
-			((MissileWeapon) n).damage(100 - ((MissileWeapon)w).durabilityLeft());
+		// technically a new set, ensure old one is destroyed (except for darts)
+		if (w instanceof MissileWeapon && w.isUpgradable()) {
+			Buff.affect(Dungeon.hero, MissileWeapon.UpgradedSetTracker.class).levelThresholds
+					.put(((MissileWeapon) w).setID, Integer.MAX_VALUE);
+			// also extra missile weapon properties
+			((MissileWeapon) n).damage(100 - ((MissileWeapon) w).durabilityLeft());
 		}
-		
+
 		return n;
-		
+
 	}
-	
-	private static Ring changeRing( Ring r ) {
+
+	private static Ring changeRing(Ring r) {
 		Ring n;
 		do {
-			n = (Ring)Generator.randomUsingDefaults( Generator.Category.RING );
+			n = (Ring) Generator.randomUsingDefaults(Generator.Category.RING);
 		} while (Challenges.isItemBlocked(n) || n.getClass() == r.getClass());
-		
+
 		n.level(0);
-		
+
 		int level = r.level();
 		if (level > 0) {
-			n.upgrade( level );
+			n.upgrade(level);
 		} else if (level < 0) {
-			n.degrade( -level );
+			n.degrade(-level);
 		}
-		
+
 		n.levelKnown = r.levelKnown;
 		n.cursedKnown = r.cursedKnown;
 		n.cursed = r.cursed;
-		
+
 		return n;
 	}
-	
-	private static Artifact changeArtifact( Artifact a ) {
+
+	private static Artifact changeArtifact(Artifact a) {
 		Artifact n;
 		do {
 			n = Generator.randomArtifact();
-		} while ( n != null && (Challenges.isItemBlocked(n) || n.getClass() == a.getClass()));
-		
-		if (n != null){
+		} while (n != null && (Challenges.isItemBlocked(n) || n.getClass() == a.getClass()));
 
-			if (a instanceof DriedRose){
-				if (((DriedRose) a).ghostWeapon() != null){
+		if (n != null) {
+
+			if (a instanceof DriedRose) {
+				if (((DriedRose) a).ghostWeapon() != null) {
 					Dungeon.level.drop(((DriedRose) a).ghostWeapon(), Dungeon.hero.pos);
 				}
-				if (((DriedRose) a).ghostArmor() != null){
+				if (((DriedRose) a).ghostArmor() != null) {
 					Dungeon.level.drop(((DriedRose) a).ghostArmor(), Dungeon.hero.pos);
 				}
 			}
@@ -318,15 +324,15 @@ public class ScrollOfTransmutation extends InventoryScroll {
 			n.transferUpgrade(a.visiblyUpgraded());
 			return n;
 		}
-		
+
 		return null;
 	}
 
-	private static Trinket changeTrinket( Trinket t ){
+	private static Trinket changeTrinket(Trinket t) {
 		Trinket n;
 		do {
-			n = (Trinket)Generator.random(Generator.Category.TRINKET);
-		} while ( Challenges.isItemBlocked(n) || n.getClass() == t.getClass());
+			n = (Trinket) Generator.random(Generator.Category.TRINKET);
+		} while (Challenges.isItemBlocked(n) || n.getClass() == t.getClass());
 
 		n.level(t.trueLevel());
 		n.levelKnown = t.levelKnown;
@@ -335,16 +341,16 @@ public class ScrollOfTransmutation extends InventoryScroll {
 
 		return n;
 	}
-	
-	private static Wand changeWand( Wand w ) {
+
+	private static Wand changeWand(Wand w) {
 		Wand n;
 		do {
-			n = (Wand)Generator.randomUsingDefaults( Generator.Category.WAND );
-		} while ( Challenges.isItemBlocked(n) || n.getClass() == w.getClass());
-		
-		n.level( 0 );
+			n = (Wand) Generator.randomUsingDefaults(Generator.Category.WAND);
+		} while (Challenges.isItemBlocked(n) || n.getClass() == w.getClass());
+
+		n.level(0);
 		int level = w.trueLevel();
-		n.upgrade( level );
+		n.upgrade(level);
 
 		n.levelKnown = w.levelKnown;
 		n.curChargeKnown = w.curChargeKnown;
@@ -353,33 +359,33 @@ public class ScrollOfTransmutation extends InventoryScroll {
 		n.curseInfusionBonus = w.curseInfusionBonus;
 		n.resinBonus = w.resinBonus;
 
-		n.curCharges =  w.curCharges;
+		n.curCharges = w.curCharges;
 		n.updateLevel();
-		
-		return n;
-	}
-	
-	private static Plant.Seed changeSeed( Plant.Seed s ) {
-		Plant.Seed n;
-		
-		do {
-			n = (Plant.Seed)Generator.randomUsingDefaults( Generator.Category.SEED );
-		} while (n.getClass() == s.getClass());
-		
-		return n;
-	}
-	
-	private static Runestone changeStone( Runestone r ) {
-		Runestone n;
-		
-		do {
-			n = (Runestone) Generator.randomUsingDefaults( Generator.Category.STONE );
-		} while (n.getClass() == r.getClass());
-		
+
 		return n;
 	}
 
-	private static Scroll changeScroll( Scroll s ) {
+	private static Plant.Seed changeSeed(Plant.Seed s) {
+		Plant.Seed n;
+
+		do {
+			n = (Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED);
+		} while (n.getClass() == s.getClass());
+
+		return n;
+	}
+
+	private static Runestone changeStone(Runestone r) {
+		Runestone n;
+
+		do {
+			n = (Runestone) Generator.randomUsingDefaults(Generator.Category.STONE);
+		} while (n.getClass() == r.getClass());
+
+		return n;
+	}
+
+	private static Scroll changeScroll(Scroll s) {
 		if (s instanceof ExoticScroll) {
 			return Reflection.newInstance(ExoticScroll.exoToReg.get(s.getClass()));
 		} else {
@@ -387,14 +393,14 @@ public class ScrollOfTransmutation extends InventoryScroll {
 		}
 	}
 
-	private static Potion changePotion( Potion p ) {
-		if	(p instanceof ExoticPotion) {
+	private static Potion changePotion(Potion p) {
+		if (p instanceof ExoticPotion) {
 			return Reflection.newInstance(ExoticPotion.exoToReg.get(p.getClass()));
 		} else {
 			return Reflection.newInstance(ExoticPotion.regToExo.get(p.getClass()));
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 50 * quantity : super.value();

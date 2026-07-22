@@ -13,6 +13,10 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoRoleExecutor;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
@@ -171,6 +175,48 @@ class EchoBossMovementTest {
 
 		Assertions.assertThat(boss.speed()).isEqualTo(boss.getEchoHero().combatSpeed());
 		Assertions.assertThat(boss.speed()).isEqualTo(3f);
+	}
+
+	@Test
+	@DisplayName("Echo drink haste on body triples boss speed like Hero")
+	void echoDrinkHasteOnBodyTriplesBossSpeed() {
+		Hero player = EchoTestSupport.warriorHero();
+		PotionOfHaste haste = new PotionOfHaste();
+		haste.identify();
+		haste.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, movePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		Potion potion = kit.belongings.getItem(PotionOfHaste.class);
+		Assertions.assertThat(potion).isNotNull();
+		Assertions.assertThat(boss.speed()).isEqualTo(1f);
+
+		potion.drinkAs(UseContext.echo(boss));
+
+		Assertions.assertThat(boss.buff(Haste.class))
+				.as("drinkAs applies self-buffs to the boss body")
+				.isNotNull();
+		Assertions.assertThat(boss.speed())
+				.as("body Haste must affect EchoBoss.speed like Hero.speed")
+				.isEqualTo(3f);
+	}
+
+	@Test
+	@DisplayName("Echo kit Ring of Haste multiplies boss speed like Hero")
+	void echoKitRingOfHasteMultipliesBossSpeed() {
+		Hero player = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, movePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		RingOfHaste ring = new RingOfHaste();
+		kit.belongings.ring = ring;
+		ring.activate(kit);
+
+		float expected = kit.combatSpeed();
+		Assertions.assertThat(expected).isGreaterThan(1f);
+		Assertions.assertThat(boss.speed()).isEqualTo(expected);
 	}
 
 	@Test

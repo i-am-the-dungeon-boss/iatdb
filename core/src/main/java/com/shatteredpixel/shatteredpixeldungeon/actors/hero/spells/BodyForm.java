@@ -25,10 +25,12 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
@@ -51,7 +53,8 @@ public class BodyForm extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", duration()) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", duration()) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -71,8 +74,43 @@ public class BodyForm extends ClericSpell {
 
 	}
 
-	public static int duration(){
-		return Math.round(13.33f + 6.67f* Dungeon.hero.pointsInTalent(Talent.BODY_FORM));
+	/**
+	 * Echo: apply BodyFormBuff from equipped weapon enchantment or armor glyph.
+	 * Hero: opens {@link Trinity.WndItemtypeSelect}.
+	 */
+	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx.heroFX) {
+			onCast(tome, ctx.kit);
+			return false;
+		}
+		Bundlable effect = null;
+		if (ctx.kit.belongings.weapon() instanceof Weapon) {
+			Weapon.Enchantment ench = ((Weapon) ctx.kit.belongings.weapon()).enchantment;
+			if (ench != null) {
+				effect = ench;
+			}
+		}
+		if (effect == null && ctx.kit.belongings.armor() != null) {
+			Armor.Glyph glyph = ctx.kit.belongings.armor().glyph;
+			if (glyph != null) {
+				effect = glyph;
+			}
+		}
+		if (effect == null) {
+			return false;
+		}
+		Buff.prolong(ctx.body, BodyFormBuff.class, duration(ctx.kit)).setEffect(effect);
+		onSpellCast(ctx, tome);
+		return true;
+	}
+
+	public static int duration() {
+		return duration(Dungeon.hero);
+	}
+
+	public static int duration(Hero hero) {
+		return Math.round(13.33f + 6.67f * hero.pointsInTalent(Talent.BODY_FORM));
 	}
 
 	public static class BodyFormBuff extends FlavourBuff {
@@ -98,19 +136,19 @@ public class BodyForm extends ClericSpell {
 			return Math.max(0, (duration() - visualcooldown()) / duration());
 		}
 
-		public void setEffect(Bundlable effect){
+		public void setEffect(Bundlable effect) {
 			this.effect = effect;
 		}
 
-		public Weapon.Enchantment enchant(){
-			if (effect instanceof Weapon.Enchantment){
+		public Weapon.Enchantment enchant() {
+			if (effect instanceof Weapon.Enchantment) {
 				return (Weapon.Enchantment) effect;
 			}
 			return null;
 		}
 
-		public Armor.Glyph glyph(){
-			if (effect instanceof Armor.Glyph){
+		public Armor.Glyph glyph() {
+			if (effect instanceof Armor.Glyph) {
 				return (Armor.Glyph) effect;
 			}
 			return null;
@@ -118,9 +156,9 @@ public class BodyForm extends ClericSpell {
 
 		@Override
 		public String desc() {
-			if (enchant() != null){
+			if (enchant() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(enchant().name()), dispTurns());
-			} else if (glyph() != null){
+			} else if (glyph() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(glyph().name()), dispTurns());
 			}
 			return super.desc();

@@ -25,6 +25,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -38,7 +39,9 @@ public abstract class TargetedClericSpell extends ClericSpell {
 		GameScene.selectCell(new CellSelector.Listener() {
 			@Override
 			public void onSelect(Integer cell) {
-				onTargetSelected(tome, hero, cell);
+				if (cell != null) {
+					castAs(UseContext.hero(hero), tome, cell);
+				}
 			}
 
 			@Override
@@ -46,6 +49,29 @@ public abstract class TargetedClericSpell extends ClericSpell {
 				return targetingPrompt();
 			}
 		});
+	}
+
+	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx == null || ctx.body == null || ctx.kit == null || tome == null) {
+			return false;
+		}
+		if (targetingFlags() != -1 && target == null) {
+			if (ctx.heroFX) {
+				onCast(tome, ctx.kit);
+			}
+			return false;
+		}
+		if (ctx.heroFX) {
+			onTargetSelected(tome, ctx.kit, target);
+			return true;
+		}
+		return castAtTarget(ctx, tome, target);
+	}
+
+	/** Char-safe targeted effect for Echo (cell already chosen). */
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		return false;
 	}
 
 	@Override

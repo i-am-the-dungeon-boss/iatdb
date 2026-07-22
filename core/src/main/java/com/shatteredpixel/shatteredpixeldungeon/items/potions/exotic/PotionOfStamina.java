@@ -24,6 +24,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -37,11 +38,12 @@ public class PotionOfStamina extends ExoticPotion {
 	}
 	
 	@Override
-	public void apply(Hero hero) {
-		identify();
-		
-		Buff.prolong(hero, Stamina.class, Stamina.DURATION);
-		SpellSprite.show(hero, SpellSprite.HASTE, 0.5f, 1, 0.5f);
+	public void apply(Char ch) {
+		if (ch instanceof Hero) {
+			identify();
+			SpellSprite.show(ch, SpellSprite.HASTE, 0.5f, 1, 0.5f);
+		}
+		Buff.prolong(ch, Stamina.class, Stamina.DURATION);
 	}
 	
 }

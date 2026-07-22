@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -76,7 +77,8 @@ public class DeathMark extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+		Hero kit = ctx.kit;
 		if (target == null){
 			return;
 		}
@@ -84,27 +86,33 @@ public class DeathMark extends ArmorAbility {
 		Char ch = Actor.findChar(target);
 
 		if (ch == null || !Dungeon.level.heroFOV[target]){
-			GLog.w(Messages.get(this, "no_target"));
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "no_target"));
+			}
 			return;
 		} else if (ch.alignment != Char.Alignment.ENEMY){
-			GLog.w(Messages.get(this, "ally_target"));
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "ally_target"));
+			}
 			return;
 		}
 
-		if (ch != null){
-			Buff.affect(ch, DeathMarkTracker.class, DeathMarkTracker.DURATION).setInitialHP(ch.HP);
+		Buff.affect(ch, DeathMarkTracker.class, DeathMarkTracker.DURATION).setInitialHP(ch.HP);
+
+		armor.charge -= chargeUse( kit );
+		armor.updateQuickslot();
+		if (UseContext.canWorldFx(ctx.body)) {
+			ctx.body.sprite.zap(target);
 		}
 
-		armor.charge -= chargeUse( hero );
-		armor.updateQuickslot();
-		hero.sprite.zap(target);
+		if (ctx.heroFX) {
+			kit.next();
+		}
 
-		hero.next();
-
-		if (hero.buff(DoubleMarkTracker.class) != null){
-			hero.buff(DoubleMarkTracker.class).detach();
-		} else if (hero.hasTalent(Talent.DOUBLE_MARK)) {
-			Buff.affect(hero, DoubleMarkTracker.class, 0.01f);
+		if (kit.buff(DoubleMarkTracker.class) != null){
+			kit.buff(DoubleMarkTracker.class).detach();
+		} else if (kit.hasTalent(Talent.DOUBLE_MARK)) {
+			Buff.affect(kit, DoubleMarkTracker.class, 0.01f);
 		}
 
 	}

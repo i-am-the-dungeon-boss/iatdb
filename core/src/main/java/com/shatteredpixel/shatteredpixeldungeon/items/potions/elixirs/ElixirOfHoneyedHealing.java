@@ -45,11 +45,14 @@ public class ElixirOfHoneyedHealing extends Elixir {
 	}
 	
 	@Override
-	public void apply(Hero hero) {
-		PotionOfHealing.cure(hero);
-		PotionOfHealing.heal(hero);
-		Buff.affect(hero, Hunger.class).satisfy(Hunger.HUNGRY/2f);
-		Talent.onFoodEaten(hero, Hunger.HUNGRY/2f, this);
+	public void apply(Char ch) {
+		PotionOfHealing.cure(ch);
+		PotionOfHealing.heal(ch);
+		if (ch instanceof Hero) {
+			Hero hero = (Hero) ch;
+			Buff.affect(hero, Hunger.class).satisfy(Hunger.HUNGRY/2f);
+			Talent.onFoodEaten(hero, Hunger.HUNGRY/2f, this);
+		}
 	}
 	
 	@Override

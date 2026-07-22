@@ -1,37 +1,43 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfHoneyedHealing;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfMagicalSight;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.InventoryStone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
-import com.watabou.utils.Callback;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.watabou.utils.DeviceCompat;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * Executes a resolved role via SPD item/movement APIs (canvas §9).
- * Inventory from {@code echoHero}; effects/VFX/turn on {@link EchoBoss}.
+ * Inventory from {@code echoHero}; effects/VFX/turn on {@link EchoBoss}
+ * via shared {@link UseContext} paths ({@code drinkAs}/{@code throwAs}/
+ * {@code zapAs}/{@code activateAs}/{@code readAs}).
  *
  * @return true if the turn was spent; false to let the boss fall through (e.g.
  *         melee).
@@ -62,44 +68,118 @@ public final class EchoRoleExecutor {
 			return ok;
 		}
 
-		boolean aoe = cap != null && cap.has("hazard") && !cap.optString("hazard").isEmpty();
-		int cell = EchoTargetPicker.pick(boss, status, itemId, aoe);
-		if (needsAimCell(itemId) && cell < 0) {
-			debugExec("no aim cell for " + itemId);
-			return false;
-		}
-
 		Item item = EchoInventory.find(boss.getEchoHero(), itemId);
 		if (item == null) {
 			debugExec("inventory miss item=" + itemId);
 			return false;
 		}
 
+		boolean aoe = cap != null && cap.has("hazard") && !cap.optString("hazard").isEmpty();
+		int cell = EchoTargetPicker.pick(boss, status, itemId, aoe);
+
 		if (item instanceof Potion) {
 			boolean ok = executePotion(boss, (Potion) item, choice.useRole, cell);
 			debugExec("potion " + itemId + " cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
+		if (item instanceof Scroll) {
+			boolean ok = ((Scroll) item).readAs(UseContext.echo(boss));
+			debugExec("scroll " + itemId + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		if (item instanceof ClassArmor) {
+			boolean ok = executeArmorAbility(boss, (ClassArmor) item, cell);
+			debugExec("armor ability " + itemId + " cell=" + cell + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
 		if (item instanceof Wand) {
-			int aim = cell >= 0 ? cell : Dungeon.hero.pos;
-			boolean ok = executeWand(boss, (Wand) item, aim);
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			boolean ok = aim >= 0 && Dungeon.level != null
+					&& ((Wand) item).zapAs(UseContext.echo(boss), aim);
 			debugExec("wand " + itemId + " cell=" + aim + " charges=" + ((Wand) item).curCharges
 					+ " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof SpiritBow) {
 			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			boolean ok = executeSpiritBow(boss, (SpiritBow) item, aim);
+			boolean ok = aim >= 0 && Dungeon.level != null
+					&& ((SpiritBow) item).knockArrow().throwAs(UseContext.echo(boss), aim);
 			debugExec("spirit bow cell=" + aim + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof MagesStaff) {
-			// Staff zap still needs an AI path (imbued wand is private); fall through.
-			debugExec("ranged weapon fallthrough item=" + itemId);
-			return false;
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			boolean ok = aim >= 0 && Dungeon.level != null
+					&& ((MagesStaff) item).zapAs(UseContext.echo(boss), aim);
+			debugExec("staff zap cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		if (item instanceof MeleeWeapon && !(item instanceof MagesStaff)) {
+			Hero kit = boss.getEchoHero();
+			if (kit != null && kit.heroClass == HeroClass.DUELIST) {
+				MeleeWeapon weapon = (MeleeWeapon) item;
+				Integer target = weapon.targetingPrompt() != null
+						? (cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : null))
+						: null;
+				if (weapon.targetingPrompt() != null && target == null) {
+					debugExec("no aim cell for melee ability " + itemId);
+					return false;
+				}
+				boolean ok = weapon.abilityAs(UseContext.echo(boss), target);
+				debugExec("melee ability " + itemId + " cell=" + target + " → " + (ok ? "spent" : "fail"));
+				return ok;
+			}
+		}
+		if (item instanceof MissileWeapon || item instanceof Bomb || isThrowableRunestone(item)) {
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			if (aim < 0 || Dungeon.level == null) {
+				debugExec("no aim cell for " + itemId);
+				return false;
+			}
+			boolean ok = item.throwAs(UseContext.echo(boss), aim);
+			debugExec("throwable " + itemId + " cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		if (item instanceof InventoryStone) {
+			boolean ok = ((InventoryStone) item).useAs(UseContext.echo(boss));
+			debugExec("inventory stone " + itemId + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		// Artifacts — HolyTome cleric spells via castAs (merge: keep sibling branches)
+		if (item instanceof HolyTome) {
+			boolean ok = executeHolyTome(boss, (HolyTome) item, cap, cell);
+			debugExec("holy tome cell=" + cell + " → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		// Artifacts — CloakOfShadows stealth via shared useAs (merge: keep sibling
+		// branches)
+		if (item instanceof CloakOfShadows) {
+			boolean ok = ((CloakOfShadows) item).useAs(UseContext.echo(boss));
+			debugExec("artifact CloakOfShadows → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		if (item instanceof HornOfPlenty) {
+			boolean ok = ((HornOfPlenty) item).useAs(UseContext.echo(boss));
+			debugExec("artifact HornOfPlenty → " + (ok ? "spent" : "fail"));
+			return ok;
+		}
+		if (item instanceof EtherealChains) {
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			if (aim < 0) {
+				debugExec("artifact EtherealChains no aim");
+				return false;
+			}
+			boolean ok = ((EtherealChains) item).useAs(UseContext.echo(boss), aim);
+			debugExec("artifact EtherealChains cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			return ok;
 		}
 		debugExec("unsupported item class=" + item.getClass().getSimpleName());
 		return false;
+	}
+
+	/** Inventory stones need a bag UI; throwable runestones activate on land. */
+	private static boolean isThrowableRunestone(Item item) {
+		return item instanceof Runestone && !(item instanceof InventoryStone);
 	}
 
 	private static void debugExec(String message) {
@@ -108,20 +188,22 @@ public final class EchoRoleExecutor {
 		}
 	}
 
-	/** Self-drink potions apply on the boss; others are thrown at a cell. */
-	private static boolean isSelfDrinkPotion(String itemId) {
-		return "PotionOfHealing".equals(itemId)
-				|| "PotionOfShielding".equals(itemId)
-				|| "ElixirOfHoneyedHealing".equals(itemId)
-				|| "PotionOfPurity".equals(itemId)
-				|| "PotionOfFrost".equals(itemId)
-				|| "PotionOfHaste".equals(itemId)
-				|| "PotionOfStamina".equals(itemId)
-				|| "PotionOfInvisibility".equals(itemId)
-				|| "PotionOfCleansing".equals(itemId)
-				|| "PotionOfLevitation".equals(itemId);
+	/**
+	 * Self-drink when the role is an explicit drink role (dual-mode / must-throw
+	 * exceptions like CLEANSE_BURN+Frost), or the potion's default action is
+	 * {@link Potion#AC_DRINK} (not must-throw / choose).
+	 */
+	private static boolean shouldSelfDrink(Potion potion, String role) {
+		if (isSelfDrinkRole(role)) {
+			return true;
+		}
+		return Potion.AC_DRINK.equals(potion.defaultAction());
 	}
 
+	/**
+	 * Dual-mode ({@code AC_CHOOSE}) and must-throw potions that policy still
+	 * drinks via role (e.g. Purity, Cleansing, Frost cleanse).
+	 */
 	private static boolean isSelfDrinkRole(String role) {
 		return "HEAL".equals(role)
 				|| "CLEANSE_BURN".equals(role)
@@ -132,9 +214,15 @@ public final class EchoRoleExecutor {
 				|| "LEVITATE".equals(role);
 	}
 
-	private static boolean needsAimCell(String itemId) {
-		return (itemId.startsWith("PotionOf") || itemId.startsWith("ElixirOf"))
-				&& !isSelfDrinkPotion(itemId);
+	/**
+	 * {@code apply(Char)} is a no-op on non-Hero — refuse without consuming.
+	 */
+	private static boolean isHeroOnlyDrink(Potion potion) {
+		return potion instanceof PotionOfStrength
+				|| potion instanceof PotionOfExperience
+				|| potion instanceof ElixirOfMight
+				|| potion instanceof PotionOfMindVision
+				|| potion instanceof PotionOfMagicalSight;
 	}
 
 	private static boolean executeVirtual(EchoBoss boss, EchoPolicyStatus status, String tag) {
@@ -160,172 +248,93 @@ public final class EchoRoleExecutor {
 	}
 
 	/**
-	 * Shared potion pattern: detach from echo inventory → self-apply on boss or
-	 * throw at cell via {@link Item#castVisual}.
+	 * Potion execute: self-drink via {@link Potion#drinkAs}, throw via
+	 * {@link Item#throwAs}.
 	 */
 	private static boolean executePotion(EchoBoss boss, Potion potion, String role, int cell) {
-		Hero echoHero = boss.getEchoHero();
-
-		boolean selfDrink = isSelfDrinkRole(role);
-		if (!selfDrink && (cell < 0 || Dungeon.level == null)) {
+		UseContext ctx = UseContext.echo(boss);
+		// Targeted cone — not self-drink / shatter
+		if (potion instanceof PotionOfDragonsBreath) {
+			if (cell < 0 || Dungeon.level == null) {
+				return false;
+			}
+			return ((PotionOfDragonsBreath) potion).breatheAs(ctx, cell);
+		}
+		if (shouldSelfDrink(potion, role)) {
+			if (isHeroOnlyDrink(potion)) {
+				return false;
+			}
+			return potion.drinkAs(ctx);
+		}
+		if (cell < 0 || Dungeon.level == null) {
 			return false;
 		}
+		return potion.throwAs(ctx, cell);
+	}
 
-		potion.detach(echoHero.belongings.backpack);
-		if (selfDrink) {
-			return applySelfDrink(boss, echoHero, potion, role);
+	/** ClassArmor charge skill via {@link ArmorAbility#activateAs}. */
+	private static boolean executeArmorAbility(EchoBoss boss, ClassArmor armor, int cell) {
+		Hero kit = boss.getEchoHero();
+		ArmorAbility ability = kit != null ? kit.armorAbility : null;
+		if (ability == null) {
+			return false;
 		}
-		return throwPotion(boss, echoHero, potion, cell);
+		Integer target = null;
+		if (ability.useTargeting()) {
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			if (aim < 0) {
+				return false;
+			}
+			target = aim;
+		}
+		return ability.activateAs(UseContext.echo(boss), armor, target);
+	}
+
+	private static boolean executeHolyTome(EchoBoss boss, HolyTome tome, JSONObject cap, int cell) {
+		ClericSpell spell = resolveClericSpell(cap);
+		if (spell == null) {
+			return false;
+		}
+		Integer target = null;
+		if (spell.targetingFlags() != -1) {
+			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+			if (aim < 0 || Dungeon.level == null) {
+				return false;
+			}
+			target = aim;
+		}
+		return tome.castAs(UseContext.echo(boss), spell, target);
 	}
 
 	/**
-	 * Uses {@link Item#castVisual} (same missile path as hero {@link Item#cast}),
-	 * then {@link Item#onThrow} on arrival. Instant when boss sprite is off-stage.
+	 * Reads optional {@code spell} on capability; else first items entry that maps
+	 * to a spell.
 	 */
-	private static boolean throwPotion(EchoBoss boss, Hero echoHero, Potion potion, int cell) {
-		potion.setCurrent(echoHero);
-		Callback shatter = () -> AiItemActions.withUser(echoHero, potion,
-				() -> AiItemActions.onThrow(potion, cell));
-
-		if (!canPlayThrowVisual(boss, cell)) {
-			shatter.call();
-			return true;
+	static ClericSpell resolveClericSpell(JSONObject cap) {
+		if (cap == null) {
+			return null;
 		}
-		potion.castVisual(boss.sprite, boss.pos, cell, shatter);
-		return true;
-	}
-
-	private static boolean canPlayThrowVisual(EchoBoss boss, int cell) {
-		return boss.sprite != null
-				&& boss.sprite.parent != null
-				&& (boss.sprite.visible
-						|| (Dungeon.level != null && cell >= 0
-								&& cell < Dungeon.level.heroFOV.length
-								&& Dungeon.level.heroFOV[cell]));
-	}
-
-	/** Effects target the EchoBoss mob, not the phantom echo hero. */
-	private static boolean applySelfDrink(EchoBoss boss, Hero echoHero, Potion potion, String role) {
-		if ("HEAL".equals(role)) {
-			if (potion instanceof PotionOfShielding) {
-				Buff.affect(boss, Barrier.class).setShield((int) (0.6f * boss.HT + 10));
-				return true;
+		String spellName = cap.optString("spell", "");
+		if (!spellName.isEmpty()) {
+			ClericSpell spell = ClericSpell.bySimpleName(spellName);
+			if (spell != null) {
+				return spell;
 			}
-			if (potion instanceof PotionOfHealing || potion instanceof ElixirOfHoneyedHealing) {
-				PotionOfHealing.cure(boss);
-				PotionOfHealing.heal(boss);
-				return true;
-			}
-			return false;
 		}
-		if ("CLEANSE_BURN".equals(role)) {
-			Buff.detach(boss, Burning.class);
-			potion.setCurrent(echoHero);
-			AiItemActions.withUser(echoHero, potion, () -> potion.shatter(boss.pos));
-			return true;
-		}
-		if ("CLEANSE".equals(role)) {
-			PotionOfCleansing.cleanse(boss);
-			return true;
-		}
-		if ("PURITY".equals(role)) {
-			Buff.prolong(boss, BlobImmunity.class, BlobImmunity.DURATION);
-			return true;
-		}
-		if ("HASTE".equals(role)) {
-			if (potion instanceof PotionOfStamina) {
-				Buff.prolong(boss, Stamina.class, Stamina.DURATION);
-			} else {
-				Buff.prolong(boss, Haste.class, Haste.DURATION);
-			}
-			return true;
-		}
-		if ("INVIS".equals(role)) {
-			Buff.prolong(boss, Invisibility.class, Invisibility.DURATION);
-			return true;
-		}
-		if ("LEVITATE".equals(role)) {
-			Buff.prolong(boss, Levitation.class, Levitation.DURATION);
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Shoot without {@link SpiritBow.SpiritArrow#cast} (that path uses hero
-	 * {@code spendAndNext}). Uses {@link Item#castVisual} from the boss when
-	 * on-stage; otherwise applies the hit immediately (tests / off-screen).
-	 */
-	private static boolean executeSpiritBow(EchoBoss boss, SpiritBow bow, int cell) {
-		Hero echoHero = boss.getEchoHero();
-		Hero enemy = Dungeon.hero;
-		if (enemy == null || Dungeon.level == null || cell < 0)
-			return false;
-
-		SpiritBow.SpiritArrow arrow = bow.knockArrow();
-		int throwCell = arrow.throwPos(boss.pos, cell);
-		Char found = Actor.findChar(throwCell);
-		if (found == null && throwCell == enemy.pos) {
-			found = enemy;
-		}
-		if (found == null || found == echoHero || found == boss)
-			return false;
-
-		final Char target = found;
-		Callback onArrive = () -> applySpiritBowShot(boss, arrow, target);
-
-		if (boss.sprite != null && boss.sprite.parent != null
-				&& (boss.sprite.visible || (target.sprite != null && target.sprite.visible))) {
-			arrow.castVisual(boss.sprite, boss.pos, cell, onArrive);
-		} else {
-			onArrive.call();
-		}
-		return true;
-	}
-
-	/** Sync phantom hero pos/sprite, then {@link Hero#shoot}. */
-	private static void applySpiritBowShot(EchoBoss boss, SpiritBow.SpiritArrow arrow, Char target) {
-		Hero echoHero = boss.getEchoHero();
-		int savedPos = echoHero.pos;
-		var savedSprite = echoHero.sprite;
-		echoHero.pos = boss.pos;
-		// Phantom echo hero is never placed on the level; Char.attack hit VFX
-		// calls attacker.sprite.center() when the defender has a sprite.
-		echoHero.sprite = boss.sprite;
-		try {
-			AiItemActions.withUser(echoHero, arrow, () -> echoHero.shoot(target, arrow));
-		} finally {
-			echoHero.sprite = savedSprite;
-			echoHero.pos = savedPos;
-		}
-	}
-
-	/**
-	 * Manual zap pipeline: Ballistica → onZap → AI charge spend.
-	 * Does not call {@link Wand#wandUsed()} (that spends the phantom echo hero).
-	 */
-	private static boolean executeWand(EchoBoss boss, Wand wand, int cell) {
-		Hero echoHero = boss.getEchoHero();
-		if (Dungeon.hero == null || wand.curCharges <= 0)
-			return false;
-
-		int savedPos = echoHero.pos;
-		echoHero.pos = boss.pos;
-		try {
-			Ballistica shot = new Ballistica(boss.pos, cell, wand.collisionProperties(cell));
-			wand.setCurrent(echoHero);
-			final boolean[] ok = { false };
-			AiItemActions.withUser(echoHero, wand, () -> {
-				if (wand.tryToZap(echoHero, cell)) {
-					wand.onZap(shot);
-					wand.spendChargesForAi();
-					ok[0] = true;
+		JSONArray items = cap.optJSONArray("items");
+		if (items != null) {
+			for (int i = 0; i < items.length(); i++) {
+				String id = items.optString(i, "");
+				if ("HolyTome".equals(id)) {
+					continue;
 				}
-			});
-			return ok[0];
-		} finally {
-			echoHero.pos = savedPos;
+				ClericSpell spell = ClericSpell.bySimpleName(id);
+				if (spell != null) {
+					return spell;
+				}
+			}
 		}
+		return null;
 	}
 
 }

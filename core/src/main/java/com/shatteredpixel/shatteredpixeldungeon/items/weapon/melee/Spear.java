@@ -31,9 +31,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -48,14 +50,14 @@ public class Spear extends MeleeWeapon {
 		hitSoundPitch = 0.9f;
 
 		tier = 2;
-		DLY = 1.5f; //0.67x speed
-		RCH = 2;    //extra reach
+		DLY = 1.5f; // 0.67x speed
+		RCH = 2; // extra reach
 	}
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(6.67f*(tier+1)) +    //20 base, up from 15
-				lvl*Math.round(1.33f*(tier+1)); //+4 per level, up from +3
+		return Math.round(6.67f * (tier + 1)) + // 20 base, up from 15
+				lvl * Math.round(1.33f * (tier + 1)); // +4 per level, up from +3
 	}
 
 	@Override
@@ -64,71 +66,123 @@ public class Spear extends MeleeWeapon {
 	}
 
 	@Override
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		// +(9+2*lvl) damage, roughly +83% base damage, +80% scaling
+		int dmgBoost = augment.damageFactor(9 + Math.round(2f * buffedLvl()));
+		return spikeAbility(ctx, target, 1, dmgBoost, this);
+	}
+
+	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		//+(9+2*lvl) damage, roughly +83% base damage, +80% scaling
-		int dmgBoost = augment.damageFactor(9 + Math.round(2f*buffedLvl()));
-		Spear.spikeAbility(hero, target, 1, dmgBoost, this);
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override
 	public String abilityInfo() {
-		int dmgBoost = levelKnown ? 9 + Math.round(2f*buffedLvl()) : 9;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		int dmgBoost = levelKnown ? 9 + Math.round(2f * buffedLvl()) : 9;
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
-		int dmgBoost = 9 + Math.round(2f*level);
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+	public String upgradeAbilityStat(int level) {
+		int dmgBoost = 9 + Math.round(2f * level);
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 
-	public static void spikeAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep){
+	public static boolean spikeAbility(UseContext ctx, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep) {
 		if (target == null) {
-			return;
+			return false;
 		}
+
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
-			GLog.w(Messages.get(wep, "ability_no_target"));
-			return;
-		}
-
-		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy) || Dungeon.level.adjacent(hero.pos, enemy.pos)){
-			GLog.w(Messages.get(wep, "ability_target_range"));
-			hero.belongings.abilityWeapon = null;
-			return;
-		}
-		hero.belongings.abilityWeapon = null;
-
-		hero.sprite.attack(enemy.pos, new Callback() {
-			@Override
-			public void call() {
-				wep.beforeAbilityUsed(hero, enemy);
-				AttackIndicator.target(enemy);
-				int oldPos = enemy.pos;
-				//do not push if enemy has moved, or another push is active (e.g. elastic)
-				if (hero.attack(enemy, dmgMulti, dmgBoost, Char.INFINITE_ACCURACY)) {
-					if (enemy.isAlive() && enemy.pos == oldPos && !Pushing.pushingExistsForChar(enemy)){
-						//trace a ballistica to our target (which will also extend past them
-						Ballistica trajectory = new Ballistica(hero.pos, enemy.pos, Ballistica.STOP_TARGET);
-						//trim it to just be the part that goes past them
-						trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);
-						//knock them back along that ballistica
-						WandOfBlastWave.throwChar(enemy, trajectory, 1, true, false, hero);
-					} else if (!enemy.isAlive()) {
-						wep.onAbilityKill(hero, enemy);
-					}
-					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-				}
-				Invisibility.dispel();
-				hero.spendAndNext(hero.attackDelay());
-				wep.afterAbilityUsed(hero);
+		boolean inFov = body.fieldOfView != null && target < body.fieldOfView.length
+				? body.fieldOfView[target]
+				: Dungeon.level.heroFOV[target];
+		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(wep, "ability_no_target"));
 			}
-		});
+			return false;
+		}
+
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
+		}
+		try {
+			kit.belongings.abilityWeapon = wep;
+			if (Dungeon.level.adjacent(body.pos, enemy.pos) || !wep.canReach(kit, enemy.pos)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(wep, "ability_target_range"));
+				}
+				kit.belongings.abilityWeapon = null;
+				return false;
+			}
+			kit.belongings.abilityWeapon = null;
+
+			Callback doHit = new Callback() {
+				@Override
+				public void call() {
+					wep.beforeAbilityUsed(ctx, enemy);
+					if (ctx.heroFX) {
+						AttackIndicator.target(enemy);
+					}
+					int oldPos = enemy.pos;
+					if (kit.attack(enemy, dmgMulti, dmgBoost, Char.INFINITE_ACCURACY)) {
+						if (enemy.isAlive() && enemy.pos == oldPos && !Pushing.pushingExistsForChar(enemy)) {
+							Ballistica trajectory = new Ballistica(body.pos, enemy.pos, Ballistica.STOP_TARGET);
+							trajectory = new Ballistica(trajectory.collisionPos,
+									trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);
+							if (ctx.heroFX) {
+								WandOfBlastWave.throwChar(enemy, trajectory, 1, true, false, kit);
+							}
+						} else if (!enemy.isAlive()) {
+							wep.onAbilityKill(kit, enemy);
+						}
+						if (UseContext.canWorldFx(kit)) {
+							Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+						}
+					}
+					Invisibility.dispel(body);
+					if (ctx.heroFX) {
+						kit.spendAndNext(kit.attackDelay());
+					}
+					wep.afterAbilityUsed(ctx);
+				}
+			};
+
+			if (ctx.heroFX) {
+				ctx.turns.busy();
+			}
+			if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+				kit.sprite.attack(enemy.pos, doHit);
+			} else {
+				if (UseContext.canWorldFx(kit)) {
+					kit.sprite.attack(enemy.pos);
+				}
+				doHit.call();
+			}
+			return true;
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
+	}
+
+	public static void spikeAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep) {
+		spikeAbility(UseContext.hero(hero), target, dmgMulti, dmgBoost, wep);
 	}
 
 }

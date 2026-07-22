@@ -19,8 +19,15 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoWireCodec;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Visual;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
 import com.watabou.utils.FileUtils;
 import com.watabou.utils.PointF;
 import com.watabou.utils.SparseArray;
@@ -182,6 +189,110 @@ public final class EchoTestSupport {
 		ch.sprite = sprite;
 	}
 
+	/** Last cell passed to {@link CharSprite#place} on a stub sprite, or -1. */
+	public static int stubSpritePlacedCell(Char ch) {
+		if (ch == null || !(ch.sprite instanceof StubCharSprite)) {
+			return -1;
+		}
+		return ((StubCharSprite) ch.sprite).lastPlacedCell;
+	}
+
+	public static int stubSpriteAttackCalls(Char ch) {
+		return stubSprite(ch) == null ? 0 : stubSprite(ch).attackCalls;
+	}
+
+	public static int stubSpriteJumpCalls(Char ch) {
+		return stubSprite(ch) == null ? 0 : stubSprite(ch).jumpCalls;
+	}
+
+	public static int stubSpriteOperateCalls(Char ch) {
+		return stubSprite(ch) == null ? 0 : stubSprite(ch).operateCalls;
+	}
+
+	public static int stubSpriteZapCalls(Char ch) {
+		return stubSprite(ch) == null ? 0 : stubSprite(ch).zapCalls;
+	}
+
+	private static StubCharSprite stubSprite(Char ch) {
+		if (ch == null || !(ch.sprite instanceof StubCharSprite)) {
+			return null;
+		}
+		return (StubCharSprite) ch.sprite;
+	}
+
+	/**
+	 * Attaches a headless scene parent that recycles MagicMissile / MissileSprite
+	 * and invokes their arrive callbacks immediately — so Echo FX paths can be
+	 * tested without GameScene.
+	 */
+	public static InstantProjectileGroup attachInstantProjectileParent(Char ch) {
+		InstantProjectileGroup group = new InstantProjectileGroup();
+		if (ch != null && ch.sprite != null) {
+			ch.sprite.parent = group;
+		}
+		return group;
+	}
+
+	public static final class InstantProjectileGroup extends Group {
+		public int magicMissileRecycles;
+		public int missileSpriteRecycles;
+
+		@Override
+		public synchronized Gizmo recycle(Class<? extends Gizmo> c) {
+			if (c == MagicMissile.class) {
+				magicMissileRecycles++;
+				return add(new InstantMagicMissile());
+			}
+			if (c == MissileSprite.class) {
+				missileSpriteRecycles++;
+				return add(new InstantMissileSprite());
+			}
+			return super.recycle(c);
+		}
+	}
+
+	private static final class InstantMagicMissile extends MagicMissile {
+		@Override
+		public void reset(int type, PointF from, PointF to, Callback callback) {
+			if (callback != null) {
+				callback.call();
+			}
+		}
+	}
+
+	private static final class InstantMissileSprite extends MissileSprite {
+		@Override
+		public void reset(int from, int to, Item item, Callback listener) {
+			invoke(listener);
+		}
+
+		@Override
+		public void reset(Visual from, int to, Item item, Callback listener) {
+			invoke(listener);
+		}
+
+		@Override
+		public void reset(int from, Visual to, Item item, Callback listener) {
+			invoke(listener);
+		}
+
+		@Override
+		public void reset(Visual from, Visual to, Item item, Callback listener) {
+			invoke(listener);
+		}
+
+		@Override
+		public void reset(PointF from, PointF to, Item item, Callback listener) {
+			invoke(listener);
+		}
+
+		private static void invoke(Callback listener) {
+			if (listener != null) {
+				listener.call();
+			}
+		}
+	}
+
 	/** FIRST_LEGAL capability with a single item id (or virtual tag). */
 	public static JSONObject capability(String itemId) {
 		return new JSONObject()
@@ -215,8 +326,15 @@ public final class EchoTestSupport {
 	 * effects.
 	 */
 	private static final class StubCharSprite extends CharSprite {
+		int lastPlacedCell = -1;
+		int attackCalls;
+		int jumpCalls;
+		int operateCalls;
+		int zapCalls;
+
 		@Override
 		public void place(int cell) {
+			lastPlacedCell = cell;
 			// skip worldToCamera — headless tests have no Camera.main
 		}
 
@@ -224,6 +342,37 @@ public final class EchoTestSupport {
 		public void move(int from, int to) {
 			turnTo(from, to);
 			place(to);
+		}
+
+		@Override
+		public void jump(int from, int to, float height, float duration, com.watabou.utils.Callback callback) {
+			jumpCalls++;
+			place(to);
+			if (callback != null) {
+				callback.call();
+			}
+		}
+
+		@Override
+		public synchronized void attack(int cell, com.watabou.utils.Callback callback) {
+			attackCalls++;
+			if (ch != null) {
+				turnTo(ch.pos, cell);
+			}
+			if (callback != null) {
+				callback.call();
+			}
+		}
+
+		@Override
+		public synchronized void operate(int cell, com.watabou.utils.Callback callback) {
+			operateCalls++;
+			if (ch != null) {
+				turnTo(ch.pos, cell);
+			}
+			if (callback != null) {
+				callback.call();
+			}
 		}
 
 		@Override
@@ -253,6 +402,17 @@ public final class EchoTestSupport {
 
 		@Override
 		public void showStatus(int color, String text, Object... args) {
+		}
+
+		@Override
+		public synchronized void zap(int cell, Callback callback) {
+			zapCalls++;
+			if (ch != null) {
+				turnTo(ch.pos, cell);
+			}
+			if (callback != null) {
+				callback.call();
+			}
 		}
 	}
 

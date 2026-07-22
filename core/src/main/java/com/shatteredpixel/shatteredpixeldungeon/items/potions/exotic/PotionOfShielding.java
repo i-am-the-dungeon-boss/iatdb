@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
 
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -41,15 +42,20 @@ public class PotionOfShielding extends ExoticPotion {
 	}
 	
 	@Override
-	public void apply(Hero hero) {
-		identify();
+	public void apply(Char ch) {
+		if (ch instanceof Hero) {
+			identify();
+			if (Dungeon.isChallenged(Challenges.NO_HEALING)) {
+				PotionOfHealing.pharmacophobiaProc((Hero) ch);
+				return;
+			}
+		}
 
-		if (Dungeon.isChallenged(Challenges.NO_HEALING)){
-			PotionOfHealing.pharmacophobiaProc(hero);
-		} else {
-			//~75% of a potion of healing
-			Buff.affect(hero, Barrier.class).setShield((int) (0.6f * hero.HT + 10));
-			hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString((int) (0.6f * hero.HT + 10)), FloatingText.SHIELDING );
+		//~75% of a potion of healing
+		int shield = (int) (0.6f * ch.HT + 10);
+		Buff.affect(ch, Barrier.class).setShield(shield);
+		if (ch.sprite != null) {
+			ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield), FloatingText.SHIELDING);
 		}
 	}
 }

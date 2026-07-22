@@ -1,9 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import org.json.JSONArray;
 
 import java.util.HashSet;
@@ -24,15 +28,50 @@ public final class EchoInventory {
 		if (echoHero == null)
 			return ids;
 		for (Item item : echoHero.belongings) {
+			if (item.quantity() <= 0) {
+				continue;
+			}
 			if (item instanceof Wand && ((Wand) item).curCharges <= 0) {
 				continue;
 			}
 			if (item instanceof MagesStaff && !((MagesStaff) item).canZap()) {
 				continue;
 			}
+			if (item instanceof ClassArmor && !classArmorReady(echoHero, (ClassArmor) item)) {
+				continue;
+			}
+			if (item instanceof MeleeWeapon && !(item instanceof MagesStaff)
+					&& !duelistWeaponAbilityReady(echoHero, (MeleeWeapon) item)) {
+				continue;
+			}
 			ids.add(itemId(item));
 		}
 		return ids;
+	}
+
+	private static boolean classArmorReady(Hero echoHero, ClassArmor armor) {
+		if (echoHero.armorAbility == null) {
+			return false;
+		}
+		return armor.charge >= echoHero.armorAbility.chargeUse(echoHero);
+	}
+
+	/**
+	 * Duelist weapon abilities need an equipped weapon with enough Charger.
+	 * Non-duelist kits keep melee ids available (unused by WEAPON_ABILITY).
+	 */
+	private static boolean duelistWeaponAbilityReady(Hero echoHero, MeleeWeapon weapon) {
+		if (echoHero.heroClass != HeroClass.DUELIST) {
+			return true;
+		}
+		if (!weapon.isEquipped(echoHero)) {
+			return false;
+		}
+		if (weapon.STRReq() > echoHero.STR()) {
+			return false;
+		}
+		MeleeWeapon.Charger charger = Buff.affect(echoHero, MeleeWeapon.Charger.class);
+		return (charger.charges + charger.partialCharge) >= weapon.abilityChargeUse(echoHero, null);
 	}
 
 	/** Total quantity of items whose class simple name equals {@code itemId}. */

@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.brews;
 
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
@@ -81,35 +82,35 @@ public class UnstableBrew extends Brew {
 		potionChances.put(PotionOfPurity.class, 2f);
 		potionChances.put(PotionOfExperience.class, 1f);
 	}
-	
+
 	@Override
-	public void apply(Hero hero) {
-		//Don't allow this to roll healing in pharma
-		if (Dungeon.isChallenged(Challenges.NO_HEALING)){
+	public void apply(Char ch) {
+		// Don't allow this to roll healing in pharma
+		if (Dungeon.isChallenged(Challenges.NO_HEALING)) {
 			potionChances.put(PotionOfHealing.class, 0f);
 		}
 
 		Potion p = Reflection.newInstance(Random.chances(potionChances));
 
-		//reroll the potion if it wasn't a good potion to drink
-		while (mustThrowPots.contains(p.getClass())){
+		// reroll the potion if it wasn't a good potion to drink
+		while (mustThrowPots.contains(p.getClass())) {
 			p = Reflection.newInstance(Random.chances(potionChances));
 		}
 
 		p.anonymize();
-		p.apply(hero);
+		p.apply(ch);
 
-		if (Dungeon.isChallenged(Challenges.NO_HEALING)){
+		if (Dungeon.isChallenged(Challenges.NO_HEALING)) {
 			potionChances.put(PotionOfHealing.class, 3f);
 		}
 	}
-	
+
 	@Override
 	public void shatter(int cell) {
 		Potion p = Reflection.newInstance(Random.chances(potionChances));
 
-		//reroll the potion if it wasn't a good potion to throw
-		while (!mustThrowPots.contains(p.getClass()) && !canThrowPots.contains(p.getClass())){
+		// reroll the potion if it wasn't a good potion to throw
+		while (!mustThrowPots.contains(p.getClass()) && !canThrowPots.contains(p.getClass())) {
 			p = Reflection.newInstance(Random.chances(potionChances));
 		}
 
@@ -117,13 +118,13 @@ public class UnstableBrew extends Brew {
 		curItem = p;
 		p.shatter(cell);
 	}
-	
+
 	@Override
 	public boolean isKnown() {
 		return true;
 	}
 
-	//lower values, as it's cheaper to make
+	// lower values, as it's cheaper to make
 	@Override
 	public int value() {
 		return 40 * quantity;
@@ -135,16 +136,16 @@ public class UnstableBrew extends Brew {
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {
-		
+
 		@Override
 		public boolean testIngredients(ArrayList<Item> ingredients) {
 			boolean potion = false;
 			boolean seed = false;
 
-			for (Item i : ingredients){
+			for (Item i : ingredients) {
 				if (i instanceof Plant.Seed) {
 					seed = true;
-					//if it is a regular or exotic potion
+					// if it is a regular or exotic potion
 				} else if (ExoticPotion.regToExo.containsKey(i.getClass())
 						|| ExoticPotion.regToExo.containsValue(i.getClass())) {
 					potion = true;
@@ -162,17 +163,17 @@ public class UnstableBrew extends Brew {
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
 
-			for (Item i : ingredients){
-				i.quantity(i.quantity()-1);
+			for (Item i : ingredients) {
+				i.quantity(i.quantity() - 1);
 			}
-			
+
 			return sampleOutput(null);
 		}
-		
+
 		@Override
 		public Item sampleOutput(ArrayList<Item> ingredients) {
 			return new UnstableBrew();
 		}
 	}
-	
+
 }

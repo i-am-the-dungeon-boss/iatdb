@@ -56,6 +56,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
@@ -104,33 +105,33 @@ import java.util.HashMap;
 
 public class ElementalStrike extends ArmorAbility {
 
-	//TODO a few duplicates here (curse duplicates are fine)
-	private static final HashMap<Class<?extends Weapon.Enchantment>, Integer> effectTypes = new HashMap<>();
+	// TODO a few duplicates here (curse duplicates are fine)
+	private static final HashMap<Class<? extends Weapon.Enchantment>, Integer> effectTypes = new HashMap<>();
 	static {
-		effectTypes.put(Blazing.class,      MagicMissile.FIRE_CONE);
-		effectTypes.put(Chilling.class,     MagicMissile.FROST_CONE);
-		effectTypes.put(Kinetic.class,      MagicMissile.FORCE_CONE);
-		effectTypes.put(Shocking.class,     MagicMissile.SPARK_CONE);
-		effectTypes.put(Blocking.class,     MagicMissile.WARD_CONE);
-		effectTypes.put(Blooming.class,     MagicMissile.FOLIAGE_CONE);
-		effectTypes.put(Elastic.class,      MagicMissile.FORCE_CONE);
-		effectTypes.put(Lucky.class,        MagicMissile.RAINBOW_CONE);
-		effectTypes.put(Projecting.class,   MagicMissile.PURPLE_CONE);
-		effectTypes.put(Unstable.class,     MagicMissile.RAINBOW_CONE);
-		effectTypes.put(Corrupting.class,   MagicMissile.SHADOW_CONE);
-		effectTypes.put(Grim.class,         MagicMissile.SHADOW_CONE);
-		effectTypes.put(Vampiric.class,     MagicMissile.BLOOD_CONE);
+		effectTypes.put(Blazing.class, MagicMissile.FIRE_CONE);
+		effectTypes.put(Chilling.class, MagicMissile.FROST_CONE);
+		effectTypes.put(Kinetic.class, MagicMissile.FORCE_CONE);
+		effectTypes.put(Shocking.class, MagicMissile.SPARK_CONE);
+		effectTypes.put(Blocking.class, MagicMissile.WARD_CONE);
+		effectTypes.put(Blooming.class, MagicMissile.FOLIAGE_CONE);
+		effectTypes.put(Elastic.class, MagicMissile.FORCE_CONE);
+		effectTypes.put(Lucky.class, MagicMissile.RAINBOW_CONE);
+		effectTypes.put(Projecting.class, MagicMissile.PURPLE_CONE);
+		effectTypes.put(Unstable.class, MagicMissile.RAINBOW_CONE);
+		effectTypes.put(Corrupting.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Grim.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Vampiric.class, MagicMissile.BLOOD_CONE);
 
-		effectTypes.put(Annoying.class,     MagicMissile.SHADOW_CONE);
-		effectTypes.put(Displacing.class,   MagicMissile.SHADOW_CONE);
-		effectTypes.put(Dazzling.class,     MagicMissile.SHADOW_CONE);
-		effectTypes.put(Explosive.class,    MagicMissile.SHADOW_CONE);
-		effectTypes.put(Sacrificial.class,  MagicMissile.SHADOW_CONE);
-		effectTypes.put(Wayward.class,      MagicMissile.SHADOW_CONE);
-		effectTypes.put(Polarized.class,    MagicMissile.SHADOW_CONE);
-		effectTypes.put(Friendly.class,     MagicMissile.SHADOW_CONE);
+		effectTypes.put(Annoying.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Displacing.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Dazzling.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Explosive.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Sacrificial.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Wayward.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Polarized.class, MagicMissile.SHADOW_CONE);
+		effectTypes.put(Friendly.class, MagicMissile.SHADOW_CONE);
 
-		effectTypes.put(null,               MagicMissile.MAGIC_MISS_CONE);
+		effectTypes.put(null, MagicMissile.MAGIC_MISS_CONE);
 	}
 
 	{
@@ -148,185 +149,214 @@ public class ElementalStrike extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, Hero hero, Integer target) {
-		if (target == null){
+	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
+		if (target == null) {
 			return;
 		}
 
-		armor.charge -= chargeUse(hero);
-		Item.updateQuickslot();
+		armor.charge -= chargeUse(kit);
+		armor.updateQuickslot();
 
-		Ballistica aim = new Ballistica(hero.pos, target, Ballistica.WONT_STOP);
-
-		int maxDist = 4 + hero.pointsInTalent(Talent.ELEMENTAL_REACH);
-		int dist = Math.min(aim.dist, maxDist);
-
-		ConeAOE cone = new ConeAOE(aim,
-				dist,
-				65 + 10*hero.pointsInTalent(Talent.ELEMENTAL_REACH),
-				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
-
-		KindOfWeapon w = hero.belongings.weapon();
-		Weapon.Enchantment enchantment = null;
-		if (w instanceof MeleeWeapon) {
-			enchantment = ((MeleeWeapon) w).enchantment;
+		int savedPos = kit.pos;
+		com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
 		}
-		Class<?extends Weapon.Enchantment> enchCls = null;
-		if (enchantment != null){
-			enchCls = enchantment.getClass();
-		}
+		try {
+			Ballistica aim = new Ballistica(body.pos, target, Ballistica.WONT_STOP);
 
-		//cast to cells at the tip, rather than all cells, better performance.
-		for (Ballistica ray : cone.outerRays){
-			((MagicMissile)hero.sprite.parent.recycle( MagicMissile.class )).reset(
-					effectTypes.get(enchCls),
-					hero.sprite,
-					ray.path.get(ray.dist),
-					null
-			);
-		}
+			int maxDist = 4 + kit.pointsInTalent(Talent.ELEMENTAL_REACH);
+			int dist = Math.min(aim.dist, maxDist);
 
-		Weapon.Enchantment finalEnchantment = enchantment;
-		hero.sprite.attack(target, new Callback() {
-			@Override
-			public void call() {
+			ConeAOE cone = new ConeAOE(aim,
+					dist,
+					65 + 10 * kit.pointsInTalent(Talent.ELEMENTAL_REACH),
+					Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
 
-				Char enemy = Actor.findChar(target);
-
-				if (enemy != null) {
-					if (hero.isCharmedBy(enemy)) {
-						enemy = null;
-					} else if (enemy.alignment == hero.alignment) {
-						enemy = null;
-					} else if (!hero.canAttack(enemy)) {
-						enemy = null;
-					}
-				}
-
-				preAttackEffect(cone, hero, finalEnchantment);
-
-				if (enemy != null){
-					AttackIndicator.target(enemy);
-					oldEnemyPos = enemy.pos;
-					if (hero.attack(enemy, 1, 0, Char.INFINITE_ACCURACY)) {
-						Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-					}
-				}
-
-				perCellEffect(cone, finalEnchantment);
-
-				perCharEffect(cone, hero, enemy, finalEnchantment);
-
-				Invisibility.dispel();
-				hero.spendAndNext(hero.attackDelay());
+			KindOfWeapon w = kit.belongings.weapon();
+			Weapon.Enchantment enchantment = null;
+			if (w instanceof MeleeWeapon) {
+				enchantment = ((MeleeWeapon) w).enchantment;
 			}
-		});
+			Class<? extends Weapon.Enchantment> enchCls = null;
+			if (enchantment != null) {
+				enchCls = enchantment.getClass();
+			}
 
-		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-		hero.busy();
+			Weapon.Enchantment finalEnchantment = enchantment;
+			final int strikeTarget = target;
+			Callback applyStrike = new Callback() {
+				@Override
+				public void call() {
+
+					Char enemy = Actor.findChar(strikeTarget);
+
+					if (enemy != null) {
+						if (kit.isCharmedBy(enemy)) {
+							enemy = null;
+						} else if (enemy.alignment == body.alignment) {
+							enemy = null;
+						} else if (!kit.canAttack(enemy)) {
+							enemy = null;
+						}
+					}
+
+					preAttackEffect(cone, kit, finalEnchantment);
+
+					if (enemy != null) {
+						if (ctx.heroFX) {
+							AttackIndicator.target(enemy);
+						}
+						oldEnemyPos = enemy.pos;
+						if (kit.attack(enemy, 1, 0, Char.INFINITE_ACCURACY)) {
+							if (UseContext.canWorldFx(body)) {
+								Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+							}
+						}
+					}
+
+					perCellEffect(cone, finalEnchantment);
+
+					perCharEffect(cone, kit, enemy, finalEnchantment);
+
+					Invisibility.dispel(body);
+					ctx.turns.spendAfterThrow(kit.attackDelay());
+				}
+			};
+
+			if (UseContext.canWorldFx(body)) {
+				// cast to cells at the tip, rather than all cells, better performance.
+				for (Ballistica ray : cone.outerRays) {
+					((MagicMissile) body.sprite.parent.recycle(MagicMissile.class)).reset(
+							effectTypes.get(enchCls),
+							body.sprite,
+							ray.path.get(ray.dist),
+							null);
+				}
+
+				body.sprite.attack(strikeTarget, applyStrike);
+				Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
+			} else {
+				applyStrike.call();
+			}
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
 
 	}
 
-	//effects that trigger before the attack
-	private void preAttackEffect(ConeAOE cone, Hero hero, Weapon.Enchantment ench){
+	// effects that trigger before the attack
+	private void preAttackEffect(ConeAOE cone, Hero hero, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
-		for (Char ch : Actor.chars()){
-			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)){
+		for (Char ch : Actor.chars()) {
+			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)) {
 				targetsHit++;
 			}
 		}
 
-		if (hero.hasTalent(Talent.DIRECTED_POWER)){
+		if (hero.hasTalent(Talent.DIRECTED_POWER)) {
 			float enchBoost = 0.30f * targetsHit * hero.pointsInTalent(Talent.DIRECTED_POWER);
 			Buff.affect(hero, DirectedPowerTracker.class, 0f).enchBoost = enchBoost;
 		}
 
-		float powerMulti = 1f + 0.30f*Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
+		float powerMulti = 1f + 0.30f * Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
 
-		//*** Kinetic ***
-		if (ench instanceof Kinetic){
+		// *** Kinetic ***
+		if (ench instanceof Kinetic) {
 			if (hero.buff(Kinetic.ConservedDamage.class) != null) {
 				storedKineticDamage = hero.buff(Kinetic.ConservedDamage.class).damageBonus();
 			}
 
-		//*** Blocking ***
-		} else if (ench instanceof Blocking){
-			if (targetsHit > 0){
-				int shield = Math.round(Math.round(6f*targetsHit*powerMulti));
-				Buff.affect(hero, Barrier.class).setShield(Math.round(6f*targetsHit*powerMulti));
+			// *** Blocking ***
+		} else if (ench instanceof Blocking) {
+			if (targetsHit > 0) {
+				int shield = Math.round(Math.round(6f * targetsHit * powerMulti));
+				Buff.affect(hero, Barrier.class).setShield(Math.round(6f * targetsHit * powerMulti));
 				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield), FloatingText.SHIELDING);
 			}
 
-		//*** Vampiric ***
-		} else if (ench instanceof Vampiric){
-			if (targetsHit > 0){
-				int heal = Math.round(2.5f*targetsHit*powerMulti);
-				heal = Math.min( heal, hero.HT - hero.HP );
-				if (heal > 0){
+			// *** Vampiric ***
+		} else if (ench instanceof Vampiric) {
+			if (targetsHit > 0) {
+				int heal = Math.round(2.5f * targetsHit * powerMulti);
+				heal = Math.min(heal, hero.HT - hero.HP);
+				if (heal > 0) {
 					hero.HP += heal;
-					hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString( heal ), FloatingText.HEALING );
+					hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
 				}
 			}
 
-		//*** Sacrificial ***
-		} else if (ench instanceof Sacrificial){
+			// *** Sacrificial ***
+		} else if (ench instanceof Sacrificial) {
 			Buff.affect(hero, Bleeding.class).set(10 * powerMulti);
 		}
 
 	}
 
-	public static class DirectedPowerTracker extends FlavourBuff{
+	public static class DirectedPowerTracker extends FlavourBuff {
 		public float enchBoost = 0f;
 	}
 
-	public static class ElementalStrikeLuckyTracker extends Buff{};
+	public static class ElementalStrikeLuckyTracker extends Buff {
+	};
 
 	private int storedKineticDamage = 0;
 
-	public static class ElementalStrikeFurrowCounter extends CounterBuff{{revivePersists = true;}};
+	public static class ElementalStrikeFurrowCounter extends CounterBuff {
+		{
+			revivePersists = true;
+		}
+	};
 
-	//effects that affect the cells of the environment themselves
-	private void perCellEffect(ConeAOE cone, Weapon.Enchantment ench){
+	// effects that affect the cells of the environment themselves
+	private void perCellEffect(ConeAOE cone, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
-		for (Char ch : Actor.chars()){
-			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)){
+		for (Char ch : Actor.chars()) {
+			if (ch.alignment == Char.Alignment.ENEMY && cone.cells.contains(ch.pos)) {
 				targetsHit++;
 			}
 		}
 
-		float powerMulti = 1f + 0.30f*Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
+		float powerMulti = 1f + 0.30f * Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
 
-		//*** Blazing ***
-		if (ench instanceof Blazing){
+		// *** Blazing ***
+		if (ench instanceof Blazing) {
 			for (int cell : cone.cells) {
 				GameScene.add(Blob.seed(cell, Math.round(8 * powerMulti), Fire.class));
 			}
 
-		//*** Chilling ***
-		} else if (ench instanceof Chilling){
+			// *** Chilling ***
+		} else if (ench instanceof Chilling) {
 			for (int cell : cone.cells) {
 				GameScene.add(Blob.seed(cell, Math.round(8 * powerMulti), Freezing.class));
 			}
 
-		//*** Shocking ***
-		} else if (ench instanceof Shocking){
+			// *** Shocking ***
+		} else if (ench instanceof Shocking) {
 			for (int cell : cone.cells) {
 				GameScene.add(Blob.seed(cell, Math.round(8 * powerMulti), Electricity.class));
 			}
 
-		//*** Blooming ***
-		} else if (ench instanceof Blooming){
+			// *** Blooming ***
+		} else if (ench instanceof Blooming) {
 			ArrayList<Integer> cells = new ArrayList<>(cone.cells);
 			Random.shuffle(cells);
-			int grassToPlace = Math.round(8*powerMulti);
+			int grassToPlace = Math.round(8 * powerMulti);
 
-			//start spawning furrowed grass if exp is not being gained
+			// start spawning furrowed grass if exp is not being gained
 			// each hero level is worth 20 normal uses, but just 5 if no enemies are present
 			// cap of 40/10 uses
 			int highGrassType = Terrain.HIGH_GRASS;
-			if (Buff.affect(Dungeon.hero, ElementalStrikeFurrowCounter.class).count() >= 40){
+			if (Buff.affect(Dungeon.hero, ElementalStrikeFurrowCounter.class).count() >= 40) {
 				highGrassType = Terrain.FURROWED_GRASS;
 			} else {
 				if (Dungeon.hero.visibleEnemies() == 0 && targetsHit == 0) {
@@ -342,13 +372,13 @@ public class ElementalStrike extends ArmorAbility {
 						terr == Terrain.GRASS) {
 					if (grassToPlace > 0
 							&& !Char.hasProp(Actor.findChar(cell), Char.Property.IMMOVABLE)
-							&& Dungeon.level.plants.get(cell) == null){
+							&& Dungeon.level.plants.get(cell) == null) {
 						Level.set(cell, highGrassType);
 						grassToPlace--;
 					} else {
 						Level.set(cell, Terrain.GRASS);
 					}
-					GameScene.updateMap( cell );
+					GameScene.updateMap(cell);
 				}
 			}
 			Dungeon.observe();
@@ -357,7 +387,7 @@ public class ElementalStrike extends ArmorAbility {
 
 	private int oldEnemyPos;
 
-	//effects that affect the characters within the cone AOE
+	// effects that affect the characters within the cone AOE
 	private void perCharEffect(ConeAOE cone, Hero hero, Char primaryTarget, Weapon.Enchantment ench) {
 
 		float powerMulti = 1f + 0.30f * Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
@@ -370,14 +400,14 @@ public class ElementalStrike extends ArmorAbility {
 			}
 		}
 
-		//*** no enchantment ***
+		// *** no enchantment ***
 		if (ench == null) {
-			for (Char ch : affected){
-				ch.damage(Math.round(powerMulti* Hero.heroDamageIntRange(6, 12)), ElementalStrike.this);
+			for (Char ch : affected) {
+				ch.damage(Math.round(powerMulti * Hero.heroDamageIntRange(6, 12)), ElementalStrike.this);
 			}
 
-		//*** Kinetic ***
-		} else if (ench instanceof Kinetic){
+			// *** Kinetic ***
+		} else if (ench instanceof Kinetic) {
 			if (storedKineticDamage > 0) {
 				for (Char ch : affected) {
 					if (ch != primaryTarget) {
@@ -386,21 +416,21 @@ public class ElementalStrike extends ArmorAbility {
 				}
 				storedKineticDamage = 0;
 			}
-			//clear stored damage if there was no primary target
-			if (primaryTarget == null && hero.buff(Kinetic.ConservedDamage.class) != null){
+			// clear stored damage if there was no primary target
+			if (primaryTarget == null && hero.buff(Kinetic.ConservedDamage.class) != null) {
 				hero.buff(Kinetic.ConservedDamage.class).detach();
 			}
 
-		//*** Blooming ***
-		} else if (ench instanceof Blooming){
-			for (Char ch : affected){
-				Buff.affect(ch, Roots.class, Math.round(6f*powerMulti));
+			// *** Blooming ***
+		} else if (ench instanceof Blooming) {
+			for (Char ch : affected) {
+				Buff.affect(ch, Roots.class, Math.round(6f * powerMulti));
 			}
 
-		//*** Elastic ***
-		} else if (ench instanceof Elastic){
+			// *** Elastic ***
+		} else if (ench instanceof Elastic) {
 
-			//sorts affected from furthest to closest
+			// sorts affected from furthest to closest
 			Collections.sort(affected, new Comparator<Char>() {
 				@Override
 				public int compare(Char a, Char b) {
@@ -408,11 +438,12 @@ public class ElementalStrike extends ArmorAbility {
 				}
 			});
 
-			for (Char ch : affected){
-				if (ch == primaryTarget && oldEnemyPos != primaryTarget.pos) continue;
+			for (Char ch : affected) {
+				if (ch == primaryTarget && oldEnemyPos != primaryTarget.pos)
+					continue;
 
 				Ballistica aim = new Ballistica(hero.pos, ch.pos, Ballistica.WONT_STOP);
-				int knockback = Math.round(5*powerMulti);
+				int knockback = Math.round(5 * powerMulti);
 				WandOfBlastWave.throwChar(ch,
 						new Ballistica(ch.pos, aim.collisionPos, Ballistica.MAGIC_BOLT),
 						knockback,
@@ -421,11 +452,11 @@ public class ElementalStrike extends ArmorAbility {
 						ElementalStrike.this);
 			}
 
-		//*** Lucky ***
-		} else if (ench instanceof Lucky){
-			for (Char ch : affected){
+			// *** Lucky ***
+		} else if (ench instanceof Lucky) {
+			for (Char ch : affected) {
 				if (ch.alignment == Char.Alignment.ENEMY
-						&& Random.Float() < 0.125f*powerMulti
+						&& Random.Float() < 0.125f * powerMulti
 						&& ch.buff(ElementalStrikeLuckyTracker.class) == null) {
 					Dungeon.level.drop(Lucky.genLoot(), ch.pos).sprite.drop();
 					Lucky.showFlare(ch.sprite);
@@ -433,122 +464,123 @@ public class ElementalStrike extends ArmorAbility {
 				}
 			}
 
-		//*** Projecting ***
-		} else if (ench instanceof Projecting){
-			for (Char ch : affected){
+			// *** Projecting ***
+		} else if (ench instanceof Projecting) {
+			for (Char ch : affected) {
 				if (ch != primaryTarget) {
 					ch.damage(Math.round(hero.damageRoll() * 0.3f * powerMulti), ench);
 				}
 			}
 
-		//*** Unstable ***
-		} else if (ench instanceof Unstable){
+			// *** Unstable ***
+		} else if (ench instanceof Unstable) {
 			KindOfWeapon w = hero.belongings.weapon();
 			if (w instanceof Weapon) {
-				for (Char ch : affected){
+				for (Char ch : affected) {
 					if (ch != primaryTarget) {
 						ench.proc((Weapon) w, hero, ch, w.damageRoll(hero));
 					}
 				}
 			}
 
-		//*** Corrupting ***
-		} else if (ench instanceof Corrupting){
-			for (Char ch : affected){
+			// *** Corrupting ***
+		} else if (ench instanceof Corrupting) {
+			for (Char ch : affected) {
 				if (ch != primaryTarget
 						&& !ch.isImmune(Corruption.class)
 						&& ch.buff(Corruption.class) == null
 						&& ch instanceof Mob
 						&& ch.isAlive()) {
-					float hpMissing = 1f - (ch.HP / (float)ch.HT);
-					float chance = 0.05f + 0.2f*hpMissing; //5-25%
-					if (Random.Float() < chance*powerMulti){
+					float hpMissing = 1f - (ch.HP / (float) ch.HT);
+					float chance = 0.05f + 0.2f * hpMissing; // 5-25%
+					if (Random.Float() < chance * powerMulti) {
 						Corruption.corruptionHeal(ch);
 						AllyBuff.affectAndLoot((Mob) ch, hero, Corruption.class);
 					}
 				}
 			}
 
-		//*** Grim ***
-		} else if (ench instanceof Grim){
-			for (Char ch : affected){
+			// *** Grim ***
+		} else if (ench instanceof Grim) {
+			for (Char ch : affected) {
 				if (ch != primaryTarget) {
-					float hpMissing = 1f - (ch.HP / (float)ch.HT);
-					float chance = 0.06f + 0.24f*hpMissing; //6-30%
-					if (Random.Float() < chance*powerMulti){
-						ch.damage( ch.HP, Grim.class );
-						ch.sprite.emitter().burst( ShadowParticle.UP, 5 );
+					float hpMissing = 1f - (ch.HP / (float) ch.HT);
+					float chance = 0.06f + 0.24f * hpMissing; // 6-30%
+					if (Random.Float() < chance * powerMulti) {
+						ch.damage(ch.HP, Grim.class);
+						ch.sprite.emitter().burst(ShadowParticle.UP, 5);
 					}
 				}
 			}
 
-		//*** Annoying ***
-		} else if (ench instanceof Annoying){
-			for (Char ch : affected){
-				if (Random.Float() < 0.2f*powerMulti){
-					//TODO totally should add a bit of dialogue here
+			// *** Annoying ***
+		} else if (ench instanceof Annoying) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.2f * powerMulti) {
+					// TODO totally should add a bit of dialogue here
 					Buff.affect(ch, Amok.class, 6f);
 				}
 			}
 
-		//*** Displacing ***
-		} else if (ench instanceof Displacing){
-			for (Char ch : affected){
-				if (Random.Float() < 0.5f*powerMulti){
+			// *** Displacing ***
+		} else if (ench instanceof Displacing) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.5f * powerMulti) {
 					int oldpos = ch.pos;
-					if (ScrollOfTeleportation.teleportChar(ch)){
+					if (ScrollOfTeleportation.teleportChar(ch)) {
 						if (Dungeon.level.heroFOV[oldpos]) {
-							CellEmitter.get( oldpos ).start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );
+							CellEmitter.get(oldpos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);
 						}
 
-						if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).HUNTING){
+						if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).HUNTING) {
 							((Mob) ch).state = ((Mob) ch).WANDERING;
 						}
 					}
 				}
 			}
 
-		//*** Dazzling ***
-		} else if (ench instanceof Dazzling){
-			for (Char ch : affected){
-				if (Random.Float() < 0.5f*powerMulti){
+			// *** Dazzling ***
+		} else if (ench instanceof Dazzling) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.5f * powerMulti) {
 					Buff.affect(ch, Blindness.class, 6f);
 				}
 			}
 
-		//*** Explosive ***
-		} else if (ench instanceof Explosive){
-			if (Random.Float() < 0.5f*powerMulti){
+			// *** Explosive ***
+		} else if (ench instanceof Explosive) {
+			if (Random.Float() < 0.5f * powerMulti) {
 				Char exploding = Random.element(affected);
-				if (exploding != null) new Bomb.ConjuredBomb().explode(exploding.pos);
+				if (exploding != null)
+					new Bomb.ConjuredBomb().explode(exploding.pos);
 			}
 
-		//*** Sacrificial ***
-		} else if (ench instanceof Sacrificial){
-			for (Char ch : affected){
-				Buff.affect(ch, Bleeding.class).set(12f*powerMulti);
+			// *** Sacrificial ***
+		} else if (ench instanceof Sacrificial) {
+			for (Char ch : affected) {
+				Buff.affect(ch, Bleeding.class).set(12f * powerMulti);
 			}
 
-		//*** Wayward ***
-		} else if (ench instanceof Wayward){
-			for (Char ch : affected){
-				if (Random.Float() < 0.5f*powerMulti){
+			// *** Wayward ***
+		} else if (ench instanceof Wayward) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.5f * powerMulti) {
 					Buff.affect(ch, Hex.class, 6f);
 				}
 			}
 
-		//*** Polarized ***
-		} else if (ench instanceof Polarized){
-			for (Char ch : affected){
-				if (Random.Float() < 0.5f*powerMulti){
+			// *** Polarized ***
+		} else if (ench instanceof Polarized) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.5f * powerMulti) {
 					ch.damage(Hero.heroDamageIntRange(24, 36), ElementalStrike.this);
 				}
 			}
 
-		//*** Friendly ***
-		} else if (ench instanceof Friendly){
-			for (Char ch : affected){
-				if (Random.Float() < 0.5f*powerMulti){
+			// *** Friendly ***
+		} else if (ench instanceof Friendly) {
+			for (Char ch : affected) {
+				if (Random.Float() < 0.5f * powerMulti) {
 					Buff.affect(ch, Charm.class, 6f).object = hero.id();
 				}
 			}
@@ -559,9 +591,9 @@ public class ElementalStrike extends ArmorAbility {
 	@Override
 	public String desc() {
 		String desc = Messages.get(this, "desc");
-		if (Game.scene() instanceof GameScene){
+		if (Game.scene() instanceof GameScene) {
 			KindOfWeapon w = Dungeon.hero.belongings.weapon();
-			if (w instanceof MeleeWeapon && ((MeleeWeapon) w).enchantment != null){
+			if (w instanceof MeleeWeapon && ((MeleeWeapon) w).enchantment != null) {
 				desc += "\n\n" + Messages.get(((MeleeWeapon) w).enchantment, "elestrike_desc");
 			} else {
 				desc += "\n\n" + Messages.get(this, "generic_desc");
@@ -569,7 +601,7 @@ public class ElementalStrike extends ArmorAbility {
 		} else {
 			desc += "\n\n" + Messages.get(this, "generic_desc");
 		}
-		desc += "\n\n" + Messages.get(this, "cost", (int)baseChargeUse);
+		desc += "\n\n" + Messages.get(this, "cost", (int) baseChargeUse);
 		return desc;
 	}
 
@@ -580,7 +612,8 @@ public class ElementalStrike extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.ELEMENTAL_REACH, Talent.STRIKING_FORCE, Talent.DIRECTED_POWER, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.ELEMENTAL_REACH, Talent.STRIKING_FORCE, Talent.DIRECTED_POWER,
+				Talent.HEROIC_ENERGY };
 	}
 
 }

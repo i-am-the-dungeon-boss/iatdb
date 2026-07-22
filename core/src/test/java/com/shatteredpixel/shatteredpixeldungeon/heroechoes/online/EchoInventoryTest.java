@@ -1,11 +1,17 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.junit.jupiter.api.DisplayName;
@@ -76,6 +82,31 @@ class EchoInventoryTest {
 	}
 
 	@Test
+	@DisplayName("availableIds includes MissileWeapon when quantity is positive")
+	void availableIdsIncludesMissileWithQuantity() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ThrowingKnife knives = new ThrowingKnife();
+		knives.identify();
+		knives.quantity(2);
+		knives.collect(hero.belongings.backpack);
+
+		Assertions.assertThat(EchoInventory.availableIds(hero)).contains("ThrowingKnife");
+	}
+
+	@Test
+	@DisplayName("availableIds omits MissileWeapon when quantity is zero")
+	void availableIdsOmitsMissileWithZeroQuantity() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ThrowingKnife knives = new ThrowingKnife();
+		knives.identify();
+		knives.quantity(1);
+		knives.collect(hero.belongings.backpack);
+		knives.quantity(0);
+
+		Assertions.assertThat(EchoInventory.availableIds(hero)).doesNotContain("ThrowingKnife");
+	}
+
+	@Test
 	@DisplayName("find returns the first item with the matching class name")
 	void findReturnsMatchingItem() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -85,6 +116,61 @@ class EchoInventoryTest {
 
 		Assertions.assertThat(EchoInventory.find(hero, "PotionOfHealing")).isSameAs(potion);
 		Assertions.assertThat(EchoInventory.find(hero, "PotionOfFrost")).isNull();
+	}
+
+	@Test
+	@DisplayName("availableIds includes equipped duelist melee weapon when Charger has charges")
+	void availableIdsIncludesChargedEquippedDuelistWeapon() {
+		Hero hero = duelistHero();
+		Scimitar scimitar = new Scimitar();
+		scimitar.identify();
+		hero.belongings.weapon = scimitar;
+		scimitar.activate(hero);
+		hero.STR = Math.max(hero.STR(), scimitar.STRReq());
+		Buff.affect(hero, MeleeWeapon.Charger.class).charges = 2;
+
+		Assertions.assertThat(EchoInventory.availableIds(hero)).contains("Scimitar");
+	}
+
+	@Test
+	@DisplayName("availableIds omits duelist melee weapon when Charger has insufficient charges")
+	void availableIdsOmitsUnchargedDuelistWeapon() {
+		Hero hero = duelistHero();
+		Scimitar scimitar = new Scimitar();
+		scimitar.identify();
+		hero.belongings.weapon = scimitar;
+		scimitar.activate(hero);
+		hero.STR = Math.max(hero.STR(), scimitar.STRReq());
+		MeleeWeapon.Charger charger = Buff.affect(hero, MeleeWeapon.Charger.class);
+		charger.charges = 0;
+		charger.partialCharge = 0;
+
+		Assertions.assertThat(EchoInventory.availableIds(hero)).doesNotContain("Scimitar");
+	}
+
+	@Test
+	@DisplayName("availableIds omits unequipped duelist melee weapon even with charges")
+	void availableIdsOmitsUnequippedDuelistWeapon() {
+		Hero hero = duelistHero();
+		Scimitar scimitar = new Scimitar();
+		scimitar.identify();
+		scimitar.collect(hero.belongings.backpack);
+		Buff.affect(hero, MeleeWeapon.Charger.class).charges = 5;
+
+		Assertions.assertThat(EchoInventory.availableIds(hero)).doesNotContain("Scimitar");
+	}
+
+	private static Hero duelistHero() {
+		Hero previous = Dungeon.hero;
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.DUELIST.initHero(hero);
+		hero.lvl = 10;
+		hero.HP = hero.HT = 30;
+		if (previous != null) {
+			Dungeon.hero = previous;
+		}
+		return hero;
 	}
 
 }

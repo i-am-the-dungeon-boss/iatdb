@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -66,8 +67,13 @@ public class Greatshield extends MeleeWeapon {
 	}
 
 	@Override
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		return RoundShield.guardAbility(ctx, 3 + buffedLvl(), this);
+	}
+
+	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		RoundShield.guardAbility(hero, 3+buffedLvl(), this);
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override

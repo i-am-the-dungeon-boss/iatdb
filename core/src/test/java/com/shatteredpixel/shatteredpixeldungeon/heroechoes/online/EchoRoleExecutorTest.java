@@ -1,28 +1,50 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfArcaneArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfEarthenArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -206,6 +228,93 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
+	@DisplayName("drink-default PotionOfStamina buffs Stamina on the boss not the kit")
+	void staminaDrinksOntoBossViaDrinkDefault() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfStamina stamina = new PotionOfStamina();
+		stamina.identify();
+		stamina.collect(hero.belongings.backpack);
+		// Role name is not in the legacy self-drink role list — drink via AC_DRINK
+		// default.
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, staminaPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STAMINA")).build(),
+				new EchoPolicyChoice("STAMINA", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Stamina.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().buff(Stamina.class)).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfStamina.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("drink-default ElixirOfArcaneArmor buffs ArcaneArmor on the boss")
+	void arcaneArmorDrinksOntoBossViaDrinkDefault() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ElixirOfArcaneArmor elixir = new ElixirOfArcaneArmor();
+		elixir.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, arcaneArmorPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARCANE_ARMOR")).build(),
+				new EchoPolicyChoice("ARCANE_ARMOR", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(ArcaneArmor.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().buff(ArcaneArmor.class)).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(ElixirOfArcaneArmor.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("drink-default PotionOfEarthenArmor buffs Barkskin on the boss")
+	void earthenArmorDrinksOntoBossViaDrinkDefault() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfEarthenArmor earthen = new PotionOfEarthenArmor();
+		earthen.identify();
+		earthen.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, earthenArmorPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("EARTHEN_ARMOR")).build(),
+				new EchoPolicyChoice("EARTHEN_ARMOR", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Barkskin.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().buff(Barkskin.class)).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfEarthenArmor.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("Hero-only PotionOfStrength self-drink fails without consuming")
+	void strengthSelfDrinkFailsWithoutConsuming() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfStrength strength = new PotionOfStrength();
+		strength.identify();
+		strength.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, strengthPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STRENGTH")).build(),
+				new EchoPolicyChoice("STRENGTH", "reactions", null));
+
+		Assertions.assertThat(spent).isFalse();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfStrength.class)).isNotNull();
+	}
+
+	@Test
 	@DisplayName("PURITY drinks blob immunity onto the boss")
 	void purityDrinksBlobImmunity() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -227,8 +336,8 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
-	@DisplayName("CLEANSE_BURN detaches burning from the boss")
-	void cleanseBurnDetachesBurning() {
+	@DisplayName("CLEANSE_BURN drinks frost via shared apply (shatter at boss)")
+	void cleanseBurnDrinksFrost() {
 		Hero hero = EchoTestSupport.warriorHero();
 		PotionOfFrost frost = new PotionOfFrost();
 		frost.identify();
@@ -244,8 +353,34 @@ class EchoRoleExecutorTest {
 				new EchoPolicyChoice("CLEANSE_BURN", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
-		Assertions.assertThat(boss.buff(Burning.class)).isNull();
+		// Same as Hero drink: apply → shatter. No Echo-only Burning.detach.
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfFrost.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("DRAGONS_BREATH cones Burning and Cripple onto the player from the boss")
+	void dragonsBreathBreathesViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfDragonsBreath breath = new PotionOfDragonsBreath();
+		breath.identify();
+		breath.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, dragonsBreathPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
+		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
+		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("DRAGONS_BREATH")).build(),
+				new EchoPolicyChoice("DRAGONS_BREATH", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(hero.buff(Burning.class)).isNotNull();
+		Assertions.assertThat(hero.buff(Cripple.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfDragonsBreath.class)).isNull();
 	}
 
 	@Test
@@ -302,8 +437,7 @@ class EchoRoleExecutorTest {
 				.as("thrown potion must play a MissileSprite from the boss")
 				.isNotNull();
 
-		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
-				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected = new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
 		expected.view(expectedImage, null);
 		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
 		com.watabou.utils.RectF expectedFrame = expected.frame();
@@ -341,8 +475,7 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(stage.lastMissile).isNotNull();
 
-		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
-				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected = new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
 		expected.view(expectedImage, null);
 		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
 		com.watabou.utils.RectF expectedFrame = expected.frame();
@@ -350,6 +483,41 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(missileFrame.top).isEqualTo(expectedFrame.top);
 		Assertions.assertThat(missileFrame.right).isEqualTo(expectedFrame.right);
 		Assertions.assertThat(missileFrame.bottom).isEqualTo(expectedFrame.bottom);
+	}
+
+	@Test
+	@DisplayName("RANGED MissileWeapon spends turn, damages player, and leaves kit sprite-less")
+	void rangedMissileWeaponHitsAndLeavesKitSpriteNull() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ThrowingKnife knives = new ThrowingKnife();
+		knives.identify();
+		knives.quantity(3);
+		knives.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, rangedMissilePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		ThrowingKnife kitKnives = kit.belongings.getItem(ThrowingKnife.class);
+		Assertions.assertThat(kitKnives).isNotNull();
+		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
+		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
+
+		int hpBefore = hero.HP;
+		int qtyBefore = kitKnives.quantity();
+		kit.invisible = 1; // guarantee hit (surprise-accuracy path)
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("RANGED")).build(),
+				new EchoPolicyChoice("RANGED", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
+		Assertions.assertThat(kit.sprite).isNull();
+		ThrowingKnife after = kit.belongings.getItem(ThrowingKnife.class);
+		Assertions.assertThat(after == null ? 0 : after.quantity()).isLessThan(qtyBefore);
 	}
 
 	@Test
@@ -410,8 +578,7 @@ class EchoRoleExecutorTest {
 				.as("SpiritBow should recycle a MissileSprite onto the boss sprite parent")
 				.isNotNull();
 
-		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected =
-				new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
+		com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite expected = new com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite();
 		expected.view(expectedImage, null);
 		com.watabou.utils.RectF missileFrame = stage.lastMissile.frame();
 		com.watabou.utils.RectF expectedFrame = expected.frame();
@@ -446,6 +613,250 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfLiquidFlame.class)).isNotNull();
 	}
 
+	@Test
+	@DisplayName("PAYOFF_AOE Bomb throwAs lights fuse via executor")
+	void payoffAoeBombLightsFuseViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		Bomb bomb = new Bomb();
+		bomb.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, bombPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(java.util.Set.of("PAYOFF_AOE"))
+				.safeHazards(java.util.Set.of("fire_aoe", "PAYOFF_AOE"))
+				.build();
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				status,
+				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(Bomb.class)).isNull();
+
+		Bomb landed = null;
+		for (Heap heap : Dungeon.level.heaps.valueList()) {
+			for (Item i : heap.items) {
+				if (i instanceof Bomb) {
+					landed = (Bomb) i;
+					break;
+				}
+			}
+		}
+		Assertions.assertThat(landed).isNotNull();
+		Assertions.assertThat(landed.fuse).isNotNull();
+	}
+
+	@Test
+	@DisplayName("PAYOFF_AOE StoneOfBlast throwAs damages hero via executor")
+	void payoffAoeStoneOfBlastDamagesHeroViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		StoneOfBlast stone = new StoneOfBlast();
+		stone.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, stoneBlastPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		java.util.Arrays.fill(Dungeon.level.heroFOV, false);
+		int hpBefore = hero.HP;
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(java.util.Set.of("PAYOFF_AOE"))
+				.safeHazards(java.util.Set.of("fire_aoe", "PAYOFF_AOE"))
+				.build();
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				status,
+				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(StoneOfBlast.class)).isNull();
+		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
+	}
+
+	@Test
+	@DisplayName("SCROLL reads ScrollOfRecharging onto the boss body")
+	void scrollRechargingBuffsBossViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ScrollOfRecharging scroll = new ScrollOfRecharging();
+		scroll.identify();
+		scroll.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, scrollRechargePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SCROLL")).build(),
+				new EchoPolicyChoice("SCROLL", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Recharging.class)).isNotNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(ScrollOfRecharging.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("SCROLL Upgrade auto-upgrades kit weapon via executor")
+	void scrollUpgradeViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ScrollOfUpgrade scroll = new ScrollOfUpgrade();
+		scroll.identify();
+		scroll.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, scrollUpgradePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword sword = new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword();
+		sword.identify();
+		kit.belongings.weapon = sword;
+		int levelBefore = sword.level();
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SCROLL")).build(),
+				new EchoPolicyChoice("SCROLL", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(sword.level()).isEqualTo(levelBefore + 1);
+		Assertions.assertThat(kit.belongings.getItem(ScrollOfUpgrade.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("ARMOR_ABILITY Endure activates ClassArmor on the boss body")
+	void armorAbilityEndureBuffsBossViaExecutor() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, armorEndurePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		WarriorArmor armor = new WarriorArmor();
+		armor.charge = 100;
+		kit.belongings.armor = armor;
+		armor.activate(kit);
+		kit.armorAbility = new Endure();
+		float chargeBefore = armor.charge;
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
+				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNotNull();
+		Assertions.assertThat(kit.buff(Endure.EndureTracker.class)).isNull();
+		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
+	}
+
+	@Test
+	@DisplayName("STEALTH CloakOfShadows useAs buffs the boss body via executor")
+	void stealthCloakBuffsBossViaExecutor() {
+		Hero hero = rogueHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, stealthCloakPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		CloakOfShadows cloak = kit.belongings.getItem(CloakOfShadows.class);
+		Assertions.assertThat(cloak).isNotNull();
+		cloak.directCharge(2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STEALTH")).build(),
+				new EchoPolicyChoice("STEALTH", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(CloakOfShadows.cloakStealth.class)).isNotNull();
+		Assertions.assertThat(kit.buff(CloakOfShadows.cloakStealth.class)).isNull();
+		Assertions.assertThat(boss.invisible).isGreaterThan(0);
+	}
+
+	@Test
+	@DisplayName("HOLY_WARD casts HolyWard via HolyTome capability spell field")
+	void holyWardCastViaExecutor() {
+		Hero hero = clericHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, holyWardPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		HolyTome tome = (HolyTome) boss.getEchoHero().belongings.artifact;
+		tome.directCharge(5f);
+		String chargeBefore = tome.status();
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HOLY_WARD")).build(),
+				new EchoPolicyChoice("HOLY_WARD", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions
+				.assertThat(boss
+						.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard.HolyArmBuff.class))
+				.isNotNull();
+		Assertions.assertThat(boss.getEchoHero().buff(
+				com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard.HolyArmBuff.class)).isNull();
+		Assertions.assertThat(tome.status()).isNotEqualTo(chargeBefore);
+	}
+
+	@Test
+	@DisplayName("ARMOR_ABILITY refuses when ClassArmor charge is too low")
+	void armorAbilityRefusesLowCharge() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, armorEndurePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		WarriorArmor armor = new WarriorArmor();
+		armor.charge = 0;
+		kit.belongings.armor = armor;
+		armor.activate(kit);
+		kit.armorAbility = new Endure();
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
+				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+
+		Assertions.assertThat(spent).isFalse();
+		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNull();
+	}
+
+	private static Hero clericHero() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.CLERIC.initHero(hero);
+		hero.lvl = 6;
+		hero.HP = hero.HT = 30;
+		return hero;
+	}
+
+	private static EchoPolicy holyWardPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("HOLY_WARD", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("HolyTome"))
+						.put("spell", "HolyWard"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static Hero rogueHero() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.ROGUE.initHero(hero);
+		hero.lvl = 6;
+		hero.HP = hero.HT = 30;
+		return hero;
+	}
+
+	private static EchoPolicy stealthCloakPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("STEALTH", EchoTestSupport.capability("CloakOfShadows"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
 	private static Hero huntressHero() {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
@@ -460,6 +871,110 @@ class EchoRoleExecutorTest {
 				.put("RANGED", new JSONObject()
 						.put("pick", "MAX_DAMAGE")
 						.put("items", new JSONArray().put("SpiritBow")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy rangedMissilePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("RANGED", new JSONObject()
+						.put("pick", "MAX_DAMAGE")
+						.put("items", new JSONArray().put("ThrowingKnife")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	@Test
+	@DisplayName("WEAPON_ABILITY Scimitar abilityAs buffs the boss body via executor")
+	void weaponAbilityScimitarViaExecutor() {
+		Hero player = EchoTestSupport.warriorHero();
+		Hero template = duelistHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				template, scimitarAbilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		Scimitar scimitar = new Scimitar();
+		scimitar.identify();
+		kit.belongings.weapon = scimitar;
+		scimitar.activate(kit);
+		kit.STR = Math.max(kit.STR(), scimitar.STRReq());
+		com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff
+				.affect(kit,
+						com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon.Charger.class).charges = 5;
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("WEAPON_ABILITY")).build(),
+				new EchoPolicyChoice("WEAPON_ABILITY", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(boss.buff(Scimitar.SwordDance.class)).isNotNull();
+		Assertions.assertThat(kit.buff(Scimitar.SwordDance.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("WEAPON_ABILITY refuses when Charger has insufficient charges")
+	void weaponAbilityRefusesLowCharge() {
+		Hero player = EchoTestSupport.warriorHero();
+		Hero template = duelistHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				template, scimitarAbilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		Scimitar scimitar = new Scimitar();
+		scimitar.identify();
+		kit.belongings.weapon = scimitar;
+		scimitar.activate(kit);
+		kit.STR = Math.max(kit.STR(), scimitar.STRReq());
+		com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon.Charger charger = com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff
+				.affect(kit, com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon.Charger.class);
+		charger.charges = 0;
+		charger.partialCharge = 0;
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("WEAPON_ABILITY")).build(),
+				new EchoPolicyChoice("WEAPON_ABILITY", "default", null));
+
+		Assertions.assertThat(spent).isFalse();
+		Assertions.assertThat(boss.buff(Scimitar.SwordDance.class)).isNull();
+	}
+
+	private static Hero duelistHero() {
+		Hero hero = new Hero();
+		HeroClass.DUELIST.initHero(hero);
+		hero.lvl = 10;
+		hero.HP = hero.HT = 30;
+		return hero;
+	}
+
+	private static EchoPolicy scimitarAbilityPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("WEAPON_ABILITY", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("Scimitar")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy armorEndurePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("ARMOR_ABILITY", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("WarriorArmor")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy scrollRechargePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("SCROLL", EchoTestSupport.capability("ScrollOfRecharging"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy scrollUpgradePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("SCROLL", EchoTestSupport.capability("ScrollOfUpgrade"))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
@@ -507,6 +1022,30 @@ class EchoRoleExecutorTest {
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
+	private static EchoPolicy staminaPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("STAMINA", EchoTestSupport.capability("PotionOfStamina"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy arcaneArmorPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("ARCANE_ARMOR", EchoTestSupport.capability("ElixirOfArcaneArmor"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy earthenArmorPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("EARTHEN_ARMOR", EchoTestSupport.capability("PotionOfEarthenArmor"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy strengthPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("STRENGTH", EchoTestSupport.capability("PotionOfStrength"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
 	private static EchoPolicy purityPolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("PURITY", EchoTestSupport.capability("PotionOfPurity"))
@@ -516,6 +1055,12 @@ class EchoRoleExecutorTest {
 	private static EchoPolicy cleansePolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("CLEANSE_BURN", EchoTestSupport.capability("PotionOfFrost"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy dragonsBreathPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("DRAGONS_BREATH", EchoTestSupport.capability("PotionOfDragonsBreath"))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
@@ -530,6 +1075,24 @@ class EchoRoleExecutorTest {
 				.put("PAYOFF_AOE", new JSONObject()
 						.put("pick", "MAX_DAMAGE")
 						.put("items", new JSONArray().put("PotionOfLiquidFlame"))
+						.put("hazard", EchoPolicyHazards.FIRE_AOE))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy bombPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("PAYOFF_AOE", new JSONObject()
+						.put("pick", "MAX_DAMAGE")
+						.put("items", new JSONArray().put("Bomb"))
+						.put("hazard", EchoPolicyHazards.FIRE_AOE))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy stoneBlastPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("PAYOFF_AOE", new JSONObject()
+						.put("pick", "MAX_DAMAGE")
+						.put("items", new JSONArray().put("StoneOfBlast"))
 						.put("hazard", EchoPolicyHazards.FIRE_AOE))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}

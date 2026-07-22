@@ -25,7 +25,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -40,63 +42,106 @@ public abstract class InventoryScroll extends Scroll {
 
 	@Override
 	public void doRead() {
-		
+
 		if (!isKnown()) {
 			identify();
-			curItem = detach( curUser.belongings.backpack );
+			curItem = detach(curUser.belongings.backpack);
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
 		}
-		
-		GameScene.selectItem( itemSelector );
+
+		GameScene.selectItem(itemSelector);
 	}
-	
+
+	/**
+	 * Echo: auto-pick first usable kit item and apply without bag UI.
+	 * Hero: opens {@link #doRead()} selector.
+	 */
+	@Override
+	protected boolean doReadAs(UseContext ctx) {
+		if (ctx.heroFX) {
+			doRead();
+			return true;
+		}
+		Item pick = null;
+		for (Item item : ctx.kit.belongings) {
+			if (item != this && usableOnItem(item)) {
+				pick = item;
+				break;
+			}
+		}
+		if (pick == null) {
+			return false;
+		}
+		InventoryScroll scroll = this;
+		if (!anonymous) {
+			Item detached = detach(ctx.kit.belongings.backpack);
+			if (detached instanceof InventoryScroll) {
+				scroll = (InventoryScroll) detached;
+			}
+		}
+		Hero prevUser = curUser;
+		Item prevItem = curItem;
+		curUser = ctx.kit;
+		curItem = scroll;
+		try {
+			scroll.onItemSelected(pick);
+		} finally {
+			curUser = prevUser;
+			curItem = prevItem;
+		}
+		return true;
+	}
+
 	private void confirmCancelation() {
-		GameScene.show( new WndConfirmCancel() );
+		GameScene.show(new WndConfirmCancel());
 	}
 
-	public class WndConfirmCancel extends WndOptions{
+	public class WndConfirmCancel extends WndOptions {
 
-		public WndConfirmCancel(){
+		public WndConfirmCancel() {
 			super(new ItemSprite(InventoryScroll.this),
 					Messages.titleCase(name()),
 					Messages.get(InventoryScroll.this, "warning"),
 					Messages.get(InventoryScroll.this, "yes"),
-					Messages.get(InventoryScroll.this, "no") );
+					Messages.get(InventoryScroll.this, "no"));
 		}
+
 		@Override
-		protected void onSelect( int index ) {
+		protected void onSelect(int index) {
 			switch (index) {
 				case 0:
-					curUser.spendAndNext( TIME_TO_READ );
+					curUser.spendAndNext(TIME_TO_READ);
 					identifiedByUse = false;
 					break;
 				case 1:
-					GameScene.selectItem( itemSelector );
+					GameScene.selectItem(itemSelector);
 					break;
 			}
 		}
-		public void onBackPressed() {}
 
-		public WndBag.ItemSelector getItemSelector(){
+		public void onBackPressed() {
+		}
+
+		public WndBag.ItemSelector getItemSelector() {
 			return itemSelector;
 		}
 
 	}
 
-	private String inventoryTitle(){
+	private String inventoryTitle() {
 		return Messages.get(this, "inv_title");
 	}
 
-	protected Class<?extends Bag> preferredBag = null;
+	protected Class<? extends Bag> preferredBag = null;
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
-	
-	protected abstract void onItemSelected( Item item );
-	
+
+	protected abstract void onItemSelected(Item item);
+
 	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {
 
 		@Override
@@ -115,35 +160,35 @@ public abstract class InventoryScroll extends Scroll {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
-			
-			//FIXME this safety check shouldn't be necessary
-			//it would be better to eliminate the curItem static variable.
-			if (!(curItem instanceof InventoryScroll)){
+		public void onSelect(Item item) {
+
+			// FIXME this safety check shouldn't be necessary
+			// it would be better to eliminate the curItem static variable.
+			if (!(curItem instanceof InventoryScroll)) {
 				return;
 			}
-			
+
 			if (item != null) {
 
-				//SoU opens a separate window that can be cancelled
-				//so we don't do a lot of logic here
+				// SoU opens a separate window that can be cancelled
+				// so we don't do a lot of logic here
 				if (!identifiedByUse && !(curItem instanceof ScrollOfUpgrade)) {
 					curItem = detach(curUser.belongings.backpack);
 				}
-				((InventoryScroll)curItem).onItemSelected( item );
+				((InventoryScroll) curItem).onItemSelected(item);
 
 				if (!(curItem instanceof ScrollOfUpgrade)) {
 					((InventoryScroll) curItem).readAnimation();
 					Sample.INSTANCE.play(Assets.Sounds.READ);
 				}
-				
-			} else if (identifiedByUse && !((Scroll)curItem).anonymous) {
-				
-				((InventoryScroll)curItem).confirmCancelation();
-				
-			} else if (((Scroll)curItem).anonymous) {
 
-				curUser.spendAndNext( TIME_TO_READ );
+			} else if (identifiedByUse && !((Scroll) curItem).anonymous) {
+
+				((InventoryScroll) curItem).confirmCancelation();
+
+			} else if (((Scroll) curItem).anonymous) {
+
+				curUser.spendAndNext(TIME_TO_READ);
 
 			}
 		}

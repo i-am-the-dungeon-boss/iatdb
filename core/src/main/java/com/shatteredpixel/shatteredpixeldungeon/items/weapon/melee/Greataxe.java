@@ -30,7 +30,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -49,14 +51,14 @@ public class Greataxe extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  5*(tier+4) +    //45 base, up from 30
-				lvl*(tier+1);   //scaling unchanged
+		return 5 * (tier + 4) + // 45 base, up from 30
+				lvl * (tier + 1); // scaling unchanged
 	}
 
 	@Override
 	public int STRReq(int lvl) {
-		int req = STRReq(tier+1, lvl); //20 base strength req, up from 18
-		if (masteryPotionBonus){
+		int req = STRReq(tier + 1, lvl); // 20 base strength req, up from 18
+		if (masteryPotionBonus) {
 			req -= 2;
 		}
 		return req;
@@ -68,67 +70,117 @@ public class Greataxe extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		if (hero.HP / (float)hero.HT >= 0.5f){
-			GLog.w(Messages.get(this, "ability_cant_use"));
-			return;
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
+
+		if (body.HP / (float) body.HT >= 0.5f) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "ability_cant_use"));
+			}
+			return false;
 		}
 
 		if (target == null) {
-			return;
+			return false;
 		}
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
-			GLog.w(Messages.get(this, "ability_no_target"));
-			return;
-		}
-
-		hero.belongings.abilityWeapon = this;
-		if (!hero.canAttack(enemy)){
-			GLog.w(Messages.get(this, "ability_target_range"));
-			hero.belongings.abilityWeapon = null;
-			return;
-		}
-		hero.belongings.abilityWeapon = null;
-
-		hero.sprite.attack(enemy.pos, new Callback() {
-			@Override
-			public void call() {
-				beforeAbilityUsed(hero, enemy);
-				AttackIndicator.target(enemy);
-
-				//+(15+(2*lvl)) damage, roughly +60% base damage, +55% scaling
-				int dmgBoost = augment.damageFactor(15 + 2*buffedLvl());
-
-				if (hero.attack(enemy, 1, dmgBoost, Char.INFINITE_ACCURACY)){
-					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-				}
-
-				Invisibility.dispel();
-				if (!enemy.isAlive()){
-					hero.next();
-					onAbilityKill(hero, enemy);
-				} else {
-					hero.spendAndNext(hero.attackDelay());
-				}
-				afterAbilityUsed(hero);
+		boolean inFov = body.fieldOfView != null && target < body.fieldOfView.length
+				? body.fieldOfView[target]
+				: Dungeon.level.heroFOV[target];
+		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "ability_no_target"));
 			}
-		});
+			return false;
+		}
+
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
+		}
+		try {
+			kit.belongings.abilityWeapon = this;
+			if (!kit.canAttack(enemy)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(this, "ability_target_range"));
+				}
+				kit.belongings.abilityWeapon = null;
+				return false;
+			}
+			kit.belongings.abilityWeapon = null;
+
+			Callback doHit = new Callback() {
+				@Override
+				public void call() {
+					beforeAbilityUsed(ctx, enemy);
+					if (ctx.heroFX) {
+						AttackIndicator.target(enemy);
+					}
+
+					int dmgBoost = augment.damageFactor(15 + 2 * buffedLvl());
+
+					if (kit.attack(enemy, 1, dmgBoost, Char.INFINITE_ACCURACY)) {
+						if (UseContext.canWorldFx(kit)) {
+							Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+						}
+					}
+
+					Invisibility.dispel(body);
+					if (!enemy.isAlive()) {
+						if (body instanceof Hero) {
+							((Hero) body).next();
+						}
+						onAbilityKill(kit, enemy);
+					} else if (ctx.heroFX) {
+						kit.spendAndNext(kit.attackDelay());
+					}
+					afterAbilityUsed(ctx);
+				}
+			};
+
+			if (ctx.heroFX) {
+				ctx.turns.busy();
+			}
+			if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+				kit.sprite.attack(enemy.pos, doHit);
+			} else {
+				if (UseContext.canWorldFx(kit)) {
+					kit.sprite.attack(enemy.pos);
+				}
+				doHit.call();
+			}
+			return true;
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override
 	public String abilityInfo() {
-		int dmgBoost = levelKnown ? 15 + 2*buffedLvl() : 15;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		int dmgBoost = levelKnown ? 15 + 2 * buffedLvl() : 15;
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
-		int dmgBoost = 15 + 2*level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+	public String upgradeAbilityStat(int level) {
+		int dmgBoost = 15 + 2 * level;
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 }

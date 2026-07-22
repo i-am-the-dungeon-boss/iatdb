@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -40,7 +41,11 @@ public class PotionOfMindVision extends Potion {
 	}
 
 	@Override
-	public void apply( Hero hero ) {
+	public void apply(Char ch) {
+		if (!(ch instanceof Hero)) {
+			return;
+		}
+		Hero hero = (Hero) ch;
 		identify();
 		Buff.prolong( hero, MindVision.class, MindVision.DURATION );
 		SpellSprite.show(hero, SpellSprite.VISION, 1, 0.77f, 0.9f);

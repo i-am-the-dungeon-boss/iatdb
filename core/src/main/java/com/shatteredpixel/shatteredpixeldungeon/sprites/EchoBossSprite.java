@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.windows.EchoHeroLoader;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Callback;
 import com.watabou.utils.PointF;
 
 public class EchoBossSprite extends MobSprite {
@@ -14,6 +15,9 @@ public class EchoBossSprite extends MobSprite {
     private static final int FRAME_WIDTH = 12;
     private static final int FRAME_HEIGHT = 15;
     private static final int RUN_FRAMERATE = 20;
+
+    private Animation fly;
+    private Animation read;
 
     public EchoBossSprite() {
         super();
@@ -59,6 +63,17 @@ public class EchoBossSprite extends MobSprite {
         // Match HeroSprite: ranged / wand shots use zap (clone of attack).
         zap = attack.clone();
 
+        operate = new Animation(8, false);
+        operate.frames(film, 16, 17, 16, 17);
+
+        // Match HeroSprite: lunge / leap pose (Rapier, HeroicLeap, Feint, …).
+        fly = new Animation(1, true);
+        fly.frames(film, 18);
+
+        // Match HeroSprite: scroll read pose.
+        read = new Animation(20, false);
+        read.frames(film, 19, 20, 20, 20, 20, 20, 20, 20, 20, 19);
+
         if (ch != null && ch.isAlive()) {
             idle();
         } else if (ch != null) {
@@ -90,6 +105,50 @@ public class EchoBossSprite extends MobSprite {
         }
 
         setup(cls, armorTierFor(echoHero, echo));
+    }
+
+    /**
+     * Same scroll-read pose as {@link HeroSprite#read} — without Hero turn
+     * ownership (Echo is AI-driven).
+     */
+    public synchronized void read() {
+        animCallback = new Callback() {
+            @Override
+            public void call() {
+                idle();
+                if (ch != null) {
+                    ch.onOperateComplete();
+                }
+            }
+        };
+        play(read);
+    }
+
+    /**
+     * Same lunge pose as {@link HeroSprite#jump} — without camera follow (Echo is
+     * not
+     * the player). Missing this made height-0 Rapier jumps look like teleports.
+     */
+    @Override
+    public void jump(int from, int to, float height, float duration, Callback callback) {
+        super.jump(from, to, height, duration, callback);
+        play(fly);
+    }
+
+    @Override
+    public void idle() {
+        super.idle();
+        if (ch != null && ch.flying) {
+            play(fly);
+        }
+    }
+
+    @Override
+    public void move(int from, int to) {
+        super.move(from, to);
+        if (ch != null && ch.flying) {
+            play(fly);
+        }
     }
 
     @Override

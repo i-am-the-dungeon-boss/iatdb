@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -63,25 +64,36 @@ public class HolyIntuition extends InventoryClericSpell {
 	}
 
 	@Override
+	protected boolean onItemSelectedAs(UseContext ctx, HolyTome tome, Item item) {
+		item.cursedKnown = true;
+		onSpellCast(ctx, tome);
+		return true;
+	}
+
+	@Override
 	protected void onItemSelected(HolyTome tome, Hero hero, Item item) {
-		if (item == null){
+		if (item == null) {
 			return;
 		}
 
 		item.cursedKnown = true;
 
-		if (item.cursed){
+		if (item.cursed) {
 			GLog.w(Messages.get(this, "cursed"));
 		} else {
 			GLog.i(Messages.get(this, "uncursed"));
 		}
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.busy();
-		hero.sprite.operate(hero.pos);
-		hero.sprite.parent.add( new Identification( hero.sprite.center().offset( 0, -16 ) ) );
+		if (hero.sprite != null) {
+			hero.sprite.operate(hero.pos);
+			if (hero.sprite.parent != null) {
+				hero.sprite.parent.add(new Identification(hero.sprite.center().offset(0, -16)));
+			}
+		}
 
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 		onSpellCast(tome, hero);
 
 	}

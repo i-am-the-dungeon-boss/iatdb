@@ -309,6 +309,16 @@ public class MagesStaff extends MeleeWeapon {
 		return wand != null ? wand.getClass() : null;
 	}
 
+	/** Imbued wand, or null. */
+	public Wand wand() {
+		return wand;
+	}
+
+	/** Shared zap via imbued wand ({@link Wand#zapAs}). */
+	public boolean zapAs(com.shatteredpixel.shatteredpixeldungeon.items.UseContext ctx, int target) {
+		return wand != null && wand.zapAs(ctx, target);
+	}
+
 	/** True when the imbued wand can zap (has charges). */
 	public boolean canZap() {
 		return wand != null && wand.curCharges > 0;

@@ -35,9 +35,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
@@ -394,102 +397,183 @@ public class SpiritBow extends Weapon {
 
 		@Override
 		public void cast(final Hero user, final int dst) {
-			final int cell = throwPos( user, dst );
+			throwAs(UseContext.hero(user), dst);
+		}
+
+		/**
+		 * Shared SpiritBow shot for Hero and Echo. Sniper flurry / Seer Shot stay
+		 * behind {@code heroFX}; Echo requires a valid target Char.
+		 */
+		@Override
+		public boolean throwAs(UseContext ctx, int dst) {
+			final int cell = throwPos(ctx.body.pos, dst);
 			SpiritBow.this.targetPos = cell;
-			if (sniperSpecial && SpiritBow.this.augment == Augment.SPEED){
-				if (flurryCount == -1) flurryCount = 3;
-				
-				final Char enemy = Actor.findChar( cell );
-				
-				if (enemy == null){
-					if (user.buff(Talent.LethalMomentumTracker.class) != null){
-						user.buff(Talent.LethalMomentumTracker.class).detach();
-						user.next();
-					} else {
-						user.spendAndNext(castDelay(user, cell));
-					}
-					sniperSpecial = false;
-					flurryCount = -1;
 
-					if (flurryActor != null){
-						flurryActor.next();
-						flurryActor = null;
-					}
-					return;
-				}
-
-				QuickSlotButton.target(enemy);
-				
-				user.busy();
-				
-				throwSound();
-
-				user.sprite.zap(cell);
-				((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
-						reset(user.sprite,
-								cell,
-								this,
-								new Callback() {
-									@Override
-									public void call() {
-										if (enemy.isAlive()) {
-											curUser = user;
-											onThrow(cell);
-										}
-
-										flurryCount--;
-										if (flurryCount > 0){
-											Actor.add(new Actor() {
-
-												{
-													actPriority = VFX_PRIO-1;
-												}
-
-												@Override
-												protected boolean act() {
-													flurryActor = this;
-													int target = QuickSlotButton.autoAim(enemy, SpiritArrow.this);
-													if (target == -1) target = cell;
-													cast(user, target);
-													Actor.remove(this);
-													return false;
-												}
-											});
-											curUser.next();
-										} else {
-											if (user.buff(Talent.LethalMomentumTracker.class) != null){
-												user.buff(Talent.LethalMomentumTracker.class).detach();
-												user.next();
-											} else {
-												user.spendAndNext(castDelay(user, cell));
-											}
-											sniperSpecial = false;
-											flurryCount = -1;
-										}
-
-										if (flurryActor != null){
-											flurryActor.next();
-											flurryActor = null;
-										}
-									}
-								});
-				
-			} else {
-
-				if (user.hasTalent(Talent.SEER_SHOT)
-						&& user.buff(Talent.SeerShotCooldown.class) == null){
-					int shotPos = throwPos(user, dst);
-					if (Actor.findChar(shotPos) == null) {
-						RevealedArea a = Buff.affect(user, RevealedArea.class, 5 * user.pointsInTalent(Talent.SEER_SHOT));
-						a.depth = Dungeon.depth;
-						a.branch = Dungeon.branch;
-						a.pos = shotPos;
-						Buff.affect(user, Talent.SeerShotCooldown.class, 20f);
-					}
-				}
-
-				super.cast(user, dst);
+			if (ctx.heroFX && sniperSpecial && SpiritBow.this.augment == Augment.SPEED) {
+				castSniperFlurry(ctx.kit, dst, cell);
+				return true;
 			}
+
+			if (ctx.heroFX) {
+				applySeerShot(ctx.kit, dst);
+			}
+
+			Char found = Actor.findChar(cell);
+			if (!ctx.heroFX) {
+				Hero enemy = Dungeon.hero;
+				if (found == null && enemy != null && cell == enemy.pos) {
+					found = enemy;
+				}
+				if (found == null || found == ctx.kit || found == ctx.body) {
+					return false;
+				}
+			}
+
+			ctx.turns.busy();
+			if (ctx.heroFX) {
+				QuickSlotButton.target(found);
+			}
+
+			final float delay = castDelay(ctx.kit, cell);
+			final Char target = found;
+			Callback onArrive = () -> {
+				applySpiritShot(ctx, cell);
+				ctx.turns.spendAfterThrow(delay);
+			};
+
+			CharSprite sprite = ctx.body.sprite;
+			if (sprite != null && sprite.parent != null
+					&& (sprite.visible
+							|| (target != null && target.sprite != null && target.sprite.visible)
+							|| (Dungeon.level != null && cell >= 0
+									&& cell < Dungeon.level.heroFOV.length
+									&& Dungeon.level.heroFOV[cell]))) {
+				castVisual(sprite, ctx.body.pos, dst, onArrive);
+			} else {
+				onArrive.call();
+			}
+			return true;
+		}
+
+		/** Hit via kit; borrow body sprite/pos when body ≠ kit (Echo hit VFX). */
+		private void applySpiritShot(UseContext ctx, int cell) {
+			Hero kit = ctx.kit;
+			Char body = ctx.body;
+			int savedPos = kit.pos;
+			CharSprite savedSprite = kit.sprite;
+			boolean borrow = body != kit;
+			if (borrow) {
+				kit.pos = body.pos;
+				kit.sprite = body.sprite;
+			}
+			try {
+				AiItemActions.withUser(kit, this, () -> {
+					Item i = detach(kit.belongings.backpack);
+					if (i != null) {
+						AiItemActions.onThrow(i, cell);
+					}
+				});
+			} finally {
+				if (borrow) {
+					kit.sprite = savedSprite;
+					kit.pos = savedPos;
+				}
+			}
+		}
+
+		private void applySeerShot(Hero user, int dst) {
+			if (user.hasTalent(Talent.SEER_SHOT)
+					&& user.buff(Talent.SeerShotCooldown.class) == null) {
+				int shotPos = throwPos(user, dst);
+				if (Actor.findChar(shotPos) == null) {
+					RevealedArea a = Buff.affect(user, RevealedArea.class,
+							5 * user.pointsInTalent(Talent.SEER_SHOT));
+					a.depth = Dungeon.depth;
+					a.branch = Dungeon.branch;
+					a.pos = shotPos;
+					Buff.affect(user, Talent.SeerShotCooldown.class, 20f);
+				}
+			}
+		}
+
+		/** Hero-only sniper SPEED flurry (unchanged behavior). */
+		private void castSniperFlurry(Hero user, int dst, int cell) {
+			if (flurryCount == -1) flurryCount = 3;
+
+			final Char enemy = Actor.findChar(cell);
+
+			if (enemy == null) {
+				if (user.buff(Talent.LethalMomentumTracker.class) != null) {
+					user.buff(Talent.LethalMomentumTracker.class).detach();
+					user.next();
+				} else {
+					user.spendAndNext(castDelay(user, cell));
+				}
+				sniperSpecial = false;
+				flurryCount = -1;
+
+				if (flurryActor != null) {
+					flurryActor.next();
+					flurryActor = null;
+				}
+				return;
+			}
+
+			QuickSlotButton.target(enemy);
+
+			user.busy();
+
+			throwSound();
+
+			user.sprite.zap(cell);
+			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
+					reset(user.sprite,
+							cell,
+							this,
+							new Callback() {
+								@Override
+								public void call() {
+									if (enemy.isAlive()) {
+										curUser = user;
+										onThrow(cell);
+									}
+
+									flurryCount--;
+									if (flurryCount > 0) {
+										Actor.add(new Actor() {
+
+											{
+												actPriority = VFX_PRIO - 1;
+											}
+
+											@Override
+											protected boolean act() {
+												flurryActor = this;
+												int target = QuickSlotButton.autoAim(enemy, SpiritArrow.this);
+												if (target == -1) target = cell;
+												cast(user, target);
+												Actor.remove(this);
+												return false;
+											}
+										});
+										curUser.next();
+									} else {
+										if (user.buff(Talent.LethalMomentumTracker.class) != null) {
+											user.buff(Talent.LethalMomentumTracker.class).detach();
+											user.next();
+										} else {
+											user.spendAndNext(castDelay(user, cell));
+										}
+										sniperSpecial = false;
+										flurryCount = -1;
+									}
+
+									if (flurryActor != null) {
+										flurryActor.next();
+										flurryActor = null;
+									}
+								}
+							});
 		}
 	}
 	

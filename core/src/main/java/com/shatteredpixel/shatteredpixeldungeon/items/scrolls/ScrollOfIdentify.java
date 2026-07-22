@@ -50,28 +50,29 @@ public class ScrollOfIdentify extends InventoryScroll {
 	}
 
 	@Override
-	protected void onItemSelected( Item item ) {
-		
-		curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );
+	protected void onItemSelected(Item item) {
+		if (curUser.sprite != null && curUser.sprite.parent != null) {
+			curUser.sprite.parent.add(new Identification(curUser.sprite.center().offset(0, -16)));
+		}
 
 		IDItem(item);
 	}
 
-	public static void IDItem( Item item ){
+	public static void IDItem(Item item) {
 		if (ShardOfOblivion.passiveIDDisabled()) {
-			if (item instanceof Weapon){
+			if (item instanceof Weapon) {
 				((Weapon) item).setIDReady();
 				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
-			} else if (item instanceof Armor){
+			} else if (item instanceof Armor) {
 				((Armor) item).setIDReady();
 				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
-			} else if (item instanceof Ring){
+			} else if (item instanceof Ring) {
 				((Ring) item).setIDReady();
 				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
-			} else if (item instanceof Wand){
+			} else if (item instanceof Wand) {
 				((Wand) item).setIDReady();
 				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
@@ -80,9 +81,9 @@ public class ScrollOfIdentify extends InventoryScroll {
 
 		item.identify();
 		GLog.i(Messages.get(ScrollOfIdentify.class, "it_is", item.title()));
-		Badges.validateItemLevelAquired( item );
+		Badges.validateItemLevelAquired(item);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 30 * quantity : super.value();

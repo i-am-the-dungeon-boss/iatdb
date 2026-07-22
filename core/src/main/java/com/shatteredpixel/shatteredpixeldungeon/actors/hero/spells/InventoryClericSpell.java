@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -33,6 +34,38 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 
 public abstract class InventoryClericSpell extends ClericSpell {
+
+	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx.heroFX) {
+			onCast(tome, ctx.kit);
+			return false;
+		}
+		Item pick = firstUsableItem(ctx.kit);
+		if (pick == null) {
+			return false;
+		}
+		return onItemSelectedAs(ctx, tome, pick);
+	}
+
+	/** First kit item this spell can affect. */
+	protected Item firstUsableItem(Hero kit) {
+		for (Item item : kit.belongings) {
+			if (usableOnItem(item)) {
+				return item;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Echo auto-pick apply. Default bridges to {@link #onItemSelected} — subclasses
+	 * with Hero-only VFX/spend should override.
+	 */
+	protected boolean onItemSelectedAs(UseContext ctx, HolyTome tome, Item item) {
+		onItemSelected(tome, ctx.kit, item);
+		return true;
+	}
 
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
@@ -60,18 +93,18 @@ public abstract class InventoryClericSpell extends ClericSpell {
 		});
 	}
 
-	protected String inventoryPrompt(){
+	protected String inventoryPrompt() {
 		return Messages.get(this, "prompt");
 	}
 
 	protected Class<? extends Bag> preferredBag() {
-		return null; //defaults to no preference
+		return null; // defaults to no preference
 	}
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
 
-	protected abstract void onItemSelected( HolyTome tome, Hero hero, Item item );
+	protected abstract void onItemSelected(HolyTome tome, Hero hero, Item item);
 
 }

@@ -32,7 +32,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -49,13 +51,13 @@ public class Sai extends MeleeWeapon {
 		hitSoundPitch = 1.3f;
 
 		tier = 3;
-		DLY = 0.5f; //2x speed
+		DLY = 0.5f; // 2x speed
 	}
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(2.5f*(tier+1)) +     //10 base, down from 20
-				lvl*Math.round(0.5f*(tier+1));  //+2 per level, down from +4
+		return Math.round(2.5f * (tier + 1)) + // 10 base, down from 20
+				lvl * Math.round(0.5f * (tier + 1)); // +2 per level, down from +4
 	}
 
 	@Override
@@ -64,72 +66,124 @@ public class Sai extends MeleeWeapon {
 	}
 
 	@Override
-	protected void duelistAbility(Hero hero, Integer target) {
-		//+(4+lvl) damage, roughly +60% base damage, +67% scaling
+	protected boolean duelistAbility(UseContext ctx, Integer target) {
 		int dmgBoost = augment.damageFactor(4 + buffedLvl());
-		Sai.comboStrikeAbility(hero, target, 0, dmgBoost, this);
+		return comboStrikeAbility(ctx, target, 0, dmgBoost, this);
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		duelistAbility(UseContext.hero(hero), target);
 	}
 
 	@Override
 	public String abilityInfo() {
 		int dmgBoost = levelKnown ? 4 + buffedLvl() : 4;
-		if (levelKnown){
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(dmgBoost));
 		} else {
 			return Messages.get(this, "typical_ability_desc", augment.damageFactor(dmgBoost));
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		return "+" + augment.damageFactor(4 + level);
 	}
 
-	public static void comboStrikeAbility(Hero hero, Integer target, float multiPerHit, int boostPerHit, MeleeWeapon wep){
+	public static boolean comboStrikeAbility(UseContext ctx, Integer target, float multiPerHit, int boostPerHit,
+			MeleeWeapon wep) {
 		if (target == null) {
-			return;
+			return false;
 		}
+
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
-			GLog.w(Messages.get(wep, "ability_no_target"));
-			return;
-		}
-
-		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy)){
-			GLog.w(Messages.get(wep, "ability_target_range"));
-			hero.belongings.abilityWeapon = null;
-			return;
-		}
-		hero.belongings.abilityWeapon = null;
-
-		hero.sprite.attack(enemy.pos, new Callback() {
-			@Override
-			public void call() {
-				wep.beforeAbilityUsed(hero, enemy);
-				AttackIndicator.target(enemy);
-
-				int recentHits = 0;
-				ComboStrikeTracker buff = hero.buff(ComboStrikeTracker.class);
-				if (buff != null){
-					recentHits = buff.hits;
-					buff.detach();
-				}
-
-				boolean hit = hero.attack(enemy, 1f + multiPerHit*recentHits, boostPerHit*recentHits, Char.INFINITE_ACCURACY);
-				if (hit && !enemy.isAlive()){
-					wep.onAbilityKill(hero, enemy);
-				}
-
-				Invisibility.dispel();
-				hero.spendAndNext(hero.attackDelay());
-				if (recentHits >= 2 && hit){
-					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-				}
-
-				wep.afterAbilityUsed(hero);
+		boolean inFov = body.fieldOfView != null && target < body.fieldOfView.length
+				? body.fieldOfView[target]
+				: Dungeon.level.heroFOV[target];
+		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(wep, "ability_no_target"));
 			}
-		});
+			return false;
+		}
+
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
+		}
+		try {
+			kit.belongings.abilityWeapon = wep;
+			if (!kit.canAttack(enemy)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(wep, "ability_target_range"));
+				}
+				kit.belongings.abilityWeapon = null;
+				return false;
+			}
+			kit.belongings.abilityWeapon = null;
+
+			Callback doHit = new Callback() {
+				@Override
+				public void call() {
+					wep.beforeAbilityUsed(ctx, enemy);
+					if (ctx.heroFX) {
+						AttackIndicator.target(enemy);
+					}
+
+					int recentHits = 0;
+					ComboStrikeTracker buff = kit.buff(ComboStrikeTracker.class);
+					if (buff != null) {
+						recentHits = buff.hits;
+						buff.detach();
+					}
+
+					boolean hit = kit.attack(enemy, 1f + multiPerHit * recentHits, boostPerHit * recentHits,
+							Char.INFINITE_ACCURACY);
+					if (hit && !enemy.isAlive()) {
+						wep.onAbilityKill(kit, enemy);
+					}
+
+					Invisibility.dispel(body);
+					if (ctx.heroFX) {
+						kit.spendAndNext(kit.attackDelay());
+					}
+					if (recentHits >= 2 && hit && UseContext.canWorldFx(kit)) {
+						Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+					}
+
+					wep.afterAbilityUsed(ctx);
+				}
+			};
+
+			if (ctx.heroFX) {
+				ctx.turns.busy();
+			}
+			if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+				kit.sprite.attack(enemy.pos, doHit);
+			} else {
+				if (UseContext.canWorldFx(kit)) {
+					kit.sprite.attack(enemy.pos);
+				}
+				doHit.call();
+			}
+			return true;
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
+	}
+
+	public static void comboStrikeAbility(Hero hero, Integer target, float multiPerHit, int boostPerHit,
+			MeleeWeapon wep) {
+		comboStrikeAbility(UseContext.hero(hero), target, multiPerHit, boostPerHit, wep);
 	}
 
 	public static class ComboStrikeTracker extends Buff {
@@ -158,7 +212,7 @@ public class Sai extends MeleeWeapon {
 
 		@Override
 		public boolean act() {
-			comboTime-=TICK;
+			comboTime -= TICK;
 			spend(TICK);
 			if (comboTime <= 0) {
 				detach();
@@ -166,23 +220,23 @@ public class Sai extends MeleeWeapon {
 			return true;
 		}
 
-		public void addHit(){
+		public void addHit() {
 			hits++;
 			comboTime = 5f;
 
-			if (hits >= 2 && icon() != BuffIndicator.NONE){
-				GLog.p( Messages.get(Combo.class, "combo", hits) );
+			if (hits >= 2 && icon() != BuffIndicator.NONE) {
+				GLog.p(Messages.get(Combo.class, "combo", hits));
 			}
 		}
 
 		@Override
 		public float iconFadePercent() {
-			return Math.max(0, (DURATION - comboTime)/ DURATION);
+			return Math.max(0, (DURATION - comboTime) / DURATION);
 		}
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)comboTime);
+			return Integer.toString((int) comboTime);
 		}
 
 		@Override
@@ -190,7 +244,7 @@ public class Sai extends MeleeWeapon {
 			return Messages.get(this, "desc", hits, dispTurns(comboTime));
 		}
 
-		private static final String TIME  = "combo_time";
+		private static final String TIME = "combo_time";
 		public static String RECENT_HITS = "recent_hits";
 
 		@Override

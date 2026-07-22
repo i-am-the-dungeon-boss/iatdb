@@ -47,11 +47,14 @@ public class PotionOfCleansing extends ExoticPotion {
 	}
 	
 	@Override
-	public void apply( Hero hero ) {
-		identify();
-		
-		cleanse( hero );
-		new Flare( 6, 32 ).color(0xFF4CD2, true).show( curUser.sprite, 2f );
+	public void apply( Char ch ) {
+		if (ch instanceof Hero) {
+			identify();
+			if (curUser != null && curUser.sprite != null) {
+				new Flare( 6, 32 ).color(0xFF4CD2, true).show( curUser.sprite, 2f );
+			}
+		}
+		cleanse( ch );
 	}
 	
 	@Override

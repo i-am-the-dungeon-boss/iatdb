@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
@@ -49,7 +50,11 @@ public class ElixirOfMight extends Elixir {
 	}
 	
 	@Override
-	public void apply( Hero hero ) {
+	public void apply(Char ch) {
+		if (!(ch instanceof Hero)) {
+			return;
+		}
+		Hero hero = (Hero) ch;
 		identify();
 		
 		hero.STR++;

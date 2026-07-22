@@ -33,16 +33,17 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
-import com.watabou.utils.Random;
 
 public class Smite extends TargetedClericSpell {
 
@@ -55,14 +56,15 @@ public class Smite extends TargetedClericSpell {
 
 	@Override
 	public int targetingFlags() {
-		return Ballistica.STOP_TARGET; //no auto-aim
+		return Ballistica.STOP_TARGET; // no auto-aim
 	}
 
 	@Override
 	public String desc() {
-		int min = 5 + Dungeon.hero.lvl/2;
+		int min = 5 + Dungeon.hero.lvl / 2;
 		int max = 10 + Dungeon.hero.lvl;
-		return Messages.get(this, "desc", min, max) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", min, max) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -76,18 +78,84 @@ public class Smite extends TargetedClericSpell {
 	}
 
 	@Override
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		if (target == null || Dungeon.level == null) {
+			return false;
+		}
+
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
+		Char enemy = Actor.findChar(target);
+		if (enemy == null || enemy == body) {
+			return false;
+		}
+
+		SmiteTracker tracker = Buff.affect(kit, SmiteTracker.class);
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
+		}
+		try {
+			boolean inFov = body.fieldOfView != null && target < body.fieldOfView.length
+					? body.fieldOfView[target]
+					: Dungeon.level.heroFOV[target];
+			if (kit.isCharmedBy(enemy) || !inFov || !kit.canAttack(enemy)) {
+				tracker.detach();
+				return false;
+			}
+
+			float accMult = 1;
+			if (!(kit.belongings.attackingWeapon() instanceof Weapon)
+					|| ((Weapon) kit.belongings.attackingWeapon()).STRReq() <= kit.STR()) {
+				accMult = Char.INFINITE_ACCURACY;
+			}
+			final float accuracy = accMult;
+			Callback doHit = () -> {
+				if (kit.attack(enemy, 1, 0, accuracy)) {
+					if (UseContext.canWorldFx(body)) {
+						Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+					}
+					if (UseContext.canWorldFx(enemy)) {
+						enemy.sprite.burst(0xFFFFFFFF, 10);
+					}
+				}
+				tracker.detach();
+				Invisibility.dispel(body);
+				onSpellCast(ctx, tome);
+			};
+			if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+				kit.sprite.attack(enemy.pos, doHit);
+			} else {
+				if (UseContext.canWorldFx(kit)) {
+					kit.sprite.attack(enemy.pos);
+				}
+				doHit.call();
+			}
+			return true;
+		} finally {
+			if (borrow) {
+				kit.pos = savedPos;
+				kit.sprite = savedSprite;
+			}
+		}
+	}
+
+	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
 		if (target == null) {
 			return;
 		}
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero){
+		if (enemy == null || enemy == hero) {
 			GLog.w(Messages.get(this, "no_target"));
 			return;
 		}
 
-		//we apply here because of projecting
+		// we apply here because of projecting
 		SmiteTracker tracker = Buff.affect(hero, SmiteTracker.class);
 		if (hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target] || !hero.canAttack(enemy)) {
 			GLog.w(Messages.get(this, "invalid_enemy"));
@@ -102,10 +170,10 @@ public class Smite extends TargetedClericSpell {
 
 				float accMult = 1;
 				if (!(hero.belongings.attackingWeapon() instanceof Weapon)
-						|| ((Weapon) hero.belongings.attackingWeapon()).STRReq() <= hero.STR()){
+						|| ((Weapon) hero.belongings.attackingWeapon()).STRReq() <= hero.STR()) {
 					accMult = Char.INFINITE_ACCURACY;
 				}
-				if (hero.attack(enemy, 1, 0, accMult)){
+				if (hero.attack(enemy, 1, 0, accMult)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 					enemy.sprite.burst(0xFFFFFFFF, 10);
 				}
@@ -120,16 +188,17 @@ public class Smite extends TargetedClericSpell {
 
 	}
 
-	public static int bonusDmg( Hero attacker, Char defender){
-		int min = 5 + attacker.lvl/2;
+	public static int bonusDmg(Hero attacker, Char defender) {
+		int min = 5 + attacker.lvl / 2;
 		int max = 10 + attacker.lvl;
-		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)){
+		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)) {
 			return max;
 		} else {
 			return Hero.heroDamageIntRange(min, max);
 		}
 	}
 
-	public static class SmiteTracker extends FlavourBuff {};
+	public static class SmiteTracker extends FlavourBuff {
+	};
 
 }

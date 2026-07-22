@@ -110,6 +110,7 @@ public class Item implements Bundlable {
 		@Override
 		public int compare(Item lhs, Item rhs) {
 			return Generator.Category.order(lhs) - Generator.Category.order(rhs);
+		// do nothing by default
 		}
 	};
 
@@ -195,7 +196,7 @@ public class Item implements Bundlable {
 
 	protected void onThrow(int cell) {
 		Heap heap = Dungeon.level.drop(this, cell);
-		if (!heap.isEmpty()) {
+		if (!heap.isEmpty() && heap.sprite != null) {
 			heap.sprite.drop(cell);
 		}
 	}
@@ -691,42 +692,69 @@ public class Item implements Bundlable {
 		return cell;
 	}
 
-	public void cast(final Hero user, final int dst) {
-		user.busy();
+	/**
+	 * Shared throwable execute for Hero and Echo. Cell is already chosen (no
+	 * CellSelector). Uses {@code ctx.body} for VFX / origin, {@code ctx.kit} for
+	 * inventory / {@link #curUser}, and {@code ctx.turns} for busy / spend.
+	 *
+	 * @return true if the throw was started (turn policy applied by
+	 *         {@code ctx.turns})
+	 */
+	public boolean throwAs(UseContext ctx, int dst) {
+		ctx.turns.busy();
 
-		final int cell = throwPos(user, dst);
-		Char enemy = Actor.findChar(cell);
-		QuickSlotButton.target(enemy);
+		final int cell = throwPos(ctx.body.pos, dst);
+		final Char enemy = Actor.findChar(cell);
+		if (ctx.heroFX) {
+			QuickSlotButton.target(enemy);
+		}
 
-		final float delay = castDelay(user, cell);
+		final float delay = castDelay(ctx.kit, cell);
 
-		castVisual(user.sprite, user.pos, dst, new Callback() {
-			@Override
-			public void call() {
-				curUser = user;
-				Item i = Item.this.detach(user.belongings.backpack);
-				if (i != null)
-					i.onThrow(cell);
-
-				if (enemy != null
-						&& curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
-						&& !(Item.this instanceof MissileWeapon)
-						&& curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null) {
-					if (enemy.alignment != curUser.alignment) {
-						Sample.INSTANCE.play(Assets.Sounds.HIT);
-						Buff.affect(enemy, Blindness.class, 1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
-						Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);
+		castVisual(ctx.body.sprite, ctx.body.pos, dst, () -> {
+			Hero kit = ctx.kit;
+			Char body = ctx.body;
+			int savedPos = kit.pos;
+			CharSprite savedSprite = kit.sprite;
+			boolean borrow = body != kit;
+			if (borrow) {
+				kit.pos = body.pos;
+				kit.sprite = body.sprite;
+			}
+			try {
+				AiItemActions.withUser(kit, Item.this, () -> {
+					Item i = Item.this.detach(kit.belongings.backpack);
+					if (i != null) {
+						i.onThrow(cell);
 					}
-				}
 
-				if (user.buff(Talent.LethalMomentumTracker.class) != null) {
-					user.buff(Talent.LethalMomentumTracker.class).detach();
-					user.next();
-				} else {
-					user.spendAndNext(delay);
+					if (ctx.heroFX
+							&& enemy != null
+							&& kit.hasTalent(Talent.IMPROVISED_PROJECTILES)
+							&& !(Item.this instanceof MissileWeapon)
+							&& kit.buff(Talent.ImprovisedProjectileCooldown.class) == null) {
+						if (enemy.alignment != kit.alignment) {
+							Sample.INSTANCE.play(Assets.Sounds.HIT);
+							Buff.affect(enemy, Blindness.class,
+									1f + kit.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
+							Buff.affect(kit, Talent.ImprovisedProjectileCooldown.class, 50f);
+						}
+					}
+				});
+				ctx.turns.spendAfterThrow(delay);
+			} finally {
+				if (borrow) {
+					kit.sprite = savedSprite;
+					kit.pos = savedPos;
 				}
 			}
 		});
+		return true;
+	}
+
+	/** Player Hero convenience — aim already resolved; opens no selector. */
+	public void cast(final Hero user, final int dst) {
+		throwAs(UseContext.hero(user), dst);
 	}
 
 	public float castDelay(Char user, int cell) {

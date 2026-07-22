@@ -40,6 +40,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Statue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
@@ -64,7 +65,8 @@ public class Ratmogrify extends ArmorAbility {
 		baseChargeUse = 50f;
 	}
 
-	//this is sort of hacky, but we need it to know when to use alternate name/icon for heroic energy
+	// this is sort of hacky, but we need it to know when to use alternate name/icon
+	// for heroic energy
 	public static boolean useRatroicEnergy = false;
 
 	@Override
@@ -78,105 +80,125 @@ public class Ratmogrify extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+		Char body = ctx.body;
+		Hero kit = ctx.kit;
 
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		Char ch = Actor.findChar(target);
 
 		if (ch == null || !Dungeon.level.heroFOV[target]) {
-			GLog.w(Messages.get(this, "no_target"));
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "no_target"));
+			}
 			return;
-		} else if (ch == hero){
-			if (!hero.hasTalent(Talent.RATFORCEMENTS)){
-				GLog.w(Messages.get(this, "self_target"));
+		} else if (ch == body) {
+			if (!kit.hasTalent(Talent.RATFORCEMENTS)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(this, "self_target"));
+				}
 				return;
 			} else {
 				ArrayList<Integer> spawnPoints = new ArrayList<>();
 
 				for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
-					int p = hero.pos + PathFinder.NEIGHBOURS8[i];
-					if (Actor.findChar( p ) == null && Dungeon.level.passable[p]) {
-						spawnPoints.add( p );
+					int p = body.pos + PathFinder.NEIGHBOURS8[i];
+					if (Actor.findChar(p) == null && Dungeon.level.passable[p]) {
+						spawnPoints.add(p);
 					}
 				}
 
-				int ratsToSpawn = hero.pointsInTalent(Talent.RATFORCEMENTS);
+				int ratsToSpawn = kit.pointsInTalent(Talent.RATFORCEMENTS);
 
 				while (ratsToSpawn > 0 && spawnPoints.size() > 0) {
-					int index = Random.index( spawnPoints );
+					int index = Random.index(spawnPoints);
 
 					Rat rat = new Rat();
 					rat.alignment = Char.Alignment.ALLY;
 					rat.state = rat.HUNTING;
 					Buff.affect(rat, AscensionChallenge.AscensionBuffBlocker.class);
-					GameScene.add( rat );
-					ScrollOfTeleportation.appear( rat, spawnPoints.get( index ) );
+					GameScene.add(rat);
+					ScrollOfTeleportation.appear(rat, spawnPoints.get(index));
 
-					spawnPoints.remove( index );
+					spawnPoints.remove(index);
 					ratsToSpawn--;
 				}
 
 			}
-		} else if (ch.alignment != Char.Alignment.ENEMY || !(ch instanceof Mob) || ch instanceof Rat){
-			GLog.w(Messages.get(this, "cant_transform"));
-			return;
-		} else if (ch instanceof TransmogRat){
-			if (((TransmogRat) ch).allied || !hero.hasTalent(Talent.RATLOMACY)){
+		} else if (ch.alignment != Char.Alignment.ENEMY || !(ch instanceof Mob) || ch instanceof Rat) {
+			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "cant_transform"));
+			}
+			return;
+		} else if (ch instanceof TransmogRat) {
+			if (((TransmogRat) ch).allied || !kit.hasTalent(Talent.RATLOMACY)) {
+				if (ctx.heroFX) {
+					GLog.w(Messages.get(this, "cant_transform"));
+				}
 				return;
 			} else {
 				((TransmogRat) ch).makeAlly();
-				ch.sprite.emitter().start(Speck.factory(Speck.HEART), 0.2f, 5);
-				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-				if (hero.pointsInTalent(Talent.RATLOMACY) > 1){
-					Buff.affect(ch, Adrenaline.class, 2*(hero.pointsInTalent(Talent.RATLOMACY)-1));
+				if (UseContext.canWorldFx(ch)) {
+					ch.sprite.emitter().start(Speck.factory(Speck.HEART), 0.2f, 5);
+					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
+				}
+				if (kit.pointsInTalent(Talent.RATLOMACY) > 1) {
+					Buff.affect(ch, Adrenaline.class, 2 * (kit.pointsInTalent(Talent.RATLOMACY) - 1));
 				}
 			}
-		} else if (Char.hasProp(ch, Char.Property.MINIBOSS) || Char.hasProp(ch, Char.Property.BOSS)){
-			GLog.w(Messages.get(this, "too_strong"));
+		} else if (Char.hasProp(ch, Char.Property.MINIBOSS) || Char.hasProp(ch, Char.Property.BOSS)) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "too_strong"));
+			}
 			return;
 		} else {
 			TransmogRat rat = new TransmogRat();
-			rat.setup((Mob)ch);
+			rat.setup((Mob) ch);
 			rat.pos = ch.pos;
 
-			//preserve some buffs
+			// preserve some buffs
 			HashSet<Buff> persistentBuffs = new HashSet<>();
-			for (Buff b : ch.buffs()){
-				if (b.revivePersists){
+			for (Buff b : ch.buffs()) {
+				if (b.revivePersists) {
 					persistentBuffs.add(b);
 				}
 			}
 
-			Actor.remove( ch );
-			ch.sprite.killAndErase();
+			Actor.remove(ch);
+			if (ch.sprite != null) {
+				ch.sprite.killAndErase();
+			}
 			Dungeon.level.mobs.remove(ch);
 
-			for (Buff b : persistentBuffs){
+			for (Buff b : persistentBuffs) {
 				ch.add(b);
 			}
 
 			GameScene.add(rat);
 
-			TargetHealthIndicator.instance.target(null);
-			CellEmitter.get(rat.pos).burst(Speck.factory(Speck.WOOL), 4);
-			Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			if (ctx.heroFX) {
+				TargetHealthIndicator.instance.target(null);
+			}
+			if (UseContext.canWorldFx(rat)) {
+				CellEmitter.get(rat.pos).burst(Speck.factory(Speck.WOOL), 4);
+				Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			}
 
-			//for rare cases where a buff was keeping a mob alive (e.g. gnoll brute rage)
-			if (!rat.isAlive()){
+			// for rare cases where a buff was keeping a mob alive (e.g. gnoll brute rage)
+			if (!rat.isAlive()) {
 				rat.die(this);
 			} else {
 				Dungeon.level.occupyCell(rat);
 			}
 		}
 
-		armor.charge -= chargeUse(hero);
+		armor.charge -= chargeUse(kit);
 		armor.updateQuickslot();
-		Invisibility.dispel();
-		hero.spendAndNext(Actor.TICK);
+		Invisibility.dispel(body);
+		ctx.turns.spendAfterThrow(Actor.TICK);
 
 	}
 
@@ -187,7 +209,7 @@ public class Ratmogrify extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{ Talent.RATSISTANCE, Talent.RATLOMACY, Talent.RATFORCEMENTS, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.RATSISTANCE, Talent.RATLOMACY, Talent.RATFORCEMENTS, Talent.HEROIC_ENERGY };
 	}
 
 	public static class TransmogRat extends Mob {
@@ -195,7 +217,8 @@ public class Ratmogrify extends ArmorAbility {
 		{
 			spriteClass = RatSprite.class;
 
-			//always false, as we derive stats from what we are transmogging from (which was already added)
+			// always false, as we derive stats from what we are transmogging from (which
+			// was already added)
 			firstAdded = false;
 		}
 
@@ -224,7 +247,7 @@ public class Ratmogrify extends ArmorAbility {
 
 		}
 
-		public Mob getOriginal(){
+		public Mob getOriginal() {
 			if (original != null) {
 				original.HP = HP;
 				original.pos = pos;
@@ -236,7 +259,7 @@ public class Ratmogrify extends ArmorAbility {
 
 		@Override
 		protected boolean act() {
-			if (timeLeft <= 0){
+			if (timeLeft <= 0) {
 				Mob original = getOriginal();
 				this.original = null;
 				GameScene.add(original);
@@ -254,7 +277,8 @@ public class Ratmogrify extends ArmorAbility {
 
 		@Override
 		protected void spend(float time) {
-			if (!allied) timeLeft -= time;
+			if (!allied)
+				timeLeft -= time;
 			super.spend(time);
 		}
 
@@ -277,7 +301,7 @@ public class Ratmogrify extends ArmorAbility {
 		@Override
 		public int damageRoll() {
 			int damage = original.damageRoll();
-			if (!allied && Dungeon.hero.hasTalent(Talent.RATSISTANCE)){
+			if (!allied && Dungeon.hero.hasTalent(Talent.RATSISTANCE)) {
 				damage *= Math.pow(0.9f, Dungeon.hero.pointsInTalent(Talent.RATSISTANCE));
 			}
 			return damage;
@@ -301,8 +325,8 @@ public class Ratmogrify extends ArmorAbility {
 				Bestiary.setSeen(original.getClass());
 				Bestiary.countEncounter(original.getClass());
 			}
-			if (original instanceof Statue){
-				Notes.remove( original.landmark() );
+			if (original instanceof Statue) {
+				Notes.remove(original.landmark());
 			}
 		}
 
@@ -334,7 +358,8 @@ public class Ratmogrify extends ArmorAbility {
 			EXP = original.EXP;
 
 			allied = bundle.getBoolean(ALLIED);
-			if (allied) alignment = Alignment.ALLY;
+			if (allied)
+				alignment = Alignment.ALLY;
 		}
 	}
 }

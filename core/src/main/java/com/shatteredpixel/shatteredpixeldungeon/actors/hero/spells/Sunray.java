@@ -36,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
@@ -45,7 +46,6 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.utils.Random;
 
 public class Sunray extends TargetedClericSpell {
 
@@ -61,7 +61,8 @@ public class Sunray extends TargetedClericSpell {
 		int min = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;
 		int max = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 12 : 8;
 		int dur = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;
-		return Messages.get(this, "desc", min, max, dur) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", min, max, dur) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -70,15 +71,78 @@ public class Sunray extends TargetedClericSpell {
 	}
 
 	@Override
+	protected boolean castAtTarget(UseContext ctx, HolyTome tome, Integer target) {
+		if (target == null || Dungeon.level == null) {
+			return false;
+		}
+
+		Hero kit = ctx.kit;
+		Ballistica aim = new Ballistica(ctx.body.pos, target, targetingFlags());
+
+		if (Actor.findChar(aim.collisionPos) == ctx.body) {
+			return false;
+		}
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
+			ctx.body.sprite.zap(target);
+			ctx.body.sprite.parent.add(
+					new Beam.SunRay(ctx.body.sprite.center(),
+							DungeonTilemap.raisedTileCenterToWorld(aim.collisionPos)));
+		}
+
+		Char ch = Actor.findChar(aim.collisionPos);
+		if (ch != null) {
+			if (UseContext.canWorldFx(ch)) {
+				ch.sprite.burst(0xFFFFFF44, 5);
+			}
+			applySunrayHit(kit, ch);
+		}
+
+		onSpellCast(ctx, tome);
+		return true;
+	}
+
+	private void applySunrayHit(Hero kit, Char ch) {
+		if (Char.hasProp(ch, Char.Property.UNDEAD) || Char.hasProp(ch, Char.Property.DEMONIC)) {
+			if (kit.pointsInTalent(Talent.SUNRAY) == 2) {
+				ch.damage(12, Sunray.this);
+			} else {
+				ch.damage(8, Sunray.this);
+			}
+		} else {
+			if (kit.pointsInTalent(Talent.SUNRAY) == 2) {
+				ch.damage(Hero.heroDamageIntRange(6, 12), Sunray.this);
+			} else {
+				ch.damage(Hero.heroDamageIntRange(4, 8), Sunray.this);
+			}
+		}
+
+		if (ch.isAlive()) {
+			if (ch.buff(Blindness.class) != null && ch.buff(SunRayRecentlyBlindedTracker.class) != null) {
+				Buff.prolong(ch, Paralysis.class, 2f + 2f * kit.pointsInTalent(Talent.SUNRAY));
+				ch.buff(SunRayRecentlyBlindedTracker.class).detach();
+			} else if (ch.buff(SunRayUsedTracker.class) == null) {
+				Buff.prolong(ch, Blindness.class, 2f + 2f * kit.pointsInTalent(Talent.SUNRAY));
+				Buff.prolong(ch, SunRayRecentlyBlindedTracker.class, 2f + 2f * kit.pointsInTalent(Talent.SUNRAY));
+				Buff.affect(ch, SunRayUsedTracker.class);
+			}
+			if (kit.subClass == HeroSubClass.PRIEST) {
+				Buff.affect(ch, GuidingLight.Illuminated.class);
+			}
+		}
+	}
+
+	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
-		Ballistica aim = new Ballistica(hero.pos, target,  targetingFlags());
+		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());
 
-		if (Actor.findChar( aim.collisionPos ) == hero){
-			GLog.i( Messages.get(Wand.class, "self_target") );
+		if (Actor.findChar(aim.collisionPos) == hero) {
+			GLog.i(Messages.get(Wand.class, "self_target"));
 			return;
 		}
 
@@ -89,54 +153,34 @@ public class Sunray extends TargetedClericSpell {
 		}
 
 		hero.busy();
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
+		Sample.INSTANCE.play(Assets.Sounds.RAY);
 		hero.sprite.zap(target);
 
-		hero.sprite.parent.add(
-				new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(aim.collisionPos)));
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
+		if (hero.sprite.parent != null) {
+			hero.sprite.parent.add(
+					new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(aim.collisionPos)));
+		}
+		Sample.INSTANCE.play(Assets.Sounds.RAY);
 
-		Char ch = Actor.findChar( aim.collisionPos );
+		Char ch = Actor.findChar(aim.collisionPos);
 		if (ch != null) {
-			ch.sprite.burst(0xFFFFFF44, 5);
-
-			if (Char.hasProp(ch, Char.Property.UNDEAD) || Char.hasProp(ch, Char.Property.DEMONIC)){
-				if (hero.pointsInTalent(Talent.SUNRAY) == 2) {
-					ch.damage(12, Sunray.this);
-				} else {
-					ch.damage(8, Sunray.this);
-				}
-			} else {
-				if (hero.pointsInTalent(Talent.SUNRAY) == 2) {
-					ch.damage(Hero.heroDamageIntRange(6, 12), Sunray.this);
-				} else {
-					ch.damage(Hero.heroDamageIntRange(4, 8), Sunray.this);
-				}
+			if (ch.sprite != null) {
+				ch.sprite.burst(0xFFFFFF44, 5);
 			}
-
-			if (ch.isAlive()) {
-				if (ch.buff(Blindness.class) != null && ch.buff(SunRayRecentlyBlindedTracker.class) != null) {
-					Buff.prolong(ch, Paralysis.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
-					ch.buff(SunRayRecentlyBlindedTracker.class).detach();
-				} else if (ch.buff(SunRayUsedTracker.class) == null) {
-					Buff.prolong(ch, Blindness.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
-					Buff.prolong(ch, SunRayRecentlyBlindedTracker.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
-					Buff.affect(ch, SunRayUsedTracker.class);
-				}
-				if (hero.subClass == HeroSubClass.PRIEST){
-					Buff.affect(ch, GuidingLight.Illuminated.class);
-				}
-			}
+			applySunrayHit(hero, ch);
 		}
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.next();
 
 		onSpellCast(tome, hero);
 
 	}
 
-	public static class SunRayUsedTracker extends Buff {}
-	public static class SunRayRecentlyBlindedTracker extends FlavourBuff {}
+	public static class SunRayUsedTracker extends Buff {
+	}
+
+	public static class SunRayRecentlyBlindedTracker extends FlavourBuff {
+	}
 
 }

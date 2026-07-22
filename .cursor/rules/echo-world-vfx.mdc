@@ -1,0 +1,61 @@
+---
+description: Echo/shared UseContext paths must show world VFX; prefer tests that assert it
+alwaysApply: true
+---
+
+# World VFX (Echo and Shared Paths)
+
+## Iron Law
+
+Any change to combat, abilities, spells, items, or moves that can show world VFX must call that VFX correctly for **both** Hero and Echo. Do not gate attack / jump / zap / MagicMissile / MissileSprite / operate / emitters on `ctx.heroFX` alone.
+
+## Gate correctly
+
+| Concern                                                                       | Gate                                                                                  |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Attack, jump, zap, missiles, operate, emitters, hit sounds tied to those      | `UseContext.canWorldFx(ch)` / `ctx.canWorldFx()` (`sprite != null && parent != null`) |
+| QuickSlot, GLog, identify, talent UI, `spendAndNext`, camera-only Hero riders | `ctx.heroFX`                                                                          |
+
+```java
+// ❌ BAD — Echo never swings / never bolts
+if (ctx.heroFX && kit.sprite != null) {
+	kit.sprite.attack(enemy.pos, doHit);
+} else {
+	doHit.call();
+}
+
+// ✅ GOOD — on-stage Echo shows VFX; headless still sync-applies
+if (ctx.heroFX && UseContext.canWorldFx(kit)) {
+	kit.sprite.attack(enemy.pos, doHit);
+} else {
+	if (UseContext.canWorldFx(kit)) {
+		kit.sprite.attack(enemy.pos); // visual only; hit stays sync (borrow-safe)
+	}
+	doHit.call();
+}
+```
+
+Relocates: use `Char.move(cell, false)` (or `ScrollOfTeleportation.appear`) so the sprite is placed — do not update `pos` alone.
+
+## Prefer tests
+
+When you change a path that has world VFX, add or extend a test that proves Echo fires it with a live parent:
+
+- `EchoTestSupport.installEchoBossLevel` + `attachInstantProjectileParent(boss)`
+- Assert recycles / stub counters: `magicMissileRecycles`, `missileSpriteRecycles`, `stubSpriteAttackCalls`, `stubSpriteJumpCalls`, `stubSpriteOperateCalls`, `stubSpriteZapCalls`, `stubSpritePlacedCell`
+
+```java
+// ✅ GOOD — Echo wand bolt actually recycles MagicMissile
+EchoTestSupport.InstantProjectileGroup fx =
+		EchoTestSupport.attachInstantProjectileParent(boss);
+wand.zapAs(UseContext.echo(boss), player.pos);
+Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
+```
+
+Headless without a parent must still apply gameplay (damage, buffs, move) synchronously.
+
+## Before finishing
+
+- [ ] No new `heroFX && sprite…` world-VFX gates
+- [ ] Echo on-stage path shows the same class of VFX as Hero
+- [ ] Test asserts VFX when practical; otherwise note the gap

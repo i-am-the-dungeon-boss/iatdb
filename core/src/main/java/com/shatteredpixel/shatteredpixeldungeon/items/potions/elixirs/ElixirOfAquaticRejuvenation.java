@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -45,51 +46,53 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class ElixirOfAquaticRejuvenation extends Elixir {
-	
+
 	{
 		image = ItemSpriteSheet.ELIXIR_AQUA;
 	}
-	
+
 	@Override
-	public void apply(Hero hero) {
-		if (Dungeon.isChallenged(Challenges.NO_HEALING)){
-			PotionOfHealing.pharmacophobiaProc(hero);
-		} else {
-			Buff.affect(hero, AquaHealing.class).set(Math.round(hero.HT * 1.5f));
+	public void apply(Char ch) {
+		if (ch instanceof Hero && Dungeon.isChallenged(Challenges.NO_HEALING)) {
+			PotionOfHealing.pharmacophobiaProc((Hero) ch);
+			return;
 		}
+		Buff.affect(ch, AquaHealing.class).set(Math.round(ch.HT * 1.5f));
 	}
-	
+
 	public static class AquaHealing extends Buff {
-		
+
 		{
 			type = buffType.POSITIVE;
 			announced = true;
 		}
-		
+
 		private int left;
-		
-		public void set( int amount ){
-			if (amount > left) left = amount;
+
+		public void set(int amount) {
+			if (amount > left)
+				left = amount;
 		}
 
-		public void extend( float duration ) {
+		public void extend(float duration) {
 			left += duration;
 		}
-		
+
 		@Override
 		public boolean act() {
-			
-			if (!target.flying && Dungeon.level.water[target.pos] && target.HP < target.HT){
-				float healAmt = GameMath.gate( 1, target.HT/50f, left );
+
+			if (!target.flying && Dungeon.level.water[target.pos] && target.HP < target.HT) {
+				float healAmt = GameMath.gate(1, target.HT / 50f, left);
 				healAmt = Math.min(healAmt, target.HT - target.HP);
-				if (Random.Float() < (healAmt % 1)){
-					healAmt = (float)Math.ceil(healAmt);
+				if (Random.Float() < (healAmt % 1)) {
+					healAmt = (float) Math.ceil(healAmt);
 				} else {
-					healAmt = (float)Math.floor(healAmt);
+					healAmt = (float) Math.floor(healAmt);
 				}
-				target.HP += (int)healAmt;
-				left -= (int)healAmt;
-				target.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString((int)healAmt), FloatingText.HEALING );
+				target.HP += (int) healAmt;
+				left -= (int) healAmt;
+				target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString((int) healAmt),
+						FloatingText.HEALING);
 
 				if (target.HP >= target.HT) {
 					target.HP = target.HT;
@@ -98,8 +101,8 @@ public class ElixirOfAquaticRejuvenation extends Elixir {
 					}
 				}
 			}
-			
-			if (left <= 0){
+
+			if (left <= 0) {
 				detach();
 				if (target instanceof Hero) {
 					((Hero) target).resting = false;
@@ -109,7 +112,7 @@ public class ElixirOfAquaticRejuvenation extends Elixir {
 			}
 			return true;
 		}
-		
+
 		@Override
 		public int icon() {
 			return BuffIndicator.HEALING;
@@ -130,36 +133,36 @@ public class ElixirOfAquaticRejuvenation extends Elixir {
 		public String iconTextDisplay() {
 			return Integer.toString(left);
 		}
-		
+
 		@Override
 		public String desc() {
 			return Messages.get(this, "desc", left);
 		}
-		
+
 		private static final String LEFT = "left";
-		
+
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			super.storeInBundle( bundle );
-			bundle.put( LEFT, left );
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put(LEFT, left);
 		}
-		
+
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
-			super.restoreFromBundle( bundle );
-			left = bundle.getInt( LEFT );
-			
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			left = bundle.getInt(LEFT);
+
 		}
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
-		
+
 		{
-			inputs =  new Class[]{PotionOfHealing.class, GooBlob.class};
-			inQuantity = new int[]{1, 1};
-			
+			inputs = new Class[] { PotionOfHealing.class, GooBlob.class };
+			inQuantity = new int[] { 1, 1 };
+
 			cost = 6;
-			
+
 			output = ElixirOfAquaticRejuvenation.class;
 			outQuantity = 1;
 		}
@@ -170,5 +173,5 @@ public class ElixirOfAquaticRejuvenation extends Elixir {
 			return super.brew(ingredients);
 		}
 	}
-	
+
 }

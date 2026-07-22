@@ -33,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -63,27 +64,65 @@ public class Judgement extends ClericSpell {
 	}
 
 	@Override
+	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
+		if (ctx == null || ctx.body == null || ctx.kit == null || tome == null) {
+			return false;
+		}
+		if (!canCast(ctx.kit)) {
+			return false;
+		}
+		if (ctx.heroFX) {
+			onCast(tome, ctx.kit);
+			return true;
+		}
+
+		AscendedForm.AscendBuff ascend = ctx.kit.buff(AscendedForm.AscendBuff.class);
+		int damageBase = 5 + 5 * ctx.kit.pointsInTalent(Talent.JUDGEMENT);
+		if (ascend != null) {
+			damageBase += Math.round(damageBase * ascend.spellCasts / 3f);
+		}
+
+		boolean[] inFov = ctx.body.fieldOfView != null ? ctx.body.fieldOfView : Dungeon.level.heroFOV;
+
+		for (Char ch : Actor.chars()) {
+			if (ch.alignment != ctx.body.alignment
+					&& ch.pos >= 0 && ch.pos < inFov.length && inFov[ch.pos]) {
+				ch.damage(Hero.heroDamageIntRange(damageBase, 2 * damageBase), Judgement.this);
+				if (ctx.kit.subClass == HeroSubClass.PRIEST) {
+					Buff.affect(ch, GuidingLight.Illuminated.class);
+				}
+			}
+		}
+
+		if (ascend != null) {
+			ascend.spellCasts = 0;
+		}
+		onSpellCast(ctx, tome);
+		return true;
+	}
+
+	@Override
 	public void onCast(HolyTome tome, Hero hero) {
 
 		hero.sprite.attack(hero.pos, new Callback() {
 			@Override
 			public void call() {
-				GameScene.flash( 0x80FFFFFF );
+				GameScene.flash(0x80FFFFFF);
 				Sample.INSTANCE.play(Assets.Sounds.BLAST);
 
-				int damageBase = 5 + 5*hero.pointsInTalent(Talent.JUDGEMENT);
-				damageBase += Math.round(damageBase*hero.buff(AscendedForm.AscendBuff.class).spellCasts/3f);
+				int damageBase = 5 + 5 * hero.pointsInTalent(Talent.JUDGEMENT);
+				damageBase += Math.round(damageBase * hero.buff(AscendedForm.AscendBuff.class).spellCasts / 3f);
 
-				for (Char ch : Actor.chars()){
-					if (ch.alignment != hero.alignment && Dungeon.level.heroFOV[ch.pos]){
-						ch.damage( Hero.heroDamageIntRange(damageBase, 2*damageBase), Judgement.this);
-						if (hero.subClass == HeroSubClass.PRIEST){
+				for (Char ch : Actor.chars()) {
+					if (ch.alignment != hero.alignment && Dungeon.level.heroFOV[ch.pos]) {
+						ch.damage(Hero.heroDamageIntRange(damageBase, 2 * damageBase), Judgement.this);
+						if (hero.subClass == HeroSubClass.PRIEST) {
 							Buff.affect(ch, GuidingLight.Illuminated.class);
 						}
 					}
 				}
 
-				hero.spendAndNext( 1f );
+				hero.spendAndNext(1f);
 				onSpellCast(tome, hero);
 
 				hero.buff(AscendedForm.AscendBuff.class).spellCasts = 0;
@@ -96,12 +135,13 @@ public class Judgement extends ClericSpell {
 
 	@Override
 	public String desc() {
-		int baseDmg = 5 + 5*Dungeon.hero.pointsInTalent(Talent.JUDGEMENT);
+		int baseDmg = 5 + 5 * Dungeon.hero.pointsInTalent(Talent.JUDGEMENT);
 		int totalBaseDmg = baseDmg;
 		if (Dungeon.hero.buff(AscendedForm.AscendBuff.class) != null) {
-			totalBaseDmg += Math.round(baseDmg*Dungeon.hero.buff(AscendedForm.AscendBuff.class).spellCasts/3f);
+			totalBaseDmg += Math.round(baseDmg * Dungeon.hero.buff(AscendedForm.AscendBuff.class).spellCasts / 3f);
 		}
 
-		return Messages.get(this, "desc", baseDmg, 2*baseDmg, totalBaseDmg, 2*totalBaseDmg) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", baseDmg, 2 * baseDmg, totalBaseDmg, 2 * totalBaseDmg) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 }

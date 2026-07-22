@@ -33,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -151,6 +152,38 @@ public class HolyTome extends Artifact {
 				&& hero.buff(MagicImmune.class) == null
 				&& charge >= spell.chargeUse(hero)
 				&& spell.canCast(hero);
+	}
+
+	/**
+	 * Shared tome cast for Hero and Echo. Validates equip/charge on {@code ctx.kit},
+	 * MagicImmune on {@code ctx.body}, then delegates to {@link ClericSpell#castAs}.
+	 */
+	public boolean castAs(UseContext ctx, ClericSpell spell, Integer target) {
+		if (ctx == null || ctx.kit == null || ctx.body == null || spell == null) {
+			return false;
+		}
+		if (ctx.body.buff(MagicImmune.class) != null) {
+			return false;
+		}
+		if (!isEquipped(ctx.kit) && !ctx.kit.hasTalent(Talent.LIGHT_READING)) {
+			if (ctx.heroFX) {
+				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
+			}
+			return false;
+		}
+		if (cursed) {
+			if (ctx.heroFX) {
+				GLog.i(Messages.get(this, "cursed"));
+			}
+			return false;
+		}
+		if (!canCast(ctx.kit, spell)) {
+			if (ctx.heroFX) {
+				GLog.w(Messages.get(this, "no_spell"));
+			}
+			return false;
+		}
+		return spell.castAs(ctx, this, target);
 	}
 
 	public void spendCharge( float chargesSpent ){
@@ -358,13 +391,13 @@ public class HolyTome extends Artifact {
 				int cell = QuickSlotButton.autoAim(QuickSlotButton.lastTarget, HolyTome.this);
 
 				if (cell != -1){
-					GameScene.handleCell(cell);
+					castAs(UseContext.hero(Dungeon.hero), quickSpell, cell);
 				} else {
 					//couldn't auto-aim, just target the position and hope for the best.
-					GameScene.handleCell( QuickSlotButton.lastTarget.pos );
+					castAs(UseContext.hero(Dungeon.hero), quickSpell, QuickSlotButton.lastTarget.pos);
 				}
 			} else {
-				quickSpell.onCast(HolyTome.this, Dungeon.hero);
+				castAs(UseContext.hero(Dungeon.hero), quickSpell, null);
 
 				if (quickSpell.targetingFlags() != -1 && Dungeon.quickslot.contains(HolyTome.this)){
 					targetingSpell = quickSpell;

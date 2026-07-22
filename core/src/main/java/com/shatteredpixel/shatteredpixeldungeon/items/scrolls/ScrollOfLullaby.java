@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Drowsy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -43,24 +44,36 @@ public class ScrollOfLullaby extends Scroll {
 
 	@Override
 	public void doRead() {
+		doReadAs(UseContext.hero(curUser));
+	}
 
-		detach(curUser.belongings.backpack);
-		curUser.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
-		Sample.INSTANCE.play( Assets.Sounds.LULLABY );
+	@Override
+	protected boolean doReadAs(UseContext ctx) {
+		detach(ctx.kit.belongings.backpack);
+
+		if (UseContext.canWorldFx(ctx.body)) {
+			ctx.body.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+			Sample.INSTANCE.play( Assets.Sounds.LULLABY );
+		}
 
 		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
 			if (Dungeon.level.heroFOV[mob.pos]) {
 				Buff.affect( mob, Drowsy.class, Drowsy.DURATION );
-				mob.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+				if (UseContext.canWorldFx(mob)) {
+					mob.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+				}
 			}
 		}
 
-		Buff.affect( curUser, Drowsy.class, Drowsy.DURATION );
+		Buff.affect( ctx.body, Drowsy.class, Drowsy.DURATION );
 
-		GLog.i( Messages.get(this, "sooth") );
+		if (ctx.heroFX) {
+			GLog.i( Messages.get(this, "sooth") );
+			identify();
+		}
 
-		identify();
-		readAnimation();
+		readAnimation(ctx);
+		return true;
 	}
 	
 	@Override

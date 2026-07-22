@@ -41,21 +41,21 @@ import java.util.ArrayList;
 
 //FIXME needs a refactor, lots of weird thread interaction here.
 public class AttackIndicator extends Tag {
-	
-	private static final float ENABLED	= 1.0f;
-	private static final float DISABLED	= 0.3f;
+
+	private static final float ENABLED = 1.0f;
+	private static final float DISABLED = 0.3f;
 
 	private static float delay;
-	
+
 	private static AttackIndicator instance;
-	
+
 	private CharSprite sprite = null;
-	
+
 	private Mob lastTarget;
 	private ArrayList<Mob> candidates = new ArrayList<>();
-	
+
 	public AttackIndicator() {
-		super( DangerIndicator.COLOR );
+		super(DangerIndicator.COLOR);
 
 		synchronized (this) {
 			instance = this;
@@ -66,71 +66,77 @@ public class AttackIndicator extends Tag {
 			enable(false);
 		}
 	}
-	
+
 	@Override
 	public GameAction keyAction() {
 		return SPDAction.TAG_ATTACK;
 	}
-	
+
 	@Override
 	protected void createChildren() {
 		super.createChildren();
 	}
-	
+
 	@Override
 	protected synchronized void layout() {
 		super.layout();
 
 		if (sprite != null) {
-			if (!flipped)   sprite.x = x + (SIZE - sprite.width()) / 2f + 1;
-			else            sprite.x = x + width - (SIZE + sprite.width()) / 2f - 1;
+			if (!flipped)
+				sprite.x = x + (SIZE - sprite.width()) / 2f + 1;
+			else
+				sprite.x = x + width - (SIZE + sprite.width()) / 2f - 1;
 			sprite.y = y + (height - sprite.height()) / 2f;
 			PixelScene.align(sprite);
 		}
 	}
-	
+
 	@Override
 	public synchronized void update() {
 		super.update();
 
-		if (!bg.visible){
-			if (sprite != null) sprite.visible = false;
+		if (!bg.visible) {
+			if (sprite != null)
+				sprite.visible = false;
 			enable(false);
-			if (delay > 0f) delay -= Game.elapsed;
-			if (delay <= 0f) active = false;
+			if (delay > 0f)
+				delay -= Game.elapsed;
+			if (delay <= 0f)
+				active = false;
 		} else {
 			delay = 0.75f;
 			active = true;
-			if (bg.width > 0 && sprite != null)sprite.visible = true;
+			if (bg.width > 0 && sprite != null)
+				sprite.visible = true;
 
 			if (Dungeon.hero.isAlive()) {
 
 				enable(Dungeon.hero.ready);
 
 			} else {
-				visible( false );
-				enable( false );
+				visible(false);
+				enable(false);
 			}
 		}
 	}
-	
+
 	private synchronized void checkEnemies() {
 
 		candidates.clear();
 		int v = Dungeon.hero.visibleEnemies();
-		for (int i=0; i < v; i++) {
-			Mob mob = Dungeon.hero.visibleEnemy( i );
-			if ( Dungeon.hero.canAttack( mob) ) {
-				candidates.add( mob );
+		for (int i = 0; i < v; i++) {
+			Mob mob = Dungeon.hero.visibleEnemy(i);
+			if (Dungeon.hero.canAttack(mob)) {
+				candidates.add(mob);
 			}
 		}
-		
-		if (lastTarget == null || !candidates.contains( lastTarget )) {
+
+		if (lastTarget == null || !candidates.contains(lastTarget)) {
 			if (candidates.isEmpty()) {
 				lastTarget = null;
 			} else {
 				active = true;
-				lastTarget = Random.element( candidates );
+				lastTarget = Random.element(candidates);
 				updateImage();
 				flash();
 			}
@@ -140,18 +146,18 @@ public class AttackIndicator extends Tag {
 				flash();
 			}
 		}
-		
-		visible( lastTarget != null );
-		enable( bg.visible );
+
+		visible(lastTarget != null);
+		enable(bg.visible);
 	}
-	
+
 	private synchronized void updateImage() {
-		
+
 		if (sprite != null) {
 			sprite.killAndErase();
 			sprite = null;
 		}
-		
+
 		sprite = Reflection.newInstance(lastTarget.spriteClass);
 		active = true;
 		sprite.linkVisuals(lastTarget);
@@ -159,32 +165,33 @@ public class AttackIndicator extends Tag {
 		sprite.paused = true;
 		sprite.visible = bg.visible;
 
-		if (sprite.width() > 20 || sprite.height() > 20){
-			sprite.scale.set(PixelScene.align(20f/Math.max(sprite.width(), sprite.height())));
+		if (sprite.width() > 20 || sprite.height() > 20) {
+			sprite.scale.set(PixelScene.align(20f / Math.max(sprite.width(), sprite.height())));
 		}
 
-		add( sprite );
+		add(sprite);
 
 		layout();
 	}
-	
+
 	private boolean enabled = true;
-	private synchronized void enable( boolean value ) {
+
+	private synchronized void enable(boolean value) {
 		enabled = value;
 		if (sprite != null) {
-			sprite.alpha( value ? ENABLED : DISABLED );
+			sprite.alpha(value ? ENABLED : DISABLED);
 		}
 	}
-	
-	private synchronized void visible( boolean value ) {
+
+	private synchronized void visible(boolean value) {
 		bg.visible = value;
 	}
-	
+
 	@Override
 	protected void onClick() {
 		super.onClick();
 		if (enabled && Dungeon.hero.ready) {
-			if (Dungeon.hero.handle( lastTarget.pos )) {
+			if (Dungeon.hero.handle(lastTarget.pos)) {
 				Dungeon.hero.next();
 			}
 		}
@@ -195,8 +202,9 @@ public class AttackIndicator extends Tag {
 		return Messages.titleCase(Messages.get(WndKeyBindings.class, "tag_attack"));
 	}
 
-	public static void target(Char target ) {
-		if (target == null) return;
+	public static void target(Char target) {
+		if (target == null || instance == null)
+			return;
 		synchronized (instance) {
 			instance.lastTarget = (Mob) target;
 			instance.updateImage();
@@ -204,7 +212,7 @@ public class AttackIndicator extends Tag {
 			QuickSlotButton.target(target);
 		}
 	}
-	
+
 	public static void updateState() {
 		instance.checkEnemies();
 	}

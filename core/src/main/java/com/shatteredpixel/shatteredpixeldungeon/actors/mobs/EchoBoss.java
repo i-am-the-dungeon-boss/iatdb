@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
@@ -208,7 +209,8 @@ public class EchoBoss extends Mob {
 
     @Override
     public float speed() {
-        return withEchoHeroPos(echoHero::combatSpeed);
+        // Kit gear/talents; body potion buffs (Haste etc.) via alsoMoveBuffs.
+        return withEchoHeroPos(() -> echoHero.combatSpeed(this));
     }
 
     @Override
@@ -265,6 +267,43 @@ public class EchoBoss extends Mob {
     }
 
     @Override
+    protected void onAdd() {
+        super.onAdd();
+        // Phantom kit is never in Actor.chars(), so its Buffs (Wand.Charger,
+        // ClassArmor.Charger, artifact recharge, Regeneration, …) are not
+        // auto-scheduled. Register them so natural recharge matches the Hero.
+        scheduleEchoKitBuffs();
+    }
+
+    @Override
+    protected synchronized void onRemove() {
+        unscheduleEchoKitBuffs();
+        super.onRemove();
+    }
+
+    /**
+     * Schedules every buff on the phantom echo hero into the global Actor
+     * clock. Safe to call repeatedly — {@link Actor#add} no-ops duplicates.
+     */
+    public void scheduleEchoKitBuffs() {
+        if (echoHero == null) {
+            return;
+        }
+        for (Buff buff : echoHero.buffs().toArray(new Buff[0])) {
+            Actor.add(buff);
+        }
+    }
+
+    private void unscheduleEchoKitBuffs() {
+        if (echoHero == null) {
+            return;
+        }
+        for (Buff buff : echoHero.buffs().toArray(new Buff[0])) {
+            Actor.remove(buff);
+        }
+    }
+
+    @Override
     public void notice() {
         super.notice();
         if (!BossHealthBar.isAssigned()) {
@@ -277,6 +316,9 @@ public class EchoBoss extends Mob {
 
     @Override
     protected boolean act() {
+        // Pick up kit buffs attached after onAdd (e.g. MeleeWeapon.Charger).
+        scheduleEchoKitBuffs();
+
         if (state != HUNTING) {
             debugAct("state=" + state + " → default mob act (not HUNTING)");
             return super.act();
