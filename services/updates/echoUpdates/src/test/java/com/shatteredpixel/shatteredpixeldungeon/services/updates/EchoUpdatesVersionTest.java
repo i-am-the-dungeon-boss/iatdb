@@ -7,27 +7,45 @@ import org.junit.jupiter.api.Test;
 class EchoUpdatesVersionTest {
 
 	@Test
-	@DisplayName("treats equal version names as up to date")
-	void equalNamesAreUpToDate() {
-		Assertions.assertThat(EchoUpdates.isRemoteNewer("0.0.1", "0.0.1")).isFalse();
+	@DisplayName("equal version names do not require update")
+	void equalNamesDoNotRequireUpdate() {
+		Assertions.assertThat(EchoUpdates.requiresUpdate("0.0.1", "0.0.1")).isFalse();
 	}
 
 	@Test
-	@DisplayName("ignores -INDEV suffix on the local version name")
+	@DisplayName("ignores -INDEV suffix when comparing version names")
 	void ignoresIndevSuffix() {
-		Assertions.assertThat(EchoUpdates.isRemoteNewer("0.0.1", "0.0.1-INDEV")).isFalse();
+		Assertions.assertThat(EchoUpdates.requiresUpdate("0.0.1", "0.0.1-INDEV")).isFalse();
 	}
 
 	@Test
-	@DisplayName("detects a newer remote version name")
-	void detectsNewerRemote() {
-		Assertions.assertThat(EchoUpdates.isRemoteNewer("0.0.2", "0.0.1")).isTrue();
-		Assertions.assertThat(EchoUpdates.isRemoteNewer("0.0.10", "0.0.9")).isTrue();
+	@DisplayName("requires update when remote version differs from local")
+	void requiresUpdateWhenVersionsDiffer() {
+		Assertions.assertThat(EchoUpdates.requiresUpdate("0.0.2", "0.0.1")).isTrue();
+		Assertions.assertThat(EchoUpdates.requiresUpdate("0.0.10", "0.0.9")).isTrue();
+		Assertions.assertThat(EchoUpdates.requiresUpdate("0.0.1", "0.0.2")).isTrue();
 	}
 
 	@Test
-	@DisplayName("does not treat an older remote as newer")
-	void olderRemoteIsNotNewer() {
-		Assertions.assertThat(EchoUpdates.isRemoteNewer("0.0.1", "0.0.2")).isFalse();
+	@DisplayName("empty remote version does not require update")
+	void emptyRemoteDoesNotRequireUpdate() {
+		Assertions.assertThat(EchoUpdates.requiresUpdate("", "0.0.1")).isFalse();
+		Assertions.assertThat(EchoUpdates.requiresUpdate(null, "0.0.1")).isFalse();
+	}
+
+	@Test
+	@DisplayName("uses backend update_url when present")
+	void usesBackendUpdateUrl() {
+		Assertions.assertThat(EchoUpdates.resolveUpdateUrl("https://example.com/dl"))
+				.isEqualTo("https://example.com/dl");
+	}
+
+	@Test
+	@DisplayName("falls back to GitHub latest release when update_url missing")
+	void fallsBackToGitHubLatest() {
+		Assertions.assertThat(EchoUpdates.resolveUpdateUrl(null))
+				.isEqualTo(EchoUpdates.DEFAULT_UPDATE_URL);
+		Assertions.assertThat(EchoUpdates.resolveUpdateUrl("  "))
+				.isEqualTo(EchoUpdates.DEFAULT_UPDATE_URL);
 	}
 }

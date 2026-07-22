@@ -55,6 +55,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoConnectionFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndSettings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpdateAvailable;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats;
 import com.watabou.input.PointerEvent;
 import com.watabou.noosa.BitmapText;
@@ -343,11 +344,40 @@ public class TitleScene extends PixelScene {
 
 		uiAlpha = 1f;
 		updateFade();
+		requestUpdateCheckIfEnabled(SPDSettings.updates());
 		EchoBackendProbe.probeAsync(this::onBackendProbeComplete);
 	}
 
 	private float uiAlpha;
 	private boolean offlineErrorShown;
+	private boolean updateNudgeShown;
+
+	/** Starts an async game-version check when the updates preference is on. */
+	static void requestUpdateCheckIfEnabled(boolean updatesEnabled) {
+		if (updatesEnabled) {
+			Updates.checkForUpdate();
+		}
+	}
+
+	/** True when an update is ready and this title visit has not nudged yet. */
+	static boolean shouldShowUpdateNudge(boolean updateAvailable, boolean alreadyShown) {
+		return updateAvailable && !alreadyShown;
+	}
+
+	@Override
+	public void update() {
+		super.update();
+		if (shouldShowUpdateNudge(Updates.updateAvailable(), updateNudgeShown)
+				&& canApplyBackendProbeUi(this)) {
+			updateNudgeShown = true;
+			showUpdateAvailableDialog();
+		}
+	}
+
+	private void showUpdateAvailableDialog() {
+		AvailableUpdateData update = Updates.updateData();
+		addToFront(new WndUpdateAvailable(update, () -> Updates.launchUpdate(Updates.updateData())));
+	}
 
 	private void onBackendProbeComplete() {
 		// Resize/resetScene destroys this instance; ignore stale probe callbacks.

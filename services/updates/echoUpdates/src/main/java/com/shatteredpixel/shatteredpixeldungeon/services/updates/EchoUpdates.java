@@ -30,10 +30,12 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
 /**
- * Checks hero-echoes {@code GET /v1/game-version} for a newer
- * {@code version_name}.
+ * Checks hero-echoes {@code GET /v1/game-version} and requires an update
+ * when {@code version_name} differs from the installed game version.
  */
 public class EchoUpdates extends UpdateService {
+
+	static final String DEFAULT_UPDATE_URL = "https://github.com/i-am-the-dungeon-boss/iatdb/releases/latest";
 
 	/** Optional override set by launchers (e.g. from EchoOnlineSettings). */
 	public static String baseUrlOverride = "";
@@ -76,7 +78,7 @@ public class EchoUpdates extends UpdateService {
 					}
 					Bundle root = Bundle.read(httpResponse.getResultAsStream());
 					String remoteName = root.getString("version_name");
-					if (!isRemoteNewer(remoteName, Game.version)) {
+					if (!requiresUpdate(remoteName, Game.version)) {
 						callback.onNoUpdateFound();
 						return;
 					}
@@ -85,7 +87,7 @@ public class EchoUpdates extends UpdateService {
 					update.versionName = remoteName;
 					update.versionCode = Game.versionCode + 1;
 					update.desc = root.contains("release_notes") ? root.getString("release_notes") : null;
-					update.URL = root.getString("update_url");
+					update.URL = resolveUpdateUrl(root.contains("update_url") ? root.getString("update_url") : null);
 					callback.onUpdateAvailable(update);
 				} catch (Exception e) {
 					Game.reportException(e);
@@ -141,14 +143,22 @@ public class EchoUpdates extends UpdateService {
 	}
 
 	/**
-	 * True when remote semver is greater than local (ignores local -INDEV suffix).
+	 * True when remote and local version cores differ (ignores -INDEV / other
+	 * suffixes).
 	 */
-	static boolean isRemoteNewer(String remoteName, String localVersion) {
+	static boolean requiresUpdate(String remoteName, String localVersion) {
 		if (remoteName == null || remoteName.isEmpty()) {
 			return false;
 		}
 		String local = localVersion == null ? "" : localVersion;
-		return compareVersionNames(remoteName, local) > 0;
+		return compareVersionNames(remoteName, local) != 0;
+	}
+
+	static String resolveUpdateUrl(String fromBackend) {
+		if (fromBackend != null && !fromBackend.trim().isEmpty()) {
+			return fromBackend.trim();
+		}
+		return DEFAULT_UPDATE_URL;
 	}
 
 	static int compareVersionNames(String left, String right) {
