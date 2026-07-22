@@ -5,10 +5,13 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 /**
- * Spawns a hero echo boss instead of a regional boss when one is pending.
+ * Spawns and presents a hero echo boss instead of a regional boss when one is
+ * pending.
  */
 public final class EchoBossSpawner {
 
@@ -27,18 +30,46 @@ public final class EchoBossSpawner {
 		return new EchoBoss(Dungeon.getPendingEcho(), depth);
 	}
 
-	public static Mob createRegionalBoss(Mob defaultBoss) {
-		if (shouldSpawn()) {
-			EchoBoss echoBoss = create(Dungeon.depth);
-			return echoBoss;
-		}
-		return defaultBoss;
+	/**
+	 * Adds the boss to the scene. Notices when a sprite exists; otherwise assigns
+	 * the boss bar
+	 * (headless / no GameScene sprite path).
+	 */
+	public static void present(Mob boss) {
+		present(boss, 0f, true);
 	}
 
-	public static void announceIntroIfNeeded() {
-		if (shouldSpawn()) {
-			GLog.h(introBannerText(Dungeon.getPendingEcho()));
+	/** {@link #present(Mob)} with a turn delay (Prison Tengu/echo spawn). */
+	public static void present(Mob boss, float delay) {
+		present(boss, delay, true);
+	}
+
+	/**
+	 * Adds the boss without calling {@link Mob#notice()}. Still assigns the boss
+	 * bar when headless.
+	 * Use for Halls (no seal-time notice) or City (custom FOV notice / fade).
+	 */
+	public static void present(Mob boss, boolean notice) {
+		present(boss, 0f, notice);
+	}
+
+	public static void present(Mob boss, float delay, boolean notice) {
+		GameScene.add(boss, delay);
+		if (boss.sprite != null) {
+			if (notice) {
+				boss.notice();
+			}
+		} else {
+			BossHealthBar.assignBoss(boss);
 		}
+	}
+
+	/**
+	 * Banner for an echo fight. Call only from echo start paths after
+	 * {@link #shouldSpawn()}.
+	 */
+	public static void announceIntro() {
+		GLog.h(introBannerText(Dungeon.getPendingEcho()));
 	}
 
 	public static String introBannerText(Echo echo) {

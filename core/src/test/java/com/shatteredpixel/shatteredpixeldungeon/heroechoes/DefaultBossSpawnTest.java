@@ -1,11 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
@@ -49,23 +44,20 @@ class DefaultBossSpawnTest {
 	}
 
 	@Test
-	@DisplayName("createRegionalBoss returns default when pending echo is for a different depth")
-	void createRegionalBossDefaultsWhenPendingEchoDepthMismatches() {
+	@DisplayName("shouldSpawn is false when pending echo is for a different depth")
+	void shouldSpawnFalseWhenPendingEchoDepthMismatches() {
 		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
 				.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(5)));
 		Dungeon.prefetchEchoBossForDepth(5);
 
 		Dungeon.depth = 15;
-		DM300 defaultBoss = new DM300();
-		Mob result = EchoBossSpawner.createRegionalBoss(defaultBoss);
 
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isFalse();
-		Assertions.assertThat(result).isSameAs(defaultBoss);
 	}
 
 	@Test
-	@DisplayName("unloadable solo echo file falls back to default boss")
-	void unloadableSoloEchoFallsBackToDefaultBoss() throws Exception {
+	@DisplayName("unloadable solo echo file falls back without activating echo")
+	void unloadableSoloEchoFallsBackWithoutActivatingEcho() throws Exception {
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 		Echo snap = EchoTestSupport.warriorEchoWithData(5);
 		// Write echo-only bundle (no policy) — same shape as a stale save.
@@ -74,8 +66,7 @@ class DefaultBossSpawnTest {
 
 		Dungeon.depth = 5;
 		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isFalse();
-		Goo defaultBoss = new Goo();
-		Assertions.assertThat(EchoBossSpawner.createRegionalBoss(defaultBoss)).isSameAs(defaultBoss);
+		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isFalse();
 	}
 
 	@Test
@@ -101,25 +92,14 @@ class DefaultBossSpawnTest {
 	}
 
 	@Test
-	@DisplayName("createRegionalBoss returns each regional default when no echo is pending")
-	void createRegionalBossReturnsRegionalDefaultsWithoutEcho() {
-		Assertions.assertThat(EchoBossSpawner.createRegionalBoss(new Goo())).isInstanceOf(Goo.class);
-		Assertions.assertThat(EchoBossSpawner.createRegionalBoss(new DM300())).isInstanceOf(DM300.class);
-		Assertions.assertThat(EchoBossSpawner.createRegionalBoss(new DwarfKing())).isInstanceOf(DwarfKing.class);
-		Assertions.assertThat(EchoBossSpawner.createRegionalBoss(new YogDzewa())).isInstanceOf(YogDzewa.class);
-	}
-
-	@Test
-	@DisplayName("matching pending echo still replaces the default boss for that depth")
-	void matchingPendingEchoStillReplacesDefaultBoss() {
+	@DisplayName("matching pending echo activates shouldSpawn for that depth")
+	void matchingPendingEchoActivatesShouldSpawn() {
 		Echo echo = EchoTestSupport.warriorEchoWithData(5);
 		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport.outcomeWithPolicy(echo));
 		Dungeon.depth = 5;
 		Dungeon.prefetchEchoBossForDepth(5);
 
-		Mob result = EchoBossSpawner.createRegionalBoss(new Goo());
-
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
-		Assertions.assertThat(result).isInstanceOf(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss.class);
+		Assertions.assertThat(EchoBossSpawner.create(5).getEcho().echoId).isEqualTo(echo.echoId);
 	}
 }

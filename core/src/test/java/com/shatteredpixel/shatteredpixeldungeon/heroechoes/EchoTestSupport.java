@@ -78,8 +78,6 @@ public final class EchoTestSupport {
 		GamesInProgress.clearSlotCache();
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
 		DebugSettings.resetForTests();
-		DebugSettings.setWeakEchoSnapshots(false);
-		SPDSettings.echoesWeakSnapshots(false);
 		SPDSettings.playerName("");
 		SPDSettings.easyMode(false);
 		EchoOnlineSettings.resetForTests();

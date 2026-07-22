@@ -239,6 +239,7 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_HERO_ECHOES_WEAK_SNAPSHOTS = "hero_echoes_weak_snapshots";
 	public static final String KEY_PLAYER_NAME = "player_name";
 	public static final String KEY_DEBUG_START = "debug_start";
+	public static final String KEY_DEBUG_START_DEPTH = "debug_start_depth";
 
 	public static final String KEY_SUPPORT_NAGGED = "support_nagged";
 	public static final String KEY_VICTORY_NAGGED = "victory_nagged";
@@ -265,6 +266,15 @@ public class SPDSettings extends GameSettings {
 
 	public static boolean debugStart() {
 		return getBoolean(KEY_DEBUG_START, false);
+	}
+
+	public static void debugStartDepth(int value) {
+		put(KEY_DEBUG_START_DEPTH, DebugSettings.clampStartDepth(value));
+	}
+
+	public static int debugStartDepth() {
+		return getInt(KEY_DEBUG_START_DEPTH, DebugSettings.DEFAULT_START_DEPTH,
+				DebugSettings.MIN_START_DEPTH, DebugSettings.MAX_START_DEPTH);
 	}
 
 	public static void intro(boolean value) {

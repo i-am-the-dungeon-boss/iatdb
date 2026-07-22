@@ -2,8 +2,6 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import org.assertj.core.api.Assertions;
@@ -40,9 +38,8 @@ class EndToEndWorkflowTest {
         Echo pending = Dungeon.getPendingEcho();
         Assertions.assertThat(pending).isNotNull();
 
-        Mob boss = EchoBossSpawner.createRegionalBoss(new Goo());
-        Assertions.assertThat(boss).isInstanceOf(EchoBoss.class);
-        Assertions.assertThat(((EchoBoss) boss).getEcho()).isEqualTo(pending);
+        EchoBoss boss = EchoBossSpawner.create(5);
+        Assertions.assertThat(boss.getEcho()).isEqualTo(pending);
         Assertions.assertThat(boss.HT).isGreaterThan(pending.ht);
     }
 

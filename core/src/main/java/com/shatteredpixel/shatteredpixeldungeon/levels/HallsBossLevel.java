@@ -50,15 +50,18 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Tilemap;
 import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
@@ -255,16 +258,42 @@ public class HallsBossLevel extends Level {
 
 	@Override
 	public void seal() {
+		// Idempotent: EchoBoss.notice() (and retries) must not spawn a second boss.
+		if (locked) {
+			return;
+		}
+
 		super.seal();
 		Statistics.qualifiedForBossChallengeBadge = true;
 		int entrance = entrance();
 		set(entrance, Terrain.EMPTY_SP);
 		GameScene.updateMap(entrance);
-		CellEmitter.get(entrance).start(FlameParticle.FACTORY, 0.1f, 10);
+		Emitter flames = GameScene.emitter();
+		if (flames != null) {
+			PointF p = DungeonTilemap.tileToWorld(entrance);
+			flames.pos(p.x, p.y, DungeonTilemap.SIZE, DungeonTilemap.SIZE);
+			flames.start(FlameParticle.FACTORY, 0.1f, 10);
+		}
 
 		Dungeon.observe();
 
-		Mob boss = EchoBossSpawner.createRegionalBoss(new YogDzewa());
+		if (EchoBossSpawner.shouldSpawn()) {
+			startEchoFight();
+		} else {
+			startYogFight();
+		}
+	}
+
+	private void startEchoFight() {
+		presentFightBoss(EchoBossSpawner.create(Dungeon.depth));
+		EchoBossSpawner.announceIntro();
+	}
+
+	private void startYogFight() {
+		presentFightBoss(new YogDzewa());
+	}
+
+	private void presentFightBoss(Mob boss) {
 		boss.pos = exit() + width * 3;
 
 		// push any char that is already here away
@@ -284,8 +313,8 @@ public class HallsBossLevel extends Level {
 			Actor.add(new Pushing(ch, boss.pos, ch.pos));
 		}
 
-		GameScene.add(boss);
-		EchoBossSpawner.announceIntroIfNeeded();
+		// Halls does not notice at seal time.
+		EchoBossSpawner.present(boss, false);
 	}
 
 	@Override

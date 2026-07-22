@@ -322,6 +322,11 @@ public class CityBossLevel extends Level {
 
 	@Override
 	public void seal() {
+		// Idempotent: EchoBoss.notice() (and retries) must not spawn a second boss.
+		if (locked) {
+			return;
+		}
+
 		super.seal();
 		Statistics.qualifiedForBossChallengeBadge = true;
 
@@ -331,19 +336,11 @@ public class CityBossLevel extends Level {
 		Mob.holdAllies(this, doorPos);
 		Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
 
-		Mob boss = EchoBossSpawner.createRegionalBoss(new DwarfKing());
-		boss.state = boss.WANDERING;
-		boss.pos = pointToCell(arena.center());
-		GameScene.add(boss);
-		boss.beckon(Dungeon.hero.pos);
-
-		if (heroFOV[boss.pos]) {
-			boss.notice();
-			boss.sprite.alpha(0);
-			boss.sprite.parent.add(new AlphaTweener(boss.sprite, 1, 0.1f));
+		if (EchoBossSpawner.shouldSpawn()) {
+			startEchoFight();
+		} else {
+			startDwarfKingFight();
 		}
-
-		EchoBossSpawner.announceIntroIfNeeded();
 
 		set(bottomDoor, Terrain.LOCKED_DOOR);
 		GameScene.updateMap(bottomDoor);
@@ -355,6 +352,32 @@ public class CityBossLevel extends Level {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS, true);
 			}
 		});
+	}
+
+	private void startEchoFight() {
+		presentFightBoss(EchoBossSpawner.create(Dungeon.depth));
+		EchoBossSpawner.announceIntro();
+	}
+
+	private void startDwarfKingFight() {
+		presentFightBoss(new DwarfKing());
+	}
+
+	private void presentFightBoss(Mob boss) {
+		boss.state = boss.WANDERING;
+		boss.pos = pointToCell(arena.center());
+		// Custom FOV notice + fade; present without notice for headless bar only.
+		EchoBossSpawner.present(boss, false);
+		if (boss.sprite != null) {
+			boss.beckon(Dungeon.hero.pos);
+			if (heroFOV != null && heroFOV[boss.pos]) {
+				boss.notice();
+				boss.sprite.alpha(0);
+				if (boss.sprite.parent != null) {
+					boss.sprite.parent.add(new AlphaTweener(boss.sprite, 1, 0.1f));
+				}
+			}
+		}
 	}
 
 	@Override

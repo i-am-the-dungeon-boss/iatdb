@@ -25,6 +25,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
@@ -38,7 +42,7 @@ public abstract class GooBossRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -46,9 +50,10 @@ public abstract class GooBossRoom extends StandardRoom {
 		return false;
 	}
 
-	public static GooBossRoom randomGooRoom(){
-		switch (Random.Int(4)){
-			case 0: default:
+	public static GooBossRoom randomGooRoom() {
+		switch (Random.Int(4)) {
+			case 0:
+			default:
 				return new DiamondGooRoom();
 			case 1:
 				return new WalledGooRoom();
@@ -58,68 +63,90 @@ public abstract class GooBossRoom extends StandardRoom {
 				return new ThickPillarsGooRoom();
 		}
 	}
-	
-	protected void setupGooNest( Level level ){
+
+	protected void setupGooNest(Level level) {
 		GooNest nest = new GooNest();
-		nest.setRect(left + width()/2 - 2, top + height()/2 - 2, 4 + width()%2, 4 + height()%2);
-		
+		nest.setRect(left + width() / 2 - 2, top + height() / 2 - 2, 4 + width() % 2, 4 + height() % 2);
+
 		level.customTiles.add(nest);
 	}
-	
+
+	/** Places either the pending echo boss or Goo at the room center. */
+	protected void placeBoss(Level level) {
+		if (EchoBossSpawner.shouldSpawn()) {
+			placeEchoBoss(level);
+		} else {
+			placeGoo(level);
+		}
+	}
+
+	private void placeEchoBoss(Level level) {
+		placeAtCenter(level, EchoBossSpawner.create(Dungeon.depth));
+	}
+
+	private void placeGoo(Level level) {
+		placeAtCenter(level, new Goo());
+	}
+
+	private void placeAtCenter(Level level, Mob boss) {
+		boss.pos = level.pointToCell(center());
+		level.mobs.add(boss);
+	}
+
 	public static class GooNest extends CustomTilemap {
-		
+
 		{
 			texture = Assets.Environment.SEWER_BOSS;
 		}
-		
+
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
-			int[] data = new int[tileW*tileH];
-			for (int x = 0; x < tileW; x++){
-				for (int y = 0; y < tileH; y++){
-					
-					//corners
-					if ((x == 0 || x == tileW-1) && (y == 0 || y == tileH-1)){
-						data[x + tileW*y] = -1;
-					
-					//adjacent to corners
-					} else if ((x == 1 && y == 0) || (x == 0 && y == 1)){
-						data[x + tileW*y] = 0;
-						
-					} else if ((x == tileW-2 && y == 0) || (x == tileW-1 && y == 1)){
-						data[x + tileW*y] = 1;
-						
-					} else if ((x == 1 && y == tileH-1) || (x == 0 && y == tileH-2)){
-						data[x + tileW*y] = 2;
-					
-					} else if ((x == tileW-2 && y == tileH-1) || (x == tileW-1 && y == tileH-2)) {
-						data[x + tileW*y] = 3;
-					
-					//sides
-					} else if (x == 0){
-						data[x + tileW*y] = 4;
-					
-					} else if (y == 0){
-						data[x + tileW*y] = 5;
-					
-					} else if (x == tileW-1){
-						data[x + tileW*y] = 6;
-					
-					} else if (y == tileH-1){
-						data[x + tileW*y] = 7;
-					
-					//inside
+			int[] data = new int[tileW * tileH];
+			for (int x = 0; x < tileW; x++) {
+				for (int y = 0; y < tileH; y++) {
+
+					// corners
+					if ((x == 0 || x == tileW - 1) && (y == 0 || y == tileH - 1)) {
+						data[x + tileW * y] = -1;
+
+						// adjacent to corners
+					} else if ((x == 1 && y == 0) || (x == 0 && y == 1)) {
+						data[x + tileW * y] = 0;
+
+					} else if ((x == tileW - 2 && y == 0) || (x == tileW - 1 && y == 1)) {
+						data[x + tileW * y] = 1;
+
+					} else if ((x == 1 && y == tileH - 1) || (x == 0 && y == tileH - 2)) {
+						data[x + tileW * y] = 2;
+
+					} else if ((x == tileW - 2 && y == tileH - 1) || (x == tileW - 1 && y == tileH - 2)) {
+						data[x + tileW * y] = 3;
+
+						// sides
+					} else if (x == 0) {
+						data[x + tileW * y] = 4;
+
+					} else if (y == 0) {
+						data[x + tileW * y] = 5;
+
+					} else if (x == tileW - 1) {
+						data[x + tileW * y] = 6;
+
+					} else if (y == tileH - 1) {
+						data[x + tileW * y] = 7;
+
+						// inside
 					} else {
-						data[x + tileW*y] = 8;
+						data[x + tileW * y] = 8;
 					}
-					
+
 				}
 			}
-			v.map( data, tileW );
+			v.map(data, tileW);
 			return v;
 		}
-		
+
 		@Override
 		public Image image(int tileX, int tileY) {
 			return null;

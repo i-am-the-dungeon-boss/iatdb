@@ -36,8 +36,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Pylon;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
@@ -81,9 +83,25 @@ public class CavesBossLevel extends Level {
 		color2 = 0xb9d661;
 	}
 
+	public enum State {
+		START,
+		FIGHT,
+		ECHO_BOSS,
+		WON
+	}
+
+	private State state = State.START;
+
+	private static final String STATE = "state";
+
+	/** Package-visible for tests. */
+	State state() {
+		return state;
+	}
+
 	@Override
 	public void playLevelMusic() {
-		if (locked) {
+		if (state == State.FIGHT || state == State.ECHO_BOSS || locked) {
 			if (BossHealthBar.isBleeding()) {
 				Music.INSTANCE.play(Assets.Music.CAVES_BOSS_FINALE, true);
 			} else {
@@ -194,14 +212,39 @@ public class CavesBossLevel extends Level {
 	}
 
 	@Override
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(STATE, state);
+	}
+
+	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
+
+		if (bundle.contains(STATE)) {
+			state = bundle.getEnum(STATE, State.class);
+		} else if (locked) {
+			state = findMob(EchoBoss.class) != null ? State.ECHO_BOSS : State.FIGHT;
+		} else if (map[gate.left + gate.top * width()] != Terrain.CUSTOM_DECO) {
+			state = State.WON;
+		} else {
+			state = State.START;
+		}
 
 		for (CustomTilemap c : customTiles) {
 			if (c instanceof ArenaVisuals) {
 				customArenaVisuals = (ArenaVisuals) c;
 			}
 		}
+	}
+
+	private <T extends Mob> T findMob(Class<T> type) {
+		for (Mob mob : mobs) {
+			if (type.isInstance(mob)) {
+				return type.cast(mob);
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -280,10 +323,10 @@ public class CavesBossLevel extends Level {
 
 	@Override
 	public void occupyCell(Char ch) {
-		// seal the level when the hero moves near to a pylon, the level isn't already
-		// sealed, and the gate hasn't been destroyed
+		// Begin the fight when the hero moves near a pylon, the level is still in
+		// START, and the gate hasn't been destroyed.
 		int gatePos = pointToCell(new Point(gate.left, gate.top));
-		if (ch == Dungeon.hero && !locked && solid[gatePos]) {
+		if (ch == Dungeon.hero && state == State.START && solid[gatePos]) {
 			for (int pos : pylonPositions) {
 				if (Dungeon.level.distance(ch.pos, pos) <= 3) {
 					seal();
@@ -297,6 +340,39 @@ public class CavesBossLevel extends Level {
 
 	@Override
 	public void seal() {
+		// Idempotent: EchoBoss.notice() may call seal after the fight already started.
+		if (state != State.START) {
+			return;
+		}
+
+		sealArena();
+		if (EchoBossSpawner.shouldSpawn()) {
+			startEchoFight();
+		} else {
+			startDM300Fight();
+		}
+	}
+
+	/**
+	 * Seals the arena and starts an echo boss fight.
+	 * Does not enter DM-300 pylon phases.
+	 */
+	private void startEchoFight() {
+		// Set state before present/notice so a nested seal() is a no-op.
+		state = State.ECHO_BOSS;
+		presentFightBoss(EchoBossSpawner.create(Dungeon.depth));
+		EchoBossSpawner.announceIntro();
+		playBossMusic();
+	}
+
+	/** Seals the arena and starts the normal DM-300 fight. */
+	private void startDM300Fight() {
+		state = State.FIGHT;
+		presentFightBoss(new DM300());
+		playBossMusic();
+	}
+
+	private void sealArena() {
 		super.seal();
 		Statistics.qualifiedForBossChallengeBadge = true;
 
@@ -320,52 +396,78 @@ public class CavesBossLevel extends Level {
 				n = entrance + PathFinder.NEIGHBOURS8[Random.Int(8)];
 			} while (!Dungeon.level.passable[n]);
 			ch.pos = n;
-			ch.sprite.place(n);
+			if (ch.sprite != null) {
+				ch.sprite.place(n);
+			}
 		}
 
 		GameScene.updateMap(entrance);
 		Dungeon.observe();
 
-		CellEmitter.get(entrance).start(Speck.factory(Speck.ROCK), 0.07f, 10);
+		Emitter rocks = GameScene.emitter();
+		if (rocks != null) {
+			com.watabou.utils.PointF p = DungeonTilemap.tileToWorld(entrance);
+			rocks.pos(p.x, p.y, DungeonTilemap.SIZE, DungeonTilemap.SIZE);
+			rocks.start(Speck.factory(Speck.ROCK), 0.07f, 10);
+		}
 		PixelScene.shake(3, 0.7f);
 		Sample.INSTANCE.play(Assets.Sounds.ROCKS);
+	}
 
-		Mob boss = EchoBossSpawner.createRegionalBoss(new DM300());
+	private void presentFightBoss(Mob boss) {
 		boss.state = boss.WANDERING;
 		do {
 			boss.pos = pointToCell(Random.element(mainArena.getPoints()));
 		} while (!openSpace[boss.pos] || map[boss.pos] == Terrain.EMPTY_SP || Actor.findChar(boss.pos) != null);
-		GameScene.add(boss);
+		EchoBossSpawner.present(boss);
+	}
 
-		EchoBossSpawner.announceIntroIfNeeded();
-
+	private void playBossMusic() {
 		Game.runOnRenderThread(new Callback() {
 			@Override
 			public void call() {
 				Music.INSTANCE.play(Assets.Music.CAVES_BOSS, true);
 			}
 		});
+	}
 
+	public void completeEchoBossVictory() {
+		if (state != State.ECHO_BOSS) {
+			return;
+		}
+
+		unseal();
 	}
 
 	@Override
 	public void unseal() {
 		super.unseal();
 
-		blobs.get(PylonEnergy.class).fullyClear();
+		// DM-300 pylon phases seed this; echo fights never do.
+		Blob energy = blobs.get(PylonEnergy.class);
+		if (energy != null) {
+			energy.fullyClear();
+		}
 
 		set(entrance(), Terrain.ENTRANCE);
 		int i = gate.top * width();
 		for (int j = gate.left; j < gate.right; j++) {
 			set(i + j, Terrain.EMPTY);
 			if (Dungeon.level.heroFOV[i + j]) {
-				CellEmitter.get(i + j).burst(BlastParticle.FACTORY, 10);
+				Emitter blast = CellEmitter.get(i + j);
+				if (blast != null) {
+					blast.burst(BlastParticle.FACTORY, 10);
+				}
 			}
 		}
 		GameScene.updateMap();
 
 		if (customArenaVisuals != null)
 			customArenaVisuals.updateState();
+
+		if (state == State.FIGHT || state == State.ECHO_BOSS) {
+			state = State.WON;
+		}
 
 		Dungeon.observe();
 

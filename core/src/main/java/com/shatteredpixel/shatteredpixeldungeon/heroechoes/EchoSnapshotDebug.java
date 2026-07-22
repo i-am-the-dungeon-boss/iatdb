@@ -34,9 +34,11 @@ public final class EchoSnapshotDebug {
 		}
 
 		try {
-			Hero hero = new Hero();
-			hero.live();
-			hero.restoreFromBundle(echo.echoData);
+			// Must go through EchoHeroSnapshot so Dungeon.quickslot / ActionIndicator stay intact.
+			Hero hero = EchoHeroSnapshot.restoreHero(echo);
+			if (hero == null) {
+				return;
+			}
 			hero.lvl = WEAK_LEVEL;
 			hero.HP = WEAK_HP;
 			hero.HT = WEAK_HT;

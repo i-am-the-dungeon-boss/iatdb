@@ -55,7 +55,6 @@ import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
-import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.watabou.utils.BArray;
 import com.watabou.noosa.Camera;
@@ -561,7 +560,7 @@ public class PrisonBossLevel extends Level {
 	private void startEchoFight(int spawnPos) {
 		EchoBoss echoBoss = EchoBossSpawner.create(Dungeon.depth);
 		presentFightBoss(echoBoss, spawnPos);
-		EchoBossSpawner.announceIntroIfNeeded();
+		EchoBossSpawner.announceIntro();
 		state = State.ECHO_BOSS;
 		playBossMusic();
 	}
@@ -609,13 +608,7 @@ public class PrisonBossLevel extends Level {
 	private void presentFightBoss(Mob boss, int spawnPos) {
 		boss.state = boss.HUNTING;
 		boss.pos = spawnPos;
-		GameScene.add(boss, 1);
-		if (boss.sprite != null) {
-			boss.notice();
-		} else {
-			// Headless / no GameScene: still assign the boss bar without sprite VFX.
-			BossHealthBar.assignBoss(boss);
-		}
+		EchoBossSpawner.present(boss, 1f);
 		playBossAppearFx(spawnPos);
 	}
 

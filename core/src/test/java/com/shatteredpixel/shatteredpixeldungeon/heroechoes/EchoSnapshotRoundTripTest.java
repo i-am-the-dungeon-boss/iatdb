@@ -5,7 +5,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
@@ -92,7 +91,7 @@ class EchoSnapshotRoundTripTest {
 		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
 
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
-		EchoBoss boss = (EchoBoss) EchoBossSpawner.createRegionalBoss(new Goo());
+		EchoBoss boss = EchoBossSpawner.create(5);
 
 		Assertions.assertThat(boss.getEchoHero().heroClass).isEqualTo(HeroClass.MAGE);
 		Assertions.assertThat(boss.getEchoHero().belongings.armor()).isInstanceOf(PlateArmor.class);

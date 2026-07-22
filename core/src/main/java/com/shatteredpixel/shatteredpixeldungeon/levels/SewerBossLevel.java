@@ -66,7 +66,9 @@ public class SewerBossLevel extends SewerLevel {
 	@Override
 	public void create() {
 		super.create();
-		EchoBossSpawner.announceIntroIfNeeded();
+		if (EchoBossSpawner.shouldSpawn()) {
+			EchoBossSpawner.announceIntro();
+		}
 	}
 
 	@Override

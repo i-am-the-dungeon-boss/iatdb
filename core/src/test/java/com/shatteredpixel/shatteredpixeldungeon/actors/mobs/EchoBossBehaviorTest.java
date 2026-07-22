@@ -9,12 +9,19 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossBehaviorTest {
@@ -23,6 +30,82 @@ class EchoBossBehaviorTest {
 	void cleanup() {
 		Dungeon.level = null;
 		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Test
+	@DisplayName("notice does not reseal when the floor is already locked")
+	void noticeDoesNotResealWhenAlreadyLocked() {
+		AtomicInteger sealCalls = new AtomicInteger();
+		Level level = countingSealLevel(sealCalls);
+		level.locked = true;
+		Dungeon.level = level;
+
+		EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(15), 15);
+		level.mobs.add(boss);
+		EchoTestSupport.linkStubSprite(boss);
+
+		boss.notice();
+
+		Assertions.assertThat(sealCalls.get()).isZero();
+	}
+
+	@Test
+	@DisplayName("notice seals unlocked floors for sewer-style echo fights")
+	void noticeSealsWhenFloorUnlocked() {
+		AtomicInteger sealCalls = new AtomicInteger();
+		Level level = countingSealLevel(sealCalls);
+		level.locked = false;
+		Dungeon.level = level;
+
+		EchoBoss boss = EchoTestSupport.createBoss(EchoTestSupport.warriorEchoWithData(5), 5);
+		level.mobs.add(boss);
+		EchoTestSupport.linkStubSprite(boss);
+
+		boss.notice();
+
+		Assertions.assertThat(sealCalls.get()).isEqualTo(1);
+		Assertions.assertThat(level.locked).isTrue();
+	}
+
+	private static Level countingSealLevel(AtomicInteger sealCalls) {
+		Level level = new Level() {
+			@Override
+			public String tilesTex() {
+				return null;
+			}
+
+			@Override
+			public String waterTex() {
+				return null;
+			}
+
+			@Override
+			protected boolean build() {
+				return true;
+			}
+
+			@Override
+			protected void createMobs() {
+			}
+
+			@Override
+			protected void createItems() {
+			}
+
+			@Override
+			public void seal() {
+				sealCalls.incrementAndGet();
+				super.seal();
+			}
+		};
+		level.setSize(7, 7);
+		Arrays.fill(level.map, Terrain.EMPTY);
+		level.mobs = new HashSet<>();
+		level.heaps = new com.watabou.utils.SparseArray<>();
+		level.blobs = new HashMap<>();
+		level.plants = new com.watabou.utils.SparseArray<>();
+		level.traps = new com.watabou.utils.SparseArray<>();
+		return level;
 	}
 
 	@Test

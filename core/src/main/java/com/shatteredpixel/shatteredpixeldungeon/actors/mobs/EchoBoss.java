@@ -320,7 +320,9 @@ public class EchoBoss extends Mob {
         super.notice();
         if (!BossHealthBar.isAssigned()) {
             BossHealthBar.assignBoss(this);
-            if (Dungeon.level != null) {
+            // Goo-style: seal on notice when the boss was placed at levelgen.
+            // Caves/City/Halls already seal (and spawn) before notice — don't reseal.
+            if (Dungeon.level != null && !Dungeon.level.locked) {
                 Dungeon.level.seal();
             }
         }

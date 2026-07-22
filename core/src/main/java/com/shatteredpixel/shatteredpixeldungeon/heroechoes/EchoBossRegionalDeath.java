@@ -18,6 +18,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.keys.WornKey;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.MetalShard;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -104,7 +105,11 @@ public final class EchoBossRegionalDeath {
 	private static void applyCavesBoss(EchoBoss boss) {
 		if (Dungeon.level != null) {
 			GameScene.bossSlain();
-			Dungeon.level.unseal();
+			if (Dungeon.level instanceof CavesBossLevel) {
+				((CavesBossLevel) Dungeon.level).completeEchoBossVictory();
+			} else {
+				Dungeon.level.unseal();
+			}
 			dropChanceLoot(boss.pos, MetalShard::new);
 		}
 
