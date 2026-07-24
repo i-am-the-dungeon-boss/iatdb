@@ -81,7 +81,7 @@ public final class EchoPolicyMatcher {
 			if (r != null)
 				sorted.add(r);
 		}
-		sorted.sort(Comparator.comparingInt((JSONObject r) -> r.optInt("priority", 0)).reversed());
+		sortByPriorityDescending(sorted);
 
 		for (JSONObject r : sorted) {
 			JSONObject when = r.optJSONObject("when");
@@ -110,7 +110,7 @@ public final class EchoPolicyMatcher {
 			if (r != null)
 				sorted.add(r);
 		}
-		sorted.sort(Comparator.comparingInt((JSONObject r) -> r.optInt("priority", 0)).reversed());
+		sortByPriorityDescending(sorted);
 
 		Map<String, Integer> steps = recipeSteps != null ? recipeSteps : Collections.emptyMap();
 		for (JSONObject recipe : sorted) {
@@ -118,7 +118,8 @@ public final class EchoPolicyMatcher {
 			JSONArray stepArr = recipe.optJSONArray("steps");
 			if (stepArr == null || stepArr.length() == 0)
 				continue;
-			int idx = steps.getOrDefault(id, 0);
+			Integer stepIdx = steps.get(id);
+			int idx = stepIdx != null ? stepIdx : 0;
 			if (idx < 0 || idx >= stepArr.length())
 				continue;
 			JSONObject step = stepArr.optJSONObject(idx);
@@ -208,5 +209,14 @@ public final class EchoPolicyMatcher {
 			return null;
 		String v = stance.optString(key, "");
 		return v.isEmpty() ? null : v;
+	}
+
+	private static void sortByPriorityDescending(List<JSONObject> sorted) {
+		Collections.sort(sorted, new Comparator<JSONObject>() {
+			@Override
+			public int compare(JSONObject a, JSONObject b) {
+				return Integer.compare(b.optInt("priority", 0), a.optInt("priority", 0));
+			}
+		});
 	}
 }

@@ -27,7 +27,12 @@ public class EchoLeaderboardStorage {
         List<EchoFightResult> all = readAll();
         all.add(rec);
         if (all.size() > CAP) {
-            Collections.sort(all, Comparator.comparingLong(r -> r.timestamp));
+            Collections.sort(all, new Comparator<EchoFightResult>() {
+                @Override
+                public int compare(EchoFightResult a, EchoFightResult b) {
+                    return Long.compare(a.timestamp, b.timestamp);
+                }
+            });
             all = new ArrayList<>(all.subList(all.size() - CAP, all.size()));
         }
         writeAll(all);
@@ -35,13 +40,16 @@ public class EchoLeaderboardStorage {
 
     public List<EchoFightResult> loadTop(int limit) {
         List<EchoFightResult> all = readAll();
-        all.sort((a, b) -> {
-            if (a.bossWin != b.bossWin)
-                return a.bossWin ? -1 : 1;
-            int cmp = Integer.compare(b.damageDealt, a.damageDealt);
-            if (cmp != 0)
-                return cmp;
-            return Long.compare(b.timestamp, a.timestamp);
+        Collections.sort(all, new Comparator<EchoFightResult>() {
+            @Override
+            public int compare(EchoFightResult a, EchoFightResult b) {
+                if (a.bossWin != b.bossWin)
+                    return a.bossWin ? -1 : 1;
+                int cmp = Integer.compare(b.damageDealt, a.damageDealt);
+                if (cmp != 0)
+                    return cmp;
+                return Long.compare(b.timestamp, a.timestamp);
+            }
         });
         if (all.isEmpty())
             return all;

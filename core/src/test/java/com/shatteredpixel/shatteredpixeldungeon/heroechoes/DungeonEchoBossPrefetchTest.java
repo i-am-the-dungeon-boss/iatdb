@@ -2,9 +2,11 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
+import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
@@ -19,7 +23,76 @@ class DungeonEchoBossPrefetchTest {
 
 	@AfterEach
 	void cleanup() {
+		SentryCrashReporting.resetReporter();
 		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Test
+	@DisplayName("prefetch reports to Sentry when echo lookup returns NOT_FOUND")
+	void prefetchReportsNotFound() {
+		String previous = Game.version;
+		Game.version = "1.0.0";
+		try {
+			List<Throwable> captured = new ArrayList<>();
+			SentryCrashReporting.setReporter(captured::add);
+			CompositeEchoLookup.setEchoLookupForTests(d -> EchoLookupOutcome.notFound());
+			Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+			Dungeon.prefetchEchoBossForDepth(10);
+
+			Assertions.assertThat(captured).hasSize(1);
+			Assertions.assertThat(captured.get(0).getMessage())
+					.contains("echo boss prefetch failed")
+					.contains("depth=10")
+					.contains("mode=SOLO")
+					.contains("reason=NOT_FOUND");
+		} finally {
+			Game.version = previous;
+		}
+	}
+
+	@Test
+	@DisplayName("prefetch reports to Sentry when echo lookup returns ERROR")
+	void prefetchReportsError() {
+		String previous = Game.version;
+		Game.version = "1.0.0";
+		try {
+			List<Throwable> captured = new ArrayList<>();
+			SentryCrashReporting.setReporter(captured::add);
+			CompositeEchoLookup.setEchoLookupForTests(
+					d -> EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK));
+			Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
+
+			Dungeon.prefetchEchoBossForDepth(15);
+
+			Assertions.assertThat(captured).hasSize(1);
+			Assertions.assertThat(captured.get(0).getMessage())
+					.contains("echo boss prefetch failed")
+					.contains("depth=15")
+					.contains("mode=DEBUG")
+					.contains("reason=ERROR/NETWORK");
+		} finally {
+			Game.version = previous;
+		}
+	}
+
+	@Test
+	@DisplayName("prefetch does not report when echo lookup succeeds")
+	void prefetchDoesNotReportWhenFound() {
+		String previous = Game.version;
+		Game.version = "1.0.0";
+		try {
+			List<Throwable> captured = new ArrayList<>();
+			SentryCrashReporting.setReporter(captured::add);
+			CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
+					.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(5)));
+
+			Dungeon.prefetchEchoBossForDepth(5);
+
+			Assertions.assertThat(captured).isEmpty();
+		} finally {
+			Game.version = previous;
+		}
 	}
 
 	@Test
@@ -136,7 +209,20 @@ class DungeonEchoBossPrefetchTest {
 		Dungeon.storeEchoChoiceInBundle(bundle);
 
 		Assertions.assertThat(bundle.contains("pending_echo")).isFalse();
-		Assertions.assertThat(bundle.getBoolean("echo_boss_active")).isFalse();
+		Assertions.assertThat(bundle.contains("echo_boss_active")).isFalse();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
+	}
+
+	@Test
+	@DisplayName("restore ignores legacy echo_boss_active without pending echo data")
+	void restoreIgnoresLegacyActiveFlagWithoutPending() {
+		Bundle bundle = new Bundle();
+		bundle.put("echo_boss_active", true);
+		Dungeon.depth = 5;
+
+		Dungeon.restoreEchoChoiceFromBundle(bundle);
+
 		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
 		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
 	}

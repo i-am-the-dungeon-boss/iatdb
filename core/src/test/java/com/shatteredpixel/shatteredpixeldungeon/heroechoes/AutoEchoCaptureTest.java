@@ -55,7 +55,7 @@ class AutoEchoCaptureTest {
 
         Assertions.assertThat(EchoTestSupport.countEchoFiles()).isGreaterThan(0);
         Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isPresent();
+                .isNotNull();
     }
 
     @Test
@@ -108,7 +108,7 @@ class AutoEchoCaptureTest {
 
         EchoCaptureTrigger.onBossDefeated();
 
-        Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+        Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
         Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
         Assertions.assertThat(loaded.heroClass).isEqualTo("WARRIOR");
         Assertions.assertThat(EchoHeroSnapshot.restoreHero(loaded).belongings.armor())

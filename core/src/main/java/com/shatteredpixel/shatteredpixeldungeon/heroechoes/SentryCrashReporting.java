@@ -131,16 +131,24 @@ public final class SentryCrashReporting {
 	static String readClasspathDsn() {
 		try (InputStream in = SentryCrashReporting.class.getClassLoader()
 				.getResourceAsStream(PROPERTIES_RESOURCE)) {
-			if (in == null) {
-				return "";
-			}
-			Properties props = new Properties();
-			props.load(in);
-			String dsn = props.getProperty("dsn");
-			return dsn != null ? dsn.trim() : "";
+			return readDsn(in);
 		} catch (IOException e) {
 			return "";
 		}
+	}
+
+	/**
+	 * Parses {@code dsn=} from a {@code sentry.properties} stream; empty if
+	 * missing.
+	 */
+	static String readDsn(InputStream in) throws IOException {
+		if (in == null) {
+			return "";
+		}
+		Properties props = new Properties();
+		props.load(in);
+		String dsn = props.getProperty("dsn");
+		return dsn != null ? dsn.trim() : "";
 	}
 
 	/**

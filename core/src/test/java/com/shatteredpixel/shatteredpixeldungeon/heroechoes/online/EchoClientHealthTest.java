@@ -25,4 +25,10 @@ class EchoClientHealthTest {
 		Assertions.assertThat(EchoClient.isHealthy(200, "not-json")).isFalse();
 		Assertions.assertThat(EchoClient.isHealthy(200, null)).isFalse();
 	}
+
+	@Test
+	@DisplayName("whitespace-only body is unhealthy")
+	void rejectsWhitespaceOnlyBody() {
+		Assertions.assertThat(EchoClient.isHealthy(200, "   ")).isFalse();
+	}
 }

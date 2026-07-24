@@ -23,11 +23,10 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.Strings;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class EchoBoss extends Mob {
 
@@ -244,11 +243,21 @@ public class EchoBoss extends Mob {
         return withEchoHeroPosInt(() -> echoHero.defenseProc(enemy, damage));
     }
 
+    /** Local int supplier — RoboVM lacks {@code java.util.function.IntSupplier}. */
+    private interface IntAction {
+        int getAsInt();
+    }
+
+    /** Local value supplier — RoboVM lacks {@code java.util.function.Supplier}. */
+    private interface ValueAction<T> {
+        T get();
+    }
+
     /**
      * Echo hero is never placed on the level; sync {@link Hero#pos} for combat
      * queries only.
      */
-    private int withEchoHeroPosInt(IntSupplier action) {
+    private int withEchoHeroPosInt(IntAction action) {
         int savedPos = echoHero.pos;
         echoHero.pos = pos;
         try {
@@ -258,7 +267,7 @@ public class EchoBoss extends Mob {
         }
     }
 
-    private <T> T withEchoHeroPos(Supplier<T> action) {
+    private <T> T withEchoHeroPos(ValueAction<T> action) {
         int savedPos = echoHero.pos;
         echoHero.pos = pos;
         try {
@@ -376,8 +385,8 @@ public class EchoBoss extends Mob {
                 + " dist=" + status.distance
                 + " los=" + status.enemyInLos
                 + " on=" + status.onTerrain
-                + " self=[" + String.join(",", status.selfStatuses) + "]"
-                + " enemy=[" + String.join(",", status.enemyStatuses) + "]"
+                + " self=[" + Strings.join(",", status.selfStatuses) + "]"
+                + " enemy=[" + Strings.join(",", status.enemyStatuses) + "]"
                 + " ready=" + status.rolesReady
                 + " recipes=" + recipeSteps);
 
@@ -398,7 +407,8 @@ public class EchoBoss extends Mob {
             return false;
         }
         if ("recipes".equals(choice.layer) && choice.recipeId != null) {
-            recipeSteps.merge(choice.recipeId, 1, Integer::sum);
+            Integer prev = recipeSteps.get(choice.recipeId);
+            recipeSteps.put(choice.recipeId, (prev != null ? prev : 0) + 1);
             debugAct("recipe step advanced id=" + choice.recipeId
                     + " nextStep=" + recipeSteps.get(choice.recipeId));
         }
@@ -456,6 +466,14 @@ public class EchoBoss extends Mob {
                 Game.version);
         super.die(cause);
         EchoBossRegionalDeath.apply(this, cause);
+    }
+
+    @Override
+    public String name() {
+        if (echo == null) {
+            return Messages.get(this, "name");
+        }
+        return Echo.resolveUserName(echo.userName, echo.heroClass);
     }
 
     @Override

@@ -206,7 +206,7 @@ class EchoHeroSnapshotTest {
 
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
-		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 		Assertions.assertThat(EchoHeroSnapshot.hasEquippedItems(loaded.echoData)).isTrue();
 		Assertions.assertThat(EchoHeroSnapshot.restoreHero(loaded).belongings.armor())
 				.isInstanceOf(PlateArmor.class);

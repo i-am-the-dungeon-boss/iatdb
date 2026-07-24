@@ -28,8 +28,10 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoMob;
@@ -38,6 +40,7 @@ import com.watabou.noosa.Image;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.Callback;
+import com.watabou.utils.Strings;
 
 public class BossHealthBar extends Component {
 
@@ -46,6 +49,7 @@ public class BossHealthBar extends Component {
 	private Image shieldHP;
 	private Image hp;
 	private BitmapText hpText;
+	private RenderedTextBlock nameText;
 
 	private Button bossInfo;
 	private BuffIndicator buffs;
@@ -94,6 +98,11 @@ public class BossHealthBar extends Component {
 		hpText = new BitmapText(PixelScene.pixelFont);
 		hpText.alpha(0.6f);
 		add(hpText);
+
+		nameText = PixelScene.renderTextBlock(6);
+		nameText.alpha(0.9f);
+		add(nameText);
+		refreshNameLabel();
 
 		bossInfo = new Button(){
 			@Override
@@ -164,6 +173,14 @@ public class BossHealthBar extends Component {
 		int paneSize = large ? 30 : 16;
 		skull.x = bar.x + (paneSize - skull.width())/2f;
 		skull.y = bar.y + (paneSize - skull.height())/2f;
+
+		if (nameText != null && nameText.visible) {
+			nameText.maxWidth((int) bar.width);
+			nameText.setPos(
+					bar.x + (bar.width - nameText.width()) / 2f,
+					bar.y - nameText.height() - 1);
+			PixelScene.align(nameText);
+		}
 	}
 
 	@Override
@@ -179,6 +196,7 @@ public class BossHealthBar extends Component {
 					buffs.destroy();
 					buffs = null;
 				}
+				refreshNameLabel();
 			} else {
 
 				int health = boss.HP;
@@ -227,7 +245,7 @@ public class BossHealthBar extends Component {
 			ShatteredPixelDungeon.runOnRenderThread(new Callback() {
 				@Override
 				public void call() {
-					instance.visible = instance.active = true;
+					instance.visible = instance.active = (boss != null);
 					if (boss != null){
 						if (instance.large){
 							if (instance.skull != null){
@@ -244,7 +262,10 @@ public class BossHealthBar extends Component {
 						instance.buffs = new BuffIndicator(boss, instance.large);
 						BuffIndicator.setBossInstance(instance.buffs);
 						instance.add(instance.buffs);
+						instance.refreshNameLabel();
 						instance.layout();
+					} else {
+						instance.refreshNameLabel();
 					}
 				}
 			});
@@ -261,6 +282,35 @@ public class BossHealthBar extends Component {
 
 	public static boolean isBleeding(){
 		return isAssigned() && bleeding;
+	}
+
+	/**
+	 * Name drawn on the boss bar. Echo bosses show the player username;
+	 * other bosses keep the bar unlabeled.
+	 */
+	public static String nameLabelFor(Mob boss) {
+		if (!(boss instanceof EchoBoss)) {
+			return null;
+		}
+		String name = boss.name();
+		if (Strings.isBlank(name)) {
+			return null;
+		}
+		return Messages.titleCase(name);
+	}
+
+	private void refreshNameLabel() {
+		if (nameText == null) {
+			return;
+		}
+		String label = nameLabelFor(boss);
+		if (label == null) {
+			nameText.text("");
+			nameText.visible = false;
+		} else {
+			nameText.text(label);
+			nameText.visible = true;
+		}
 	}
 
 }

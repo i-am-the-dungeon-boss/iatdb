@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.Strings;
 
 public class Echo {
 
@@ -69,7 +70,7 @@ public class Echo {
         try {
             String sessionName = com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession
                     .username();
-            if (sessionName != null && !sessionName.isBlank()) {
+            if (!Strings.isBlank(sessionName)) {
                 userName = sessionName;
             }
         } catch (Exception ignored) {

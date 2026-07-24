@@ -33,6 +33,27 @@ class EchoBossSpawnerTest {
 	}
 
 	@Test
+	@DisplayName("shouldSpawnDecision explains false when no pending echo")
+	void shouldSpawnDecisionExplainsNoPendingEcho() {
+		Dungeon.depth = 10;
+
+		Assertions.assertThat(EchoBossSpawner.shouldSpawnDecision())
+				.isEqualTo("shouldSpawn=false depth=10 reason=no_pending_echo");
+	}
+
+	@Test
+	@DisplayName("shouldSpawnDecision explains false when pending depth mismatches")
+	void shouldSpawnDecisionExplainsDepthMismatch() {
+		Dungeon.armPendingEchoBoss(
+				EchoTestSupport.warriorEchoWithData(10),
+				EchoTestSupport.roleBasedPolicy());
+		Dungeon.depth = 15;
+
+		Assertions.assertThat(EchoBossSpawner.shouldSpawnDecision())
+				.isEqualTo("shouldSpawn=false depth=15 reason=pending_depth_mismatch pending=10");
+	}
+
+	@Test
 	@DisplayName("shouldSpawn is true after echo boss is prepared for depth")
 	void shouldSpawnTrueWhenEchoBossPrepared() {
 		EchoStorage storage = new EchoStorage();
@@ -43,6 +64,8 @@ class EchoBossSpawnerTest {
 		Dungeon.prefetchEchoBossForDepth(10);
 
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
+		Assertions.assertThat(EchoBossSpawner.shouldSpawnDecision())
+				.isEqualTo("shouldSpawn=true depth=10");
 	}
 
 	@Test

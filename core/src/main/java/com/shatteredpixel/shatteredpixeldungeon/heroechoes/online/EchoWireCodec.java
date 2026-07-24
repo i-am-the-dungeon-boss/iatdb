@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
 import com.watabou.noosa.Game;
+import com.watabou.utils.Base64Codec;
 import com.watabou.utils.Bundle;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,7 +13,6 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public final class EchoWireCodec {
@@ -129,7 +129,7 @@ public final class EchoWireCodec {
 
 	private static Echo parseCombatEcho(String echoDataBase64) {
 		try {
-			byte[] bytes = Base64.getDecoder().decode(echoDataBase64);
+			byte[] bytes = Base64Codec.decode(echoDataBase64);
 			Bundle fileBundle = Bundle.read(new ByteArrayInputStream(bytes));
 			if (fileBundle == null || !fileBundle.contains(Echo.BUNDLE_KEY)) {
 				throw new IllegalArgumentException("echo fetch response requires echo_data");
@@ -190,6 +190,6 @@ public final class EchoWireCodec {
 		}
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		Bundle.write(echo.toFileBundle(), out);
-		return Base64.getEncoder().encodeToString(out.toByteArray());
+		return Base64Codec.encode(out.toByteArray());
 	}
 }

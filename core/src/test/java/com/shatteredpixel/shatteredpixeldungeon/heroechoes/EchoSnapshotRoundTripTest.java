@@ -36,7 +36,7 @@ class EchoSnapshotRoundTripTest {
 
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
-		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 		Hero restored = EchoHeroSnapshot.restoreHero(loaded);
 
 		Assertions.assertThat(loaded.hasCombatData()).isTrue();
@@ -66,7 +66,7 @@ class EchoSnapshotRoundTripTest {
 		EchoStorage storage = new EchoStorage();
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
-		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 		EchoBoss boss = EchoTestSupport.createBoss(loaded, 5);
 		Hero echoHero = boss.getEchoHero();
 

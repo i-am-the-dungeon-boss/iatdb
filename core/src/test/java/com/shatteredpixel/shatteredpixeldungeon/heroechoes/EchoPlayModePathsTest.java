@@ -8,8 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.Optional;
-
 @ExtendWith(GdxTestExtension.class)
 class EchoPlayModePathsTest {
 
@@ -109,8 +107,8 @@ class EchoPlayModePathsTest {
 		new EchoStorage().save(EchoTestSupport.warriorEcho(5));
 
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-		Optional<Echo> soloEcho = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
+		Echo soloEcho = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 
-		Assertions.assertThat(soloEcho).isEmpty();
+		Assertions.assertThat(soloEcho).isNull();
 	}
 }

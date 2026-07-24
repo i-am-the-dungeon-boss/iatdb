@@ -8,6 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.DeviceCompat;
 
 /**
  * Spawns and presents a hero echo boss instead of a regional boss when one is
@@ -19,11 +20,42 @@ public final class EchoBossSpawner {
 	}
 
 	public static boolean shouldSpawn() {
+		boolean spawn = canSpawnEchoBoss();
+		DeviceCompat.log("EchoBoss", shouldSpawnDecision(spawn));
+		return spawn;
+	}
+
+	/** Diagnostic line for {@link #shouldSpawn()} (also used by tests). */
+	static String shouldSpawnDecision() {
+		return shouldSpawnDecision(canSpawnEchoBoss());
+	}
+
+	private static boolean canSpawnEchoBoss() {
 		Echo pending = Dungeon.getPendingEcho();
-		return Dungeon.isEchoBossActive()
-				&& pending != null
+		return pending != null
 				&& Dungeon.getPendingEchoPolicy() != null
 				&& pending.depth == Dungeon.depth;
+	}
+
+	private static String shouldSpawnDecision(boolean spawn) {
+		if (spawn) {
+			return "shouldSpawn=true depth=" + Dungeon.depth;
+		}
+		return "shouldSpawn=false depth=" + Dungeon.depth + " reason=" + whyNotShouldSpawn();
+	}
+
+	private static String whyNotShouldSpawn() {
+		Echo pending = Dungeon.getPendingEcho();
+		if (pending == null) {
+			return "no_pending_echo";
+		}
+		if (Dungeon.getPendingEchoPolicy() == null) {
+			return "no_pending_policy";
+		}
+		if (pending.depth != Dungeon.depth) {
+			return "pending_depth_mismatch pending=" + pending.depth;
+		}
+		return "unknown";
 	}
 
 	public static EchoBoss create(int depth) {

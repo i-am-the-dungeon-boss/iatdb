@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.watabou.noosa.Game;
+import com.watabou.utils.Strings;
 
 import org.json.JSONObject;
 
@@ -111,7 +112,7 @@ public final class EchoPlayerAuth {
 
 	/** Preferred display name: session username, else SPDSettings player name. */
 	public static String preferredUsername() {
-		if (EchoPlayerSession.hasSession() && !EchoPlayerSession.username().isBlank()) {
+		if (EchoPlayerSession.hasSession() && !Strings.isBlank(EchoPlayerSession.username())) {
 			return EchoPlayerSession.username();
 		}
 		String local = SPDSettings.playerName();

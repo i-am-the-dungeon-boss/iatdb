@@ -44,9 +44,10 @@ public final class EchoPolicyInput {
 		this.subclass = subclass != null && !subclass.isEmpty() ? subclass : HeroSubClass.NONE.name();
 		this.armorAbility = armorAbility;
 		this.lvl = Math.max(0, lvl);
-		this.items = Collections.unmodifiableList(new ArrayList<>(items != null ? items : List.of()));
+		this.items = Collections.unmodifiableList(
+				new ArrayList<>(items != null ? items : Collections.emptyList()));
 		this.talents = Collections.unmodifiableMap(
-				new LinkedHashMap<>(talents != null ? talents : Map.of()));
+				new LinkedHashMap<>(talents != null ? talents : Collections.emptyMap()));
 	}
 
 	public static EchoPolicyInput fromEcho(Echo echo) {

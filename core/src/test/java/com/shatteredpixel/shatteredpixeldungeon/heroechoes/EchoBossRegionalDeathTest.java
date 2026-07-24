@@ -62,7 +62,7 @@ class EchoBossRegionalDeathTest {
 
         EchoStorage storage = new EchoStorage();
         Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isPresent();
+                .isNotNull();
     }
 
     @Test
@@ -86,7 +86,7 @@ class EchoBossRegionalDeathTest {
 
         Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
         Assertions.assertThat(new File("echoes/depth-5.dat")).doesNotExist();
-        Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+        Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
         Assertions.assertThat(loaded.heroClass).isEqualTo("WARRIOR");
         Assertions.assertThat(EchoHeroSnapshot.restoreHero(loaded).belongings.armor())
                 .isInstanceOf(PlateArmor.class);

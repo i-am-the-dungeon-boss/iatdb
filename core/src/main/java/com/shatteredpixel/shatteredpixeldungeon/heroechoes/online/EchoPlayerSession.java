@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
+import com.watabou.utils.Strings;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -33,7 +34,7 @@ public final class EchoPlayerSession {
 
 	public static synchronized String deviceId() {
 		ensureLoaded();
-		if (deviceId == null || deviceId.isBlank()) {
+		if (Strings.isBlank(deviceId)) {
 			deviceId = UUID.randomUUID().toString();
 			persist();
 		}
@@ -62,7 +63,7 @@ public final class EchoPlayerSession {
 
 	public static synchronized boolean hasSession() {
 		ensureLoaded();
-		return jwt != null && !jwt.isBlank() && username != null && !username.isBlank();
+		return !Strings.isBlank(jwt) && !Strings.isBlank(username);
 	}
 
 	public static synchronized void applyAuthResponse(
@@ -136,7 +137,7 @@ public final class EchoPlayerSession {
 	private static void persist() {
 		try {
 			Bundle bundle = new Bundle();
-			if (deviceId != null && !deviceId.isBlank()) {
+			if (!Strings.isBlank(deviceId)) {
 				bundle.put(KEY_DEVICE_ID, deviceId);
 			}
 			bundle.put(KEY_JWT, jwt != null ? jwt : "");

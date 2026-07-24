@@ -1,30 +1,74 @@
 ---
-description: Every feature and change must work on Android, desktop, and iOS
+description: Develop for Android, desktop, and iOS — RoboVM-safe APIs required
 alwaysApply: true
 ---
 
 # Cross-Platform (Android / Desktop / iOS)
 
-This game ships on **desktop, Android, and iOS**. Every feature you implement or change must work on all three unless the user explicitly scopes it to one platform.
+This game ships on **desktop, Android, and iOS**. Every feature, change, and helper must be **valid on all three** unless the user explicitly scopes work to one platform.
 
-## Default
+## Iron Law
 
-- Put shared behavior in `core` so all launchers get it.
+Do not ship code that only works on a full JVM (desktop / Android). **iOS (RoboVM) is a first-class target.** Prefer the **intersection** of APIs that all three runtimes support.
+
+RoboVM’s `robovm-rt` is roughly pre–Java 8 collections: desktop tests can be green while iOS dies with `NoSuchMethodError` / `NoClassDefFoundError`.
+
+## RoboVM API policy (do not forget)
+
+**Default: avoid unsupported APIs and rewrite to classic forms.** Do **not** grow a parallel JDK (`java.util.function` / `Optional` clones).
+
+| Avoid on shared paths                   | Use instead                                                                     |
+| --------------------------------------- | ------------------------------------------------------------------------------- |
+| `String.isBlank()`                      | `Strings.isBlank(s)` (multi-site helper)                                        |
+| `String.join(...)`                      | `Strings.join(...)` when needed in several places; else a local `StringBuilder` |
+| `java.util.Base64`                      | `Base64Codec` (same RFC 4648 strings — no DB/wire migration)                    |
+| `java.util.function.*`                  | Local nested interface next to the owner, or existing `Callback`                |
+| `java.util.Optional`                    | Nullable return / explicit empty collections                                    |
+| `List.of` / `Map.of` / `Set.of`         | `Collections.emptyList()` / `emptyMap()` / `emptySet()`, or `new ArrayList<>()` |
+| `list.sort(...)`                        | `Collections.sort(list, comparator)`                                            |
+| `Comparator.comparing*`                 | Anonymous `Comparator` / `Integer.compare` / `Long.compare`                     |
+| `Map.getOrDefault` / `Map.merge`        | `containsKey` / `get` + `put`                                                   |
+| `Collection.removeIf`                   | Iterator remove loop                                                            |
+| `java.nio.file` for game data           | `FileUtils` / `java.io` streams                                                 |
+| Desktop-only env / cwd files at runtime | Build-time defaults + `FileUtils` Local                                         |
+
+Shared helpers under `com.watabou.utils` only for **hot duplicates** (e.g. `Strings.isBlank`). One-off gaps: inline rewrite at the call site.
+
+```java
+// ❌ BAD — missing on RoboVM
+if (body == null || body.isBlank()) { ... }
+list.sort(Comparator.comparingInt(...));
+return Optional.empty();
+Function<String, String> env = System::getenv; // especially in <clinit>
+
+// ✅ GOOD
+if (Strings.isBlank(body)) { ... }
+Collections.sort(list, new Comparator<JSONObject>() { ... });
+return null; // or empty list
+// local interface / Map test seam — not java.util.function
+```
+
+Guard: keep / extend `RoboVMUnsupportedApisTest` when adding new forbidden patterns.
+
+## Default structure
+
+- Put shared behavior in `core` (or `SPD-classes`) so all launchers get it.
 - Do not assume a desktop JVM, mouse/keyboard-only input, large screen, or process cwd.
-- Prefer existing portable APIs (`FileUtils`, libGDX, `Game.platform`, existing UI patterns) over new platform forks.
+- Prefer portable APIs (`FileUtils`, libGDX, `Game.platform`, `Strings`, `Callback`, existing UI).
 
 ## Before finishing any feature or change
 
-Ask: “Does this still work on Android, desktop, and iOS?”
+Ask: “Does this still work on Android, desktop, and iOS — including the APIs used?”
 
-- [ ] Logic lives in `core` (or each platform module is updated intentionally)
+- [ ] Logic lives in `core` / `SPD-classes` (or each launcher is updated intentionally)
+- [ ] No JDK APIs RoboVM lacks (table above); no new `java.util.function` / `Optional` in production
 - [ ] No desktop-only assumptions (cwd files, `System.exit` paths, mouse-only UX, unbounded RAM)
 - [ ] Touch + keyboard/mouse still usable where UI changed
 - [ ] Portrait and landscape considered if layout/UI changed
 - [ ] Network / threading / lifecycle safe on mobile (pause, background, slow I/O)
 - [ ] Persistence uses `FileUtils` Local — not raw `java.io.File` relative paths
 
-## File persistence (common footgun)
+## File persistence
 
 Launchers set `FileUtils.setDefaultFileProperties(Files.FileType.Local, "")`. Game data must use that sandbox on every platform.
 

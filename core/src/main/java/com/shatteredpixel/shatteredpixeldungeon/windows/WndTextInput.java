@@ -36,6 +36,7 @@ import com.watabou.input.PointerEvent;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.TextInput;
 import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.Strings;
 
 public class WndTextInput extends Window {
 
@@ -202,7 +203,7 @@ public class WndTextInput extends Window {
 		pos += inputHeight + MARGIN;
 
 		if (secondaryMaxLength > 0) {
-			if (secondaryHint != null && !secondaryHint.isBlank()) {
+			if (!Strings.isBlank(secondaryHint)) {
 				final RenderedTextBlock txtHint = PixelScene.renderTextBlock(secondaryHint, 6);
 				txtHint.maxWidth(width);
 				txtHint.setPos(0, pos);
@@ -229,7 +230,7 @@ public class WndTextInput extends Window {
 			pos += BUTTON_HEIGHT + MARGIN;
 		}
 
-		if (errorMessage != null && !errorMessage.isBlank()) {
+		if (!Strings.isBlank(errorMessage)) {
 			final RenderedTextBlock txtError = PixelScene.renderTextBlock(errorMessage, 6);
 			txtError.maxWidth(width);
 			txtError.hardlight(CharSprite.NEGATIVE);

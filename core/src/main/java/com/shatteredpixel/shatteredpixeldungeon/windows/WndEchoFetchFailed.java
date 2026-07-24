@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.watabou.utils.Strings;
 
 /**
  * Echo prefetch failed after auto-retries. User must Retry or Abort.
@@ -31,7 +32,7 @@ public class WndEchoFetchFailed extends WndOptions {
 	}
 
 	public static String buildMessage(String failureHint) {
-		if (failureHint == null || failureHint.isBlank()) {
+		if (Strings.isBlank(failureHint)) {
 			return Messages.get(WndEchoFetchFailed.class, "message");
 		}
 		return Messages.get(WndEchoFetchFailed.class, "message_with_reason", failureHint);

@@ -94,7 +94,7 @@ class EchoSnapshotDebugTest {
 
 		EchoCaptureTrigger.captureBossVictory(hero, 5, storage);
 
-		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION).orElseThrow();
+		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 		Assertions.assertThat(loaded.lvl).isEqualTo(EchoSnapshotDebug.WEAK_LEVEL);
 		Assertions.assertThat(loaded.hp).isEqualTo(EchoSnapshotDebug.WEAK_HP);
 		Assertions.assertThat(loaded.ht).isEqualTo(EchoSnapshotDebug.WEAK_HT);

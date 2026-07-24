@@ -7,8 +7,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 
-import java.util.function.Consumer;
-
 /**
  * Call-site context for shared item execute APIs ({@link Item#throwAs},
  * {@link com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand#zapAs},
@@ -20,6 +18,14 @@ import java.util.function.Consumer;
  * (boss body, phantom kit, AI turn) share one path.
  */
 public final class UseContext {
+
+	/**
+	 * RoboVM-safe stand-in for a per-hostile effect (not
+	 * {@code java.util.function}).
+	 */
+	public interface HostileEffect {
+		void accept(Char ch);
+	}
 
 	/** Position, sprite, and self-buff target. */
 	public final Char body;
@@ -68,7 +74,7 @@ public final class UseContext {
 	 * Visible chars hostile to {@link #body} — includes the living Hero when an
 	 * Echo reads/casts AoE that should hit the player.
 	 */
-	public void forEachVisibleHostile(Consumer<Char> effect) {
+	public void forEachVisibleHostile(HostileEffect effect) {
 		if (effect == null || body == null || Dungeon.level == null) {
 			return;
 		}

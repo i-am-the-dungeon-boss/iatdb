@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -115,9 +116,16 @@ class SentryCrashReportingTest {
 
 	@Test
 	@DisplayName("reads DSN from classpath sentry.properties")
-	void readsDsnFromClasspathSentryProperties() {
-		Assertions.assertThat(SentryCrashReporting.readClasspathDsn())
-				.isEqualTo("https://publickey@o000.ingest.sentry.io/000");
+	void readsDsnFromClasspathSentryProperties() throws IOException {
+		// Parse the :core test fixture via stream API. Do not call
+		// SentryCrashReporting.class.getClassLoader().getResource(...) here — IDE
+		// runners often load main classes from a classloader that cannot see
+		// test resources (this assert was null at line 130 in Eclipse).
+		Path fixture = findRepoFile("core/src/test/resources/sentry.properties");
+		String expected = extractDsn(Files.readString(fixture, StandardCharsets.UTF_8));
+		try (InputStream in = Files.newInputStream(fixture)) {
+			Assertions.assertThat(SentryCrashReporting.readDsn(in)).isEqualTo(expected);
+		}
 	}
 
 	@Test

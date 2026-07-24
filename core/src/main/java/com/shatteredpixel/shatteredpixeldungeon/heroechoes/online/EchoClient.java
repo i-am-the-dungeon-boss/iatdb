@@ -6,6 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.Strings;
 
 import org.json.JSONObject;
 
@@ -44,7 +45,7 @@ public final class EchoClient {
 	}
 
 	static boolean isHealthy(int statusCode, String body) {
-		if (statusCode != 200 || body == null || body.isBlank()) {
+		if (statusCode != 200 || Strings.isBlank(body)) {
 			return false;
 		}
 		try {
@@ -167,7 +168,7 @@ public final class EchoClient {
 	public boolean authenticateDevice(String deviceId, String username) throws Exception {
 		JSONObject body = new JSONObject();
 		body.put("device_id", deviceId);
-		if (username != null && !username.isBlank()) {
+		if (!Strings.isBlank(username)) {
 			body.put("username", username.trim());
 		}
 		EchoHttpResponse response = transport.send(new EchoHttpRequest(
@@ -237,7 +238,7 @@ public final class EchoClient {
 		if (response.statusCode == 200) {
 			return EchoWireCodec.decodeLeaderboardEntries(response.body);
 		}
-		return List.of();
+		return java.util.Collections.emptyList();
 	}
 
 	private static String easyModeQuery() {

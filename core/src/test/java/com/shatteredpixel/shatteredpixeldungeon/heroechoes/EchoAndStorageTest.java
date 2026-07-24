@@ -13,7 +13,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.util.Optional;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -124,12 +123,12 @@ class EchoAndStorageTest {
 
         storage.save(snap);
 
-        Optional<Echo> loaded = storage.loadForDepth(
+        Echo loaded = storage.loadForDepth(
                 5, EchoTestSupport.TEST_GAME_VERSION);
-        Assertions.assertThat(loaded).isPresent();
-        Assertions.assertThat(loaded.get().depth).isEqualTo(5);
-        Assertions.assertThat(loaded.get().heroClass).isEqualTo("WARRIOR");
-        Assertions.assertThat(loaded.get().hasCombatData()).isTrue();
+        Assertions.assertThat(loaded).isNotNull();
+        Assertions.assertThat(loaded.depth).isEqualTo(5);
+        Assertions.assertThat(loaded.heroClass).isEqualTo("WARRIOR");
+        Assertions.assertThat(loaded.hasCombatData()).isTrue();
     }
 
     @Test
@@ -204,9 +203,9 @@ class EchoAndStorageTest {
         old.gameVersion = "1.0.0";
         storage.save(old);
 
-        Optional<Echo> loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
-        Assertions.assertThat(loaded).isPresent();
-        Assertions.assertThat(loaded.get().gameVersion).isEqualTo("1.0.0");
+        Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
+        Assertions.assertThat(loaded).isNotNull();
+        Assertions.assertThat(loaded.gameVersion).isEqualTo("1.0.0");
     }
 
     @Test
@@ -232,7 +231,7 @@ class EchoAndStorageTest {
         Assertions.assertThat(FileUtils.fileExists("echoes-solo/depth-5.dat")).isTrue();
         Assertions.assertThat(new File("echoes-solo/depth-5.dat")).doesNotExist();
         Assertions.assertThat(new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isPresent();
+                .isNotNull();
     }
 
     @Test
@@ -253,11 +252,10 @@ class EchoAndStorageTest {
 
         Assertions.assertThat(EchoTestSupport.countEchoFiles()).isEqualTo(2);
         Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isPresent()
-                .get()
+                .isNotNull()
                 .extracting(e -> e.echoId)
                 .isEqualTo("solo-5-5");
-        Assertions.assertThat(storage.loadForDepth(10, EchoTestSupport.TEST_GAME_VERSION)).isPresent();
+        Assertions.assertThat(storage.loadForDepth(10, EchoTestSupport.TEST_GAME_VERSION)).isNotNull();
     }
 
     @Test
@@ -278,11 +276,10 @@ class EchoAndStorageTest {
 
         Assertions.assertThat(EchoTestSupport.countEchoFiles()).isEqualTo(2);
         Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isPresent()
-                .get()
+                .isNotNull()
                 .extracting(e -> e.echoId)
                 .isEqualTo("ranked-5-5");
-        Assertions.assertThat(storage.loadForDepth(15, EchoTestSupport.TEST_GAME_VERSION)).isPresent();
+        Assertions.assertThat(storage.loadForDepth(15, EchoTestSupport.TEST_GAME_VERSION)).isNotNull();
     }
 
     @Test
@@ -301,10 +298,10 @@ class EchoAndStorageTest {
         second.timestamp = 2_000L;
         storage.save(second);
 
-        Optional<Echo> loaded = storage.loadForDepth(
+        Echo loaded = storage.loadForDepth(
                 5, EchoTestSupport.TEST_GAME_VERSION);
 
-        Assertions.assertThat(loaded).isPresent();
-        Assertions.assertThat(loaded.get().echoId).isEqualTo("second");
+        Assertions.assertThat(loaded).isNotNull();
+        Assertions.assertThat(loaded.echoId).isEqualTo("second");
     }
 }

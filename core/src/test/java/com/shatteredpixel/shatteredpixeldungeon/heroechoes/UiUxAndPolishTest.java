@@ -3,8 +3,12 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +21,7 @@ class UiUxAndPolishTest {
 
     @AfterEach
     void reset() {
+        BossHealthBar.assignBoss(null);
         EchoTestSupport.resetWorkflowState();
     }
 
@@ -27,6 +32,33 @@ class UiUxAndPolishTest {
 
         Assertions.assertThat(text).isNotBlank();
         Assertions.assertThat(text.toLowerCase()).contains("warrior");
+    }
+
+    @Test
+    @DisplayName("EchoBoss name is the echo username")
+    void echoBossNameIsUsername() {
+        Echo echo = EchoTestSupport.warriorEchoWithData(5);
+        echo.userName = "Marwan";
+        EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
+
+        Assertions.assertThat(boss.name()).isEqualTo("Marwan");
+    }
+
+    @Test
+    @DisplayName("Boss health bar label renders EchoBoss username")
+    void bossHealthBarLabelRendersEchoUsername() {
+        Echo echo = EchoTestSupport.warriorEchoWithData(5);
+        echo.userName = "Marwan";
+        EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
+
+        Assertions.assertThat(BossHealthBar.nameLabelFor(boss))
+                .isEqualTo(Messages.titleCase("Marwan"));
+    }
+
+    @Test
+    @DisplayName("Boss health bar label stays empty for non-echo bosses")
+    void bossHealthBarLabelEmptyForNonEchoBoss() {
+        Assertions.assertThat(BossHealthBar.nameLabelFor(new Goo())).isNull();
     }
 
     @Test

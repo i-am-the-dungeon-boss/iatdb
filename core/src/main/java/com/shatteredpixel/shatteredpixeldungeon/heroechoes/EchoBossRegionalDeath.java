@@ -24,8 +24,6 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
-import java.util.function.Supplier;
-
 /**
  * Applies the rewards and progression of the regional floor boss when an echo
  * boss is defeated.
@@ -185,7 +183,12 @@ public final class EchoBossRegionalDeath {
 		Statistics.bossScores[regionIndex] += scorePoints;
 	}
 
-	private static void dropChanceLoot(int pos, Supplier<Item> itemFactory) {
+	/** Local factory — RoboVM lacks {@code java.util.function.Supplier}. */
+	private interface ItemFactory {
+		Item get();
+	}
+
+	private static void dropChanceLoot(int pos, ItemFactory itemFactory) {
 		int drops = Random.chances(new float[] { 0, 0, 6, 3, 1 });
 		for (int i = 0; i < drops; i++) {
 			int ofs;

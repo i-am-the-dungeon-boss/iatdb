@@ -11,11 +11,12 @@ import com.watabou.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,15 +59,19 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         }
     }
 
-    public Optional<Echo> loadForDepth(int depth, String currentGameVersion) {
-        return loadResultForDepth(depth).map(result -> result.echo);
+    /**
+     * @return loaded echo, or {@code null} if none / invalid (RoboVM has no
+     *         Optional).
+     */
+    public Echo loadForDepth(int depth, String currentGameVersion) {
+        EchoFetchResult result = loadResultForDepth(depth);
+        return result != null ? result.echo : null;
     }
 
     @Override
     public EchoLookupOutcome findEchoForDepth(int depth) {
-        return loadResultForDepth(depth)
-                .map(EchoLookupOutcome::found)
-                .orElseGet(EchoLookupOutcome::notFound);
+        EchoFetchResult result = loadResultForDepth(depth);
+        return result != null ? EchoLookupOutcome.found(result) : EchoLookupOutcome.notFound();
     }
 
     public static final class EchoEntry {
@@ -118,7 +123,12 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
         }
 
         List<EchoEntry> entries = new ArrayList<>(newestPerDepth.values());
-        entries.sort((a, b) -> Long.compare(b.sortTime(), a.sortTime()));
+        Collections.sort(entries, new Comparator<EchoEntry>() {
+            @Override
+            public int compare(EchoEntry a, EchoEntry b) {
+                return Long.compare(b.sortTime(), a.sortTime());
+            }
+        });
         return entries;
     }
 
@@ -170,19 +180,19 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
                 || name.equals("latest-depth-" + depth + ".dat");
     }
 
-    private Optional<EchoFetchResult> loadResultForDepth(int depth) {
+    private EchoFetchResult loadResultForDepth(int depth) {
         String canonical = canonicalPath(depth);
         if (FileUtils.fileExists(canonical)) {
             try {
                 return readResult(canonical, depth);
             } catch (Exception ignored) {
             }
-            return Optional.empty();
+            return null;
         }
 
         String dirName = EchoPlayModePaths.echoesDir();
         if (!FileUtils.dirExists(dirName)) {
-            return Optional.empty();
+            return null;
         }
 
         EchoFetchResult newest = null;
@@ -193,39 +203,38 @@ public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
             }
             try {
                 String path = dirName + "/" + name;
-                Optional<EchoFetchResult> loaded = readResult(path, depth);
-                if (loaded.isEmpty()) {
+                EchoFetchResult loaded = readResult(path, depth);
+                if (loaded == null) {
                     continue;
                 }
-                EchoFetchResult result = loaded.get();
-                long sortTime = result.echo.timestamp > 0
-                        ? result.echo.timestamp
+                long sortTime = loaded.echo.timestamp > 0
+                        ? loaded.echo.timestamp
                         : FileUtils.getFileHandle(path).lastModified();
                 if (sortTime >= newestTime) {
-                    newest = result;
+                    newest = loaded;
                     newestTime = sortTime;
                 }
             } catch (Exception ignored) {
             }
         }
-        return Optional.ofNullable(newest);
+        return newest;
     }
 
-    private static Optional<EchoFetchResult> readResult(String path, int depth)
+    private static EchoFetchResult readResult(String path, int depth)
             throws IOException {
         Bundle fileBundle = FileUtils.bundleFromFile(path);
         if (!fileBundle.contains(Echo.BUNDLE_KEY) || !fileBundle.contains(POLICY_BUNDLE_KEY)) {
-            return Optional.empty();
+            return null;
         }
         Echo loaded = Echo.fromFileBundle(fileBundle);
         if (loaded.depth != depth || !loaded.hasCombatData()) {
-            return Optional.empty();
+            return null;
         }
         EchoPolicy policy = EchoPolicy.fromBundle(fileBundle.getBundle(POLICY_BUNDLE_KEY));
         if (!policy.isSupported()) {
-            return Optional.empty();
+            return null;
         }
-        return Optional.of(new EchoFetchResult(loaded, policy));
+        return new EchoFetchResult(loaded, policy);
     }
 
     private static int parseDepth(String filename) {

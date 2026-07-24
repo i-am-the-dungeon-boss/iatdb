@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTextInput;
 import com.watabou.noosa.Game;
+import com.watabou.utils.Strings;
 
 /**
  * UI gate: ensure solo/ranked online play has a player username + session.
@@ -33,7 +34,7 @@ public final class EchoPlayerAuthGate {
 			ShatteredPixelDungeon.scene().add(new WndError(Messages.get(TitleScene.class, "auth_offline")));
 			return;
 		}
-		if (EchoPlayerSession.hasSession() && (fieldError == null || fieldError.isBlank())) {
+		if (EchoPlayerSession.hasSession() && Strings.isBlank(fieldError)) {
 			refreshInBackground();
 			continuation.proceed();
 			return;

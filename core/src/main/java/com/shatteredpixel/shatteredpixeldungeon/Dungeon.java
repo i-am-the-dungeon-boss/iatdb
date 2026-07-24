@@ -108,7 +108,6 @@ import com.watabou.utils.SparseArray;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -454,7 +453,6 @@ public class Dungeon {
 		}
 	}
 
-	private static boolean echoBossActive;
 	private static Echo pendingEcho;
 	private static EchoPolicy pendingEchoPolicy;
 
@@ -483,11 +481,14 @@ public class Dungeon {
 		}
 		pendingEcho = echo;
 		pendingEchoPolicy = policy;
-		echoBossActive = true;
 	}
 
+	/**
+	 * True when a pending echo and policy are armed (derived; not a separate
+	 * latch).
+	 */
 	public static boolean isEchoBossActive() {
-		return echoBossActive;
+		return pendingEcho != null && pendingEchoPolicy != null;
 	}
 
 	/**
@@ -497,7 +498,7 @@ public class Dungeon {
 	public static boolean shouldRetreatEchoBossOnContinue(Level level) {
 		return level != null
 				&& level.locked
-				&& echoBossActive
+				&& isPendingEchoForCurrentBossFloor()
 				&& branch == 0
 				&& bossLevel(depth);
 	}
@@ -513,7 +514,6 @@ public class Dungeon {
 			FileUtils.deleteFile(GamesInProgress.depthFile(GamesInProgress.curSlot, depth, branch));
 		}
 		clearPendingEcho();
-		echoBossActive = false;
 		if (hero != null && hero.buff(LockedFloor.class) != null) {
 			hero.buff(LockedFloor.class).detach();
 		}
@@ -525,7 +525,6 @@ public class Dungeon {
 	}
 
 	public static void resetEchoStateForTests() {
-		echoBossActive = false;
 		clearPendingEcho();
 		echoPlayMode = EchoPlayMode.NONE;
 		easyMode = false;
@@ -570,12 +569,10 @@ public class Dungeon {
 	 * empty).
 	 */
 	public static EchoLookupOutcome prefetchEchoBossOutcome(int depth) {
-		if (echoBossActive && pendingEcho != null && pendingEcho.depth == depth
-				&& pendingEchoPolicy != null) {
+		if (pendingEcho != null && pendingEchoPolicy != null && pendingEcho.depth == depth) {
 			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho, pendingEchoPolicy));
 		}
 		clearPendingEcho();
-		echoBossActive = false;
 		if (!EchoReplacementDecider.isBossDepth(depth)) {
 			return EchoLookupOutcome.notFound();
 		}
@@ -584,13 +581,36 @@ public class Dungeon {
 			if (outcome.isFound()) {
 				pendingEcho = outcome.result.echo;
 				pendingEchoPolicy = outcome.result.policy;
-				echoBossActive = true;
+			} else {
+				reportEchoPrefetchFailure(depth, outcome);
 			}
 			return outcome;
 		} catch (Exception unexpected) {
 			SentryCrashReporting.report(unexpected);
 			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
 		}
+	}
+
+	private static void reportEchoPrefetchFailure(int depth, EchoLookupOutcome outcome) {
+		String reason;
+		if (outcome == null) {
+			reason = "UNKNOWN";
+		} else if (outcome.isNotFound()) {
+			reason = "NOT_FOUND";
+		} else if (outcome.isError()) {
+			String kind = outcome.failureKind != null ? outcome.failureKind.name() : "UNKNOWN";
+			reason = outcome.httpStatus > 0
+					? "ERROR/" + kind + " http=" + outcome.httpStatus
+					: "ERROR/" + kind;
+		} else {
+			reason = String.valueOf(outcome.status);
+		}
+		String message = "echo boss prefetch failed"
+				+ " depth=" + depth
+				+ " mode=" + echoPlayMode
+				+ " reason=" + reason;
+		DeviceCompat.log("EchoFetch", message);
+		SentryCrashReporting.report(new IllegalStateException(message));
 	}
 
 	/**
@@ -601,8 +621,15 @@ public class Dungeon {
 	 * and
 	 * returns the error (caller persists the run and returns to the title).
 	 */
+	/**
+	 * RoboVM-safe recovery callback (not {@code java.util.function.Function}).
+	 */
+	public interface PrefetchErrorHandler {
+		EchoPrefetchUserChoice apply(EchoLookupOutcome failed);
+	}
+
 	public static EchoLookupOutcome prefetchEchoBossWithRankedRecovery(
-			int depth, Function<EchoLookupOutcome, EchoPrefetchUserChoice> onError) {
+			int depth, PrefetchErrorHandler onError) {
 		while (true) {
 			EchoLookupOutcome outcome = prefetchEchoBossOutcome(depth);
 			if (!outcome.isError() || !needsOnlineFetchRecovery()) {
@@ -624,9 +651,7 @@ public class Dungeon {
 		// Pending echo is only meaningful on the boss floor it was fetched for.
 		if (!isPendingEchoForCurrentBossFloor()) {
 			clearPendingEcho();
-			echoBossActive = false;
 		}
-		bundle.put("echo_boss_active", echoBossActive);
 		if (pendingEcho != null) {
 			bundle.put("pending_echo", pendingEcho.toBundle());
 		}
@@ -636,7 +661,6 @@ public class Dungeon {
 	}
 
 	public static void restoreEchoChoiceFromBundle(Bundle bundle) {
-		echoBossActive = bundle.getBoolean("echo_boss_active");
 		if (bundle.contains("pending_echo")) {
 			pendingEcho = Echo.fromBundle(bundle.getBundle("pending_echo"));
 		} else {
@@ -648,21 +672,18 @@ public class Dungeon {
 			pendingEchoPolicy = null;
 		}
 		// Never carry a pending echo without a supported policy, or onto the wrong
-		// floor.
+		// floor. Legacy echo_boss_active is ignored — armed state is derived.
 		if (pendingEcho != null
 				&& (pendingEchoPolicy == null || !pendingEchoPolicy.isSupported())) {
 			clearPendingEcho();
-			echoBossActive = false;
 		}
 		if (!isPendingEchoForCurrentBossFloor()) {
 			clearPendingEcho();
-			echoBossActive = false;
 		}
 	}
 
 	private static boolean isPendingEchoForCurrentBossFloor() {
-		return echoBossActive
-				&& pendingEcho != null
+		return pendingEcho != null
 				&& pendingEchoPolicy != null
 				&& EchoReplacementDecider.isBossDepth(depth)
 				&& pendingEcho.depth == depth;

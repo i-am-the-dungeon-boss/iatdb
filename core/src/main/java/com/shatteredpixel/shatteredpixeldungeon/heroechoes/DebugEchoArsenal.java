@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -82,7 +83,12 @@ public final class DebugEchoArsenal {
 		if (kit == null || kit.belongings == null || kit.belongings.backpack == null) {
 			return;
 		}
-		kit.belongings.backpack.items.removeIf(DebugEchoArsenal::isPolicyUsable);
+		Iterator<Item> it = kit.belongings.backpack.items.iterator();
+		while (it.hasNext()) {
+			if (isPolicyUsable(it.next())) {
+				it.remove();
+			}
+		}
 	}
 
 	public static List<Item> usableItems() {
