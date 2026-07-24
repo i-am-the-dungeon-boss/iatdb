@@ -3,8 +3,6 @@
     "**/build": true,
     "**/target/**": true
   },
-  "java.settings.url": ".vscode/java.prefs",
-  "java.jdt.ls.androidSupport.enabled": "on",
   "java.test.config": [
     {
       "name": "core-assets",
