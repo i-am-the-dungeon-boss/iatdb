@@ -2,11 +2,9 @@ name: iOS unsigned IPA
 
 # Produces an unsigned IPA for archive/CI checks. It will not install on devices
 # without resigning (Ad Hoc / TestFlight / App Store).
+# Manual only — release.ps1 dispatches this via `gh workflow run`.
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
 
 jobs:
   ios-unsigned:
@@ -64,25 +62,3 @@ jobs:
           name: iatdb-${{ steps.ipa.outputs.version }}-ios-unsigned
           path: ${{ steps.ipa.outputs.path }}
           if-no-files-found: error
-
-      # Tag pushes: attach IPA to the GitHub Release (release.ps1 may create the release
-      # shortly after the tag; retry until it exists). workflow_dispatch keeps Actions artifact only.
-      - name: Attach IPA to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-          IPA_PATH: ${{ steps.ipa.outputs.path }}
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-          for i in $(seq 1 36); do
-            if gh release view "${TAG}" >/dev/null 2>&1; then
-              gh release upload "${TAG}" "${IPA_PATH}" --clobber
-              echo "Uploaded ${IPA_PATH} to release ${TAG}"
-              exit 0
-            fi
-            echo "Release ${TAG} not ready yet (attempt ${i}/36); waiting..."
-            sleep 10
-          done
-          echo "Timed out waiting for GitHub Release ${TAG} so the unsigned IPA could be uploaded." >&2
-          exit 1

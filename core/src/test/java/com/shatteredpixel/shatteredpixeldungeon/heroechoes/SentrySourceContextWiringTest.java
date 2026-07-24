@@ -128,12 +128,13 @@ class SentrySourceContextWiringTest {
 	}
 
 	@Test
-	@DisplayName("ios CI attaches unsigned IPA to GitHub Release on version tags")
-	void iosCiAttachesIpaToGitHubRelease() throws IOException {
+	@DisplayName("ios CI is manual workflow_dispatch only")
+	void iosCiIsManualWorkflowDispatchOnly() throws IOException {
 		String source = readSource(".github/workflows/ios-unsigned.yml");
 
-		Assertions.assertThat(source).contains("gh release upload");
-		Assertions.assertThat(source).contains("refs/tags/");
+		Assertions.assertThat(source).contains("workflow_dispatch:");
+		Assertions.assertThat(source).doesNotContain("tags:");
+		Assertions.assertThat(source).doesNotContain("gh release upload");
 	}
 
 	private static String readSource(String relativePath) throws IOException {
