@@ -234,9 +234,9 @@ The IPA is a required GitHub Release asset. For -DryRun, place it in dist/ first
 or a prior ios-unsigned.yml artifact). Without -DryRun, release.ps1 fetches it via ios-unsigned.yml.
 "@
     }
-    $ipaPath = Get-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -CommitSha $commitSha
+    Get-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -CommitSha $commitSha | Out-Null
     Update-Sha256Sums -DistDir $distDir -VersionName $versionName -VersionCode $versionCode
-    $iosIpa = Get-Item -LiteralPath $ipaPath
+    $iosIpa = Get-Item -LiteralPath (Join-Path $distDir "iatdb-$versionName-ios-unsigned.ipa")
     $sums = Get-Item -LiteralPath (Join-Path $distDir 'SHA256SUMS.txt')
 }
 if (-not $iosIpa) {

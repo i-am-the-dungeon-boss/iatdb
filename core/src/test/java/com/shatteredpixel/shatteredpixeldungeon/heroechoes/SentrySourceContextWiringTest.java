@@ -117,6 +117,17 @@ class SentrySourceContextWiringTest {
 	}
 
 	@Test
+	@DisplayName("release.ps1 resolves fetched IPA from dist path not command output")
+	void releaseScriptResolvesFetchedIpaFromDistPath() throws IOException {
+		String source = readSource("scripts/release.ps1");
+		String common = readSource("scripts/release/_common.ps1");
+
+		Assertions.assertThat(source).contains("Get-UnsignedIosIpaViaActions");
+		Assertions.assertThat(source).doesNotContain("Get-Item -LiteralPath $ipaPath");
+		Assertions.assertThat(common).contains("Out-Host");
+	}
+
+	@Test
 	@DisplayName("ios CI attaches unsigned IPA to GitHub Release on version tags")
 	void iosCiAttachesIpaToGitHubRelease() throws IOException {
 		String source = readSource(".github/workflows/ios-unsigned.yml");
