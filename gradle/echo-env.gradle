@@ -1,0 +1,54 @@
+// Shared .env / -P / process-env resolution for Echo + related build secrets.
+// Apply from Android / desktop / iOS build scripts. Does not commit secrets.
+
+def loadDotEnvFile(File file) {
+	def values = [:]
+	if (file == null || !file.isFile()) {
+		return values
+	}
+	file.eachLine('UTF-8') { line ->
+		def trimmed = line.trim()
+		if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+			return
+		}
+		def separator = trimmed.indexOf('=')
+		if (separator <= 0) {
+			return
+		}
+		def key = trimmed.substring(0, separator).trim()
+		def value = trimmed.substring(separator + 1).trim()
+		if ((value.startsWith('"') && value.endsWith('"'))
+				|| (value.startsWith("'") && value.endsWith("'"))) {
+			value = value.substring(1, value.length() - 1)
+		}
+		values[key] = value
+	}
+	return values
+}
+
+def echoEnv = loadDotEnvFile(rootProject.file('.env'))
+
+ext.echoEnvOrProp = { String key ->
+	def fromGradle = project.findProperty(key)
+	if (fromGradle != null && fromGradle.toString().trim()) {
+		return fromGradle.toString().trim()
+	}
+	def fromProcess = System.getenv(key)
+	if (fromProcess != null && !fromProcess.trim().isEmpty()) {
+		return fromProcess.trim()
+	}
+	def fromFile = echoEnv[key]
+	if (fromFile != null && !fromFile.toString().trim().isEmpty()) {
+		return fromFile.toString().trim()
+	}
+	return ''
+}
+
+/** Single API key for all platforms and build types. */
+ext.echoApiKey = ext.echoEnvOrProp('ECHO_API_KEY')
+
+ext.echoDebugBackendUrl = ext.echoEnvOrProp('ECHO_BACKEND_URL')
+ext.echoReleaseBackendUrl = ext.echoEnvOrProp('ECHO_BACKEND_URL_RELEASE')
+if (!ext.echoReleaseBackendUrl) {
+	ext.echoReleaseBackendUrl = ext.echoDebugBackendUrl
+}

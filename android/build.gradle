@@ -1,30 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.sentry.android.gradle'
 
-def loadDotEnvFile(File file) {
-    def values = [:]
-    if (file == null || !file.isFile()) {
-        return values
-    }
-    file.eachLine('UTF-8') { line ->
-        def trimmed = line.trim()
-        if (trimmed.isEmpty() || trimmed.startsWith('#')) {
-            return
-        }
-        def separator = trimmed.indexOf('=')
-        if (separator <= 0) {
-            return
-        }
-        def key = trimmed.substring(0, separator).trim()
-        def value = trimmed.substring(separator + 1).trim()
-        if ((value.startsWith('"') && value.endsWith('"'))
-                || (value.startsWith("'") && value.endsWith("'"))) {
-            value = value.substring(1, value.length() - 1)
-        }
-        values[key] = value
-    }
-    return values
-}
+apply from: rootProject.file('gradle/echo-env.gradle')
 
 def quoteBuildConfigString(String value) {
     def escaped = (value ?: '')
@@ -32,9 +9,6 @@ def quoteBuildConfigString(String value) {
             .replace('"', '\\"')
     return "\"${escaped}\""
 }
-
-def echoEnvFile = rootProject.file('.env')
-def echoEnv = loadDotEnvFile(echoEnvFile)
 
 def loadProjectLinksProperties() {
     def props = new Properties()
@@ -48,42 +22,19 @@ def loadProjectLinksProperties() {
 def projectLinksProps = loadProjectLinksProperties()
 def projectLinksBackendUrl = (projectLinksProps.getProperty('backend.url') ?: '').trim()
 
-def echoEnvOrProp = { String key ->
-    def fromGradle = project.findProperty(key)
-    if (fromGradle != null && fromGradle.toString().trim()) {
-        return fromGradle.toString().trim()
-    }
-    def fromProcess = System.getenv(key)
-    if (fromProcess != null && !fromProcess.trim().isEmpty()) {
-        return fromProcess.trim()
-    }
-    def fromFile = echoEnv[key]
-    if (fromFile != null && !fromFile.toString().trim().isEmpty()) {
-        return fromFile.toString().trim()
-    }
-    return ''
-}
-
-def echoDebugBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL')
-def echoDebugApiKey = echoEnvOrProp('ECHO_API_KEY')
-def echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL_RELEASE')
-if (!echoReleaseBackendUrl) {
-    echoReleaseBackendUrl = echoEnvOrProp('ECHO_BACKEND_URL')
-}
+def echoDebugBackendUrl = project.ext.echoDebugBackendUrl
+def echoApiKey = project.ext.echoApiKey
+def echoReleaseBackendUrl = project.ext.echoReleaseBackendUrl
 if (!echoReleaseBackendUrl) {
     echoReleaseBackendUrl = projectLinksBackendUrl
 }
-def echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY_RELEASE')
-if (!echoReleaseApiKey) {
-    echoReleaseApiKey = echoEnvOrProp('ECHO_API_KEY')
-}
 
-def sentryDsn = echoEnvOrProp('SENTRY_DSN')
-def sentryOrg = echoEnvOrProp('SENTRY_ORG')
+def sentryDsn = project.ext.echoEnvOrProp('SENTRY_DSN')
+def sentryOrg = project.ext.echoEnvOrProp('SENTRY_ORG')
 if (!sentryOrg) {
     sentryOrg = 'dungeonboss'
 }
-def sentryProject = echoEnvOrProp('SENTRY_PROJECT')
+def sentryProject = project.ext.echoEnvOrProp('SENTRY_PROJECT')
 if (!sentryProject) {
     sentryProject = 'android'
 }
@@ -150,7 +101,7 @@ android {
             manifestPlaceholders.sentryDsn = ''
             manifestPlaceholders.sentryAutoInit = 'false'
             buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoDebugBackendUrl)
-            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoDebugApiKey)
+            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoApiKey)
             buildConfigField 'String', 'SENTRY_DSN', quoteBuildConfigString('')
             dependencies {
                 debugImplementation project(':services:updates:echoUpdates')
@@ -172,7 +123,7 @@ android {
             }
 
             buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoReleaseBackendUrl)
-            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoReleaseApiKey)
+            buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoApiKey)
 
             dependencies {
                 // IATDB: version checks via hero-echoes /v1/game-version; news stays stubbed

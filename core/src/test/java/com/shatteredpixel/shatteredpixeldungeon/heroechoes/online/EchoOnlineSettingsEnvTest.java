@@ -92,10 +92,10 @@ class EchoOnlineSettingsEnvTest {
 	}
 
 	@Test
-	@DisplayName("apiKey ignores ECHO_API_KEY_RELEASE at runtime (assemble-time bake only)")
-	void apiKeyIgnoresReleaseEnvKey() {
+	@DisplayName("apiKey only reads ECHO_API_KEY at runtime")
+	void apiKeyOnlyReadsEchoApiKey() {
 		Map<String, String> env = new HashMap<>();
-		env.put("ECHO_API_KEY_RELEASE", "release-only-key");
+		env.put("SOME_OTHER_KEY", "not-the-api-key");
 		EchoOnlineSettings.setEnvForTests(env);
 
 		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEmpty();

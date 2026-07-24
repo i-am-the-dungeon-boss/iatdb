@@ -137,14 +137,48 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
-	@DisplayName("shared echo-build-defaults.gradle bakes ECHO_API_KEY_RELEASE into EchoBuildConfig")
-	void sharedEchoBuildDefaultsBakesReleaseApiKey() throws IOException {
+	@DisplayName("shared echo-build-defaults.gradle writes gitignored EchoBuildConfig from echo-env")
+	void sharedEchoBuildDefaultsBakesApiKey() throws IOException {
 		String source = readSource("gradle/echo-build-defaults.gradle");
 
-		Assertions.assertThat(source).contains("ECHO_API_KEY_RELEASE");
-		Assertions.assertThat(source).contains("ECHO_API_KEY");
-		Assertions.assertThat(source).contains("generateEchoBuildConfig");
+		Assertions.assertThat(source).contains("echo-env.gradle");
+		Assertions.assertThat(source).contains("echoApiKey");
 		Assertions.assertThat(source).contains("EchoBuildConfig.java");
+		Assertions.assertThat(source).contains("src/generated/java");
+		Assertions.assertThat(source).doesNotContain("ECHO_API_KEY_RELEASE");
+	}
+
+	@Test
+	@DisplayName("shared echo-env.gradle exposes a single ECHO_API_KEY")
+	void sharedEchoEnvResolvesSingleApiKey() throws IOException {
+		String source = readSource("gradle/echo-env.gradle");
+
+		Assertions.assertThat(source).contains("ECHO_API_KEY");
+		Assertions.assertThat(source).contains("echoApiKey");
+		Assertions.assertThat(source).doesNotContain("ECHO_API_KEY_RELEASE");
+		Assertions.assertThat(source).doesNotContain("echoReleaseApiKey");
+		Assertions.assertThat(source).doesNotContain("echoDebugApiKey");
+	}
+
+	@Test
+	@DisplayName("gitignore excludes generated EchoBuildConfig sources")
+	void gitignoreExcludesGeneratedEchoBuildConfig() throws IOException {
+		String source = readSource(".gitignore");
+
+		Assertions.assertThat(source).contains("**/src/generated/");
+	}
+
+	@Test
+	@DisplayName("android build.gradle uses shared echo-env for API key bake")
+	void androidBuildGradleUsesSharedEchoEnv() throws IOException {
+		String source = readSource("android/build.gradle");
+
+		Assertions.assertThat(source).contains("echo-env.gradle");
+		Assertions.assertThat(source).contains("echoApiKey");
+		Assertions.assertThat(source).doesNotContain("def loadDotEnvFile");
+		Assertions.assertThat(source).doesNotContain("ECHO_API_KEY_RELEASE");
+		Assertions.assertThat(source).doesNotContain("echoReleaseApiKey");
+		Assertions.assertThat(source).doesNotContain("echoDebugApiKey");
 	}
 
 	@Test
