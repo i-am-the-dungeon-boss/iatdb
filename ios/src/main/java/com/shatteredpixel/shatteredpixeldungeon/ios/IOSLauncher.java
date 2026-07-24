@@ -86,7 +86,7 @@ public class IOSLauncher extends IOSApplication.Delegate {
 		EchoOnlineSettings.loadDefaultDotEnv();
 		EchoOnlineSettings.setBuildDefaults(
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
-				"");
+				EchoBuildConfig.ECHO_API_KEY);
 
 		// Preserve RoboVM NPE/mach handlers while third-party SDKs install theirs.
 		Signals.installSignals(

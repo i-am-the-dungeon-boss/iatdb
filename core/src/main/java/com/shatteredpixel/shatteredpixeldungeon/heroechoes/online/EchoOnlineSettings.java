@@ -89,7 +89,8 @@ public final class EchoOnlineSettings {
 
 	/**
 	 * Platform/build defaults used when env and dotenv do not supply a value.
-	 * Android debug/release inject these from {@code BuildConfig}.
+	 * Android injects these from {@code BuildConfig}; desktop/iOS from generated
+	 * {@code EchoBuildConfig}.
 	 */
 	public static void setBuildDefaults(String backendUrl, String apiKey) {
 		buildDefaultBackendUrl = backendUrl;

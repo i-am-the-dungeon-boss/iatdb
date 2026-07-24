@@ -15,6 +15,9 @@ apply plugin: 'io.sentry.jvm.gradle'
 ext.sentryProjectName = 'ios'
 apply from: rootProject.file('gradle/sentry-source-context.gradle')
 
+ext.echoBuildConfigPackage = 'com.shatteredpixel.shatteredpixeldungeon.ios'
+apply from: rootProject.file('gradle/echo-build-defaults.gradle')
+
 sentry {
 	// Core already depends on io.sentry:sentry — do not auto-add another copy.
 	autoInstallation {

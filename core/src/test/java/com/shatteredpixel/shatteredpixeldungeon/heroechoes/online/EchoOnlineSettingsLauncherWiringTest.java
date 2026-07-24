@@ -80,6 +80,25 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
+	@DisplayName("desktop launcher applies EchoBuildConfig API key as build default")
+	void desktopLauncherAppliesEchoBuildConfigApiKey() throws IOException {
+		String source = readSource(
+				"desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoBuildConfig.ECHO_API_KEY");
+		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+	}
+
+	@Test
+	@DisplayName("desktop build.gradle generates EchoBuildConfig from release API key")
+	void desktopBuildGradleGeneratesEchoBuildConfig() throws IOException {
+		String source = readSource("desktop/build.gradle");
+
+		Assertions.assertThat(source).contains("echo-build-defaults.gradle");
+		Assertions.assertThat(source).contains("echoBuildConfigPackage");
+	}
+
+	@Test
 	@DisplayName("ios launcher loads EchoOnlineSettings dotenv on startup")
 	void iosLauncherLoadsDotEnv() throws IOException {
 		String source = readSource(
@@ -96,6 +115,36 @@ class EchoOnlineSettingsLauncherWiringTest {
 
 		Assertions.assertThat(source).contains("EchoOnlineSettings.PRODUCTION_BACKEND_URL");
 		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+	}
+
+	@Test
+	@DisplayName("ios launcher applies EchoBuildConfig API key as build default")
+	void iosLauncherAppliesEchoBuildConfigApiKey() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoBuildConfig.ECHO_API_KEY");
+		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+	}
+
+	@Test
+	@DisplayName("ios build.gradle generates EchoBuildConfig from release API key")
+	void iosBuildGradleGeneratesEchoBuildConfig() throws IOException {
+		String source = readSource("ios/build.gradle");
+
+		Assertions.assertThat(source).contains("echo-build-defaults.gradle");
+		Assertions.assertThat(source).contains("echoBuildConfigPackage");
+	}
+
+	@Test
+	@DisplayName("shared echo-build-defaults.gradle bakes ECHO_API_KEY_RELEASE into EchoBuildConfig")
+	void sharedEchoBuildDefaultsBakesReleaseApiKey() throws IOException {
+		String source = readSource("gradle/echo-build-defaults.gradle");
+
+		Assertions.assertThat(source).contains("ECHO_API_KEY_RELEASE");
+		Assertions.assertThat(source).contains("ECHO_API_KEY");
+		Assertions.assertThat(source).contains("generateEchoBuildConfig");
+		Assertions.assertThat(source).contains("EchoBuildConfig.java");
 	}
 
 	@Test

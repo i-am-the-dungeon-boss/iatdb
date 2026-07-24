@@ -63,7 +63,7 @@ public class DesktopLauncher {
 		EchoOnlineSettings.loadDefaultDotEnv();
 		EchoOnlineSettings.setBuildDefaults(
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
-				"");
+				EchoBuildConfig.ECHO_API_KEY);
 
 		String earlyVersion = DesktopLauncher.class.getPackage().getSpecificationVersion();
 		if (earlyVersion == null) {

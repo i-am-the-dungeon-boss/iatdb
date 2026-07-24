@@ -92,7 +92,7 @@ class EchoOnlineSettingsEnvTest {
 	}
 
 	@Test
-	@DisplayName("apiKey ignores ECHO_API_KEY_RELEASE (Android assemble only)")
+	@DisplayName("apiKey ignores ECHO_API_KEY_RELEASE at runtime (assemble-time bake only)")
 	void apiKeyIgnoresReleaseEnvKey() {
 		Map<String, String> env = new HashMap<>();
 		env.put("ECHO_API_KEY_RELEASE", "release-only-key");
