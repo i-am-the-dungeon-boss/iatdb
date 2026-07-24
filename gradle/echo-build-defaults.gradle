@@ -1,5 +1,5 @@
-// Bakes ECHO_API_KEY from .env into a gitignored EchoBuildConfig.java under
-// src/generated/java. Expects ext.echoBuildConfigPackage.
+// Bakes ECHO_API_KEY from .env into echo-build.properties (processResources).
+// Expects ext.echoBuildConfigPackage so apply sites stay explicit.
 apply from: rootProject.file('gradle/echo-env.gradle')
 
 if (!project.ext.has('echoBuildConfigPackage') || !project.ext.echoBuildConfigPackage) {
@@ -7,26 +7,18 @@ if (!project.ext.has('echoBuildConfigPackage') || !project.ext.echoBuildConfigPa
 			"${project.path}: echo-build-defaults.gradle requires ext.echoBuildConfigPackage")
 }
 
-def echoBuildConfigPackage = project.ext.echoBuildConfigPackage.toString()
-def packagePath = echoBuildConfigPackage.replace('.', '/')
-def generatedRoot = file('src/generated/java')
-def outDir = file("$generatedRoot/$packagePath")
-outDir.mkdirs()
-
 def escapedKey = (project.ext.echoApiKey ?: '')
 		.replace('\\', '\\\\')
-		.replace('"', '\\"')
+		.replace('\r', '')
+		.replace('\n', '')
 
-new File(outDir, 'EchoBuildConfig.java').setText("""\
-package ${echoBuildConfigPackage};
-
-/** Generated from .env ECHO_API_KEY — do not commit (gitignored under src/generated/). */
-public final class EchoBuildConfig {
-	public static final String ECHO_API_KEY = "${escapedKey}";
-
-	private EchoBuildConfig() {
+tasks.named('processResources').configure {
+	filesMatching('echo-build.properties') {
+		filter { String line ->
+			if (line.startsWith('ECHO_API_KEY=')) {
+				return "ECHO_API_KEY=${escapedKey}"
+			}
+			return line
+		}
 	}
 }
-""", 'UTF-8')
-
-sourceSets.main.java.srcDir generatedRoot

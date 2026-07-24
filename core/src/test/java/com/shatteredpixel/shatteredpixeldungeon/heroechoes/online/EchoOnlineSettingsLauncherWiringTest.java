@@ -137,14 +137,14 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
-	@DisplayName("shared echo-build-defaults.gradle writes gitignored EchoBuildConfig from echo-env")
+	@DisplayName("shared echo-build-defaults.gradle bakes ECHO_API_KEY into echo-build.properties")
 	void sharedEchoBuildDefaultsBakesApiKey() throws IOException {
 		String source = readSource("gradle/echo-build-defaults.gradle");
 
 		Assertions.assertThat(source).contains("echo-env.gradle");
 		Assertions.assertThat(source).contains("echoApiKey");
-		Assertions.assertThat(source).contains("EchoBuildConfig.java");
-		Assertions.assertThat(source).contains("src/generated/java");
+		Assertions.assertThat(source).contains("echo-build.properties");
+		Assertions.assertThat(source).contains("processResources");
 		Assertions.assertThat(source).doesNotContain("ECHO_API_KEY_RELEASE");
 	}
 
@@ -161,11 +161,23 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
-	@DisplayName("gitignore excludes generated EchoBuildConfig sources")
-	void gitignoreExcludesGeneratedEchoBuildConfig() throws IOException {
-		String source = readSource(".gitignore");
+	@DisplayName("desktop EchoBuildConfig is committed and reads echo-build.properties")
+	void desktopEchoBuildConfigReadsProperties() throws IOException {
+		String source = readSource(
+				"desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/EchoBuildConfig.java");
 
-		Assertions.assertThat(source).contains("**/src/generated/");
+		Assertions.assertThat(source).contains("echo-build.properties");
+		Assertions.assertThat(source).contains("ECHO_API_KEY");
+	}
+
+	@Test
+	@DisplayName("ios EchoBuildConfig is committed and reads echo-build.properties")
+	void iosEchoBuildConfigReadsProperties() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/EchoBuildConfig.java");
+
+		Assertions.assertThat(source).contains("echo-build.properties");
+		Assertions.assertThat(source).contains("ECHO_API_KEY");
 	}
 
 	@Test

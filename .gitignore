@@ -39,9 +39,6 @@ echoes-solo/
 # Local secrets (copy from .env.example)
 .env
 
-# Gradle-baked EchoBuildConfig (API key from .env) — never commit
-**/src/generated/
-
 # Sentry auth / CLI (never commit tokens). Desktop DSN file under
 # desktop/src/main/resources/sentry.properties is intentionally committed.
 /sentry.properties

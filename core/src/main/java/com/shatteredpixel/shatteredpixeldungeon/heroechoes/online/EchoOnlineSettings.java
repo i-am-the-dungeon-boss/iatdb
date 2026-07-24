@@ -89,8 +89,8 @@ public final class EchoOnlineSettings {
 
 	/**
 	 * Platform/build defaults used when env and dotenv do not supply a value.
-	 * Android: {@code BuildConfig}; desktop/iOS: gitignored generated
-	 * {@code EchoBuildConfig} (both baked from root {@code .env} at build time).
+	 * Android: {@code BuildConfig}; desktop/iOS: {@code EchoBuildConfig} reading
+	 * Gradle-baked {@code echo-build.properties} (from root {@code .env}).
 	 */
 	public static void setBuildDefaults(String backendUrl, String apiKey) {
 		buildDefaultBackendUrl = backendUrl;
