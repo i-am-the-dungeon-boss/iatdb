@@ -1,0 +1,83 @@
+// Shared Sentry source-context upload for launcher modules.
+// Expects ext.sentryProjectName (e.g. 'android', 'java', 'ios').
+//
+// Token resolution (first non-empty wins):
+//   1) -PSENTRY_AUTH_TOKEN=... / project property
+//   2) process environment SENTRY_AUTH_TOKEN
+//   3) root .env SENTRY_AUTH_TOKEN
+//
+// prepareRelease requires a token (see root build.gradle). Day-to-day
+// :desktop:debug / assembleDebug still succeed without one.
+
+def loadDotEnvFile(File file) {
+	def values = [:]
+	if (file == null || !file.isFile()) {
+		return values
+	}
+	file.eachLine('UTF-8') { line ->
+		def trimmed = line.trim()
+		if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+			return
+		}
+		def separator = trimmed.indexOf('=')
+		if (separator <= 0) {
+			return
+		}
+		def key = trimmed.substring(0, separator).trim()
+		def value = trimmed.substring(separator + 1).trim()
+		if ((value.startsWith('"') && value.endsWith('"'))
+				|| (value.startsWith("'") && value.endsWith("'"))) {
+			value = value.substring(1, value.length() - 1)
+		}
+		values[key] = value
+	}
+	return values
+}
+
+def echoEnv = loadDotEnvFile(rootProject.file('.env'))
+
+def resolveSentryValue = { String key ->
+	def fromGradle = project.findProperty(key)
+	if (fromGradle != null && fromGradle.toString().trim()) {
+		return fromGradle.toString().trim()
+	}
+	def fromProcess = System.getenv(key)
+	if (fromProcess != null && !fromProcess.trim().isEmpty()) {
+		return fromProcess.trim()
+	}
+	def fromFile = echoEnv[key]
+	if (fromFile != null && !fromFile.toString().trim().isEmpty()) {
+		return fromFile.toString().trim()
+	}
+	return ''
+}
+
+def sentryAuthToken = resolveSentryValue('SENTRY_AUTH_TOKEN')
+// Debug/local builds may omit the token (uploads stay off). Release tasks require it
+// (see root build.gradle taskGraph.whenReady) — there is no skip flag.
+def sentryCanUpload = !sentryAuthToken.isEmpty()
+def sentryOrg = resolveSentryValue('SENTRY_ORG')
+if (sentryOrg.isEmpty()) {
+	sentryOrg = 'dungeonboss'
+}
+
+// Expose for Android ProGuard upload and prepareRelease checks.
+ext.sentryAuthToken = sentryAuthToken
+ext.sentryCanUpload = sentryCanUpload
+ext.sentryOrgResolved = sentryOrg
+
+// Most crashes are in shared modules — include them in every launcher's source bundle.
+def sharedSourceDirs = [
+		'../core/src/main/java',
+		'../SPD-classes/src/main/java',
+		'../services/src/main/java',
+		'../services/updates/echoUpdates/src/main/java',
+]
+
+sentry {
+	includeSourceContext = sentryCanUpload
+	org = sentryOrg
+	projectName = sentryProjectName
+	authToken = sentryAuthToken
+	additionalSourceDirsForSourceContext = sharedSourceDirs
+}

@@ -35,8 +35,11 @@ import com.badlogic.gdx.backends.iosrobovm.bindings.metalangle.MGLDrawableDepthF
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.EchoUpdates;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.UpdateImpl;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.watabou.noosa.Game;
@@ -60,6 +63,13 @@ public class IOSLauncher extends IOSApplication.Delegate {
 
 		//ensures the app actually crashes if there's an error in the mobiVM runtime
 		NSException.registerDefaultJavaUncaughtExceptionHandler();
+		Thread.UncaughtExceptionHandler robovmHandler = Thread.getDefaultUncaughtExceptionHandler();
+		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+			SentryCrashReporting.reportAndFlush(throwable);
+			if (robovmHandler != null) {
+				robovmHandler.uncaughtException(thread, throwable);
+			}
+		});
 
 		try {
 			Game.version = NSBundle.getMainBundle().getInfoDictionaryObject("CFBundleVersionString").description();
@@ -72,8 +82,16 @@ public class IOSLauncher extends IOSApplication.Delegate {
 			Game.versionCode = 0;
 		}
 
+		EchoOnlineSettings.loadDefaultDotEnv();
+		EchoOnlineSettings.setBuildDefaults(
+				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
+				"");
+
+		SentryCrashReporting.initForRelease("ios", Game.version, Game.versionCode);
+
 		if (UpdateImpl.supportsUpdates()) {
 			Updates.service = UpdateImpl.getUpdateService();
+			EchoUpdates.baseUrlOverride = EchoOnlineSettings.backendUrl();
 		}
 		if (NewsImpl.supportsNews()) {
 			News.service = NewsImpl.getNewsService();

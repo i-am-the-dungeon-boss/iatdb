@@ -5,8 +5,10 @@
 
 .DESCRIPTION
   Reads appVersionName / appVersionCode from the root build.gradle, runs
-  prepareRelease (optionally with -PwithJpackage), then creates an annotated
-  git tag and a GitHub Release with APK, JAR, SHA256SUMS, and generated notes.
+  prepareRelease (optionally with -PwithJpackage), ensures an unsigned iOS IPA
+  is present (built on macOS, or fetched via GitHub Actions on other OSes),
+  then creates an annotated git tag and a GitHub Release with APK, JAR, IPA,
+  SHA256SUMS, and generated notes.
 
 .EXAMPLE
   .\scripts\release.ps1
@@ -95,6 +97,42 @@ function Get-GradleWrapper {
     return $sh
 }
 
+function Import-DotEnv {
+    param([string] $Path)
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+    Get-Content -LiteralPath $Path | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith('#')) { return }
+        $eq = $line.IndexOf('=')
+        if ($eq -le 0) { return }
+        $key = $line.Substring(0, $eq).Trim()
+        $value = $line.Substring($eq + 1).Trim()
+        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+        # Do not overwrite variables already set in the process environment.
+        $existing = [Environment]::GetEnvironmentVariable($key, 'Process')
+        if ([string]::IsNullOrWhiteSpace($existing)) {
+            Set-Item -Path "Env:$key" -Value $value
+        }
+    }
+}
+
+function Assert-SentryAuthToken {
+    if ([string]::IsNullOrWhiteSpace($env:SENTRY_AUTH_TOKEN)) {
+        throw @'
+Missing SENTRY_AUTH_TOKEN.
+
+Every release uploads Sentry source context (android / java / ios). Set the token in your
+environment or root .env (never commit it):
+  https://sentry.io/settings/dungeonboss/auth-tokens/
+'@
+    }
+    Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
+}
+
 function Get-ProjectLinks {
     param([string] $Root)
 
@@ -128,6 +166,108 @@ function Get-ProjectLinks {
     }
 }
 
+function Update-Sha256Sums {
+    param(
+        [string] $DistDir,
+        [string] $VersionName,
+        [int] $VersionCode
+    )
+
+    $manifest = Join-Path $DistDir 'SHA256SUMS.txt'
+    $lines = @(
+        "appVersionName=$VersionName",
+        "appVersionCode=$VersionCode",
+        "builtAt=$(Get-Date -Format o)",
+        ''
+    )
+    Get-ChildItem -LiteralPath $DistDir -File |
+        Where-Object { $_.Name -ne 'SHA256SUMS.txt' -and $_.Name -ne 'RELEASE_NOTES.md' } |
+        Sort-Object Name |
+        ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            $lines += "$hash  $($_.Name)"
+        }
+    Set-Content -LiteralPath $manifest -Value ($lines -join "`n") -Encoding utf8
+}
+
+function Get-UnsignedIosIpaViaActions {
+    param(
+        [string] $DistDir,
+        [string] $VersionName,
+        [string] $CommitSha
+    )
+
+    $expectedName = "iatdb-$VersionName-ios-unsigned.ipa"
+    $expectedPath = Join-Path $DistDir $expectedName
+    $artifactName = "iatdb-$VersionName-ios-unsigned"
+    $workflow = 'ios-unsigned.yml'
+
+    $ref = (git rev-parse --abbrev-ref HEAD).Trim()
+    if ($ref -eq 'HEAD') {
+        $ref = $CommitSha
+    }
+
+    git fetch --quiet origin 2>$null
+    $remoteContains = @(git branch -r --contains $CommitSha 2>$null)
+    if (-not $remoteContains -or $remoteContains.Count -eq 0) {
+        throw "Commit $CommitSha is not on the remote. Push your branch before release so $workflow can build the unsigned IPA."
+    }
+
+    Write-Host ">> gh workflow run $workflow --ref $ref"
+    gh workflow run $workflow --ref $ref
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to dispatch $workflow (is the workflow on the remote ref?)"
+    }
+
+    Write-Host ">> Waiting for $workflow run at $CommitSha ..."
+    $runId = $null
+    for ($i = 0; $i -lt 60; $i++) {
+        Start-Sleep -Seconds 5
+        $json = gh run list --workflow $workflow --limit 10 --json databaseId,headSha,status,conclusion
+        if ($LASTEXITCODE -ne 0) {
+            throw 'gh run list failed'
+        }
+        $runs = $json | ConvertFrom-Json
+        $match = $runs | Where-Object { $_.headSha -eq $CommitSha } | Select-Object -First 1
+        if ($match) {
+            $runId = [string]$match.databaseId
+            break
+        }
+    }
+    if (-not $runId) {
+        throw "No $workflow run found for commit $CommitSha"
+    }
+
+    Write-Host ">> gh run watch $runId"
+    gh run watch $runId --exit-status
+    if ($LASTEXITCODE -ne 0) {
+        throw "ios-unsigned workflow run $runId failed"
+    }
+
+    $downloadDir = Join-Path $DistDir '_ios-unsigned-download'
+    if (Test-Path -LiteralPath $downloadDir) {
+        Remove-Item -LiteralPath $downloadDir -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $downloadDir | Out-Null
+
+    Write-Host ">> gh run download $runId -n $artifactName"
+    gh run download $runId -n $artifactName -D $downloadDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to download artifact $artifactName from run $runId"
+    }
+
+    $downloaded = Get-ChildItem -LiteralPath $downloadDir -Recurse -Filter $expectedName -File | Select-Object -First 1
+    if (-not $downloaded) {
+        $downloaded = Get-ChildItem -LiteralPath $downloadDir -Recurse -Filter '*.ipa' -File | Select-Object -First 1
+    }
+    if (-not $downloaded) {
+        throw "Downloaded artifact did not contain $expectedName"
+    }
+    Copy-Item -LiteralPath $downloaded.FullName -Destination $expectedPath -Force
+    Remove-Item -LiteralPath $downloadDir -Recurse -Force
+    return $expectedPath
+}
+
 function Get-ReleaseNoteBody {
     param(
         [string] $VersionName,
@@ -153,13 +293,14 @@ function Get-ReleaseNoteBody {
     }
 
     return @"
-## $VersionName — I am the Dungeon Boss
+## $VersionName - I am the Dungeon Boss
 
 Unofficial Shattered Pixel Dungeon fork / mod (GPLv3). Not affiliated with Shattered Pixel or Watabou.
 
 ### Install
 - **Android:** download the APK and sideload (enable install from unknown sources).
 $desktopInstall
+- **iOS:** unsigned IPA is included for archive/CI only - it will **not** install on devices without resigning.
 
 ### Artifacts
 $assetLines
@@ -209,6 +350,11 @@ if ($porcelain -and -not $AllowDirty) {
     throw 'Working tree has uncommitted changes. Commit/stash them, or pass -AllowDirty.'
 }
 
+$commitSha = (git rev-parse HEAD).Trim()
+
+Import-DotEnv (Join-Path $root '.env')
+Assert-SentryAuthToken
+
 if (-not $SkipBuild) {
     $gradlew = Get-GradleWrapper $root
     $gradleArgs = @('prepareRelease')
@@ -229,7 +375,7 @@ if (-not $SkipBuild) {
 if (-not (Test-Path -LiteralPath $distDir)) {
     if ($DryRun) {
         Write-Host ">> Dry run: dist/${versionName} missing (would be created by prepareRelease)."
-        Write-Host ">> Would tag ${tagName}, push to ${Remote}, and gh release create with APK+JAR(+optional zip)."
+        Write-Host ">> Would ensure unsigned IPA, tag ${tagName}, push to ${Remote}, and gh release create."
         Write-Host ""
         Write-Host "Dry run complete - no tag push or GitHub Release created."
         exit 0
@@ -244,9 +390,28 @@ if (-not $apk) { throw "Missing Android APK under $distDir" }
 if (-not $jar) { throw "Missing desktop JAR under $distDir" }
 if (-not $sums) { throw "Missing SHA256SUMS.txt under $distDir" }
 
+$iosIpa = Get-ChildItem -LiteralPath $distDir -Filter "iatdb-$versionName-ios-unsigned.ipa" -File -ErrorAction SilentlyContinue
+if (-not $iosIpa) {
+    if ($DryRun) {
+        throw @"
+Missing unsigned iOS IPA under $distDir (expected iatdb-$versionName-ios-unsigned.ipa).
+The IPA is a required GitHub Release asset. For -DryRun, place it in dist/ first (macOS prepareRelease,
+or a prior ios-unsigned.yml artifact). Without -DryRun, release.ps1 fetches it via ios-unsigned.yml.
+"@
+    }
+    $ipaPath = Get-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -CommitSha $commitSha
+    Update-Sha256Sums -DistDir $distDir -VersionName $versionName -VersionCode $versionCode
+    $iosIpa = Get-Item -LiteralPath $ipaPath
+    $sums = Get-Item -LiteralPath (Join-Path $distDir 'SHA256SUMS.txt')
+}
+if (-not $iosIpa) {
+    throw "Missing unsigned iOS IPA under $distDir (expected iatdb-$versionName-ios-unsigned.ipa)"
+}
+
 $assets = [System.Collections.Generic.List[string]]::new()
 $assets.Add($apk.FullName) | Out-Null
 $assets.Add($jar.FullName) | Out-Null
+$assets.Add($iosIpa.FullName) | Out-Null
 $assets.Add($sums.FullName) | Out-Null
 $jpackageZips = @(Get-ChildItem -LiteralPath $distDir -Filter "iatdb-$versionName-desktop-*.zip" -File -ErrorAction SilentlyContinue)
 foreach ($z in $jpackageZips) {
@@ -254,7 +419,6 @@ foreach ($z in $jpackageZips) {
 }
 $includesJpackage = $jpackageZips.Count -gt 0
 
-$commitSha = (git rev-parse HEAD).Trim()
 $notesPath = if ($NotesFile) {
     if (-not (Test-Path -LiteralPath $NotesFile)) {
         throw "Notes file not found: $NotesFile"
@@ -262,12 +426,13 @@ $notesPath = if ($NotesFile) {
     (Resolve-Path -LiteralPath $NotesFile).Path
 } else {
     $generated = Join-Path $distDir 'RELEASE_NOTES.md'
+    $assetNamesForNotes = @($assets | ForEach-Object { Split-Path $_ -Leaf })
     $body = Get-ReleaseNoteBody `
         -VersionName $versionName `
         -VersionCode $versionCode `
         -TagName $tagName `
         -CommitSha $commitSha `
-        -AssetNames @($assets | ForEach-Object { Split-Path $_ -Leaf }) `
+        -AssetNames $assetNamesForNotes `
         -IncludesJpackage $includesJpackage `
         -ProjectLinks $projectLinks
     Set-Content -LiteralPath $generated -Value $body -Encoding utf8
@@ -305,7 +470,7 @@ if (-not $DryRun) {
 }
 
 # Version first: GitHub's release list truncates titles on the left.
-$title = "$versionName — I am the Dungeon Boss"
+$title = "$versionName - I am the Dungeon Boss"
 $ghArgs = @(
     'release', 'create', $tagName,
     '--title', $title,

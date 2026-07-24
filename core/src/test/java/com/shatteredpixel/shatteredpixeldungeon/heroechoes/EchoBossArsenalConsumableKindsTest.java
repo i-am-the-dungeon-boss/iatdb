@@ -32,7 +32,14 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfTo
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfEarthenArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStatus;
@@ -339,38 +346,106 @@ class EchoBossArsenalConsumableKindsTest {
 		}
 
 		@Test
-		@DisplayName("Echo StoneOfFear throwAs applies Terror on the Hero")
-		void fearStoneTerrifiesHero() {
+		@DisplayName("Echo StoneOfBlink throwAs onto occupied cell teleports short of the occupant")
+		void blinkStoneThrowOntoOccupiedCellDoesNotNpe() {
 			Fight f = fight();
-			com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear stone = new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear();
+			StoneOfBlink stone = new StoneOfBlink();
 			stone.collect(f.kit().belongings.backpack);
-			EchoTestSupport.attachInstantProjectileParent(f.boss);
+			int start = f.boss.pos;
+			int occupied = f.player.pos;
 
-			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
-			Assertions.assertThat(f.player.buff(
-					com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror.class)).isNotNull();
-			Assertions.assertThat(f.kit().belongings.getItem(
-					com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear.class)).isNull();
+			Assertions.assertThat(stone.throwAs(f.echo(), occupied)).isTrue();
+			Assertions.assertThat(f.boss.pos).isNotEqualTo(start);
+			Assertions.assertThat(f.boss.pos).isNotEqualTo(occupied);
+			Assertions.assertThat(f.kit().belongings.getItem(StoneOfBlink.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo PoisonDart throwAs damages the Hero without phantom spend")
+		@DisplayName("Echo StoneOfFear throwAs applies Terror on the Hero")
+		void fearStoneTerrifiesHero() {
+			Fight f = fight();
+			StoneOfFear stone = new StoneOfFear();
+			stone.collect(f.kit().belongings.backpack);
+			EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
+
+			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
+			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
+			Assertions.assertThat(f.player.buff(Terror.class)).isNotNull();
+			Assertions.assertThat(f.kit().belongings.getItem(StoneOfFear.class)).isNull();
+		}
+
+		@Test
+		@DisplayName("Echo StoneOfBlast throwAs damages the Hero on a live fight stage")
+		void blastStoneDamagesHero() {
+			Fight f = fight();
+			StoneOfBlast stone = new StoneOfBlast();
+			stone.collect(f.kit().belongings.backpack);
+			EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
+			int hpBefore = f.player.HP;
+
+			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
+			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
+			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
+			Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
+			Assertions.assertThat(f.kit().belongings.getItem(StoneOfBlast.class)).isNull();
+		}
+
+		@Test
+		@DisplayName("Echo StoneOfShock throwAs paralyzes the Hero via lightning arcs")
+		void shockStoneParalyzesHero() {
+			Fight f = fight();
+			StoneOfShock stone = new StoneOfShock();
+			stone.collect(f.kit().belongings.backpack);
+			EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
+
+			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
+			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
+			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
+			Assertions.assertThat(f.player.buff(Paralysis.class)).isNotNull();
+			Assertions.assertThat(f.kit().belongings.getItem(StoneOfShock.class)).isNull();
+		}
+
+		@Test
+		@DisplayName("Echo PoisonDart throwAs damages and poisons the Hero on a live fight stage")
 		void poisonDartDamagesHero() {
 			Fight f = fight();
-			com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart dart = new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart();
+			PoisonDart dart = new PoisonDart();
 			dart.collect(f.kit().belongings.backpack);
-			EchoTestSupport.attachInstantProjectileParent(f.boss);
+			EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 			// Tipped darts need STR 11+ for surprise accuracy; kit starts at 10.
 			f.kit().STR = 16;
 			f.kit().invisible = 1;
+
+			int aimCell = emptyCellAwayFrom(f, f.player.pos, f.boss.pos);
+			Assertions.assertThat(aimCell).isGreaterThanOrEqualTo(0);
+			f.player.move(aimCell, false);
+			Assertions.assertThat(f.player.pos).isEqualTo(aimCell);
+			Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(f.player)).isEqualTo(aimCell);
+
 			int hpBefore = f.player.HP;
 			float kitBefore = f.kit().cooldown();
 
+			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
+			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
+			Assertions.assertThat(f.kit().sprite).isNull();
 			Assertions.assertThat(dart.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.kit().cooldown()).isEqualTo(kitBefore);
 			Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
-			Assertions.assertThat(f.player.buff(
-					com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison.class)).isNotNull();
+			Assertions.assertThat(f.player.buff(Poison.class)).isNotNull();
+
+			int afterCell = emptyCellAwayFrom(f, f.player.pos, f.boss.pos);
+			Assertions.assertThat(afterCell).isGreaterThanOrEqualTo(0);
+			f.player.move(afterCell, false);
+			Assertions.assertThat(f.player.pos).isEqualTo(afterCell);
+			Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(f.player)).isEqualTo(afterCell);
+			Assertions.assertThat(f.player.buff(Poison.class)).isNotNull();
 		}
 
 	}
@@ -419,6 +494,24 @@ class EchoBossArsenalConsumableKindsTest {
 			}
 			if (cell >= 0 && cell < Dungeon.level.length()
 					&& Dungeon.level.passable[cell]
+					&& com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell) == null) {
+				return cell;
+			}
+		}
+		return -1;
+	}
+
+	/** First empty passable cell that is not any of the excluded positions. */
+	private static int emptyCellAwayFrom(Fight f, int... excluded) {
+		java.util.HashSet<Integer> skip = new java.util.HashSet<>();
+		for (int cell : excluded) {
+			skip.add(cell);
+		}
+		for (int cell = 0; cell < Dungeon.level.length(); cell++) {
+			if (skip.contains(cell)) {
+				continue;
+			}
+			if (Dungeon.level.passable[cell]
 					&& com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell) == null) {
 				return cell;
 			}

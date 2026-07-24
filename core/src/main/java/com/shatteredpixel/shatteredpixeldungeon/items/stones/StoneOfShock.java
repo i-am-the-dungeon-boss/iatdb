@@ -35,8 +35,9 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.EnergyParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
-import com.watabou.utils.BArray;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.BArray;
 import com.watabou.utils.PathFinder;
 
 import java.util.ArrayList;
@@ -60,18 +61,30 @@ public class StoneOfShock extends Runestone {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				Char n = Actor.findChar(i);
 				if (n != null) {
-					arcs.add(new Lightning.Arc(cell, n.sprite.center()));
+					// Arc VFX needs a live sprite; paralysis still applies headless.
+					if (n.sprite != null) {
+						arcs.add(new Lightning.Arc(cell, n.sprite.center()));
+					}
 					Buff.prolong(n, Paralysis.class, 1f);
 					hits++;
 				}
 			}
 		}
 		
-		CellEmitter.center( cell ).burst( SparkParticle.FACTORY, 3 );
+		Emitter sparks = CellEmitter.center( cell );
+		if (sparks != null) {
+			sparks.burst( SparkParticle.FACTORY, 3 );
+		}
 		
 		if (hits > 0) {
-			curUser.sprite.parent.addToFront( new Lightning( arcs, null ) );
-			curUser.sprite.centerEmitter().burst(EnergyParticle.FACTORY, 10);
+			if (curUser != null && curUser.sprite != null && curUser.sprite.parent != null
+					&& !arcs.isEmpty()) {
+				curUser.sprite.parent.addToFront( new Lightning( arcs, null ) );
+				Emitter energy = curUser.sprite.centerEmitter();
+				if (energy != null) {
+					energy.burst(EnergyParticle.FACTORY, 10);
+				}
+			}
 			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
 			
 			curUser.belongings.charge(1f + hits);

@@ -80,6 +80,87 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
+	@DisplayName("ios launcher loads EchoOnlineSettings dotenv on startup")
+	void iosLauncherLoadsDotEnv() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoOnlineSettings.loadDefaultDotEnv()");
+	}
+
+	@Test
+	@DisplayName("ios launcher applies production backend URL when dotenv is empty")
+	void iosLauncherAppliesProductionBackendDefault() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoOnlineSettings.PRODUCTION_BACKEND_URL");
+		Assertions.assertThat(source).contains("EchoOnlineSettings.setBuildDefaults");
+	}
+
+	@Test
+	@DisplayName("ios launcher sets EchoUpdates base URL override")
+	void iosLauncherSetsEchoUpdatesBaseUrlOverride() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("EchoUpdates.baseUrlOverride");
+		Assertions.assertThat(source).contains("EchoOnlineSettings.backendUrl()");
+	}
+
+	@Test
+	@DisplayName("ios build.gradle uses echoUpdates and debugNews")
+	void iosBuildGradleUsesEchoUpdatesAndDebugNews() throws IOException {
+		String source = readSource("ios/build.gradle");
+
+		Assertions.assertThat(source).contains("services:updates:echoUpdates");
+		Assertions.assertThat(source).contains("services:news:debugNews");
+		Assertions.assertThat(source).doesNotContain("services:updates:debugUpdates");
+		Assertions.assertThat(source).doesNotContain("services:news:shatteredNews");
+	}
+
+	@Test
+	@DisplayName("ios build.gradle main class matches IOSLauncher Java package")
+	void iosBuildGradleMainClassMatchesJavaPackage() throws IOException {
+		String source = readSource("ios/build.gradle");
+
+		Assertions.assertThat(source)
+				.contains("com.shatteredpixel.shatteredpixeldungeon.ios.IOSLauncher");
+		Assertions.assertThat(source)
+				.doesNotContain("appPackageName + \".ios.IOSLauncher\"");
+	}
+
+	@Test
+	@DisplayName("ios launcher initializes Sentry with ios platform tag")
+	void iosLauncherInitializesSentry() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("SentryCrashReporting.initForRelease");
+		Assertions.assertThat(source).contains("\"ios\"");
+		Assertions.assertThat(source).contains("SentryCrashReporting.reportAndFlush");
+	}
+
+	@Test
+	@DisplayName("desktop launcher initializes Sentry via SentryCrashReporting")
+	void desktopLauncherInitializesSentryViaHelper() throws IOException {
+		String source = readSource(
+				"desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java");
+
+		Assertions.assertThat(source).contains("SentryCrashReporting.initForRelease");
+		Assertions.assertThat(source).contains("\"desktop\"");
+		Assertions.assertThat(source).contains("SentryCrashReporting.reportAndFlush");
+	}
+
+	@Test
+	@DisplayName("ios robovm.xml force-links Sentry classes")
+	void iosRobovmForceLinksSentry() throws IOException {
+		String source = readSource("ios/robovm.xml");
+
+		Assertions.assertThat(source).contains("io.sentry.**");
+	}
+
+	@Test
 	@DisplayName("production backend URL constant reuses ProjectLinks")
 	void productionBackendUrlReusesProjectLinks() {
 		Assertions.assertThat(EchoOnlineSettings.PRODUCTION_BACKEND_URL)

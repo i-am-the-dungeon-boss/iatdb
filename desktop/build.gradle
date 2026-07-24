@@ -2,6 +2,19 @@ plugins {
     id 'org.beryx.runtime' version '2.0.1'
 }
 
+// Same classpath as Android (root buildscript: sentry-android-gradle-plugin).
+apply plugin: 'io.sentry.jvm.gradle'
+
+ext.sentryProjectName = 'java'
+apply from: rootProject.file('gradle/sentry-source-context.gradle')
+
+sentry {
+    // Core already depends on io.sentry:sentry — do not auto-add another copy.
+    autoInstallation {
+        enabled = false
+    }
+}
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
 
@@ -36,6 +49,9 @@ tasks.register('release', Jar) {
     setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
+    // Bundle id in the JAR + upload source context to Sentry project "java" on every release.
+    dependsOn 'generateSentryDebugMetaPropertiesjava'
+    dependsOn 'sentryUploadSourceBundleJava'
     from { configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) } }
 
     manifest {

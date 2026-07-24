@@ -57,6 +57,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.BArray;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.PathFinder;
@@ -164,7 +165,10 @@ public class Bomb extends Item {
 			ArrayList<Char> affectedChars = new ArrayList<>();
 			
 			if (Dungeon.level.heroFOV[cell]) {
-				CellEmitter.center(cell).burst(BlastParticle.FACTORY, 30);
+				Emitter blastFx = CellEmitter.center(cell);
+				if (blastFx != null) {
+					blastFx.burst(BlastParticle.FACTORY, 30);
+				}
 			}
 			
 			boolean terrainAffected = false;
@@ -184,7 +188,10 @@ public class Bomb extends Item {
 
 			for (int i : affectedCells){
 				if (Dungeon.level.heroFOV[i]) {
-					CellEmitter.get(i).burst(SmokeParticle.FACTORY, 4);
+					Emitter smokeFx = CellEmitter.get(i);
+					if (smokeFx != null) {
+						smokeFx.burst(SmokeParticle.FACTORY, 4);
+					}
 				}
 
 				if (Dungeon.level.flamable[i]) {

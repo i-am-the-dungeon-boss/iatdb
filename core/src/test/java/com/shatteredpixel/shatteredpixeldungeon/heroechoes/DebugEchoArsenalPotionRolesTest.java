@@ -1,11 +1,12 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.BlizzardBrew;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -59,6 +60,41 @@ class DebugEchoArsenalPotionRolesTest {
 		Assertions.assertThat(jsonStrings(other)).contains("WandOfMagicMissile");
 		Assertions.assertThat(jsonStrings(drink)).doesNotContain("PotionOfLiquidFlame");
 		Assertions.assertThat(jsonStrings(throwItems)).doesNotContain("PotionOfHealing");
+	}
+
+	@Test
+	@DisplayName("cycle policy puts bombs, missiles, and throwable stones on THROW")
+	void cyclePolicyPutsNonPotionThrowablesOnThrowRole() {
+		List<Item> items = new ArrayList<>();
+		items.add(new Bomb());
+		items.add(new ThrowingStone());
+		items.add(new StoneOfBlast());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify());
+
+		JSONObject caps = DebugEchoArsenal.cyclePolicy(items).root().getJSONObject("capabilities");
+		JSONArray throwItems = caps.getJSONObject(DebugEchoArsenal.ROLE_THROW).getJSONArray("items");
+		JSONArray other = caps.getJSONObject(DebugEchoArsenal.ROLE).getJSONArray("items");
+
+		Assertions.assertThat(jsonStrings(throwItems))
+				.containsExactlyInAnyOrder("Bomb", "ThrowingStone", "StoneOfBlast");
+		Assertions.assertThat(jsonStrings(other))
+				.containsExactlyInAnyOrder("WandOfMagicMissile", "ScrollOfIdentify");
+	}
+
+	@Test
+	@DisplayName("cycle policy THROW role has no AOE hazard so point throwables aim at the hero")
+	void cyclePolicyThrowRoleHasNoAoeHazard() {
+		List<Item> items = new ArrayList<>();
+		items.add(new ThrowingStone());
+		items.add(new PotionOfLiquidFlame());
+		items.add(new StoneOfBlast());
+
+		JSONObject throwCap = DebugEchoArsenal.cyclePolicy(items).root()
+				.getJSONObject("capabilities")
+				.getJSONObject(DebugEchoArsenal.ROLE_THROW);
+
+		Assertions.assertThat(throwCap.optString("hazard", "")).isEmpty();
 	}
 
 	private static List<String> jsonStrings(JSONArray arr) {

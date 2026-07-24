@@ -17,7 +17,7 @@ allprojects {
 
         // Versioning: 0.0.N = alpha, 0.1.N = beta, 1.0.N = first public release.
         // Keep appVersionName in sync with hero-echoes package.json when shipping online.
-        appVersionName = '0.0.3'
+        appVersionName = '0.0.4'
         // Match Shattered's versionCode for save-compat branches. Do not bump on our own
         // releases — only raise this when upstream Shattered Pixel increases theirs.
         appVersionCode = 896
@@ -46,17 +46,68 @@ allprojects {
 //   ./gradlew prepareRelease
 // Optional Windows/macOS/Linux portable app (slow; downloads a JDK):
 //   ./gradlew prepareRelease -PwithJpackage
+// Unsigned iOS IPA is always included when :ios is available (macOS + Xcode).
 // End-to-end tag + GitHub Release (Windows):
 //   .\scripts\release.ps1
 //   .\scripts\release.ps1 -WithJpackage
+//
+// Release builds always upload Sentry source context (+ Android ProGuard maps).
+// SENTRY_AUTH_TOKEN is required (env or root .env) — not optional.
+
+def resolveSentryAuthToken = {
+    def token = System.getenv('SENTRY_AUTH_TOKEN')
+    if (token != null && !token.trim().isEmpty()) {
+        return token.trim()
+    }
+    def envFile = rootProject.file('.env')
+    if (envFile.isFile()) {
+        def found = null
+        envFile.eachLine('UTF-8') { line ->
+            def trimmed = line.trim()
+            if (trimmed.startsWith('SENTRY_AUTH_TOKEN=')) {
+                found = trimmed.substring('SENTRY_AUTH_TOKEN='.length()).trim()
+                if ((found.startsWith('"') && found.endsWith('"'))
+                        || (found.startsWith("'") && found.endsWith("'"))) {
+                    found = found.substring(1, found.length() - 1)
+                }
+            }
+        }
+        if (found != null && !found.trim().isEmpty()) {
+            return found.trim()
+        }
+    }
+    return null
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def releaseNeedsSentry = graph.allTasks.any { task ->
+        def path = task.path
+        path == ':prepareRelease' ||
+                path == ':android:assembleRelease' ||
+                path == ':desktop:release' ||
+                path == ':ios:createIPA' ||
+                task.name.startsWith('sentryUpload')
+    }
+    if (releaseNeedsSentry) {
+        def token = resolveSentryAuthToken()
+        if (token == null) {
+            throw new GradleException(
+                    'Release builds require SENTRY_AUTH_TOKEN (env or root .env) so Sentry source context uploads. '
+                            + 'Create a token at https://sentry.io/settings/dungeonboss/auth-tokens/')
+        }
+        logger.lifecycle('Sentry: SENTRY_AUTH_TOKEN present — source uploads required for this release build.')
+    }
+}
+
 gradle.projectsEvaluated {
     def withJpackage = project.hasProperty('withJpackage')
     def androidProject = findProject(':android')
     def desktopProject = findProject(':desktop')
+    def iosProject = findProject(':ios')
 
     tasks.register('prepareRelease') {
         group = 'distribution'
-        description = 'Build release APK + desktop JAR (and optional jpackage) into dist/<version>/'
+        description = 'Build release APK + desktop JAR + unsigned IPA (macOS) into dist/<version>/'
 
         dependsOn ':desktop:release'
         if (androidProject != null) {
@@ -64,6 +115,9 @@ gradle.projectsEvaluated {
         }
         if (withJpackage) {
             dependsOn ':desktop:jpackageImage'
+        }
+        if (iosProject != null) {
+            dependsOn ':ios:createIPA'
         }
 
         doFirst {
@@ -75,6 +129,10 @@ gradle.projectsEvaluated {
             if (!keystoreProps.exists()) {
                 throw new GradleException(
                         'Missing android/keystore.properties — copy keystore.properties.example and add the release keystore (see docs/release/android-signing.md).')
+            }
+            if (iosProject == null) {
+                logger.lifecycle(
+                        'prepareRelease: :ios not available on this OS - unsigned IPA will be fetched by scripts/release.ps1 via GitHub Actions.')
             }
         }
 
@@ -118,6 +176,18 @@ gradle.projectsEvaluated {
                 ant.zip(destfile: new File(outDir, zipName)) {
                     fileset(dir: jpackageDir)
                 }
+            }
+
+            if (iosProject != null) {
+                def iosBuildDir = iosProject.file('build')
+                def ipa = fileTree(iosBuildDir) {
+                    include '**/*.ipa'
+                }.files.find { true }
+                if (ipa == null || !ipa.exists()) {
+                    throw new GradleException("No IPA found under ${iosBuildDir}")
+                }
+                def ipaDest = new File(outDir, "iatdb-${versionName}-ios-unsigned.ipa")
+                copy { from ipa; into outDir; rename { ipaDest.name } }
             }
 
             def manifest = new File(outDir, 'SHA256SUMS.txt')

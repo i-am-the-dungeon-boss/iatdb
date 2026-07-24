@@ -28,11 +28,11 @@ import java.util.List;
 /**
  * Debug helper: fill an echo kit with potions, scrolls, wands, and throwables,
  * then install a policy that spends them one per turn via FIRST_LEGAL.
- * Potions are split into drink vs throw roles by type.
+ * Potions split drink vs throw; bombs / missiles / throwable stones join THROW.
  */
 public final class DebugEchoArsenal {
 
-	/** Non-potion arsenal (scrolls / wands / stones / missiles / bombs). */
+	/** Non-throw arsenal (scrolls / wands / inventory stones). */
 	public static final String ROLE = "ARSENAL";
 	public static final String ROLE_DRINK = "DRINK";
 	public static final String ROLE_THROW = "THROW";
@@ -108,6 +108,8 @@ public final class DebugEchoArsenal {
 				} else if (isDrinkPotion((Potion) item)) {
 					drinkIds.put(id);
 				}
+			} else if (isThrowable(item)) {
+				throwIds.put(id);
 			} else {
 				otherIds.put(id);
 			}
@@ -120,10 +122,12 @@ public final class DebugEchoArsenal {
 					.put("items", drinkIds));
 		}
 		if (throwIds.length() > 0) {
+			// No AOE hazard: point throwables (stones, hammers, darts) must aim at
+			// the hero. A role-wide hazard makes EchoTargetPicker pick a neighbour
+			// cell (often SW of the hero) and miss.
 			caps.put(ROLE_THROW, new JSONObject()
 					.put("pick", "FIRST_LEGAL")
-					.put("items", throwIds)
-					.put("hazard", "aoe"));
+					.put("items", throwIds));
 		}
 		if (otherIds.length() > 0) {
 			caps.put(ROLE, new JSONObject()
@@ -168,9 +172,20 @@ public final class DebugEchoArsenal {
 		return item instanceof Scroll
 				|| item instanceof Wand
 				|| item instanceof InventoryStone
-				|| item instanceof Runestone
-				|| item instanceof MissileWeapon
-				|| item instanceof Bomb;
+				|| isThrowable(item);
+	}
+
+	/**
+	 * Non-potion items the executor throws at a cell: missiles, bombs, and
+	 * throwable runestones (not inventory stones).
+	 */
+	static boolean isThrowable(Item item) {
+		if (item == null) {
+			return false;
+		}
+		return item instanceof MissileWeapon
+				|| item instanceof Bomb
+				|| (item instanceof Runestone && !(item instanceof InventoryStone));
 	}
 
 	/** Gas / shatter / brew potions — thrown at the enemy. */

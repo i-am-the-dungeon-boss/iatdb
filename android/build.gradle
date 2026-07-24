@@ -191,16 +191,15 @@ android {
 
 configurations { natives }
 
-def sentryAuthToken = System.getenv('SENTRY_AUTH_TOKEN')
-def sentryCanUpload = sentryAuthToken != null && !sentryAuthToken.trim().isEmpty()
+ext.sentryProjectName = sentryProject
+apply from: rootProject.file('gradle/sentry-source-context.gradle')
 
 sentry {
-    // Uploads need SENTRY_AUTH_TOKEN; skip when absent so release builds still succeed.
-    includeSourceContext = sentryCanUpload
-    autoUploadProguardMapping = sentryCanUpload
+    // Prefer Android BuildConfig / .env org+project (same as DSN wiring).
     org = sentryOrg
     projectName = sentryProject
-    authToken = sentryAuthToken
+    // ProGuard mapping upload is Android-only (in addition to shared source context).
+    autoUploadProguardMapping = sentryCanUpload
     autoInstallation {
         enabled = true
     }

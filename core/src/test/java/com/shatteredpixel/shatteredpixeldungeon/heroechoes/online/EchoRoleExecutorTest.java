@@ -675,6 +675,34 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
+	@DisplayName("unknown hazard aoe does not offset point throwable aim off the hero")
+	void unknownAoeHazardAimsPointThrowableAtHero() {
+		Hero hero = EchoTestSupport.warriorHero();
+		ThrowingKnife knife = new ThrowingKnife();
+		knife.quantity(1);
+		knife.collect(hero.belongings.backpack);
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("THROW", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("ThrowingKnife"))
+						.put("hazard", "aoe")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		EchoTestSupport.attachInstantProjectileParent(boss);
+		boss.getEchoHero().invisible = 1;
+		int hpBefore = hero.HP;
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("THROW")).build(),
+				new EchoPolicyChoice("THROW", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
+	}
+
+	@Test
 	@DisplayName("SCROLL reads ScrollOfRecharging onto the boss body")
 	void scrollRechargingBuffsBossViaExecutor() {
 		Hero hero = EchoTestSupport.warriorHero();

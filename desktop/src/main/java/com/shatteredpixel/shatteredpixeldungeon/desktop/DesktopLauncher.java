@@ -35,6 +35,7 @@ import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
@@ -50,8 +51,6 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
-
-import io.sentry.Sentry;
 
 public class DesktopLauncher {
 
@@ -70,13 +69,17 @@ public class DesktopLauncher {
 		if (earlyVersion == null) {
 			earlyVersion = System.getProperty("Specification-Version");
 		}
-		boolean indev = earlyVersion != null && earlyVersion.contains("INDEV");
-		if (!indev) {
-			Sentry.init(options -> {
-				options.setEnableExternalConfiguration(true);
-				options.setTag("platform", "desktop");
-			});
+		int earlyVersionCode;
+		try {
+			earlyVersionCode = Integer.parseInt(DesktopLauncher.class.getPackage().getImplementationVersion());
+		} catch (NumberFormatException e) {
+			try {
+				earlyVersionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
+			} catch (NumberFormatException e2) {
+				earlyVersionCode = 0;
+			}
 		}
+		SentryCrashReporting.initForRelease("desktop", earlyVersion, earlyVersionCode);
 
 		// detection for FreeBSD (which is equivalent to linux for us)
 		// TODO might want to merge request this to libGDX
@@ -99,7 +102,8 @@ public class DesktopLauncher {
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread thread, Throwable throwable) {
-				Game.reportException(throwable);
+				// reportAndFlush (not Game.reportException) — avoids a duplicate Sentry event
+				SentryCrashReporting.reportAndFlush(throwable);
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				throwable.printStackTrace(pw);
@@ -157,13 +161,6 @@ public class DesktopLauncher {
 			Game.versionCode = Integer.parseInt(DesktopLauncher.class.getPackage().getImplementationVersion());
 		} catch (NumberFormatException e) {
 			Game.versionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
-		}
-
-		if (Game.version != null && !Game.version.contains("INDEV")) {
-			Sentry.configureScope(scope -> {
-				scope.setTag("app.version", Game.version);
-				scope.setTag("app.version_code", String.valueOf(Game.versionCode));
-			});
 		}
 
 		if (UpdateImpl.supportsUpdates()) {

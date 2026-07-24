@@ -21,6 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ExtendWith(GdxTestExtension.class)
@@ -40,8 +41,11 @@ class DebugEchoArsenalTest {
 		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof PotionOfHealing)).isTrue();
 		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof ScrollOfIdentify)).isTrue();
 		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof Wand)).isTrue();
-		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof Runestone || i instanceof MissileWeapon
-				|| i instanceof Bomb)).isTrue();
+		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof Bomb)).isTrue();
+		Assertions.assertThat(usable.stream().anyMatch(i -> i instanceof Runestone || i instanceof MissileWeapon))
+				.isTrue();
+		Assertions.assertThat(usable.stream().filter(i -> i instanceof Bomb).count())
+				.isGreaterThanOrEqualTo(11); // Catalog.BOMBS size
 		Assertions.assertThat(usable.stream().noneMatch(i -> i.getClass().getSimpleName().equals("PotionOfStrength")))
 				.isTrue();
 		for (Item item : usable) {
@@ -127,6 +131,31 @@ class DebugEchoArsenalTest {
 				.getJSONObject("selection").getJSONArray("default_roles").getString(0))
 				.isEqualTo(DebugEchoArsenal.ROLE_DRINK);
 		Assertions.assertThat(boss.state).isSameAs(boss.HUNTING);
+	}
+
+	@Test
+	@DisplayName("grantAndCycle gives bombs and lists them on the throw role")
+	void grantAndCycleGivesBombsOnThrowRole() {
+		DebugSettings.setDebugBuildOverride(true);
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoPolicy.fallback(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		DebugEchoArsenal.grantAndCycle(boss);
+
+		Assertions.assertThat(EchoInventory.count(boss.getEchoHero(), "Bomb")).isEqualTo(1);
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(Bomb.class)).isNotNull();
+
+		org.json.JSONArray throwItems = boss.getEchoPolicy().root()
+				.getJSONObject("capabilities")
+				.getJSONObject(DebugEchoArsenal.ROLE_THROW)
+				.getJSONArray("items");
+		List<String> ids = new ArrayList<>();
+		for (int i = 0; i < throwItems.length(); i++) {
+			ids.add(throwItems.getString(i));
+		}
+		Assertions.assertThat(ids).contains("Bomb", "Firebomb", "ArcaneBomb");
+		Assertions.assertThat(ids).doesNotContain("WandOfMagicMissile", "ScrollOfIdentify");
 	}
 
 	@Test

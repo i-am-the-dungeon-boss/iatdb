@@ -1,0 +1,88 @@
+name: iOS unsigned IPA
+
+# Produces an unsigned IPA for archive/CI checks. It will not install on devices
+# without resigning (Ad Hoc / TestFlight / App Store).
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  ios-unsigned:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Require Sentry auth token
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          if [[ -z "${SENTRY_AUTH_TOKEN}" ]]; then
+            echo "Repository secret SENTRY_AUTH_TOKEN is required so iOS releases upload source context." >&2
+            echo "Create a token at https://sentry.io/settings/dungeonboss/auth-tokens/ and add it as a GitHub Actions secret." >&2
+            exit 1
+          fi
+
+      - name: Build unsigned IPA
+        env:
+          # Upload JVM source context to Sentry project "ios" on every release IPA.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: dungeonboss
+        run: ./gradlew :ios:createIPA --no-daemon
+
+      - name: Stage artifact name
+        id: ipa
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n "s/.*appVersionName = '\\([^']*\\)'.*/\\1/p" build.gradle | head -n1)"
+          IPA="$(find ios/build -name '*.ipa' -type f | head -n1)"
+          if [[ -z "${IPA}" ]]; then
+            echo "No IPA under ios/build" >&2
+            exit 1
+          fi
+          DEST="iatdb-${VERSION}-ios-unsigned.ipa"
+          mkdir -p dist
+          cp "${IPA}" "dist/${DEST}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "path=dist/${DEST}" >> "${GITHUB_OUTPUT}"
+          ls -la "dist/${DEST}"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iatdb-${{ steps.ipa.outputs.version }}-ios-unsigned
+          path: ${{ steps.ipa.outputs.path }}
+          if-no-files-found: error
+
+      # Tag pushes: attach IPA to the GitHub Release (release.ps1 may create the release
+      # shortly after the tag; retry until it exists). workflow_dispatch keeps Actions artifact only.
+      - name: Attach IPA to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IPA_PATH: ${{ steps.ipa.outputs.path }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          for i in $(seq 1 36); do
+            if gh release view "${TAG}" >/dev/null 2>&1; then
+              gh release upload "${TAG}" "${IPA_PATH}" --clobber
+              echo "Uploaded ${IPA_PATH} to release ${TAG}"
+              exit 0
+            fi
+            echo "Release ${TAG} not ready yet (attempt ${i}/36); waiting..."
+            sleep 10
+          done
+          echo "Timed out waiting for GitHub Release ${TAG} so the unsigned IPA could be uploaded." >&2
+          exit 1

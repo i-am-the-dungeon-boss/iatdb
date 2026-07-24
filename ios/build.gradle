@@ -1,56 +1,77 @@
 buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "com.mobidevelop.robovm:robovm-gradle-plugin:$robovmVersion"
-    }
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath "com.mobidevelop.robovm:robovm-gradle-plugin:$robovmVersion"
+	}
 }
 
 apply plugin: "java"
 apply plugin: "robovm"
+// Same classpath as Android (root buildscript: sentry-android-gradle-plugin).
+apply plugin: 'io.sentry.jvm.gradle'
+
+ext.sentryProjectName = 'ios'
+apply from: rootProject.file('gradle/sentry-source-context.gradle')
+
+sentry {
+	// Core already depends on io.sentry:sentry — do not auto-add another copy.
+	autoInstallation {
+		enabled = false
+	}
+}
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
 
 task updateRoboVMProps(){
-    def props = new Properties()
-    
-    props.setProperty ('appName', appName)
-    //append .apple because com.shatteredpixel.shatteredpixeldungeon was taken =(
-    props.setProperty ('appApplePackageName', appPackageName + ".apple")
+	def props = new Properties()
+	
+	props.setProperty ('appName', appName)
+	//append .apple because com.shatteredpixel.shatteredpixeldungeon was taken =(
+	props.setProperty ('appApplePackageName', appPackageName + ".apple")
 
-    props.setProperty ('appVersionCode', appVersionCode.toString())
-    props.setProperty ('appVersionName', appVersionName)
-    //parse out just #.#.# from version name, this is an apple requirement
-    props.setProperty ('appShortVersionName', (appVersionName =~ /\d+\.\d+\.\d+/)[0])
+	props.setProperty ('appVersionCode', appVersionCode.toString())
+	props.setProperty ('appVersionName', appVersionName)
+	//parse out just #.#.# from version name, this is an apple requirement
+	props.setProperty ('appShortVersionName', (appVersionName =~ /\d+\.\d+\.\d+/)[0])
 
-    props.setProperty ('appMainclass', appPackageName + ".ios.IOSLauncher")
-    props.setProperty ('appExecutable', "IOSLauncher")
+	// Keep the real Java package; appPackageName is the store/bundle id only.
+	props.setProperty ('appMainclass', 'com.shatteredpixel.shatteredpixeldungeon.ios.IOSLauncher')
+	props.setProperty ('appExecutable', "IOSLauncher")
 
-    file("robovm.properties").withWriter { props.store(it, "Dynamically generated, do not commit to version control!") }
+	file("robovm.properties").withWriter { props.store(it, "Dynamically generated, do not commit to version control!") }
 }
 
 build.dependsOn updateRoboVMProps
+// Upload JVM source context to Sentry project "ios" whenever an IPA is built for release/CI.
+createIPA.dependsOn 'sentryUploadSourceBundleJava'
 
 launchIPhoneSimulator.dependsOn build
 launchIPadSimulator.dependsOn build
 launchIOSDevice.dependsOn build
 createIPA.dependsOn build
 
-dependencies {
-    implementation project(':core')
-    implementation project(':services:updates:debugUpdates')
-    implementation project(':services:news:shatteredNews')
+// Release / CI IPAs are unsigned (will not install without resigning).
+// Pass -PiosSign to require a local signing identity + provisioning profile.
+robovm {
+	iosSkipSigning = !rootProject.hasProperty('iosSign')
+}
 
-    implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-    implementation "com.mobidevelop.robovm:robovm-rt:$robovmVersion"
-    implementation "com.mobidevelop.robovm:robovm-cocoatouch:$robovmVersion"
-    //FIXME using a prior version of metalangle backend as 1.13.5+ crashes on A7 and A8 devices
-    // Yes this is dangerous, the old backend seems to only work with libGDX 1.14.0 incidentally
-    // Ideally the next release of libGDX will fix this and this can simply use $gdxVersion again
-    implementation "com.badlogicgames.gdx:gdx-backend-robovm-metalangle:1.13.1"
-    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
-    implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-ios"
-    implementation "com.badlogicgames.gdx-controllers:gdx-controllers-ios:$gdxControllersVersion"
+dependencies {
+	implementation project(':core')
+	implementation project(':services:updates:echoUpdates')
+	implementation project(':services:news:debugNews')
+
+	implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+	implementation "com.mobidevelop.robovm:robovm-rt:$robovmVersion"
+	implementation "com.mobidevelop.robovm:robovm-cocoatouch:$robovmVersion"
+	//FIXME using a prior version of metalangle backend as 1.13.5+ crashes on A7 and A8 devices
+	// Yes this is dangerous, the old backend seems to only work with libGDX 1.14.0 incidentally
+	// Ideally the next release of libGDX will fix this and this can simply use $gdxVersion again
+	implementation "com.badlogicgames.gdx:gdx-backend-robovm-metalangle:1.13.1"
+	implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
+	implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-ios"
+	implementation "com.badlogicgames.gdx-controllers:gdx-controllers-ios:$gdxControllersVersion"
 }

@@ -110,7 +110,7 @@ public class Item implements Bundlable {
 		@Override
 		public int compare(Item lhs, Item rhs) {
 			return Generator.Category.order(lhs) - Generator.Category.order(rhs);
-		// do nothing by default
+			// do nothing by default
 		}
 	};
 

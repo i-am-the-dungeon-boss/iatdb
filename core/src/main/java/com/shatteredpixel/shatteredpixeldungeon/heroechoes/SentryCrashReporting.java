@@ -21,12 +21,21 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.watabou.noosa.Game;
 import io.sentry.Sentry;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
- * Thin hook from {@link com.watabou.noosa.Game#reportException} to Sentry.
- * Capture without {@link Sentry#init} is a no-op (e.g. iOS until wired).
+ * Thin hook from {@link com.watabou.noosa.Game#reportException} to Sentry, plus
+ * shared launcher init. Capture without {@link Sentry#init} is a no-op.
  * INDEV / debug builds never report.
  */
 public final class SentryCrashReporting {
+
+	public static final String PROPERTIES_RESOURCE = "sentry.properties";
+
+	/** Flush window for crash-time capture before process exit. */
+	public static final long CRASH_FLUSH_TIMEOUT_MS = 2000L;
 
 	@FunctionalInterface
 	public interface Reporter {
@@ -53,6 +62,67 @@ public final class SentryCrashReporting {
 			return;
 		}
 		reporter.report(throwable);
+	}
+
+	/**
+	 * Capture then block briefly so the transport can ship before a crash exit.
+	 * Used from uncaught-exception handlers.
+	 */
+	public static void reportAndFlush(Throwable throwable) {
+		report(throwable);
+		if (throwable == null || isDevBuild()) {
+			return;
+		}
+		Sentry.flush(CRASH_FLUSH_TIMEOUT_MS);
+	}
+
+	/**
+	 * Init Sentry for a release launcher. Sets DSN from classpath
+	 * {@code sentry.properties} explicitly (RoboVM cannot rely on cwd discovery).
+	 * No-op for INDEV versions or when DSN is missing.
+	 */
+	public static void initForRelease(String platform, String version, int versionCode) {
+		String dsn = readClasspathDsn();
+		if (!shouldInit(version, dsn)) {
+			return;
+		}
+		Sentry.init(options -> {
+			options.setDsn(dsn.trim());
+			options.setEnableExternalConfiguration(true);
+			options.setTag("platform", platform);
+			options.setSendDefaultPii(true);
+			options.getLogs().setEnabled(true);
+			options.setTracesSampleRate(1.0);
+			options.setEnableUncaughtExceptionHandler(true);
+		});
+		Sentry.configureScope(scope -> {
+			if (version != null) {
+				scope.setTag("app.version", version);
+			}
+			scope.setTag("app.version_code", String.valueOf(versionCode));
+		});
+	}
+
+	static boolean shouldInit(String version, String dsn) {
+		if (version != null && version.contains("INDEV")) {
+			return false;
+		}
+		return dsn != null && !dsn.trim().isEmpty();
+	}
+
+	static String readClasspathDsn() {
+		try (InputStream in = SentryCrashReporting.class.getClassLoader()
+				.getResourceAsStream(PROPERTIES_RESOURCE)) {
+			if (in == null) {
+				return "";
+			}
+			Properties props = new Properties();
+			props.load(in);
+			String dsn = props.getProperty("dsn");
+			return dsn != null ? dsn.trim() : "";
+		} catch (IOException e) {
+			return "";
+		}
 	}
 
 	/**

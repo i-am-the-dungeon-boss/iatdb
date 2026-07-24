@@ -74,8 +74,7 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 
-		boolean aoe = cap != null && cap.has("hazard") && !cap.optString("hazard").isEmpty();
-		int cell = EchoTargetPicker.pick(boss, status, itemId, aoe);
+		int cell = EchoTargetPicker.pick(boss, status, itemId, isSplashAimHazard(cap));
 
 		if (item instanceof Potion) {
 			boolean ok = executePotion(boss, (Potion) item, choice.useRole, cell);
@@ -223,6 +222,19 @@ public final class EchoRoleExecutor {
 		return "THROW".equals(role)
 				|| "THROW_POTION".equals(role)
 				|| "GAS".equals(role);
+	}
+
+	/**
+	 * Only known splash hazards use neighbour-of-hero aim. Unknown strings
+	 * (e.g. legacy debug {@code "aoe"}) must not offset point throwables.
+	 */
+	private static boolean isSplashAimHazard(JSONObject cap) {
+		if (cap == null) {
+			return false;
+		}
+		String hazard = cap.optString("hazard", "");
+		return EchoPolicyHazards.FIRE_AOE.equals(hazard)
+				|| EchoPolicyHazards.PAYOFF_AOE.equals(hazard);
 	}
 
 	/**
