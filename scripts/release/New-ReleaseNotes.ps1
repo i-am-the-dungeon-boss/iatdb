@@ -31,7 +31,7 @@ Unofficial Shattered Pixel Dungeon fork / mod (GPLv3). Not affiliated with Shatt
 ### Install
 - **Android:** download the APK and sideload (enable install from unknown sources).
 $desktopInstall
-- **iOS:** unsigned IPA is included for archive/CI only - it will **not** install on devices without resigning.
+- **iOS:** install the unsigned IPA with Sideloadly (resigns with your free or paid Apple ID). Follow its guide: https://sideloadly.io/ (Download → Load IPA → Apple ID → Sideload).
 
 ### Artifacts
 $assetLines
