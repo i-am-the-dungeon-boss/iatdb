@@ -2,7 +2,7 @@
 
 ## End-to-end (recommended)
 
-One command builds binaries, ensures an unsigned iOS IPA is present, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] with APK, JAR, unsigned IPA, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`).
+One command runs all unit tests (`gradlew test`), builds binaries, ensures an unsigned iOS IPA is present, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] with APK, JAR, unsigned IPA, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`). Failed tests abort the release before packaging.
 
 ```powershell
 # APK + desktop JAR + unsigned IPA
@@ -12,15 +12,16 @@ One command builds binaries, ensures an unsigned iOS IPA is present, creates an 
 .\scripts\release.ps1 -WithJpackage
 ```
 
-| Flag              | Meaning                                           |
-| ----------------- | ------------------------------------------------- |
-| `-WithJpackage`   | Passes `-PwithJpackage` to Gradle                 |
-| `-SkipBuild`      | Reuse existing `dist/<version>/` (publish only)   |
-| `-DryRun`         | Print steps; no tag push / no `gh release create` |
-| `-Draft`          | Create a draft GitHub Release                     |
-| `-AllowDirty`     | Allow uncommitted local changes                   |
-| `-NotesFile path` | Use custom release notes instead of the template  |
-| `-Tag name`       | Override tag (default `v` + `appVersionName`)     |
+| Flag              | Meaning                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| `-WithJpackage`   | Passes `-PwithJpackage` to Gradle                                |
+| `-SkipBuild`      | Reuse existing `dist/<version>/` (publish only; tests still run) |
+| `-SkipTests`      | Skip the pre-release `gradlew test` gate (not recommended)       |
+| `-DryRun`         | Print steps; no tests/build/tag/`gh release create`              |
+| `-Draft`          | Create a draft GitHub Release                                    |
+| `-AllowDirty`     | Allow uncommitted local changes                                  |
+| `-NotesFile path` | Use custom release notes instead of the template                 |
+| `-Tag name`       | Override tag (default `v` + `appVersionName`)                    |
 
 Requires: `git`, authenticated `gh`, Android SDK + release keystore (same as below). Push your release commit before running so the iOS workflow can build it when you are not on macOS.
 

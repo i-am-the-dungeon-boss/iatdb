@@ -4,11 +4,11 @@
   End-to-end community alpha release: build artifacts, tag, publish GitHub Release.
 
 .DESCRIPTION
-  Reads appVersionName / appVersionCode from the root build.gradle, runs
-  prepareRelease (optionally with -PwithJpackage), ensures an unsigned iOS IPA
-  is present (built on macOS, or fetched via GitHub Actions on other OSes),
-  then creates an annotated git tag and a GitHub Release with APK, JAR, IPA,
-  SHA256SUMS, and generated notes.
+  Reads appVersionName / appVersionCode from the root build.gradle, runs all
+  unit tests (`gradlew test`), then prepareRelease (optionally with
+  -PwithJpackage), ensures an unsigned iOS IPA is present (built on macOS, or
+  fetched via GitHub Actions on other OSes), then creates an annotated git tag
+  and a GitHub Release with APK, JAR, IPA, SHA256SUMS, and generated notes.
 
 .EXAMPLE
   .\scripts\release.ps1
@@ -24,8 +24,11 @@ param(
     # Also build the native desktop zip (slow; downloads a JDK).
     [switch] $WithJpackage,
 
-    # Reuse existing dist/<version>/ artifacts; skip Gradle.
+    # Reuse existing dist/<version>/ artifacts; skip prepareRelease (tests still run).
     [switch] $SkipBuild,
+
+    # Skip the pre-release `gradlew test` gate (not recommended).
+    [switch] $SkipTests,
 
     # Print actions without tagging, pushing, or calling gh release create.
     [switch] $DryRun,
@@ -131,6 +134,103 @@ environment or root .env (never commit it):
 '@
     }
     Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
+}
+
+function Test-JdkHasJlink {
+    param([string] $JavaHome)
+    if ([string]::IsNullOrWhiteSpace($JavaHome)) { return $false }
+    if (-not (Test-Path -LiteralPath $JavaHome)) { return $false }
+    return (Test-Path -LiteralPath (Join-Path $JavaHome 'bin\jlink.exe')) -or
+        (Test-Path -LiteralPath (Join-Path $JavaHome 'bin/jlink'))
+}
+
+function Resolve-ReleaseJavaHome {
+    # Android JdkImageTransform needs a real JDK with jlink. The Cursor/VS Code
+    # Red Hat Java extension embeds a stripped Temurin JRE (no jlink) that Gradle
+    # may otherwise pick as the Daemon JVM.
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    foreach ($key in @('JAVA_HOME', 'JDK_HOME')) {
+        $value = [Environment]::GetEnvironmentVariable($key, 'Process')
+        if (-not [string]::IsNullOrWhiteSpace($value)) { $candidates.Add($value.Trim()) }
+    }
+    $userGradleHome = Join-Path $env:USERPROFILE '.gradle\gradle.properties'
+    if (Test-Path -LiteralPath $userGradleHome) {
+        $text = Get-Content -LiteralPath $userGradleHome -Raw
+        if ($text -match 'org\.gradle\.java\.home\s*=\s*(\S+)') {
+            $candidates.Add(($Matches[1] -replace '/', '\').Trim())
+        }
+    }
+    $candidates.Add((Join-Path $env:USERPROFILE '.gradle\jdks\eclipse_adoptium-21-amd64-windows.2'))
+    $candidates.Add('C:\Program Files\Android\Android Studio\jbr')
+    $candidates.Add('C:\Program Files\Java\jdk-17')
+    $candidates.Add('C:\Program Files\Eclipse Adoptium\jdk-21.0.7+6-hotspot')
+
+    $seen = @{}
+    foreach ($raw in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($raw)) { continue }
+        $home = $raw.Trim().Trim('"').Trim("'")
+        $key = $home.ToLowerInvariant()
+        if ($seen.ContainsKey($key)) { continue }
+        $seen[$key] = $true
+        # Never accept the Red Hat / JustJ embedded JRE from the Java extension.
+        if ($home -match '[\\/]\.cursor[\\/]extensions[\\/]redhat\.java') { continue }
+        if ($home -match '[\\/]org\.eclipse\.justj') { continue }
+        if (Test-JdkHasJlink $home) {
+            return (Resolve-Path -LiteralPath $home).Path
+        }
+    }
+
+    throw @'
+No JDK with jlink.exe found for release builds.
+
+Android compileRelease needs jlink (JdkImageTransform). The Cursor Red Hat Java
+extension JRE is not a full JDK — do not use it for Gradle.
+
+Install Temurin 21 (or Android Studio JBR), set JAVA_HOME to that JDK, then retry.
+'@
+}
+
+function Assert-ReleaseJavaHome {
+    $javaHome = Resolve-ReleaseJavaHome
+    $env:JAVA_HOME = $javaHome
+    # Daemon JVM criteria (gradle/gradle-daemon-jvm.properties) overrides
+    # org.gradle.java.home and can still select the IDE's stripped JRE.
+    $env:ORG_GRADLE_JAVA_HOME = $javaHome
+    Write-Host ">> JAVA_HOME=$javaHome (jlink OK)"
+    return $javaHome
+}
+
+function Suspend-DaemonJvmCriteria {
+    param([string] $Root)
+    $path = Join-Path $Root 'gradle\gradle-daemon-jvm.properties'
+    if (-not (Test-Path -LiteralPath $path)) {
+        return $null
+    }
+    $backup = "$path.release-bak"
+    Move-Item -LiteralPath $path -Destination $backup -Force
+    Write-Host '>> Suspended gradle-daemon-jvm.properties (use JAVA_HOME / org.gradle.java.home)'
+    return $backup
+}
+
+function Restore-DaemonJvmCriteria {
+    param([string] $BackupPath)
+    if ([string]::IsNullOrWhiteSpace($BackupPath)) { return }
+    if (-not (Test-Path -LiteralPath $BackupPath)) { return }
+    $original = $BackupPath -replace '\.release-bak$', ''
+    Move-Item -LiteralPath $BackupPath -Destination $original -Force
+    Write-Host '>> Restored gradle-daemon-jvm.properties'
+}
+
+function Invoke-ReleaseGradle {
+    param(
+        [string] $Gradlew,
+        [string[]] $GradleArgs
+    )
+    Write-Host ">> $Gradlew $($GradleArgs -join ' ')"
+    & $Gradlew @GradleArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw ("Gradle {0} failed with exit code {1}" -f ($GradleArgs -join ' '), $LASTEXITCODE)
+    }
 }
 
 function Get-ProjectLinks {
@@ -341,6 +441,7 @@ Write-Host "  tag         = $tagName"
 Write-Host "  github      = $($projectLinks.GithubOwnerRepo)"
 Write-Host "  withJpackage= $WithJpackage"
 Write-Host "  skipBuild   = $SkipBuild"
+Write-Host "  skipTests   = $SkipTests"
 Write-Host "  dryRun      = $DryRun"
 Write-Host ""
 
@@ -354,22 +455,48 @@ $commitSha = (git rev-parse HEAD).Trim()
 
 Import-DotEnv (Join-Path $root '.env')
 Assert-SentryAuthToken
+Assert-ReleaseJavaHome | Out-Null
 
-if (-not $SkipBuild) {
-    $gradlew = Get-GradleWrapper $root
-    $gradleArgs = @('prepareRelease')
-    if ($WithJpackage) {
-        $gradleArgs += '-PwithJpackage'
+$gradlew = Get-GradleWrapper $root
+$daemonJvmBackup = $null
+
+try {
+    if (-not $DryRun -and (-not $SkipTests -or -not $SkipBuild)) {
+        $daemonJvmBackup = Suspend-DaemonJvmCriteria $root
+        Write-Host ">> $gradlew --stop"
+        & $gradlew --stop | Out-Host
     }
-    Write-Host ">> $gradlew $($gradleArgs -join ' ')"
-    if (-not $DryRun) {
-        & $gradlew @gradleArgs
-        if ($LASTEXITCODE -ne 0) {
-            throw "prepareRelease failed with exit code $LASTEXITCODE"
+
+    if (-not $SkipTests) {
+        if ($DryRun) {
+            Write-Host ">> $gradlew test"
+        } else {
+            try {
+                Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs @('test')
+            } catch {
+                throw ("Unit tests failed — release aborted. {0}" -f $_.Exception.Message)
+            }
+            Write-Host '>> All unit tests passed.'
         }
+    } else {
+        Write-Host '>> Skipping tests (-SkipTests)'
     }
-} else {
-    Write-Host ">> Skipping build (-SkipBuild)"
+
+    if (-not $SkipBuild) {
+        $gradleArgs = @('prepareRelease')
+        if ($WithJpackage) {
+            $gradleArgs += '-PwithJpackage'
+        }
+        if ($DryRun) {
+            Write-Host ">> $gradlew $($gradleArgs -join ' ')"
+        } else {
+            Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs $gradleArgs
+        }
+    } else {
+        Write-Host '>> Skipping build (-SkipBuild)'
+    }
+} finally {
+    Restore-DaemonJvmCriteria $daemonJvmBackup
 }
 
 if (-not (Test-Path -LiteralPath $distDir)) {
