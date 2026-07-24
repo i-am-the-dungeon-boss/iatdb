@@ -7,8 +7,11 @@
   Reads appVersionName / appVersionCode from the root build.gradle, runs all
   unit tests (`gradlew test`), then prepareRelease (optionally with
   -PwithJpackage), ensures an unsigned iOS IPA is present (built on macOS, or
-  fetched via GitHub Actions on other OSes), then creates an annotated git tag
-  and a GitHub Release with APK, JAR, IPA, SHA256SUMS, and generated notes.
+  fetched via GitHub Actions on other OSes). On Windows/Linux, ios-unsigned.yml
+  is dispatched (or a same-commit run reused) before tests/prepareRelease so CI
+  overlaps the local build; the IPA is downloaded after dist/ is ready. Then
+  creates an annotated git tag and a GitHub Release with APK, JAR, IPA,
+  SHA256SUMS, and generated notes.
 
 .EXAMPLE
   .\scripts\release.ps1
@@ -173,8 +176,25 @@ if ($porcelain -and -not $AllowDirty) {
 $commitSha = (git rev-parse HEAD).Trim()
 
 $onWindows = ($env:OS -match 'Windows') -or $env:WinDir
+# prepareRelease only builds the IPA when :ios is included (macOS; see settings.gradle).
+$onMacOs = $false
+if (-not $onWindows) {
+    if (Get-Variable -Name IsMacOS -Scope Global -ErrorAction SilentlyContinue) {
+        $onMacOs = [bool]$IsMacOS
+    } elseif (Get-Command uname -ErrorAction SilentlyContinue) {
+        $onMacOs = (uname) -match 'Darwin'
+    }
+}
 $gradlew = Join-Path $root $(if ($onWindows) { 'gradlew.bat' } else { 'gradlew' })
 if (-not (Test-Path -LiteralPath $gradlew)) { throw "gradlew not found at $gradlew" }
+
+# Overlap cold macOS CI with local tests + prepareRelease when IPA won't be built here.
+$ipaExpectedPath = Join-Path $distDir "iatdb-$versionName-ios-unsigned.ipa"
+$willBuildIpaLocally = $onMacOs -and -not $SkipBuild
+$iosRunId = $null
+if (-not $DryRun -and -not $willBuildIpaLocally -and -not (Test-Path -LiteralPath $ipaExpectedPath)) {
+    $iosRunId = Start-UnsignedIosIpaViaActions -CommitSha $commitSha
+}
 
 if ($SkipTests) {
     Write-Host '>> Skipping tests (-SkipTests)'
@@ -234,7 +254,11 @@ The IPA is a required GitHub Release asset. For -DryRun, place it in dist/ first
 or a prior ios-unsigned.yml artifact). Without -DryRun, release.ps1 fetches it via ios-unsigned.yml.
 "@
     }
-    Get-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -CommitSha $commitSha | Out-Null
+    if ($iosRunId) {
+        Complete-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -RunId $iosRunId | Out-Null
+    } else {
+        Get-UnsignedIosIpaViaActions -DistDir $distDir -VersionName $versionName -CommitSha $commitSha | Out-Null
+    }
     Update-Sha256Sums -DistDir $distDir -VersionName $versionName -VersionCode $versionCode
     $iosIpa = Get-Item -LiteralPath (Join-Path $distDir "iatdb-$versionName-ios-unsigned.ipa")
     $sums = Get-Item -LiteralPath (Join-Path $distDir 'SHA256SUMS.txt')

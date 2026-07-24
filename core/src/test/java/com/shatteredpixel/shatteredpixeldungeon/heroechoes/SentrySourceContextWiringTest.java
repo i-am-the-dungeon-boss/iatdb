@@ -122,6 +122,7 @@ class SentrySourceContextWiringTest {
 		String source = readSource("scripts/release.ps1");
 		String common = readSource("scripts/release/_common.ps1");
 
+		Assertions.assertThat(source).contains("Complete-UnsignedIosIpaViaActions");
 		Assertions.assertThat(source).contains("Get-UnsignedIosIpaViaActions");
 		Assertions.assertThat(source).doesNotContain("Get-Item -LiteralPath $ipaPath");
 		Assertions.assertThat(common).contains("Out-Host");

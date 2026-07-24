@@ -58,8 +58,10 @@ Example for `0.0.1`: `dist/0.0.1/`
 
 The unsigned IPA is a **required** GitHub Release asset (same as APK + JAR). On macOS,
 `prepareRelease` builds it locally. On Windows/Linux, Gradle omits it; [`scripts/release.ps1`](../../scripts/release.ps1)
-fetches it by manually dispatching [`.github/workflows/ios-unsigned.yml`](../../.github/workflows/ios-unsigned.yml)
-(`workflow_dispatch` only — not on tag pushes).
+starts [`.github/workflows/ios-unsigned.yml`](../../.github/workflows/ios-unsigned.yml) **before**
+local tests/`prepareRelease` (reuses a successful or in-progress run for the same commit when
+present), then downloads the artifact after `dist/` is ready (`workflow_dispatch` only — not on
+tag pushes).
 
 ### Optional: native desktop package (no Java install)
 
