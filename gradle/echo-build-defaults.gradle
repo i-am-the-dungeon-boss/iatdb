@@ -96,7 +96,15 @@ public final class EchoBuildConfig {
 	}
 }
 
-sourceSets.main.java.srcDir(generatedDir)
+// builtBy wires generateEchoBuildConfig into compileJava consumers; Sentry's
+// source-context tasks also scan main Java dirs and need an explicit dependsOn
+// for Gradle 9 implicit-dependency validation.
+sourceSets.main.java.srcDir(files(generatedDir).builtBy(tasks.named('generateEchoBuildConfig')))
 tasks.named('compileJava').configure {
 	dependsOn 'generateEchoBuildConfig'
+}
+tasks.configureEach { task ->
+	if (task.name.toLowerCase(Locale.ROOT).contains('sentry')) {
+		task.dependsOn('generateEchoBuildConfig')
+	}
 }
