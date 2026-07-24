@@ -124,6 +124,88 @@ function Get-ProjectLinks([string] $Root) {
     }
 }
 
+function Test-JdkHasJlink([string] $JavaHome) {
+    if ([string]::IsNullOrWhiteSpace($JavaHome)) { return $false }
+    if (-not (Test-Path -LiteralPath $JavaHome)) { return $false }
+    return (Test-Path -LiteralPath (Join-Path $JavaHome 'bin\jlink.exe')) -or
+        (Test-Path -LiteralPath (Join-Path $JavaHome 'bin/jlink'))
+}
+
+function Resolve-ReleaseJavaHome {
+    # Android JdkImageTransform needs a real JDK with jlink. The Cursor/VS Code
+    # Red Hat Java extension embeds a stripped Temurin JRE (no jlink) that Gradle
+    # may otherwise pick as the Daemon JVM.
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    foreach ($key in @('JAVA_HOME', 'JDK_HOME')) {
+        $value = [Environment]::GetEnvironmentVariable($key, 'Process')
+        if (-not [string]::IsNullOrWhiteSpace($value)) { $candidates.Add($value.Trim()) }
+    }
+    $userGradleHome = Join-Path $env:USERPROFILE '.gradle\gradle.properties'
+    if (Test-Path -LiteralPath $userGradleHome) {
+        $text = Get-Content -LiteralPath $userGradleHome -Raw
+        if ($text -match 'org\.gradle\.java\.home\s*=\s*(\S+)') {
+            $candidates.Add(($Matches[1] -replace '/', '\').Trim())
+        }
+    }
+    $candidates.Add((Join-Path $env:USERPROFILE '.gradle\jdks\eclipse_adoptium-21-amd64-windows.2'))
+    $candidates.Add('C:\Program Files\Android\Android Studio\jbr')
+    $candidates.Add('C:\Program Files\Java\jdk-17')
+    $candidates.Add('C:\Program Files\Eclipse Adoptium\jdk-21.0.7+6-hotspot')
+
+    $seen = @{}
+    foreach ($raw in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($raw)) { continue }
+        $jdkHome = $raw.Trim().Trim('"').Trim("'")
+        $key = $jdkHome.ToLowerInvariant()
+        if ($seen.ContainsKey($key)) { continue }
+        $seen[$key] = $true
+        # Never accept the Red Hat / JustJ embedded JRE from the Java extension.
+        if ($jdkHome -match '[\\/]\.cursor[\\/]extensions[\\/]redhat\.java') { continue }
+        if ($jdkHome -match '[\\/]org\.eclipse\.justj') { continue }
+        if (Test-JdkHasJlink $jdkHome) {
+            return (Resolve-Path -LiteralPath $jdkHome).Path
+        }
+    }
+
+    throw @'
+No JDK with jlink.exe found for release builds.
+
+Android compileRelease needs jlink (JdkImageTransform). The Cursor Red Hat Java
+extension JRE is not a full JDK — do not use it for Gradle.
+
+Install Temurin 21 (or Android Studio JBR), set JAVA_HOME to that JDK, then retry.
+'@
+}
+
+function Assert-ReleaseJavaHome {
+    $javaHome = Resolve-ReleaseJavaHome
+    $env:JAVA_HOME = $javaHome
+    # Daemon JVM criteria (gradle/gradle-daemon-jvm.properties) overrides
+    # org.gradle.java.home and can still select the IDE's stripped JRE.
+    $env:ORG_GRADLE_JAVA_HOME = $javaHome
+    Write-Host ">> JAVA_HOME=$javaHome (jlink OK)"
+    return $javaHome
+}
+
+function Suspend-DaemonJvmCriteria([string] $Root) {
+    $path = Join-Path $Root 'gradle\gradle-daemon-jvm.properties'
+    if (-not (Test-Path -LiteralPath $path)) {
+        return $null
+    }
+    $backup = "$path.release-bak"
+    Move-Item -LiteralPath $path -Destination $backup -Force
+    Write-Host '>> Suspended gradle-daemon-jvm.properties (use JAVA_HOME / org.gradle.java.home)'
+    return $backup
+}
+
+function Restore-DaemonJvmCriteria([string] $BackupPath) {
+    if ([string]::IsNullOrWhiteSpace($BackupPath)) { return }
+    if (-not (Test-Path -LiteralPath $BackupPath)) { return }
+    $original = $BackupPath -replace '\.release-bak$', ''
+    Move-Item -LiteralPath $BackupPath -Destination $original -Force
+    Write-Host '>> Restored gradle-daemon-jvm.properties'
+}
+
 function Invoke-ReleaseGradle([string] $Gradlew, [string[]] $GradleArgs) {
     Write-Host ">> $Gradlew $($GradleArgs -join ' ')"
     if ($DryRun) { return }
@@ -196,37 +278,52 @@ if (-not $DryRun -and -not $willBuildIpaLocally -and -not (Test-Path -LiteralPat
     $iosRunId = Start-UnsignedIosIpaViaActions -CommitSha $commitSha
 }
 
-if ($SkipTests) {
-    Write-Host '>> Skipping tests (-SkipTests)'
-} else {
-    try {
-        Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs @('test')
-    } catch {
-        throw ("Unit tests failed — release aborted. {0}" -f $_.Exception.Message)
+# Load .env before Gradle so SENTRY_AUTH_TOKEN is available for source uploads during prepareRelease.
+# Unit tests that need unset backend keys run first; keep backend secrets out of the test JVM by
+# loading .env only after tests below.
+Assert-ReleaseJavaHome | Out-Null
+$daemonJvmBackup = $null
+try {
+    if (-not $DryRun -and (-not $SkipTests -or -not $SkipBuild)) {
+        $daemonJvmBackup = Suspend-DaemonJvmCriteria $root
+        Write-Host ">> $gradlew --stop"
+        & $gradlew --stop | Out-Host
     }
-    if (-not $DryRun) { Write-Host '>> All unit tests passed.' }
-}
 
-# Load .env only after tests — Echo backend keys would otherwise poison
-# "backend unavailable" unit tests that expect those vars unset.
-Import-DotEnv (Join-Path $root '.env')
-if ([string]::IsNullOrWhiteSpace($env:SENTRY_AUTH_TOKEN)) {
-    throw @'
+    if ($SkipTests) {
+        Write-Host '>> Skipping tests (-SkipTests)'
+    } else {
+        try {
+            Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs @('test')
+        } catch {
+            throw ("Unit tests failed — release aborted. {0}" -f $_.Exception.Message)
+        }
+        if (-not $DryRun) { Write-Host '>> All unit tests passed.' }
+    }
+
+    # Load .env only after tests — Echo backend keys would otherwise poison
+    # "backend unavailable" unit tests that expect those vars unset.
+    Import-DotEnv (Join-Path $root '.env')
+    if ([string]::IsNullOrWhiteSpace($env:SENTRY_AUTH_TOKEN)) {
+        throw @'
 Missing SENTRY_AUTH_TOKEN.
 
 Every release uploads Sentry source context (android / java / ios). Set the token in your
 environment or root .env (never commit it):
   https://sentry.io/settings/dungeonboss/auth-tokens/
 '@
-}
-Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
+    }
+    Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
 
-if ($SkipBuild) {
-    Write-Host '>> Skipping build (-SkipBuild)'
-} else {
-    $gradleArgs = @('prepareRelease')
-    if ($WithJpackage) { $gradleArgs += '-PwithJpackage' }
-    Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs $gradleArgs
+    if ($SkipBuild) {
+        Write-Host '>> Skipping build (-SkipBuild)'
+    } else {
+        $gradleArgs = @('prepareRelease')
+        if ($WithJpackage) { $gradleArgs += '-PwithJpackage' }
+        Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs $gradleArgs
+    }
+} finally {
+    Restore-DaemonJvmCriteria $daemonJvmBackup
 }
 
 if (-not (Test-Path -LiteralPath $distDir)) {
