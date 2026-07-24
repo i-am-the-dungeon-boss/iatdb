@@ -168,15 +168,15 @@ function Resolve-ReleaseJavaHome {
     $seen = @{}
     foreach ($raw in $candidates) {
         if ([string]::IsNullOrWhiteSpace($raw)) { continue }
-        $home = $raw.Trim().Trim('"').Trim("'")
-        $key = $home.ToLowerInvariant()
+        $jdkHome = $raw.Trim().Trim('"').Trim("'")
+        $key = $jdkHome.ToLowerInvariant()
         if ($seen.ContainsKey($key)) { continue }
         $seen[$key] = $true
         # Never accept the Red Hat / JustJ embedded JRE from the Java extension.
-        if ($home -match '[\\/]\.cursor[\\/]extensions[\\/]redhat\.java') { continue }
-        if ($home -match '[\\/]org\.eclipse\.justj') { continue }
-        if (Test-JdkHasJlink $home) {
-            return (Resolve-Path -LiteralPath $home).Path
+        if ($jdkHome -match '[\\/]\.cursor[\\/]extensions[\\/]redhat\.java') { continue }
+        if ($jdkHome -match '[\\/]org\.eclipse\.justj') { continue }
+        if (Test-JdkHasJlink $jdkHome) {
+            return (Resolve-Path -LiteralPath $jdkHome).Path
         }
     }
 
