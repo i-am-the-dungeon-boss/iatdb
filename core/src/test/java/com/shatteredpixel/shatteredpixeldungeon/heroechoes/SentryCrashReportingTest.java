@@ -106,6 +106,14 @@ class SentryCrashReportingTest {
 	}
 
 	@Test
+	@DisplayName("init is allowed on ios platform with a DSN")
+	void initAllowedOnIosPlatform() {
+		Assertions.assertThat(
+				SentryCrashReporting.shouldInit("ios", "0.0.4", "https://a@b/1"))
+				.isTrue();
+	}
+
+	@Test
 	@DisplayName("reads DSN from classpath sentry.properties")
 	void readsDsnFromClasspathSentryProperties() {
 		Assertions.assertThat(SentryCrashReporting.readClasspathDsn())

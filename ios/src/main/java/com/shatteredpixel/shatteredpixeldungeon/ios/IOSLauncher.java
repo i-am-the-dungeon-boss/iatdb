@@ -54,6 +54,7 @@ import org.robovm.apple.foundation.NSString;
 import org.robovm.apple.uikit.UIApplication;
 import org.robovm.apple.uikit.UIInterfaceOrientation;
 import org.robovm.apple.uikit.UITextField;
+import org.robovm.rt.Signals;
 
 import java.io.File;
 
@@ -87,7 +88,10 @@ public class IOSLauncher extends IOSApplication.Delegate {
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
 				"");
 
-		SentryCrashReporting.initForRelease("ios", Game.version, Game.versionCode);
+		// Preserve RoboVM NPE/mach handlers while third-party SDKs install theirs.
+		Signals.installSignals(
+				() -> SentryCrashReporting.initForRelease("ios", Game.version, Game.versionCode),
+				true);
 
 		if (UpdateImpl.supportsUpdates()) {
 			Updates.service = UpdateImpl.getUpdateService();

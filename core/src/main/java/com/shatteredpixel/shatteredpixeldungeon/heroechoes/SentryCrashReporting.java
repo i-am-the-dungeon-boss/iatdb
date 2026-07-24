@@ -80,27 +80,37 @@ public final class SentryCrashReporting {
 	 * Init Sentry for a release launcher. Sets DSN from classpath
 	 * {@code sentry.properties} explicitly (RoboVM cannot rely on cwd discovery).
 	 * No-op for INDEV versions or when DSN is missing.
+	 * <p>
+	 * On iOS, callers must invoke this inside
+	 * {@code org.robovm.rt.Signals.installSignals(..., true)} so RoboVM keeps its
+	 * NPE signal handlers.
 	 */
 	public static void initForRelease(String platform, String version, int versionCode) {
 		String dsn = readClasspathDsn();
-		if (!shouldInit(version, dsn)) {
+		if (!shouldInit(platform, version, dsn)) {
 			return;
 		}
-		Sentry.init(options -> {
-			options.setDsn(dsn.trim());
-			options.setEnableExternalConfiguration(true);
-			options.setTag("platform", platform);
-			options.setSendDefaultPii(true);
-			options.getLogs().setEnabled(true);
-			options.setTracesSampleRate(1.0);
-			options.setEnableUncaughtExceptionHandler(true);
-		});
-		Sentry.configureScope(scope -> {
-			if (version != null) {
-				scope.setTag("app.version", version);
-			}
-			scope.setTag("app.version_code", String.valueOf(versionCode));
-		});
+		try {
+			Sentry.init(options -> {
+				options.setDsn(dsn.trim());
+				// DSN already comes from classpath; avoid cwd/file discovery.
+				options.setEnableExternalConfiguration(false);
+				options.setTag("platform", platform);
+				options.setSendDefaultPii(true);
+				options.setTracesSampleRate(1.0);
+				// Launchers install their own handler that calls reportAndFlush.
+				// Avoid a second handler that can fight RoboVM signal setup.
+				options.setEnableUncaughtExceptionHandler(false);
+			});
+			Sentry.configureScope(scope -> {
+				if (version != null) {
+					scope.setTag("app.version", version);
+				}
+				scope.setTag("app.version_code", String.valueOf(versionCode));
+			});
+		} catch (Throwable ignored) {
+			// Crash reporting must never abort app launch.
+		}
 	}
 
 	static boolean shouldInit(String version, String dsn) {
@@ -108,6 +118,14 @@ public final class SentryCrashReporting {
 			return false;
 		}
 		return dsn != null && !dsn.trim().isEmpty();
+	}
+
+	/**
+	 * Same gates as {@link #shouldInit(String, String)}; platform is recorded as a
+	 * tag.
+	 */
+	static boolean shouldInit(String platform, String version, String dsn) {
+		return shouldInit(version, dsn);
 	}
 
 	static String readClasspathDsn() {

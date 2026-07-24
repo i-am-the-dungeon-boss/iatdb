@@ -142,6 +142,21 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
+	@DisplayName("ios launcher inits Sentry inside RoboVM Signals.installSignals")
+	void iosLauncherInitsSentryInsideRobovmSignals() throws IOException {
+		String source = readSource(
+				"ios/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ios/IOSLauncher.java");
+
+		Assertions.assertThat(source).contains("import org.robovm.rt.Signals");
+		int signals = source.indexOf("Signals.installSignals");
+		int init = source.indexOf("SentryCrashReporting.initForRelease(\"ios\"");
+		int preservePorts = source.indexOf("true)", signals);
+		Assertions.assertThat(signals).isGreaterThanOrEqualTo(0);
+		Assertions.assertThat(init).isGreaterThan(signals);
+		Assertions.assertThat(preservePorts).isGreaterThan(init);
+	}
+
+	@Test
 	@DisplayName("desktop launcher initializes Sentry via SentryCrashReporting")
 	void desktopLauncherInitializesSentryViaHelper() throws IOException {
 		String source = readSource(
