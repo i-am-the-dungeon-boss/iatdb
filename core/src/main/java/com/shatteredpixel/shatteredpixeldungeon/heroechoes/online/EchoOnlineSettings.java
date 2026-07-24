@@ -6,18 +6,21 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Hero Echoes online settings: ranked-mode gates, test overrides, and
  * connection values from environment variables / optional {@code .env} file /
  * build-time defaults (e.g. Android {@code BuildConfig}).
  * Precedence: test override &gt; process env &gt; dotenv &gt; build defaults.
+ * <p>
+ * Uses {@link Map} for test env injection and {@code java.io} for dotenv so
+ * RoboVM/iOS class init does not depend on functional interfaces or NIO files.
  */
 public final class EchoOnlineSettings {
 
@@ -34,7 +37,8 @@ public final class EchoOnlineSettings {
 	private static String buildDefaultApiKey;
 
 	private static final Map<String, String> dotEnv = new HashMap<>();
-	private static Function<String, String> systemEnvGetter = System::getenv;
+	/** When non-null, replaces {@link System#getenv(String)} (tests only). */
+	private static Map<String, String> testEnv;
 
 	private EchoOnlineSettings() {
 	}
@@ -117,7 +121,8 @@ public final class EchoOnlineSettings {
 		if (file == null || !file.isFile()) {
 			return;
 		}
-		try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				parseLine(line, dotEnv);
@@ -140,8 +145,13 @@ public final class EchoOnlineSettings {
 		}
 	}
 
-	static void setEnvForTests(Function<String, String> getter) {
-		systemEnvGetter = getter != null ? getter : System::getenv;
+	/**
+	 * Test-only process-env substitute. {@code null} restores
+	 * {@link System#getenv}.
+	 * An empty map means “no process env vars”.
+	 */
+	static void setEnvForTests(Map<String, String> env) {
+		testEnv = env;
 	}
 
 	public static void resetForTests() {
@@ -151,15 +161,22 @@ public final class EchoOnlineSettings {
 		buildDefaultBackendUrl = null;
 		buildDefaultApiKey = null;
 		dotEnv.clear();
-		systemEnvGetter = System::getenv;
+		testEnv = null;
 	}
 
 	private static String resolve(String key) {
-		String fromSystem = systemEnvGetter.apply(key);
+		String fromSystem = getenv(key);
 		if (fromSystem != null && !fromSystem.trim().isEmpty()) {
 			return fromSystem;
 		}
 		return dotEnv.get(key);
+	}
+
+	private static String getenv(String key) {
+		if (testEnv != null) {
+			return testEnv.get(key);
+		}
+		return System.getenv(key);
 	}
 
 	private static void parseLine(String line, Map<String, String> target) {
