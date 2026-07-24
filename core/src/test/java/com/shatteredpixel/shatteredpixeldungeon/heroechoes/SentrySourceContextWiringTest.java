@@ -56,6 +56,17 @@ class SentrySourceContextWiringTest {
 	}
 
 	@Test
+	@DisplayName("release.ps1 runs unit tests before loading .env")
+	void releaseScriptTestsBeforeDotEnv() throws IOException {
+		String source = readSource("scripts/release.ps1");
+		int testGate = source.indexOf("GradleArgs @('test')");
+		int dotenv = source.indexOf("Import-DotEnv (Join-Path $root '.env')");
+
+		Assertions.assertThat(testGate).isGreaterThanOrEqualTo(0);
+		Assertions.assertThat(dotenv).isGreaterThan(testGate);
+	}
+
+	@Test
 	@DisplayName("android build applies shared source context snippet")
 	void androidBuildAppliesSharedSourceContext() throws IOException {
 		String source = readSource("android/build.gradle");

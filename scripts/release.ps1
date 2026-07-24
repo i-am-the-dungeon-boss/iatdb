@@ -172,18 +172,6 @@ if ($porcelain -and -not $AllowDirty) {
 
 $commitSha = (git rev-parse HEAD).Trim()
 
-Import-DotEnv (Join-Path $root '.env')
-if ([string]::IsNullOrWhiteSpace($env:SENTRY_AUTH_TOKEN)) {
-    throw @'
-Missing SENTRY_AUTH_TOKEN.
-
-Every release uploads Sentry source context (android / java / ios). Set the token in your
-environment or root .env (never commit it):
-  https://sentry.io/settings/dungeonboss/auth-tokens/
-'@
-}
-Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
-
 $onWindows = ($env:OS -match 'Windows') -or $env:WinDir
 $gradlew = Join-Path $root $(if ($onWindows) { 'gradlew.bat' } else { 'gradlew' })
 if (-not (Test-Path -LiteralPath $gradlew)) { throw "gradlew not found at $gradlew" }
@@ -198,6 +186,20 @@ if ($SkipTests) {
     }
     if (-not $DryRun) { Write-Host '>> All unit tests passed.' }
 }
+
+# Load .env only after tests — Echo backend keys would otherwise poison
+# "backend unavailable" unit tests that expect those vars unset.
+Import-DotEnv (Join-Path $root '.env')
+if ([string]::IsNullOrWhiteSpace($env:SENTRY_AUTH_TOKEN)) {
+    throw @'
+Missing SENTRY_AUTH_TOKEN.
+
+Every release uploads Sentry source context (android / java / ios). Set the token in your
+environment or root .env (never commit it):
+  https://sentry.io/settings/dungeonboss/auth-tokens/
+'@
+}
+Write-Host '>> SENTRY_AUTH_TOKEN present — Sentry source uploads required.'
 
 if ($SkipBuild) {
     Write-Host '>> Skipping build (-SkipBuild)'
