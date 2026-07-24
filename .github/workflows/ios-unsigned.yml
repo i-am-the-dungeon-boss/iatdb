@@ -40,11 +40,23 @@ jobs:
             exit 1
           fi
 
+      - name: Require Echo API key
+        env:
+          ECHO_API_KEY: ${{ secrets.ECHO_API_KEY }}
+        run: |
+          if [[ -z "${ECHO_API_KEY}" ]]; then
+            echo "Repository secret ECHO_API_KEY is required so the IPA bakes X-API-Key for Hero Echoes." >&2
+            echo "Set it to the same value as Vercel production ECHO_API_KEY." >&2
+            exit 1
+          fi
+
       - name: Build unsigned IPA
         env:
           # Upload JVM source context to Sentry project "ios" on every release IPA.
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: dungeonboss
+          # Baked into ios echo-build.properties via gradle/echo-env.gradle.
+          ECHO_API_KEY: ${{ secrets.ECHO_API_KEY }}
         run: ./gradlew :ios:createIPA --no-daemon
 
       - name: Stage artifact name

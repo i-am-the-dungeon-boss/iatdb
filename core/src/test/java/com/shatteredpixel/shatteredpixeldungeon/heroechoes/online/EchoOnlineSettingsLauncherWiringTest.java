@@ -137,6 +137,17 @@ class EchoOnlineSettingsLauncherWiringTest {
 	}
 
 	@Test
+	@DisplayName("ios-unsigned workflow requires and passes ECHO_API_KEY into createIPA")
+	void iosUnsignedWorkflowBakesEchoApiKey() throws IOException {
+		String source = readSource(".github/workflows/ios-unsigned.yml");
+
+		Assertions.assertThat(source).contains("secrets.ECHO_API_KEY");
+		Assertions.assertThat(source).contains("ECHO_API_KEY: ${{ secrets.ECHO_API_KEY }}");
+		Assertions.assertThat(source).contains(":ios:createIPA");
+		Assertions.assertThat(source).contains("Require Echo API key");
+	}
+
+	@Test
 	@DisplayName("shared echo-build-defaults.gradle bakes ECHO_API_KEY into echo-build.properties")
 	void sharedEchoBuildDefaultsBakesApiKey() throws IOException {
 		String source = readSource("gradle/echo-build-defaults.gradle");
