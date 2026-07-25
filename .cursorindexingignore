@@ -1,0 +1,32 @@
+# Excluded from the codebase index, but still readable by the agent on demand
+# (e.g. core/build/test-results/test/*.xml after a failed :core:test run).
+# Cursor also respects .gitignore.
+
+dist/
+.gradle/
+**/build/
+
+# Game art / audio
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.ogg
+**/*.mp3
+**/*.wav
+**/*.mp4
+**/*.ttf
+**/*.otf
+**/*.fnt
+
+# Platform packaging / native noise
+android/**/res/**
+ios/assets/Assets.xcassets/**
+**/*.apk
+**/*.aab
+**/*.jar
+**/*.so
+**/*.dll
+**/*.dylib
+**/*.class

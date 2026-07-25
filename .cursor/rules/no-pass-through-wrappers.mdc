@@ -1,57 +1,43 @@
 ---
-description: Avoid redundant pass-through wrapper classes in Java; put logic where it is used or owned
+description: Reject forwarding-only facades and double-fetch helpers; keep real utils and seams. Use when adding *Service/*Helper/*Prefetch types or thin wrappers.
+globs: **/*.java
 alwaysApply: false
 ---
-# No Pass-Through Wrappers (Java)
 
-Do not add a class whose public API only forwards to another type. Prefer putting behavior on the owner, caller, or an existing type that already has a reason to exist.
+# No Pass-Through Wrappers
 
-## Iron Law
-
-A new type needs **non-trivial policy, state, or a real seam** (I/O, async, test double, mode routing). If removing the type and inlining one call site does not hurt clarity or testing, do not create it.
+**YAGNI for forwarding-only types** — not a ban on utilities. Base-game `master` has many focused helpers (`GLog`, `PathFinder`, `GameMath`, `DeviceCompat`) that own real behavior. Keep that model on `main`.
 
 ## Reject
 
-- One-line facades (`prefetch()` → `Dungeon.prefetch…()`)
-- Service locators that only `new` a composite and hold a static
-- Config layers that only re-expose another config’s getters
-- “Helper” classes whose every method is `return Other.method(…)`
-- Existence-check APIs that re-run the same lookup the caller must do next (double fetch)
+A new type whose public API **only** forwards to another type, or forces the caller to look up the same data twice.
+
+- One-line facades (`prefetch(d)` → `Dungeon.prefetch…(d)`)
+- “Service” / locator that only `new`s a composite and holds a static
+- Config that only re-exposes another config’s getters
+- `shouldX(lookup)` then `resolveX(lookup)` in the same flow (double fetch)
 
 ## Prefer
 
-| Instead of                                   | Do                                                                |
-| -------------------------------------------- | ----------------------------------------------------------------- |
-| Prefetch facade                              | Call the owner (`Dungeon`, storage, client) from the scene/caller |
-| Online “service” factory                     | Static `echoLookup()` / `instance()` on the real lookup type      |
-| Tiny health/JSON helper used once            | Private/package method on the client                              |
-| Settings wrapping Env                        | One settings/config type                                          |
-| `shouldX` that duplicates `resolveX` filters | One resolve path; callers use the result                          |
+| Instead of                           | Do                                                        |
+| ------------------------------------ | --------------------------------------------------------- |
+| Prefetch facade                      | Caller/scene calls the owner (`Dungeon`, storage, client) |
+| Factory that only builds a singleton | `static` on the real type                                 |
+| One-off JSON/health helper           | Private/package method on the owner                       |
+| Duplicate filter + resolve           | One resolve path; callers use the result                  |
 
 ## Allowed thin types
 
-- **Real routing / policy** (e.g. ranked vs local lookup)
+- **Real policy / routing** (ranked vs local, mode selection)
 - **Async / lifecycle** (executor, probe cache, upload queue)
-- **Testable seams** (HTTP transport interface + impl)
-- **Shared multi-caller API** used by several levels/UI with more than a one-liner
+- **Testable I/O seams** (HTTP transport interface + impl)
+- **Multi-caller API** with non-trivial shared logic
 - **Value objects** (results, policies, DTOs)
+- **Master-style utils** that encapsulate algorithms or platform checks
 
 ## Before adding a class
 
-1. Name the **extra behavior** in one sentence. If you cannot, inline.
-2. Count call sites: one site → private method on the caller/owner.
-3. Check for a second lookup of the same data in the same flow — collapse to one.
-4. Prefer extending an existing owner over a new `*Service` / `*Helper` / `*Prefetch` type.
-
-## Examples (echo cull)
-
-```text
-❌ EchoBossPrefetch.prefetch(depth) → Dungeon.prefetchEchoBossForDepth(depth)
-✅ InterlevelScene calls Dungeon directly
-
-❌ EchoOnlineService.echoLookup() only builds CompositeEchoLookup
-✅ CompositeEchoLookup.echoLookup() owns the singleton
-
-❌ shouldUseEchoBoss(lookup) then resolveEcho(lookup)  // two fetches
-✅ prepareEchoBoss → resolveEcho once
-```
+1. Name the **extra behavior** in one sentence. If you can’t, inline.
+2. One call site → private method on the caller/owner.
+3. Collapse double lookups in the same flow.
+4. Prefer extending an existing owner over a new `*Service` / `*Helper` / `*Prefetch`.

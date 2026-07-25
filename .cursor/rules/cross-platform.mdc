@@ -1,86 +1,54 @@
 ---
-description: Develop for Android, desktop, and iOS — RoboVM-safe APIs required
+description: Desktop, Android, and iOS — RoboVM-safe JDK subset, Android org.json limits, portable I/O and UI
 alwaysApply: true
 ---
 
 # Cross-Platform (Android / Desktop / iOS)
 
-This game ships on **desktop, Android, and iOS**. Every feature, change, and helper must be **valid on all three** unless the user explicitly scopes work to one platform.
+Ships on **desktop, Android, and iOS (RoboVM/MobiVM)**. Shared code must use the **intersection** of those runtimes unless the user scopes a change to one launcher.
 
-## Iron Law
+Compile target is **Java 11**, but **iOS `robovm-rt` lacks many newer JDK APIs**. Desktop tests can pass while iOS dies with `NoSuchMethodError`. Base-game `master` already avoids streams, `Optional`, `List.of` / `Map.of` / `Set.of`, and `java.util.function` in `core` / `SPD-classes` — keep that on `main`.
 
-Do not ship code that only works on a full JVM (desktop / Android). **iOS (RoboVM) is a first-class target.** Prefer the **intersection** of APIs that all three runtimes support.
+## Forbidden on guarded production paths
 
-RoboVM’s `robovm-rt` is roughly pre–Java 8 collections: desktop tests can be green while iOS dies with `NoSuchMethodError` / `NoClassDefFoundError`.
+Guarded by `RoboVMUnsupportedApisTest` (`core`, `SPD-classes`, `desktop`, `android`, `ios` main sources). **Do not** grow a parallel JDK polyfill — rewrite to classic forms; shared helpers only for hot duplicates.
 
-## RoboVM API policy (do not forget)
+| Avoid                                       | Use instead                                             |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `String.isBlank()`                          | `Strings.isBlank(s)` (multi-site) or `trim().isEmpty()` |
+| `String.join(...)`                          | `Strings.join(...)` or local `StringBuilder`            |
+| `java.util.Base64`                          | `Base64Codec` (same RFC 4648 strings)                   |
+| `java.util.function.*`                      | Nested interface next to owner, or `Callback`           |
+| `java.util.Optional`                        | Nullable return / empty collections                     |
+| `List.of` / `Map.of` / `Set.of`             | `Collections.empty*()` or `new ArrayList<>()` etc.      |
+| `list.sort(...)`                            | `Collections.sort(list, comparator)`                    |
+| `Comparator.comparing*`                     | Anonymous `Comparator` / `Integer.compare`              |
+| `Map.getOrDefault` / `Map.merge`            | `containsKey` / `get` + `put`                           |
+| `Collection.removeIf`                       | Iterator remove loop                                    |
+| `java.nio.file` for game data               | `FileUtils` / `java.io` streams                         |
+| Desktop cwd / `System.getenv` in `<clinit>` | Build-time defaults + `FileUtils` Local                 |
 
-**Default: avoid unsupported APIs and rewrite to classic forms.** Do **not** grow a parallel JDK (`java.util.function` / `Optional` clones).
+Lambdas / method references already exist in this fork and are OK when they do not pull in forbidden APIs. Prefer **anonymous `Comparator`** (master style) for new sorts.
 
-| Avoid on shared paths                   | Use instead                                                                     |
-| --------------------------------------- | ------------------------------------------------------------------------------- |
-| `String.isBlank()`                      | `Strings.isBlank(s)` (multi-site helper)                                        |
-| `String.join(...)`                      | `Strings.join(...)` when needed in several places; else a local `StringBuilder` |
-| `java.util.Base64`                      | `Base64Codec` (same RFC 4648 strings — no DB/wire migration)                    |
-| `java.util.function.*`                  | Local nested interface next to the owner, or existing `Callback`                |
-| `java.util.Optional`                    | Nullable return / explicit empty collections                                    |
-| `List.of` / `Map.of` / `Set.of`         | `Collections.emptyList()` / `emptyMap()` / `emptySet()`, or `new ArrayList<>()` |
-| `list.sort(...)`                        | `Collections.sort(list, comparator)`                                            |
-| `Comparator.comparing*`                 | Anonymous `Comparator` / `Integer.compare` / `Long.compare`                     |
-| `Map.getOrDefault` / `Map.merge`        | `containsKey` / `get` + `put`                                                   |
-| `Collection.removeIf`                   | Iterator remove loop                                                            |
-| `java.nio.file` for game data           | `FileUtils` / `java.io` streams                                                 |
-| Desktop-only env / cwd files at runtime | Build-time defaults + `FileUtils` Local                                         |
+Extend `RoboVMUnsupportedApisTest` when adding a new forbidden pattern.
 
-Shared helpers under `com.watabou.utils` only for **hot duplicates** (e.g. `Strings.isBlank`). One-off gaps: inline rewrite at the call site.
+## org.json (master warning — crashes on Android/iOS)
 
-```java
-// ❌ BAD — missing on RoboVM
-if (body == null || body.isBlank()) { ... }
-list.sort(Comparator.comparingInt(...));
-return Optional.empty();
-Function<String, String> env = System::getenv; // especially in <clinit>
+`Bundle` documents this: the Android runtime’s `org.json` is incomplete; MobiVM uses it on iOS too. Desktop-only methods **crash on device**.
 
-// ✅ GOOD
-if (Strings.isBlank(body)) { ... }
-Collections.sort(list, new Comparator<JSONObject>() { ... });
-return null; // or empty list
-// local interface / Map test seam — not java.util.function
-```
+- Stick to APIs in [Android org.json](https://developer.android.com/reference/org/json/package-summary)
+- Prefer going through `Bundle` for game state
+- Do not use desktop-only helpers (e.g. `JSONObject.keySet()`, `write`, non-String `JSONTokener` constructors) — see comments in `Bundle`
 
-Guard: keep / extend `RoboVMUnsupportedApisTest` when adding new forbidden patterns.
+## Structure & persistence
 
-## Default structure
+- Gameplay in `core` / `SPD-classes`; launchers stay thin. Native APIs only under `desktop/` `android/` `ios/` when needed.
+- Persist via `FileUtils` Local sandbox (`FileUtils.setDefaultFileProperties(Files.FileType.Local, "")` in launchers) — not `new FileOutputStream("…")` relative to cwd.
+- UI: touch + keyboard/mouse; safe insets via `Game.platform` / `PlatformSupport`.
 
-- Put shared behavior in `core` (or `SPD-classes`) so all launchers get it.
-- Do not assume a desktop JVM, mouse/keyboard-only input, large screen, or process cwd.
-- Prefer portable APIs (`FileUtils`, libGDX, `Game.platform`, `Strings`, `Callback`, existing UI).
+## Before finishing
 
-## Before finishing any feature or change
-
-Ask: “Does this still work on Android, desktop, and iOS — including the APIs used?”
-
-- [ ] Logic lives in `core` / `SPD-classes` (or each launcher is updated intentionally)
-- [ ] No JDK APIs RoboVM lacks (table above); no new `java.util.function` / `Optional` in production
-- [ ] No desktop-only assumptions (cwd files, `System.exit` paths, mouse-only UX, unbounded RAM)
-- [ ] Touch + keyboard/mouse still usable where UI changed
-- [ ] Portrait and landscape considered if layout/UI changed
-- [ ] Network / threading / lifecycle safe on mobile (pause, background, slow I/O)
-- [ ] Persistence uses `FileUtils` Local — not raw `java.io.File` relative paths
-
-## File persistence
-
-Launchers set `FileUtils.setDefaultFileProperties(Files.FileType.Local, "")`. Game data must use that sandbox on every platform.
-
-```java
-// ❌ BAD — process cwd; breaks on Android/iOS
-new FileOutputStream("echoes-solo/depth-5.dat");
-
-// ✅ GOOD
-FileUtils.bundleToFile("echoes-solo/depth-5.dat", bundle);
-```
-
-## Exceptions
-
-- Launcher modules (`android/`, `ios/`, `desktop/`) may use native APIs.
-- Platform-specific work only when the user asks for it; note which platforms are out of scope.
+- [ ] Logic in `core` / `SPD-classes` (or intentional per-launcher work)
+- [ ] No forbidden JDK APIs; org.json usage Android-safe
+- [ ] No desktop-only assumptions on shared paths
+- [ ] Mobile lifecycle / slow I/O considered for network or disk work

@@ -1,0 +1,87 @@
+---
+description: Java style and correctness for iatdb — match master base-game idioms (Random/Reflection/Bundle/Messages/threading), keep desktop+Android+iOS parity
+globs: **/*.java
+alwaysApply: false
+---
+
+# Java Best Practices (master base + main mod + three platforms)
+
+Develop on **`main`**. For style and architecture of SPD-origin code, match the **`master`** base game — `main` has diverged and is _not_ the style reference. RoboVM / org.json API limits: [cross-platform.mdc](cross-platform.mdc). Forwarding-only types: [no-pass-through-wrappers.mdc](no-pass-through-wrappers.mdc).
+
+Compile target is Java 11, but the **language level actually in use on `master` `core` is Java 7-ish**: zero lambdas, zero `var`, zero pattern-matching `instanceof`, zero static imports. Match that in SPD-origin classes. `main` mod packages (`heroechoes/`) may use lambdas where they don't pull in forbidden APIs.
+
+## Module placement
+
+| Put it here                  | When                                                    |
+| ---------------------------- | ------------------------------------------------------- |
+| `core/`                      | Shared gameplay, items, actors, scenes                  |
+| `SPD-classes/`               | Engine (`Bundle`, `FileUtils`, `Callback`, noosa, math) |
+| `desktop/` `android/` `ios/` | Launchers / native glue only                            |
+| `services/`                  | Optional backends wired per platform build              |
+
+## Use the engine's API, not the JDK's
+
+`master` is consistent about this; every row below is a portability or determinism bug, not a style preference.
+
+| Never                                     | Always                                                                                    | Why                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `Math.random()`, `new java.util.Random()` | `com.watabou.utils.Random`                                                                | Seeded runs, reproducible levels, save-compat (`master`: 402 imports, 0 `Math.random`) |
+| `Class.forName`, `cls.newInstance()`      | `Reflection.newInstance/forName`                                                          | Wraps libGDX reflection; direct JDK reflection breaks RoboVM AOT                       |
+| `printStackTrace()`, `System.out.println` | `Game.reportException(tr)`                                                                | Sole funnel to Sentry + logcat; `master` uses it in 17 files                           |
+| `new FileOutputStream("save.dat")`        | `FileUtils.bundleToFile(...)`                                                             | Android/iOS have no writable cwd                                                       |
+| Hardcoded English in UI/log               | `Messages.get(this, "key", args)`                                                         | i18n; keys under `core/src/main/assets/messages/`                                      |
+| `java.util.function.*`                    | `com.watabou.utils.Callback` or a local nested interface (see `UseContext.HostileEffect`) | Missing from `robovm-rt`                                                               |
+
+## Threading
+
+`main` adds networking (`EchoClient`, executors, `new Thread`) that `master` never had. libGDX has one GL/render thread.
+
+```java
+// ❌ BAD — touching scene/sprites/GLog from the HTTP thread; crashes or silently drops on device
+new Thread(() -> { Echo e = client.fetch(depth); GameScene.show(new WndEcho(e)); }).start();
+
+// ✅ GOOD — do I/O off-thread, hop back for anything that touches the scene
+new Thread(() -> {
+	final Echo e = client.fetch(depth);
+	Game.runOnRenderThread(new Callback() {
+		@Override public void call() { GameScene.show(new WndEcho(e)); }
+	});
+}).start();
+```
+
+- Scene graph, sprites, emitters, `GLog`, `Actor` state, and window creation are **render-thread only**.
+- Every background task needs a cancel/abort path — Android and iOS suspend the process mid-request.
+- Don't hold a lock across a network call or across `runOnRenderThread`.
+
+## Save and wire compatibility
+
+`appVersionCode` is pinned to upstream Shattered, so saves cross mod versions.
+
+- Implement `Bundlable`; bundle keys as `private static final String` (see `Mob` on `master`)
+- **Renaming or moving a `Bundlable` class breaks every existing save** — register `Bundle.addAlias(NewClass.class, "old.fully.Qualified.Name")` instead
+- `restoreFromBundle` must tolerate keys absent from older saves; `storeInBundle`/`restoreFromBundle` always call `super`
+- Required wire/save data that fails to restore: throw or return an "unavailable" signal — never a hollow object (`"UNKNOWN"`, empty arsenal). Real domain defaults (`HeroSubClass.NONE`) are fine.
+- `org.json` on the Android-safe subset only, or prefer `Bundle`
+
+## Match master's shape
+
+- **Tabs** for indent; copy structure from the neighboring class in the same package
+- Keep the copyright header style already used in that file/package (base game vs mod)
+- Concrete collections (`ArrayList`, `HashMap`, `HashSet`); sort with `Collections.sort` + anonymous `Comparator`
+- Public fields and instance initializer blocks (`{ actPriority = …; }`) are normal here — don't "clean up" into getters/setters
+- Extend `Item` / `Mob` / `Buff` / `Actor` / `Bundlable`; don't add parallel frameworks
+- Platform branching via `DeviceCompat` / `Game.platform`, never `System.getProperty("os.name")` in `core`
+
+## Errors
+
+- Catch only what you handle; no empty `catch`
+- Never swallow a save, combat, or turn-order failure — `Game.reportException` at minimum
+- Never let an exception escape into `Actor.act()`; a thrown turn corrupts the run
+
+## Before finishing
+
+- [ ] No JDK API from the table above on a production path
+- [ ] Anything touching the scene from a background thread goes through `Game.runOnRenderThread`
+- [ ] Renamed/moved `Bundlable`? alias registered and an old save loads
+- [ ] `./gradlew :core:test` green, including `RoboVMUnsupportedApisTest`
+- [ ] Still correct on desktop, Android, **and** iOS

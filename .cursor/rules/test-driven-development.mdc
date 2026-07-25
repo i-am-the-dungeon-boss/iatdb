@@ -1,95 +1,61 @@
 ---
-description: Test-Driven Development — write failing tests first, then minimal implementation
+description: Test-Driven Development on main — failing test first for production behavior (master base game has no unit tests)
 alwaysApply: true
 ---
 
 # Test-Driven Development
 
+**`main` (mod) policy.** Base-game branch `master` has no unit-test suite. All new mod work on `main` requires TDD for production behavior.
+
 ## Iron Law
 
-No production code without a failing test first. If implementation was written before the test, delete it and start over.
+No production behavior without a failing test first. If implementation landed before the test, delete it and start over.
 
 ## Red → Green → Refactor
 
-1. **RED** — Write one minimal test for one behavior. Use `@DisplayName` and AssertJ (`Assertions.assertThat`).
-2. **Verify RED** — Run the test and confirm it fails for the right reason (missing behavior, not a typo).
-3. **GREEN** — Write the smallest code change that makes the test pass.
-4. **Verify GREEN** — Re-run tests; all must pass.
-5. **REFACTOR** — Clean up only after green. Do not add behavior during refactor.
-
-## Running Tests
+1. **RED** — One minimal test for one behavior. `@DisplayName` + AssertJ (`Assertions.assertThat`).
+2. **Verify RED** — Fails for missing behavior, not a typo/setup error.
+3. **GREEN** — Smallest change that passes.
+4. **Verify GREEN** — Re-run; all must pass.
+5. **REFACTOR** — Clean up only after green; no new behavior.
 
 ```bash
-# Single test class
 ./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
-
-# Single test method
 ./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
 ```
 
-## Test Quality
+## Test quality
 
 - One behavior per test; split if the name needs "and".
-- Test real behavior, not mocks (use `GdxTestExtension` / `EchoTestSupport` for game setup).
-- Place tests in `core/src/test/java/` mirroring the production package.
-- Never fix bugs without a failing test that reproduces them first.
-
-## Simulate Real Situations
-
-Tests must exercise the same branches a live fight would. Hollow fixtures that skip
-sprites, FOV, Actor registration, or hit/VFX paths hide production crashes.
-
-For EchoBoss / policy combat, use `EchoTestSupport.installEchoBossLevel` (or extend it):
-
-- Player and boss have **linked** sprites (`sprite.ch` set) — hit VFX calls
-  `attacker.sprite.center()` when `enemy.sprite != null`
-- Phantom `EchoBoss.getEchoHero()` stays **sprite-less** (as in production)
-- Both chars registered with `Actor`; `heroFOV` covers the fight
-- Force the path under test (e.g. guarantee a hit) when asserting combat side effects
-
-```java
-// ✅ GOOD — real hit path (player sprite present → bloodBurstA → attacker.sprite)
-EchoTestSupport.installEchoBossLevel(hero, boss, 2);
-Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
-Assertions.assertThat(boss.getEchoHero().sprite).isNull();
-boss.getEchoHero().invisible = 1; // guarantee hit
-EchoRoleExecutor.execute(...); // must not NPE; HP drops
-
-// ❌ BAD — “spent turn” only; enemy.sprite == null skips the crashing VFX branch
-boss.sprite = new StubCharSprite(); // player has no sprite
-EchoRoleExecutor.execute(...);
-Assertions.assertThat(spent).isTrue(); // green in CI, NPE in game
-```
-
-When a bug is found in play: reproduce with fixtures that match that situation before fixing.
+- Prefer **real fixtures** over mocking the game (`GdxTestExtension`, `EchoTestSupport`). Test seams (`set…ForTests`) are fine.
+- Mirror production packages under `core/src/test/java/`.
+- Never fix a bug without a failing reproduction test first.
+- EchoBoss / world-VFX combat: use skill `echo-combat-vfx-test` / `EchoTestSupport.installEchoBossLevel` — hollow sprite-less fights hide NPEs.
 
 ## Good vs Bad
 
 ```java
-// ✅ GOOD — clear behavior, one assertion focus
+// ✅ GOOD
 @Test
 @DisplayName("rejects snapshot when depth is invalid")
 void rejectsInvalidDepth() {
-    Assertions.assertThatThrownBy(() -> Echo.create(-1, ...))
-        .isInstanceOf(IllegalArgumentException.class);
+	Assertions.assertThatThrownBy(() -> Echo.create(-1, ...))
+		.isInstanceOf(IllegalArgumentException.class);
 }
 
-// ❌ BAD — vague name, tests nothing meaningful
+// ❌ BAD — vague, asserts almost nothing
 @Test
 void testSnapshot() {
-    Echo snap = Echo.create(5, ...);
-    Assertions.assertThat(snap).isNotNull();
+	Assertions.assertThat(Echo.create(5, ...)).isNotNull();
 }
 ```
 
-## Before Marking Work Complete
+## Done checklist
 
-- [ ] Every new behavior has a test written first
-- [ ] Each test was watched failing before implementation
-- [ ] Minimal code was written to pass each test
-- [ ] `./gradlew :core:test` passes with no failures
-- [ ] For new features / feature changes: report **tests created**, **test gaps**, and **redundant tests** (use `@DisplayName` titles), then ask whether to implement gaps and remove redundant ones
+- [ ] Behavior had a failing test first
+- [ ] Minimal green; `./gradlew :core:test` clean
+- [ ] Feature work: report **tests created**, **gaps**, **redundant** (`@DisplayName` titles); ask before filling/removing
 
-## Exceptions
+## Exceptions (ask if unsure)
 
-Ask before skipping TDD: throwaway prototypes, generated code, or config-only changes.
+Throwaway prototypes, generated code, config-only (rules/AGENTS/ignore), assets, i18n `.properties`, version/changelog bumps, pure renames with existing coverage.
