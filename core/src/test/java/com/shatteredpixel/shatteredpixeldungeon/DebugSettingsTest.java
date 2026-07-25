@@ -6,6 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
@@ -130,6 +131,23 @@ class DebugSettingsTest {
 		Assertions.assertThat(Dungeon.depth).isEqualTo(14);
 		Assertions.assertThat(hero.lvl).isEqualTo(DebugSettings.START_LEVEL);
 		Assertions.assertThat(hero.STR).isEqualTo(DebugSettings.START_STR);
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives an unblessed and a blessed ankh")
+	void applyDebugStartGivesUnblessedAndBlessedAnkh() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.applyDebugStart();
+
+		java.util.List<Ankh> ankhs = hero.belongings.getAllItems(Ankh.class);
+		Assertions.assertThat(ankhs).hasSize(2);
+		Assertions.assertThat(ankhs).extracting(Ankh::isBlessed)
+				.containsExactlyInAnyOrder(false, true);
 	}
 
 	@Test

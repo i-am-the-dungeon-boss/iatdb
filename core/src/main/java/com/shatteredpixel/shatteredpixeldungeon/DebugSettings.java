@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.watabou.utils.DeviceCompat;
@@ -175,6 +176,11 @@ public final class DebugSettings {
 		if (START_STR > Hero.STARTING_STR) {
 			hero.STR = START_STR;
 		}
+
+		new Ankh().collect();
+		Ankh blessed = new Ankh();
+		blessed.bless();
+		blessed.collect();
 	}
 
 	/**
