@@ -1,10 +1,14 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
@@ -16,11 +20,17 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStat
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyStatusBuilder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoBossRegionalDeath;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Strings;
@@ -459,6 +469,9 @@ public class EchoBoss extends Mob {
 
     @Override
     public void die(Object cause) {
+        if (tryReviveWithAnkh()) {
+            return;
+        }
         fightRecorder.recordBossDefeat(
                 echo,
                 Dungeon.depth,
@@ -466,6 +479,46 @@ public class EchoBoss extends Mob {
                 Game.version);
         super.die(cause);
         EchoBossRegionalDeath.apply(this, cause);
+    }
+
+    /**
+     * Kit ankhs revive the boss in place. Blessed matches hero (quarter HP, cure,
+     * invulnerability); unblessed is quarter HP only — no {@code WndResurrect}.
+     */
+    private boolean tryReviveWithAnkh() {
+        if (echoHero == null || echoHero.belongings == null) {
+            return false;
+        }
+        Ankh ankh = null;
+        for (Ankh i : echoHero.belongings.getAllItems(Ankh.class)) {
+            if (ankh == null || i.isBlessed()) {
+                ankh = i;
+            }
+        }
+        if (ankh == null) {
+            return false;
+        }
+
+        HP = HT / 4;
+        if (ankh.isBlessed()) {
+            PotionOfHealing.cure(this);
+            Buff.prolong(this, Invulnerability.class, Invulnerability.DURATION);
+        }
+        showAnkhReviveFx();
+        Statistics.ankhsUsed++;
+        Catalog.countUse(Ankh.class);
+        ankh.detach(echoHero.belongings.backpack);
+        return true;
+    }
+
+    private void showAnkhReviveFx() {
+        if (sprite == null || sprite.parent == null) {
+            return;
+        }
+        SpellSprite.show(this, SpellSprite.ANKH);
+        GameScene.flash(0x80FFFF40);
+        Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
+        GLog.w(Messages.get(Hero.class, "revive"));
     }
 
     @Override
