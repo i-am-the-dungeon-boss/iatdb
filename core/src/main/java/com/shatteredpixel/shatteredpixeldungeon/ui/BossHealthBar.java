@@ -59,7 +59,8 @@ public class BossHealthBar extends Component {
 	private Image skull;
 	private Emitter blood;
 
-	private static String asset = Assets.Interfaces.BOSSHP;
+	private static String frameAsset = Assets.Interfaces.BOSSHP_TINTED;
+	private static String barAsset = Assets.Interfaces.BOSSHP;
 
 	private static BossHealthBar instance;
 	private static boolean bleeding;
@@ -83,16 +84,16 @@ public class BossHealthBar extends Component {
 	protected void createChildren() {
 		this.large = SPDSettings.interfaceSize() != 0;
 
-		bar = large ? new Image(asset, 0, 16, 128, 30) : new Image(asset, 0, 0, 64, 16);
+		bar = large ? new Image(frameAsset, 0, 16, 128, 30) : new Image(frameAsset, 0, 0, 64, 16);
 		add(bar);
 
 		width = bar.width;
 		height = bar.height;
 
-		shieldHP = large ? new Image(asset, 0, 55, 96, 9) : new Image(asset, 71, 5, 47, 4);
+		shieldHP = large ? new Image(barAsset, 0, 55, 96, 9) : new Image(barAsset, 71, 5, 47, 4);
 		add(shieldHP);
 
-		hp =  large ? new Image(asset, 0, 46, 96, 9) : new Image(asset, 71, 0, 47, 4);
+		hp =  large ? new Image(barAsset, 0, 46, 96, 9) : new Image(barAsset, 71, 0, 47, 4);
 		add(hp);
 
 		hpText = new BitmapText(PixelScene.pixelFont);
@@ -132,7 +133,7 @@ public class BossHealthBar extends Component {
 		if (boss != null && large) {
 			skull = boss.sprite();
 		} else {
-			skull = new Image(asset, 64, 0, 6, 6);
+			skull = new Image(barAsset, 64, 0, 6, 6);
 		}
 		add(skull);
 

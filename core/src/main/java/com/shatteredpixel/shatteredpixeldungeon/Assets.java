@@ -79,14 +79,18 @@ public class Assets {
 		public static final String BADGES   = "interfaces/badges.png";
 		public static final String LOCKED   = "interfaces/locked_badge.png";
 
-		public static final String CHROME   = "interfaces/chrome.png";
-		public static final String ICONS    = "interfaces/icons.png";
+		public static final String CHROME   = "interfaces/chrome_tinted.png";
+		public static final String ICONS    = "interfaces/icons_tinted.png";
 		public static final String STATUS   = "interfaces/status_pane.png";
-		public static final String MENU     = "interfaces/menu_pane.png";
+		public static final String STATUS_TINTED = "interfaces/status_pane_tinted.png";
+		public static final String MENU     = "interfaces/menu_pane_tinted.png";
 		public static final String MENU_BTN = "interfaces/menu_button.png";
+		public static final String MENU_BTN_TINTED = "interfaces/menu_button_tinted.png";
 		public static final String TOOLBAR  = "interfaces/toolbar.png";
+		public static final String TOOLBAR_TINTED = "interfaces/toolbar_tinted.png";
 		public static final String SHADOW   = "interfaces/shadow.png";
 		public static final String BOSSHP   = "interfaces/boss_hp.png";
+		public static final String BOSSHP_TINTED = "interfaces/boss_hp_tinted.png";
 
 		public static final String SURFACE  = "interfaces/surface.png";
 
@@ -94,11 +98,11 @@ public class Assets {
 		public static final String BUFFS_LARGE      = "interfaces/large_buffs.png";
 
 		public static final String TALENT_ICONS     = "interfaces/talent_icons.png";
-		public static final String TALENT_BUTTON    = "interfaces/talent_button.png";
+		public static final String TALENT_BUTTON    = "interfaces/talent_button_tinted.png";
 
 		public static final String HERO_ICONS       = "interfaces/hero_icons.png";
 
-		public static final String RADIAL_MENU      = "interfaces/radial_menu.png";
+		public static final String RADIAL_MENU      = "interfaces/radial_menu_tinted.png";
 	}
 
 	//these points to resource bundles, not raw asset files

@@ -702,7 +702,7 @@ public class Toolbar extends Component {
 	
 	private static class Tool extends Button {
 		
-		private static final int BGCOLOR = 0x7B8073;
+		private static final int BGCOLOR = 0x687E8B;
 		
 		private Image base;
 		private Image icon;
@@ -732,7 +732,7 @@ public class Toolbar extends Component {
 		protected void createChildren() {
 			super.createChildren();
 			
-			base = new Image( Assets.Interfaces.TOOLBAR );
+			base = new Image( Assets.Interfaces.TOOLBAR_TINTED );
 			add( base );
 		}
 		

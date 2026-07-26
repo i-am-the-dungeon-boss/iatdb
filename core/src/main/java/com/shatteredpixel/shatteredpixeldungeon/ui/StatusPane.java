@@ -93,19 +93,20 @@ public class StatusPane extends Component {
 	public StatusPane( boolean large ){
 		super();
 
-		String asset = Assets.Interfaces.STATUS;
+		String frameAsset = Assets.Interfaces.STATUS_TINTED;
+		String barAsset = Assets.Interfaces.STATUS;
 
 		this.large = large;
 
-		if (large)  bg = new NinePatch( asset, 0, 64, 41, 39, 33, 0, 4, 0 );
-		else        bg = new NinePatch( asset, 0,  0, 82, 38, 32, 0, 5, 0 );
+		if (large)  bg = new NinePatch( frameAsset, 0, 64, 41, 39, 33, 0, 4, 0 );
+		else        bg = new NinePatch( frameAsset, 0,  0, 82, 38, 32, 0, 5, 0 );
 		add( bg );
 
-		heroPaneCutout = new NinePatch(asset, 0, 0, 5, 36, 4, 0, 0, 0);
+		heroPaneCutout = new NinePatch(frameAsset, 0, 0, 5, 36, 4, 0, 0, 0);
 		heroPaneCutout.visible = false;
 		add(heroPaneCutout);
 
-		hpCutout = new Image(asset, 90, 0, 12, 9);
+		hpCutout = new Image(frameAsset, 90, 0, 12, 9);
 		hpCutout.visible = false;
 		add(hpCutout);
 
@@ -136,12 +137,12 @@ public class StatusPane extends Component {
 		compass = new Compass( Statistics.amuletObtained ? Dungeon.level.entrance() : Dungeon.level.exit() );
 		add( compass );
 
-		if (large)  shieldHP = new Image(asset, 0, 112, 128, 9);
-		else        shieldHP = new Image(asset, 0, 44, 50, 4);
+		if (large)  shieldHP = new Image(barAsset, 0, 112, 128, 9);
+		else        shieldHP = new Image(barAsset, 0, 44, 50, 4);
 		add(shieldHP);
 
-		if (large)  hp = new Image(asset, 0, 103, 128, 9);
-		else        hp = new Image(asset, 0, 40, 50, 4);
+		if (large)  hp = new Image(barAsset, 0, 103, 128, 9);
+		else        hp = new Image(barAsset, 0, 40, 50, 4);
 		add( hp );
 
 		hpText = new BitmapText(PixelScene.pixelFont);
@@ -157,8 +158,8 @@ public class StatusPane extends Component {
 		};
 		add(heroInfoOnBar);
 
-		if (large)  exp = new Image(asset, 0, 121, 128, 7);
-		else        exp = new Image(asset, 0, 48, 17, 4);
+		if (large)  exp = new Image(barAsset, 0, 121, 128, 7);
+		else        exp = new Image(barAsset, 0, 48, 17, 4);
 		add( exp );
 
 		expText = new BitmapText(PixelScene.pixelFont);
