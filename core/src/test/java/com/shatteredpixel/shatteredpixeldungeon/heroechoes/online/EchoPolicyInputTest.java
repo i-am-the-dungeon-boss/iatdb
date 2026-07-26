@@ -4,6 +4,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,5 +73,23 @@ class EchoPolicyInputTest {
 		Assertions.assertThatThrownBy(() -> EchoPolicyInput.fromHero(hero))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("hero_class");
+	}
+
+	@Test
+	@DisplayName("fromHero omits WandOfWarding from policy kit items")
+	void fromHeroOmitsWandOfWarding() {
+		Hero hero = EchoTestSupport.warriorHero();
+		WandOfWarding warding = new WandOfWarding();
+		warding.identify();
+		warding.collect(hero.belongings.backpack);
+		WandOfMagicMissile missile = new WandOfMagicMissile();
+		missile.identify();
+		missile.collect(hero.belongings.backpack);
+
+		EchoPolicyInput input = EchoPolicyInput.fromHero(hero);
+
+		Assertions.assertThat(input.items)
+				.contains("WandOfMagicMissile")
+				.doesNotContain("WandOfWarding");
 	}
 }

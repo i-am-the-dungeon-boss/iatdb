@@ -5,6 +5,11 @@ import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
 import com.watabou.utils.Bundle;
@@ -104,6 +109,40 @@ public final class EchoHeroSnapshot {
 			restoreActionIndicator(savedAction);
 			GameScene.updateItemDisplays = savedUpdateItemDisplays;
 			Belongings.bundleRestoring = false;
+		}
+	}
+
+	/**
+	 * Echo fight kits start fully charged so drained captures still fight with
+	 * their arsenal (wands, artifacts, class armor, duelist charger).
+	 */
+	public static void refillCharges(Hero kit) {
+		if (kit == null || kit.belongings == null) {
+			return;
+		}
+		for (Item item : kit.belongings) {
+			if (item instanceof Wand) {
+				Wand wand = (Wand) item;
+				wand.curCharges = wand.maxCharges;
+				wand.partialCharge = 0f;
+			}
+			if (item instanceof MagesStaff) {
+				MagesStaff staff = (MagesStaff) item;
+				if (staff.wand() != null) {
+					staff.setWandCharges(staff.wand().maxCharges);
+				}
+			}
+			if (item instanceof Artifact) {
+				((Artifact) item).fullyCharge();
+			}
+			if (item instanceof ClassArmor) {
+				((ClassArmor) item).charge = 100f;
+			}
+		}
+		MeleeWeapon.Charger charger = kit.buff(MeleeWeapon.Charger.class);
+		if (charger != null) {
+			charger.charges = charger.chargeCap();
+			charger.partialCharge = 0f;
 		}
 	}
 

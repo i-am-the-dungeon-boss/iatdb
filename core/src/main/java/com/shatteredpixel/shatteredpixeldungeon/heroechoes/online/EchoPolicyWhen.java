@@ -89,6 +89,8 @@ public final class EchoPolicyWhen {
 				return status.onTerrain.equalsIgnoreCase(String.valueOf(raw));
 			case "enemy_in_los":
 				return status.enemyInLos == asBoolean(raw);
+			case "door_stalling":
+				return status.doorStalling == asBoolean(raw);
 			case "self_safe_for":
 				return status.isSafeFor(String.valueOf(raw));
 			case "self_unsafe_for":

@@ -484,7 +484,10 @@ public class Hero extends Char {
 		// TODO improve this!
 		belongings.thrownWeapon = wep;
 		boolean hit = attack(enemy);
-		Invisibility.dispel();
+		// Miss / dodge must not break invisibility; dispel the shooter only.
+		if (hit) {
+			Invisibility.dispel(this);
+		}
 		belongings.thrownWeapon = null;
 
 		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy) {
@@ -1701,6 +1704,15 @@ public class Hero extends Char {
 		// early
 		dmg = (int) Math.ceil(dmg * RingOfTenacity.damageMultiplier(this));
 
+		// Hits reveal the hero (cloak / potion invis). Always dispel on damage —
+		// do not gate on invisible>0 in case the counter and buffs ever desync.
+		if (dmg > 0) {
+			Invisibility.dispel(this);
+			if (invisible <= 0 && sprite != null) {
+				sprite.remove(CharSprite.State.INVISIBLE);
+			}
+		}
+
 		int preHP = HP + shielding();
 		if (src instanceof Hunger)
 			preHP -= shielding();
@@ -1752,7 +1764,8 @@ public class Hero extends Char {
 				Notes.add(m.landmark());
 			}
 
-			if (fieldOfView[m.pos] && m.alignment == Alignment.ENEMY) {
+			// Invisible enemies stay hidden: no visible list, no quickslot auto-aim.
+			if (fieldOfView[m.pos] && m.alignment == Alignment.ENEMY && m.invisible <= 0) {
 				visible.add(m);
 				if (!visibleEnemies.contains(m)) {
 					newMob = true;
@@ -1778,11 +1791,16 @@ public class Hero extends Char {
 		}
 
 		Char lastTarget = QuickSlotButton.lastTarget;
-		if (target != null && (lastTarget == null ||
-				!lastTarget.isAlive() || !lastTarget.isActive() ||
-				lastTarget.alignment == Alignment.ALLY ||
-				!fieldOfView[lastTarget.pos])) {
+		boolean lastTargetValid = lastTarget != null
+				&& lastTarget.isAlive()
+				&& lastTarget.isActive()
+				&& lastTarget.alignment != Alignment.ALLY
+				&& lastTarget.invisible <= 0
+				&& fieldOfView[lastTarget.pos];
+		if (target != null && !lastTargetValid) {
 			QuickSlotButton.target(target);
+		} else if (!lastTargetValid) {
+			QuickSlotButton.clearTarget();
 		}
 
 		if (newMob) {
@@ -2422,7 +2440,10 @@ public class Hero extends Char {
 
 		boolean hit = attack(attackTarget);
 
-		Invisibility.dispel();
+		// Miss / dodge must not break invisibility.
+		if (hit) {
+			Invisibility.dispel(this);
+		}
 		spend(attackDelay());
 
 		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy) {

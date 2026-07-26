@@ -5,6 +5,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
@@ -31,7 +33,13 @@ public final class EchoInventory {
 			if (item.quantity() <= 0) {
 				continue;
 			}
-			if (item instanceof Wand && ((Wand) item).curCharges <= 0) {
+			if (item instanceof Wand && !((Wand) item).canZap()) {
+				continue;
+			}
+			if (item instanceof CloakOfShadows && !((CloakOfShadows) item).canActivateStealth()) {
+				continue;
+			}
+			if (item instanceof Artifact && !((Artifact) item).hasCharges()) {
 				continue;
 			}
 			if (item instanceof MagesStaff && !((MagesStaff) item).canZap()) {

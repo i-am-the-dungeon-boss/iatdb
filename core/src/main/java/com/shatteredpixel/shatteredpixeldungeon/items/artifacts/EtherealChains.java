@@ -87,6 +87,12 @@ public class EtherealChains extends Artifact {
 		return dst;
 	}
 
+	/** Chains track soft charge without {@code chargeCap}. */
+	@Override
+	public boolean hasCharges() {
+		return charge > 0;
+	}
+
 	@Override
 	public void execute(Hero hero, String action) {
 

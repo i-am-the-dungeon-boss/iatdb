@@ -48,9 +48,13 @@ public final class UseContext {
 		return new UseContext(hero, hero, TurnOwner.hero(hero), true);
 	}
 
-	/** EchoBoss: body = boss, kit = phantom echo hero; no-op turns; heroFX off. */
+	/**
+	 * EchoBoss: body = boss, kit = phantom echo hero; heroFX off.
+	 * Turn gating matches Hero throws — {@link TurnOwner#busy()} until
+	 * {@link TurnOwner#spendAfterThrow(float)}.
+	 */
 	public static UseContext echo(EchoBoss boss) {
-		return new UseContext(boss, boss.getEchoHero(), TurnOwner.NO_OP, false);
+		return new UseContext(boss, boss.getEchoHero(), TurnOwner.echo(boss), false);
 	}
 
 	/**
@@ -125,6 +129,23 @@ public final class UseContext {
 					} else {
 						hero.spendAndNext(delay);
 					}
+				}
+			};
+		}
+
+		/**
+		 * Defers EchoBoss time spend until throw/zap VFX completes (master Hero cast).
+		 */
+		static TurnOwner echo(EchoBoss boss) {
+			return new TurnOwner() {
+				@Override
+				public void busy() {
+					boss.busy();
+				}
+
+				@Override
+				public void spendAfterThrow(float delay) {
+					boss.spendAndNext(delay);
 				}
 			};
 		}

@@ -82,27 +82,8 @@ public class WandOfWarding extends Wand {
 	
 	@Override
 	public boolean tryToZap(Hero owner, int target) {
-		
-		int currentWardEnergy = 0;
-		for (Char ch : Actor.chars()){
-			if (ch instanceof Ward){
-				currentWardEnergy += ((Ward) ch).tier;
-			}
-		}
-
-		if (Stasis.getStasisAlly() instanceof Ward){
-			currentWardEnergy += ((Ward) Stasis.getStasisAlly()).tier;
-		}
-		
-		int maxWardEnergy = 0;
-		for (Buff buff : curUser.buffs()){
-			if (buff instanceof Wand.Charger){
-				if (((Charger) buff).wand() instanceof WandOfWarding){
-					maxWardEnergy += 2 + ((Charger) buff).wand().level();
-				}
-			}
-		}
-		
+		int currentWardEnergy = wardEnergyUsed();
+		int maxWardEnergy = wardEnergyCap(owner);
 		wardAvailable = (currentWardEnergy < maxWardEnergy);
 		
 		Char ch = Actor.findChar(target);
@@ -119,6 +100,50 @@ public class WandOfWarding extends Wand {
 		}
 		
 		return super.tryToZap(owner, target);
+	}
+
+	/**
+	 * Echo AI readiness: needs charges and free ward energy (requires a live
+	 * {@link Charger} on the owner — otherwise max energy is 0).
+	 */
+	@Override
+	public boolean canZap() {
+		if (!super.canZap()) {
+			return false;
+		}
+		Char owner = charger != null ? charger.target : curUser;
+		if (!(owner instanceof Hero)) {
+			return false;
+		}
+		return wardEnergyUsed() < wardEnergyCap((Hero) owner);
+	}
+
+	private static int wardEnergyUsed() {
+		int currentWardEnergy = 0;
+		for (Char ch : Actor.chars()) {
+			if (ch instanceof Ward) {
+				currentWardEnergy += ((Ward) ch).tier;
+			}
+		}
+		if (Stasis.getStasisAlly() instanceof Ward) {
+			currentWardEnergy += ((Ward) Stasis.getStasisAlly()).tier;
+		}
+		return currentWardEnergy;
+	}
+
+	private static int wardEnergyCap(Hero owner) {
+		if (owner == null) {
+			return 0;
+		}
+		int maxWardEnergy = 0;
+		for (Buff buff : owner.buffs()) {
+			if (buff instanceof Wand.Charger) {
+				if (((Charger) buff).wand() instanceof WandOfWarding) {
+					maxWardEnergy += 2 + ((Charger) buff).wand().level();
+				}
+			}
+		}
+		return maxWardEnergy;
 	}
 	
 	@Override

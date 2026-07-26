@@ -299,7 +299,8 @@ class ArmorAbilityActivateAsTest {
 
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
-		// Strip player DR so a guaranteed hit always reduces HP (cloth DR can absorb low rolls).
+		// Strip player DR so a guaranteed hit always reduces HP (cloth DR can absorb
+		// low rolls).
 		player.belongings.armor = null;
 		int hpBefore = player.HP;
 		boss.getEchoHero().invisible = 1; // surprise accuracy for kit.attack
@@ -342,8 +343,14 @@ class ArmorAbilityActivateAsTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				hero, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
-		assertHeroAbilityDispelsInvisibility(
-				new Shockwave(), new WarriorArmor(), boss.pos, hero, boss);
+		Buff.affect(hero, Invisibility.class, Invisibility.DURATION);
+		WarriorArmor armor = new WarriorArmor();
+		armor.charge = 100;
+
+		boolean ok = new Shockwave().activateAs(UseContext.hero(hero), armor, boss.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(hero.buff(Invisibility.class)).isNull();
 	}
 
 	@Test
@@ -374,8 +381,14 @@ class ArmorAbilityActivateAsTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
-		assertEchoAbilityDispelsBossInvisibility(
-				new Shockwave(), new WarriorArmor(), player.pos, player, boss);
+		Buff.affect(boss, Invisibility.class, Invisibility.DURATION);
+		WarriorArmor armor = new WarriorArmor();
+		armor.charge = 100;
+
+		boolean ok = new Shockwave().activateAs(UseContext.echo(boss), armor, player.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(boss.buff(Invisibility.class)).isNull();
 	}
 
 	private static void assertHeroAbilityDispelsInvisibility(

@@ -55,8 +55,10 @@ public final class EchoRoleExecutor {
 		JSONObject caps = policy.root().optJSONObject("capabilities");
 		JSONObject cap = caps != null ? caps.optJSONObject(choice.useRole) : null;
 		java.util.Set<String> available = EchoInventory.availableIds(boss.getEchoHero());
-		String itemId = EchoRoleResolver.resolveItemId(cap, available);
-		if (itemId == null) {
+		String itemId = choice.itemId != null
+				? choice.itemId
+				: EchoRoleResolver.resolveItemId(cap, available);
+		if (itemId == null || (choice.itemId != null && !EchoRoleResolver.isAvailable(itemId, available))) {
 			debugExec("resolve miss role=" + choice.useRole + " available=" + available);
 			return false;
 		}
@@ -74,13 +76,40 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 
-		int cell = EchoTargetPicker.pick(boss, status, itemId, isSplashAimHazard(cap));
-
-		if (item instanceof Potion) {
-			boolean ok = executePotion(boss, (Potion) item, choice.useRole, cell);
-			debugExec("potion " + itemId + " cell=" + cell + " → " + (ok ? "spent" : "fail"));
-			return ok;
+		boolean doorBreak = "DOOR_BREAK".equals(choice.useRole)
+				|| "door_break".equals(choice.layer);
+		int cell;
+		if (doorBreak) {
+			cell = boss.doorStallCell();
+			debugExec("door_break aim cell=" + cell);
+		} else {
+			cell = EchoTargetPicker.pick(boss, status, itemId, isSplashAimHazard(cap));
 		}
+
+		boolean spent;
+		if (item instanceof Potion) {
+			spent = executePotion(boss, (Potion) item, choice.useRole, cell);
+			debugExec("potion " + itemId + " cell=" + cell + " → " + (spent ? "spent" : "fail"));
+		} else {
+			spent = executeNonPotion(boss, item, itemId, cell, choice, cap);
+		}
+		if (spent && doorBreak) {
+			boss.clearDoorStall();
+		}
+		return spent;
+	}
+
+	/**
+	 * Shared non-potion branches; extracted so door_break can clear stall after
+	 * success.
+	 */
+	private static boolean executeNonPotion(
+			EchoBoss boss,
+			Item item,
+			String itemId,
+			int cell,
+			EchoPolicyChoice choice,
+			JSONObject cap) {
 		if (item instanceof Scroll) {
 			boolean ok = ((Scroll) item).readAs(UseContext.echo(boss));
 			debugExec("scroll " + itemId + " → " + (ok ? "spent" : "fail"));
@@ -92,25 +121,22 @@ public final class EchoRoleExecutor {
 			return ok;
 		}
 		if (item instanceof Wand) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			boolean ok = aim >= 0 && Dungeon.level != null
-					&& ((Wand) item).zapAs(UseContext.echo(boss), aim);
-			debugExec("wand " + itemId + " cell=" + aim + " charges=" + ((Wand) item).curCharges
+			boolean ok = cell >= 0 && Dungeon.level != null
+					&& ((Wand) item).zapAs(UseContext.echo(boss), cell);
+			debugExec("wand " + itemId + " cell=" + cell + " charges=" + ((Wand) item).curCharges
 					+ " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof SpiritBow) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			boolean ok = aim >= 0 && Dungeon.level != null
-					&& ((SpiritBow) item).knockArrow().throwAs(UseContext.echo(boss), aim);
-			debugExec("spirit bow cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			boolean ok = cell >= 0 && Dungeon.level != null
+					&& ((SpiritBow) item).knockArrow().throwAs(UseContext.echo(boss), cell);
+			debugExec("spirit bow cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof MagesStaff) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			boolean ok = aim >= 0 && Dungeon.level != null
-					&& ((MagesStaff) item).zapAs(UseContext.echo(boss), aim);
-			debugExec("staff zap cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			boolean ok = cell >= 0 && Dungeon.level != null
+					&& ((MagesStaff) item).zapAs(UseContext.echo(boss), cell);
+			debugExec("staff zap cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof MeleeWeapon && !(item instanceof MagesStaff)) {
@@ -118,7 +144,7 @@ public final class EchoRoleExecutor {
 			if (kit != null && kit.heroClass == HeroClass.DUELIST) {
 				MeleeWeapon weapon = (MeleeWeapon) item;
 				Integer target = weapon.targetingPrompt() != null
-						? (cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : null))
+						? (cell >= 0 ? cell : null)
 						: null;
 				if (weapon.targetingPrompt() != null && target == null) {
 					debugExec("no aim cell for melee ability " + itemId);
@@ -130,13 +156,12 @@ public final class EchoRoleExecutor {
 			}
 		}
 		if (item instanceof MissileWeapon || item instanceof Bomb || isThrowableRunestone(item)) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			if (aim < 0 || Dungeon.level == null) {
+			if (cell < 0 || Dungeon.level == null) {
 				debugExec("no aim cell for " + itemId);
 				return false;
 			}
-			boolean ok = item.throwAs(UseContext.echo(boss), aim);
-			debugExec("throwable " + itemId + " cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			boolean ok = item.throwAs(UseContext.echo(boss), cell);
+			debugExec("throwable " + itemId + " cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof InventoryStone) {
@@ -144,14 +169,11 @@ public final class EchoRoleExecutor {
 			debugExec("inventory stone " + itemId + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
-		// Artifacts — HolyTome cleric spells via castAs (merge: keep sibling branches)
 		if (item instanceof HolyTome) {
 			boolean ok = executeHolyTome(boss, (HolyTome) item, cap, cell);
 			debugExec("holy tome cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
-		// Artifacts — CloakOfShadows stealth via shared useAs (merge: keep sibling
-		// branches)
 		if (item instanceof CloakOfShadows) {
 			boolean ok = ((CloakOfShadows) item).useAs(UseContext.echo(boss));
 			debugExec("artifact CloakOfShadows → " + (ok ? "spent" : "fail"));
@@ -163,13 +185,12 @@ public final class EchoRoleExecutor {
 			return ok;
 		}
 		if (item instanceof EtherealChains) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			if (aim < 0) {
+			if (cell < 0) {
 				debugExec("artifact EtherealChains no aim");
 				return false;
 			}
-			boolean ok = ((EtherealChains) item).useAs(UseContext.echo(boss), aim);
-			debugExec("artifact EtherealChains cell=" + aim + " → " + (ok ? "spent" : "fail"));
+			boolean ok = ((EtherealChains) item).useAs(UseContext.echo(boss), cell);
+			debugExec("artifact EtherealChains cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		debugExec("unsupported item class=" + item.getClass().getSimpleName());
@@ -304,11 +325,10 @@ public final class EchoRoleExecutor {
 		}
 		Integer target = null;
 		if (ability.useTargeting()) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			if (aim < 0) {
+			if (cell < 0) {
 				return false;
 			}
-			target = aim;
+			target = cell;
 		}
 		return ability.activateAs(UseContext.echo(boss), armor, target);
 	}
@@ -320,11 +340,10 @@ public final class EchoRoleExecutor {
 		}
 		Integer target = null;
 		if (spell.targetingFlags() != -1) {
-			int aim = cell >= 0 ? cell : (Dungeon.hero != null ? Dungeon.hero.pos : -1);
-			if (aim < 0 || Dungeon.level == null) {
+			if (cell < 0 || Dungeon.level == null) {
 				return false;
 			}
-			target = aim;
+			target = cell;
 		}
 		return tome.castAs(UseContext.echo(boss), spell, target);
 	}

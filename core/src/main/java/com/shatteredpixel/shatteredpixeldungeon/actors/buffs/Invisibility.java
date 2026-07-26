@@ -38,21 +38,21 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 
 public class Invisibility extends FlavourBuff {
 
-	public static final float DURATION	= 20f;
+	public static final float DURATION = 20f;
 
 	{
 		type = buffType.POSITIVE;
 		announced = true;
 	}
-	
+
 	@Override
-	public boolean attachTo( Char target ) {
-		if (super.attachTo( target )) {
+	public boolean attachTo(Char target) {
+		if (super.attachTo(target)) {
 			target.invisible++;
-			if (target instanceof Hero && ((Hero) target).subClass == HeroSubClass.ASSASSIN){
+			if (target instanceof Hero && ((Hero) target).subClass == HeroSubClass.ASSASSIN) {
 				Buff.affect(target, Preparation.class);
 			}
-			if (target instanceof Hero && ((Hero) target).hasTalent(Talent.PROTECTIVE_SHADOWS)){
+			if (target instanceof Hero && ((Hero) target).hasTalent(Talent.PROTECTIVE_SHADOWS)) {
 				Buff.affect(target, Talent.ProtectiveShadowsTracker.class);
 			}
 			return true;
@@ -60,14 +60,14 @@ public class Invisibility extends FlavourBuff {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public void detach() {
 		if (target.invisible > 0)
 			target.invisible--;
 		super.detach();
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.INVISIBLE;
@@ -80,44 +80,50 @@ public class Invisibility extends FlavourBuff {
 
 	@Override
 	public void fx(boolean on) {
-		if (on) target.sprite.add( CharSprite.State.INVISIBLE );
-		else if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
+		if (on)
+			target.sprite.add(CharSprite.State.INVISIBLE);
+		else if (target.invisible == 0)
+			target.sprite.remove(CharSprite.State.INVISIBLE);
 	}
 
 	public static void dispel() {
-		if (Dungeon.hero == null) return;
+		if (Dungeon.hero == null)
+			return;
 
 		dispel(Dungeon.hero);
 	}
 
-	public static void dispel(Char ch){
+	public static void dispel(Char ch) {
 
-		for ( Buff invis : ch.buffs( Invisibility.class )){
+		for (Buff invis : ch.buffs(Invisibility.class)) {
 			invis.detach();
 		}
-		CloakOfShadows.cloakStealth cloakBuff = ch.buff( CloakOfShadows.cloakStealth.class );
-		if (cloakBuff != null) {
-			cloakBuff.dispel();
+		// Use instanceof — Char.buff(Class) requires exact class equality, which is
+		// brittle for CloakOfShadows' non-static cloakStealth inner class.
+		for (Buff b : ch.buffs().toArray(new Buff[0])) {
+			if (b instanceof CloakOfShadows.cloakStealth) {
+				((CloakOfShadows.cloakStealth) b).dispel();
+			}
 		}
 
-		//these aren't forms of invisibility, but do dispel at the same time as it.
-		TimekeepersHourglass.timeFreeze timeFreeze = ch.buff( TimekeepersHourglass.timeFreeze.class );
+		// these aren't forms of invisibility, but do dispel at the same time as it.
+		TimekeepersHourglass.timeFreeze timeFreeze = ch.buff(TimekeepersHourglass.timeFreeze.class);
 		if (timeFreeze != null) {
 			timeFreeze.detach();
 		}
 
-		Preparation prep = ch.buff( Preparation.class );
-		if (prep != null){
+		Preparation prep = ch.buff(Preparation.class);
+		if (prep != null) {
 			prep.detach();
 		}
 
-		Swiftthistle.TimeBubble bubble =  ch.buff( Swiftthistle.TimeBubble.class );
-		if (bubble != null){
+		Swiftthistle.TimeBubble bubble = ch.buff(Swiftthistle.TimeBubble.class);
+		if (bubble != null) {
 			bubble.detach();
 		}
 
 		RoundShield.GuardTracker guard = ch.buff(RoundShield.GuardTracker.class);
-		if (guard != null && guard.hasBlocked){
+		if (guard != null && guard.hasBlocked) {
 			guard.detach();
 		}
 	}

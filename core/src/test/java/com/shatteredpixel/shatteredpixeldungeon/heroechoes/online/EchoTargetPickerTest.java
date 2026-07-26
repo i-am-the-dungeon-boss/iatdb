@@ -79,4 +79,58 @@ class EchoTargetPickerTest {
 
 		Assertions.assertThat(cell).isEqualTo(-1);
 	}
+
+	@Test
+	@DisplayName("non-AOE pick aims at last seen cell when enemy is not in LOS")
+	void nonAoeAimsLastSeenWithoutLos() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		int lastSeen = hero.pos;
+		boss.noteEnemySeenAt(lastSeen);
+		hero.pos = lastSeen + 1;
+		hero.invisible = 1;
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder().enemyInLos(false).build();
+		int cell = EchoTargetPicker.pick(boss, status, "WandOfFireblast", false);
+
+		Assertions.assertThat(cell).isEqualTo(lastSeen);
+	}
+
+	@Test
+	@DisplayName("non-AOE pick returns none without LOS when last seen is unknown")
+	void nonAoeReturnsNoneWithoutLosOrLastSeen() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		boss.noteEnemySeenAt(-1);
+		hero.invisible = 1;
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder().enemyInLos(false).build();
+		int cell = EchoTargetPicker.pick(boss, status, "SpiritBow", false);
+
+		Assertions.assertThat(cell).isEqualTo(-1);
+	}
+
+	@Test
+	@DisplayName("AOE pick aims near last seen cell when enemy is not in LOS")
+	void aoeAimsNearLastSeenWithoutLos() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		int lastSeen = hero.pos;
+		boss.noteEnemySeenAt(lastSeen);
+		hero.pos = lastSeen + Dungeon.level.width() * 2;
+		hero.invisible = 1;
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(false)
+				.safeHazards(Collections.singleton(EchoPolicyHazards.FIRE_AOE))
+				.build();
+		int cell = EchoTargetPicker.pick(boss, status, "PotionOfLiquidFlame", true);
+
+		Assertions.assertThat(cell).isGreaterThanOrEqualTo(0);
+		Assertions.assertThat(Dungeon.level.distance(cell, lastSeen)).isLessThanOrEqualTo(1);
+		Assertions.assertThat(Dungeon.level.distance(cell, hero.pos)).isGreaterThan(1);
+	}
 }

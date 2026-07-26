@@ -690,6 +690,9 @@ class EchoRoleExecutorTest {
 		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
 		EchoTestSupport.attachInstantProjectileParent(boss);
 		boss.getEchoHero().invisible = 1;
+		// Strip player DR so a guaranteed hit always reduces HP (cloth DR can absorb
+		// low rolls).
+		hero.belongings.armor = null;
 		int hpBefore = hero.HP;
 
 		boolean spent = EchoRoleExecutor.execute(

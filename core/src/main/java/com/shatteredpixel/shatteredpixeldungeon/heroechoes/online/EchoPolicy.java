@@ -45,16 +45,35 @@ public final class EchoPolicy {
 		capabilities.put("MELEE", new JSONObject()
 				.put("pick", "FIRST_LEGAL")
 				.put("items", new JSONArray().put("*melee")));
+		capabilities.put("INVIS", new JSONObject()
+				.put("pick", "FIRST_LEGAL")
+				.put("items", new JSONArray().put("PotionOfInvisibility")));
 		root.put("capabilities", capabilities);
-		root.put("reactions", new JSONArray());
+		root.put("reactions", new JSONArray().put(invisEscapeReaction()));
 		root.put("recipes", new JSONArray());
 		root.put("positioning", new JSONObject());
 		root.put("matchups", new JSONObject());
 		root.put("selection", new JSONObject()
-				.put("order", new JSONArray().put("default"))
+				.put("order", new JSONArray().put("reactions").put("default"))
 				.put("default_roles", new JSONArray().put("MELEE").put("WAIT")));
 		root.put("tuning", new JSONObject());
 		return new EchoPolicy(root);
+	}
+
+	/**
+	 * Mirrors the backend {@code invis_escape} reaction: drink invisibility to
+	 * break away when hurt and cornered.
+	 */
+	private static JSONObject invisEscapeReaction() {
+		JSONObject when = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("self_hp_below", 0.3))
+				.put(new JSONObject().put("distance_lte", 2))
+				.put(new JSONObject().put("role_ready", "INVIS")));
+		return new JSONObject()
+				.put("id", "invis_escape")
+				.put("priority", 102)
+				.put("when", when)
+				.put("do", new JSONObject().put("use_role", "INVIS"));
 	}
 
 	/** Role-based policy with capabilities. Schema version is not checked for now. */

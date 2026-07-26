@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLevitation;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -47,10 +48,10 @@ public class ElixirOfFeatherFall extends Elixir {
 	@Override
 	public void apply(Char ch) {
 		Buff.append(ch, FeatherBuff.class, FeatherBuff.DURATION);
+		if (UseContext.canWorldFx(ch)) {
+			ch.sprite.emitter().burst(Speck.factory(Speck.JET), 20);
+		}
 		if (ch instanceof Hero) {
-			if (ch.sprite != null) {
-				ch.sprite.emitter().burst(Speck.factory(Speck.JET), 20);
-			}
 			GLog.p(Messages.get(this, "light"));
 		}
 	}

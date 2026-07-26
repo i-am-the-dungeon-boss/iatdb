@@ -3,7 +3,10 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
@@ -217,6 +220,71 @@ class EchoBossMovementTest {
 		float expected = kit.combatSpeed();
 		Assertions.assertThat(expected).isGreaterThan(1f);
 		Assertions.assertThat(boss.speed()).isEqualTo(expected);
+	}
+
+	@Test
+	@DisplayName("paralysed hunting EchoBoss does not move on its turn")
+	void paralysedBossDoesNotMove() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, closeInDefaultPolicy(), 5);
+		boss.state = boss.HUNTING;
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		Buff.affect(boss, Paralysis.class, Paralysis.DURATION);
+		int start = boss.pos;
+		boss.timeToNow();
+
+		boss.act();
+
+		Assertions.assertThat(boss.pos).isEqualTo(start);
+		Assertions.assertThat(boss.cooldown()).isEqualTo(Actor.TICK);
+	}
+
+	@Test
+	@DisplayName("frozen hunting EchoBoss does not move on its turn")
+	void frozenBossDoesNotMove() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, closeInDefaultPolicy(), 5);
+		boss.state = boss.HUNTING;
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		Buff.affect(boss, Frost.class, Frost.DURATION);
+		int start = boss.pos;
+		boss.timeToNow();
+
+		boss.act();
+
+		Assertions.assertThat(boss.pos).isEqualTo(start);
+	}
+
+	@Test
+	@DisplayName("rooted EchoBoss cannot policy-step closer")
+	void rootedBossCannotPolicyStepCloser() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, closeInDefaultPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		fillFov(boss);
+		Buff.prolong(boss, Roots.class, Roots.DURATION);
+		int start = boss.pos;
+
+		boolean moved = boss.policyStepCloser(hero.pos);
+
+		Assertions.assertThat(moved).isFalse();
+		Assertions.assertThat(boss.pos).isEqualTo(start);
+	}
+
+	@Test
+	@DisplayName("rooted hunting EchoBoss stays put when policy asks to CLOSE_IN")
+	void rootedBossDoesNotCloseInOnAct() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, closeInDefaultPolicy(), 5);
+		boss.state = boss.HUNTING;
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		Buff.prolong(boss, Roots.class, Roots.DURATION);
+		int start = boss.pos;
+		boss.timeToNow();
+
+		boss.act();
+
+		Assertions.assertThat(boss.pos).isEqualTo(start);
 	}
 
 	@Test

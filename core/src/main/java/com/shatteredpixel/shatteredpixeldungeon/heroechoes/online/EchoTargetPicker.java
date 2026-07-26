@@ -24,22 +24,28 @@ public final class EchoTargetPicker {
 		if (enemy == null || level == null)
 			return -1;
 
-		if (!aoeHazard) {
-			return enemy.pos;
+		// Visible: live cell. Unseen (cloak): last-seen guess for blind defense —
+		// no live stealth tracking.
+		int focus = status.enemyInLos ? enemy.pos : boss.lastSeenEnemyPos();
+		if (focus < 0 || focus >= level.length()) {
+			return -1;
 		}
 
-		// Prefer a neighbour of the hero whose blast does not include the echo.
+		if (!aoeHazard) {
+			return focus;
+		}
+
+		// Prefer a neighbour of the focus whose blast does not include the echo.
 		int best = -1;
 		int bestScore = Integer.MIN_VALUE;
 		for (int i = 0; i < PathFinder.NEIGHBOURS9.length; i++) {
-			int cell = enemy.pos + PathFinder.NEIGHBOURS9[i];
+			int cell = focus + PathFinder.NEIGHBOURS9[i];
 			if (cell < 0 || cell >= level.length() || level.solid[cell])
 				continue;
-			boolean hitsHero = true; // NEIGHBOURS9 around hero always overlaps hero for potion splash
 			boolean harmsEcho = level.distance(cell, boss.pos) <= 1
 					&& !status.isSafeFor(EchoPolicyHazards.FIRE_AOE)
 					&& !status.isSafeFor(EchoPolicyHazards.PAYOFF_AOE);
-			if (!hitsHero || harmsEcho)
+			if (harmsEcho)
 				continue;
 			int score = level.distance(cell, boss.pos);
 			if (score > bestScore) {
@@ -50,10 +56,10 @@ public final class EchoTargetPicker {
 		if (best >= 0)
 			return best;
 
-		// Allow hero.pos only when already mitigated.
+		// Allow focus cell only when already mitigated.
 		if (status.isSafeFor(EchoPolicyHazards.FIRE_AOE)
 				|| status.isSafeFor(EchoPolicyHazards.PAYOFF_AOE)) {
-			return enemy.pos;
+			return focus;
 		}
 		return -1;
 	}

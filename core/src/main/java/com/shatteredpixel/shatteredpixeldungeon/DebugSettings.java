@@ -2,6 +2,15 @@ package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfPrismaticLight;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.watabou.utils.DeviceCompat;
@@ -20,6 +29,8 @@ public final class DebugSettings {
 	public static final int DEFAULT_START_DEPTH = 19;
 	public static final int START_LEVEL = 100;
 	public static final int START_STR = 100;
+	/** Debug consumables come as a small stack so one fight can spend several. */
+	public static final int DEBUG_POTION_STACK = 3;
 	/**
 	 * Passed to {@link Dungeon#switchLevel} to place the hero on the down stairs.
 	 */
@@ -181,6 +192,25 @@ public final class DebugSettings {
 		Ankh blessed = new Ankh();
 		blessed.bless();
 		blessed.collect();
+
+		PotionOfInvisibility invisibility = new PotionOfInvisibility();
+		invisibility.identify();
+		invisibility.quantity(DEBUG_POTION_STACK);
+		invisibility.collect();
+
+		collectDebugWand(new WandOfMagicMissile());
+		collectDebugWand(new WandOfLightning());
+		collectDebugWand(new WandOfFireblast());
+		collectDebugWand(new WandOfFrost());
+		collectDebugWand(new WandOfDisintegration());
+		collectDebugWand(new WandOfBlastWave());
+		collectDebugWand(new WandOfPrismaticLight());
+	}
+
+	private static void collectDebugWand(Wand wand) {
+		wand.identify();
+		wand.curCharges = wand.maxCharges;
+		wand.collect();
 	}
 
 	/**

@@ -1,8 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -33,6 +35,57 @@ import com.watabou.utils.Random;
 public final class EchoBossRegionalDeath {
 
 	private EchoBossRegionalDeath() {
+	}
+
+	/**
+	 * Extends {@link LockedFloor} regen window using the same depth formula as
+	 * Goo / Tengu / DM-300 / Dwarf King / Yog.
+	 *
+	 * @param dmg      damage argument passed into {@link EchoBoss#damage}
+	 * @param dmgTaken actual HP lost ({@code preHP - HP})
+	 */
+	public static void onDamaged(EchoBoss boss, Object src, int dmg, int dmgTaken) {
+		if (boss == null || Dungeon.hero == null) {
+			return;
+		}
+		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
+		if (lock == null
+				|| boss.isImmune(src.getClass())
+				|| boss.isInvulnerable(src.getClass())) {
+			return;
+		}
+		boolean strong = Dungeon.isChallenged(Challenges.STRONGER_BOSSES);
+		float time = lockedFloorTime(Dungeon.depth, strong, dmg, dmgTaken);
+		if (time > 0) {
+			lock.addTime(time);
+		}
+	}
+
+	/** Package-visible for tests. */
+	static float lockedFloorTime(int depth, boolean strongerBosses, int dmg, int dmgTaken) {
+		switch (depth) {
+			case 5: // Goo — uses damage argument
+				return strongerBosses ? dmg : dmg * 1.5f;
+			case 10: // Tengu — uses HP lost
+				if (dmgTaken <= 0) {
+					return 0f;
+				}
+				return strongerBosses ? (2 * dmgTaken / 3f) : dmgTaken;
+			case 15: // DM-300 — uses HP lost
+				if (dmgTaken <= 0) {
+					return 0f;
+				}
+				return strongerBosses ? (dmgTaken / 2f) : dmgTaken;
+			case 20: // Dwarf King — uses damage argument
+				return strongerBosses ? (dmg / 5f) : (dmg / 3f);
+			case 25: // Yog — uses HP lost
+				if (dmgTaken <= 0) {
+					return 0f;
+				}
+				return strongerBosses ? (dmgTaken / 3f) : (dmgTaken / 2f);
+			default:
+				return 0f;
+		}
 	}
 
 	public static void apply(EchoBoss boss, Object cause) {

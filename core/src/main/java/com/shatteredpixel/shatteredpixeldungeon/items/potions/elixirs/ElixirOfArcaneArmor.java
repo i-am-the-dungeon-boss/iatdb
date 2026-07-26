@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfEarthenArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
@@ -45,8 +46,21 @@ public class ElixirOfArcaneArmor extends Elixir {
 
 	@Override
 	public void apply(Char ch) {
-		int lvl = (ch instanceof Hero) ? ((Hero) ch).lvl : Math.max(1, Dungeon.depth);
-		Buff.affect(ch, ArcaneArmor.class).set(5 + lvl / 2, 80);
+		Buff.affect(ch, ArcaneArmor.class).set(5 + drinkerLevel(ch) / 2, 80);
+	}
+
+	/** Hero level, echo kit level, or depth fallback for non-hero drinkers. */
+	private static int drinkerLevel(Char ch) {
+		if (ch instanceof Hero) {
+			return ((Hero) ch).lvl;
+		}
+		if (ch instanceof EchoBoss) {
+			Hero kit = ((EchoBoss) ch).getEchoHero();
+			if (kit != null) {
+				return kit.lvl;
+			}
+		}
+		return Math.max(1, Dungeon.depth);
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {

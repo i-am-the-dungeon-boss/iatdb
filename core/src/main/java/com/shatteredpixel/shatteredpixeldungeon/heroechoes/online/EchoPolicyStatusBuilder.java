@@ -35,11 +35,17 @@ public final class EchoPolicyStatusBuilder {
 		int distance = enemy != null && level != null
 				? level.distance(boss.pos, enemy.pos)
 				: 99;
+		// Match Mob hunting: FOV alone is not enough while the hero is invisible.
 		boolean inLos = enemy != null
+				&& enemy.invisible <= 0
 				&& boss.fieldOfView != null
 				&& enemy.pos >= 0
 				&& enemy.pos < boss.fieldOfView.length
 				&& boss.fieldOfView[enemy.pos];
+		// Door-stall reactions still need a remembered door focus.
+		if (inLos) {
+			boss.noteEnemySeenAt(enemy.pos);
+		}
 
 		int nearTiles = 3;
 		JSONObject tuning = policy.root().optJSONObject("tuning");
@@ -103,6 +109,7 @@ public final class EchoPolicyStatusBuilder {
 				.enemyHpRatio(enemyHp)
 				.distance(distance)
 				.enemyInLos(inLos)
+				.doorStalling(boss.isDoorStalling())
 				.selfClass(boss.getEcho().heroClass)
 				.enemyClass(enemy != null && enemy.heroClass != null ? enemy.heroClass.name() : "")
 				.onTerrain(onTerrainName(level, boss.pos))
@@ -196,6 +203,8 @@ public final class EchoPolicyStatusBuilder {
 		Set<String> names = new HashSet<>();
 		if (ch == null)
 			return names;
+		if (ch.invisible > 0)
+			names.add("invisible");
 		if (ch.buff(Burning.class) != null)
 			names.add("burning");
 		if (ch.buff(Paralysis.class) != null)

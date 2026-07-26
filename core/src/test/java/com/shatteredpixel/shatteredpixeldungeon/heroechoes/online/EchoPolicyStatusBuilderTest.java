@@ -86,6 +86,34 @@ class EchoPolicyStatusBuilderTest {
 	}
 
 	@Test
+	@DisplayName("build marks enemy not in LOS when hero is invisible")
+	void invisibleHeroNotInLos() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		boss.fieldOfView = new boolean[Dungeon.level.length()];
+		java.util.Arrays.fill(boss.fieldOfView, true);
+		hero.invisible = 1;
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, EchoTestSupport.healCapabilityPolicy());
+
+		Assertions.assertThat(status.enemyInLos).isFalse();
+	}
+
+	@Test
+	@DisplayName("build exposes invisible enemy_status when hero.invisible > 0")
+	void invisibleHeroExposesEnemyStatus() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		hero.invisible = 1;
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, EchoTestSupport.healCapabilityPolicy());
+
+		Assertions.assertThat(status.enemyStatuses).contains("invisible");
+	}
+
+	@Test
 	@DisplayName("empty wand charges omit RANGED so positioning skips KEEP_DISTANCE")
 	void emptyWandChargesSkipKeepDistance() {
 		Hero hero = new Hero();

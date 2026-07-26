@@ -121,6 +121,14 @@ public final class DebugEchoArsenal {
 			}
 		}
 
+		// Temporarily disabled — door-break spam while tuning invis / fight flow.
+		// JSONArray doorBreakIds = new JSONArray();
+		// for (Item item : items) {
+		// if (EchoPolicyMatcher.isDoorBreakItem(item)) {
+		// doorBreakIds.put(item.getClass().getSimpleName());
+		// }
+		// }
+
 		JSONObject caps = new JSONObject();
 		if (drinkIds.length() > 0) {
 			caps.put(ROLE_DRINK, new JSONObject()
@@ -140,6 +148,11 @@ public final class DebugEchoArsenal {
 					.put("pick", "FIRST_LEGAL")
 					.put("items", otherIds));
 		}
+		// if (doorBreakIds.length() > 0) {
+		// caps.put("DOOR_BREAK", new JSONObject()
+		// .put("pick", "FIRST_LEGAL")
+		// .put("items", doorBreakIds));
+		// }
 
 		JSONArray defaults = new JSONArray();
 		if (drinkIds.length() > 0) {
@@ -153,18 +166,51 @@ public final class DebugEchoArsenal {
 		}
 		defaults.put("WAIT");
 
+		JSONArray reactions = new JSONArray();
+		// Temporarily disabled — door-break spam while tuning invis / fight flow.
+		// if (doorBreakIds.length() > 0) {
+		// reactions.put(doorBreakReaction());
+		// }
+		if (otherIds.length() > 0) {
+			reactions.put(blindDefenseReaction(ROLE, 100));
+		}
+		if (throwIds.length() > 0) {
+			reactions.put(blindDefenseReaction(ROLE_THROW, 99));
+		}
+
 		JSONObject root = new JSONObject();
 		root.put("policy_schema_version", EchoPolicy.supportedSchemaVersion());
 		root.put("capabilities", caps);
-		root.put("reactions", new JSONArray());
+		root.put("reactions", reactions);
 		root.put("recipes", new JSONArray());
 		root.put("positioning", new JSONObject());
 		root.put("matchups", new JSONObject());
 		root.put("selection", new JSONObject()
-				.put("order", new JSONArray().put("default"))
+				.put("order", new JSONArray().put("reactions").put("default"))
 				.put("default_roles", defaults));
 		root.put("tuning", new JSONObject());
 		return new EchoPolicy(root);
+	}
+
+	private static JSONObject doorBreakReaction() {
+		return new JSONObject()
+				.put("id", "door_break")
+				.put("priority", 101)
+				.put("when", new JSONObject().put("all", new JSONArray()
+						.put(new JSONObject().put("door_stalling", true))
+						.put(new JSONObject().put("role_ready", "DOOR_BREAK"))))
+				.put("do", new JSONObject().put("use_role", "DOOR_BREAK").put("target", "door_cell"));
+	}
+
+	private static JSONObject blindDefenseReaction(String role, int priority) {
+		return new JSONObject()
+				.put("id", "blind_defense_" + role.toLowerCase(java.util.Locale.ROOT))
+				.put("priority", priority)
+				.put("when", new JSONObject().put("all", new JSONArray()
+						.put(new JSONObject().put("enemy_in_los", false))
+						.put(new JSONObject().put("enemy_status", "invisible"))
+						.put(new JSONObject().put("role_ready", role))))
+				.put("do", new JSONObject().put("use_role", role).put("target", "enemy_cell"));
 	}
 
 	/**
@@ -276,5 +322,9 @@ public final class DebugEchoArsenal {
 		}
 		prepare(item);
 		hero.belongings.backpack.items.add(item);
+		// Wand.collect normally attaches Charger; keep that for ward energy caps.
+		if (item instanceof Wand) {
+			((Wand) item).charge(hero);
+		}
 	}
 }

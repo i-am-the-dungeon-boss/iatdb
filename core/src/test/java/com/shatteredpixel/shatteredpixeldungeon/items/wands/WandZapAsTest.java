@@ -85,8 +85,8 @@ class WandZapAsTest {
 	}
 
 	@Test
-	@DisplayName("Hero zapAs dispels Invisibility on the hero")
-	void heroZapAsDispelsInvisibility() {
+	@DisplayName("Hero zapAs dispels caster invisibility and reveals the hit target")
+	void heroZapAsDispelsCasterAndHitTargetInvisibility() {
 		Hero hero = mageHero();
 		EchoBoss target = EchoTestSupport.createBossWithPolicy(
 				hero, EchoTestSupport.healCapabilityPolicy(), 5);
@@ -105,12 +105,14 @@ class WandZapAsTest {
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(hero.buff(Invisibility.class)).isNull();
-		Assertions.assertThat(target.buff(Invisibility.class)).isNotNull();
+		Assertions.assertThat(target.buff(Invisibility.class))
+				.as("wand/staff hit must reveal the target")
+				.isNull();
 	}
 
 	@Test
-	@DisplayName("Echo zapAs dispels Invisibility on the boss body")
-	void echoZapAsDispelsBossInvisibility() {
+	@DisplayName("Echo zapAs dispels boss invisibility and reveals the hit hero")
+	void echoZapAsDispelsBossAndHitHeroInvisibility() {
 		Hero player = mageHero();
 		WandOfMagicMissile seed = new WandOfMagicMissile();
 		seed.curCharges = 3;
@@ -129,7 +131,54 @@ class WandZapAsTest {
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.buff(Invisibility.class)).isNull();
-		Assertions.assertThat(player.buff(Invisibility.class)).isNotNull();
+		Assertions.assertThat(player.buff(Invisibility.class))
+				.as("wand hit must reveal the hero")
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("Hero MagesStaff zapAs reveals an invisible EchoBoss")
+	void heroStaffZapAsRevealsEchoBoss() {
+		Hero hero = mageHero();
+		EchoBoss target = EchoTestSupport.createBossWithPolicy(
+				hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, target, 2);
+
+		MagesStaff staff = hero.belongings.getItem(MagesStaff.class);
+		Assertions.assertThat(staff).isNotNull();
+		staff.setWandCharges(3);
+
+		Buff.affect(target, Invisibility.class, Invisibility.DURATION);
+
+		boolean ok = staff.zapAs(UseContext.hero(hero), target.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(target.buff(Invisibility.class))
+				.as("MagesStaff is a wand zap and must reveal on hit")
+				.isNull();
+		Assertions.assertThat(target.invisible).isEqualTo(0);
+	}
+
+	@Test
+	@DisplayName("Echo MagesStaff zapAs reveals an invisible hero")
+	void echoStaffZapAsRevealsHero() {
+		Hero player = mageHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, staffPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		MagesStaff staff = boss.getEchoHero().belongings.getItem(MagesStaff.class);
+		Assertions.assertThat(staff).isNotNull();
+		staff.setWandCharges(3);
+
+		Buff.affect(player, Invisibility.class, Invisibility.DURATION);
+
+		boolean ok = staff.zapAs(UseContext.echo(boss), player.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(player.buff(Invisibility.class))
+				.as("MagesStaff is a wand zap and must reveal on hit")
+				.isNull();
+		Assertions.assertThat(player.invisible).isEqualTo(0);
 	}
 
 	@Test

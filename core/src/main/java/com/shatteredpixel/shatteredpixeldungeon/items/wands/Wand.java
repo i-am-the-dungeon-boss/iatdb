@@ -160,12 +160,17 @@ public abstract class Wand extends Item {
 		}
 
 		// if we're using wild magic, then assume we have charges
-		if (owner.buff(WildMagic.WildMagicTracker.class) != null || curCharges >= chargesPerCast()) {
+		if (owner.buff(WildMagic.WildMagicTracker.class) != null || canZap()) {
 			return true;
 		} else {
 			GLog.w(Messages.get(this, "fizzles"));
 			return false;
 		}
+	}
+
+	/** True when {@link #curCharges} covers {@link #chargesPerCast()} (echo AI readiness). */
+	public boolean canZap() {
+		return curCharges >= chargesPerCast();
 	}
 
 	@Override

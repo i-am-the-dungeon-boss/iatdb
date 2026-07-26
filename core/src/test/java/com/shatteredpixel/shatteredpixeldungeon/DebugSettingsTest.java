@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
@@ -148,6 +149,25 @@ class DebugSettingsTest {
 		Assertions.assertThat(ankhs).hasSize(2);
 		Assertions.assertThat(ankhs).extracting(Ankh::isBlessed)
 				.containsExactlyInAnyOrder(false, true);
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives an identified potion of invisibility")
+	void applyDebugStartGivesPotionOfInvisibility() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.applyDebugStart();
+
+		PotionOfInvisibility potion = hero.belongings.getItem(PotionOfInvisibility.class);
+		Assertions.assertThat(potion)
+				.as("debug kit needs invisibility to test echo stealth reveals")
+				.isNotNull();
+		Assertions.assertThat(potion.isIdentified()).isTrue();
+		Assertions.assertThat(potion.quantity()).isEqualTo(DebugSettings.DEBUG_POTION_STACK);
 	}
 
 	@Test

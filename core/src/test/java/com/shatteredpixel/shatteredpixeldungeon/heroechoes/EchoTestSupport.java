@@ -245,6 +245,73 @@ public final class EchoTestSupport {
 		return group;
 	}
 
+	/**
+	 * Like {@link #attachInstantProjectileParent} but MissileSprite holds the
+	 * arrive callback until {@link DeferredProjectileGroup#complete()} — for
+	 * testing Echo busy / in-flight throw gating.
+	 */
+	public static DeferredProjectileGroup attachDeferredProjectileParent(Char ch) {
+		DeferredProjectileGroup group = new DeferredProjectileGroup();
+		if (ch != null && ch.sprite != null) {
+			ch.sprite.parent = group;
+		}
+		return group;
+	}
+
+	public static final class DeferredProjectileGroup extends Group {
+		private Callback pending;
+
+		@Override
+		public synchronized Gizmo recycle(Class<? extends Gizmo> c) {
+			if (c == MissileSprite.class) {
+				return add(new DeferredMissileSprite());
+			}
+			if (c == MagicMissile.class) {
+				return add(new InstantMagicMissile());
+			}
+			return super.recycle(c);
+		}
+
+		public void complete() {
+			Callback cb = pending;
+			pending = null;
+			if (cb != null) {
+				cb.call();
+			}
+		}
+
+		public boolean hasPending() {
+			return pending != null;
+		}
+
+		private final class DeferredMissileSprite extends MissileSprite {
+			@Override
+			public void reset(int from, int to, Item item, Callback listener) {
+				pending = listener;
+			}
+
+			@Override
+			public void reset(Visual from, int to, Item item, Callback listener) {
+				pending = listener;
+			}
+
+			@Override
+			public void reset(int from, Visual to, Item item, Callback listener) {
+				pending = listener;
+			}
+
+			@Override
+			public void reset(Visual from, Visual to, Item item, Callback listener) {
+				pending = listener;
+			}
+
+			@Override
+			public void reset(PointF from, PointF to, Item item, Callback listener) {
+				pending = listener;
+			}
+		}
+	}
+
 	public static final class InstantProjectileGroup extends Group {
 		public int magicMissileRecycles;
 		public int missileSpriteRecycles;

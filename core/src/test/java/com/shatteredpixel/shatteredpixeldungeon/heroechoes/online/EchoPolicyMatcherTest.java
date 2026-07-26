@@ -1,9 +1,14 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +20,96 @@ import java.util.Set;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPolicyMatcherTest {
+
+	@AfterEach
+	void cleanup() {
+		Dungeon.level = null;
+		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Test
+	@DisplayName("blind_defense_ranged reaction picks RANGED when enemy is invisible and out of LOS")
+	void blindDefenseRangedReactionPicksRanged() {
+		JSONObject root = basePolicyJson();
+		JSONObject when = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("enemy_in_los", false))
+				.put(new JSONObject().put("enemy_status", "invisible"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		root.put("reactions", new JSONArray().put(
+				reaction("blind_defense_ranged", 100, "RANGED", when)));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(false)
+				.distance(2)
+				.enemyStatuses(set("invisible"))
+				.rolesReady(set("RANGED", "CLOSE_IN", "MELEE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
+	}
+
+	@Test
+	@DisplayName("blind_defense_ranged reaction is skipped while enemy is in LOS")
+	void blindDefenseRangedSkippedWhenVisible() {
+		JSONObject root = basePolicyJson();
+		JSONObject when = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("enemy_in_los", false))
+				.put(new JSONObject().put("enemy_status", "invisible"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		root.put("reactions", new JSONArray().put(
+				reaction("blind_defense_ranged", 100, "RANGED", when)));
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray().put("reactions").put("default"))
+				.put("default_roles", new JSONArray().put("MELEE")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(true)
+				.enemyStatuses(set("invisible"))
+				.rolesReady(set("RANGED", "MELEE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
+		Assertions.assertThat(choice.layer).isEqualTo("default");
+	}
+
+	@Test
+	@DisplayName("blind_defense_ranged reaction is skipped when occluded but not invisible")
+	void blindDefenseRangedSkippedWhenOnlyOccluded() {
+		JSONObject root = basePolicyJson();
+		JSONObject when = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("enemy_in_los", false))
+				.put(new JSONObject().put("enemy_status", "invisible"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		root.put("reactions", new JSONArray().put(
+				reaction("blind_defense_ranged", 100, "RANGED", when)));
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray()
+						.put("reactions").put("recipes").put("positioning")
+						.put("matchups").put("default"))
+				.put("default_roles", new JSONArray().put("CLOSE_IN")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(false)
+				.distance(2)
+				.rolesReady(set("RANGED", "CLOSE_IN"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
+		Assertions.assertThat(choice.layer).isNotEqualTo("reactions");
+	}
 
 	@Test
 	@DisplayName("higher-priority reaction wins when its when matches")

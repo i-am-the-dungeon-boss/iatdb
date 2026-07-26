@@ -3,9 +3,14 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
+import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPolicyTest {
@@ -71,6 +76,50 @@ class EchoPolicyTest {
 		Assertions.assertThat(policy.isSupported()).isTrue();
 		Assertions.assertThat(policy.root().has("capabilities")).isTrue();
 		Assertions.assertThat(policy.schemaVersion).isEqualTo("0.0.1");
+	}
+
+	@Test
+	@DisplayName("fallback INVIS capability uses the potion of invisibility")
+	void fallbackInvisCapabilityUsesPotionOfInvisibility() {
+		JSONObject caps = EchoPolicy.fallback().root().getJSONObject("capabilities");
+
+		Assertions.assertThat(caps.has("INVIS")).isTrue();
+		Assertions.assertThat(caps.getJSONObject("INVIS").getJSONArray("items").getString(0))
+				.isEqualTo("PotionOfInvisibility");
+	}
+
+	@Test
+	@DisplayName("fallback policy reaches for INVIS when cornered at low HP")
+	void fallbackReachesForInvisWhenCornered() {
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.selfHpRatio(0.2f)
+				.distance(1)
+				.enemyInLos(true)
+				.rolesReady(new HashSet<>(Arrays.asList("INVIS", "MELEE")))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(
+				EchoPolicy.fallback(), status, Collections.<String, Integer>emptyMap());
+
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("INVIS");
+	}
+
+	@Test
+	@DisplayName("fallback policy keeps meleeing while healthy")
+	void fallbackKeepsMeleeingWhileHealthy() {
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.selfHpRatio(0.9f)
+				.distance(1)
+				.enemyInLos(true)
+				.rolesReady(new HashSet<>(Arrays.asList("INVIS", "MELEE")))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(
+				EchoPolicy.fallback(), status, Collections.<String, Integer>emptyMap());
+
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 	}
 
 	@Test

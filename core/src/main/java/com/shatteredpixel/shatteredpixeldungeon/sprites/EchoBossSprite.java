@@ -166,6 +166,9 @@ public class EchoBossSprite extends MobSprite {
     /**
      * Hero sees themselves at 0.4α while invisible; Echo is an enemy, so from the
      * player's camera it must fully disappear — not leave a translucent silhouette.
+     * Same for every source that sets {@code ch.invisible} /
+     * {@link State#INVISIBLE}
+     * (cloak, potion of invisibility, etc.).
      */
     @Override
     protected synchronized void processStateAddition(State state) {
@@ -190,6 +193,12 @@ public class EchoBossSprite extends MobSprite {
     protected synchronized void processStateRemoval(State state) {
         super.processStateRemoval(state);
         if (state == State.INVISIBLE) {
+            // Ensure a finished AlphaTweener cannot keep us hidden.
+            if (invisible != null) {
+                invisible.killAndErase();
+                invisible = null;
+            }
+            alpha(1f);
             restoreFovVisibility();
         }
     }
@@ -197,7 +206,7 @@ public class EchoBossSprite extends MobSprite {
     @Override
     public void resetColor() {
         super.resetColor();
-        if (invisible != null) {
+        if (shouldHideAsInvisible()) {
             alpha(0f);
         }
     }
@@ -206,10 +215,27 @@ public class EchoBossSprite extends MobSprite {
     public void update() {
         // Must be false before super so CharSprite hides emitters/ice/aura/emo
         // (FOV may have flipped visible back on since last frame).
-        if (invisible != null) {
+        if (shouldHideAsInvisible()) {
             visible = false;
+            // Tweener may have finished; keep alpha at 0 while still stealthed.
+            if (invisible != null && !invisible.alive) {
+                alpha(0f);
+            }
+        } else if (ch != null && ch.invisible <= 0 && invisible != null) {
+            // Buff/counter cleared but sprite.remove(INVISIBLE) never ran — heal the
+            // stuck full-hide (dead AlphaTweener would otherwise keep us invisible).
+            remove(State.INVISIBLE);
         }
         super.update();
+    }
+
+    /**
+     * Hide only while the Echo is actually stealthed. Do not key off a leftover
+     * AlphaTweener reference — that tweener finishes with {@code kill()} and would
+     * otherwise keep the boss unrendered after dispel.
+     */
+    private boolean shouldHideAsInvisible() {
+        return ch != null && ch.invisible > 0;
     }
 
     private void restoreFovVisibility() {

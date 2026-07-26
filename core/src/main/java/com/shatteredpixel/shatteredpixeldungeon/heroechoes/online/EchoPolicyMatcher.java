@@ -1,5 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.IncendiaryDart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -16,6 +24,20 @@ import java.util.Map;
 public final class EchoPolicyMatcher {
 
 	private EchoPolicyMatcher() {
+	}
+
+	/** Items policy generation arms under {@code DOOR_BREAK}. */
+	public static boolean isDoorBreakItem(Item item) {
+		if (item == null) {
+			return false;
+		}
+		return item instanceof WandOfFireblast
+				|| item instanceof WandOfDisintegration
+				|| item instanceof Bomb
+				|| item instanceof StoneOfBlast
+				|| item instanceof PotionOfLiquidFlame
+				|| item instanceof PotionOfDragonsBreath
+				|| item instanceof IncendiaryDart;
 	}
 
 	/**

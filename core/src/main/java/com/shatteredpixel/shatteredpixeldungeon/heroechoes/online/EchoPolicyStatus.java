@@ -13,6 +13,8 @@ public final class EchoPolicyStatus {
 	public final float enemyHpRatio;
 	public final int distance;
 	public final boolean enemyInLos;
+	/** Hero is door-dancing; policy may blast the stalling door. */
+	public final boolean doorStalling;
 	public final String selfClass;
 	public final String enemyClass;
 	public final String onTerrain;
@@ -35,6 +37,7 @@ public final class EchoPolicyStatus {
 		this.enemyHpRatio = b.enemyHpRatio;
 		this.distance = b.distance;
 		this.enemyInLos = b.enemyInLos;
+		this.doorStalling = b.doorStalling;
 		this.selfClass = b.selfClass != null ? b.selfClass : "";
 		this.enemyClass = b.enemyClass != null ? b.enemyClass : "";
 		this.onTerrain = b.onTerrain != null ? b.onTerrain : "empty";
@@ -70,6 +73,7 @@ public final class EchoPolicyStatus {
 		private float enemyHpRatio = 1f;
 		private int distance = 1;
 		private boolean enemyInLos = true;
+		private boolean doorStalling = false;
 		private String selfClass = "";
 		private String enemyClass = "";
 		private String onTerrain = "empty";
@@ -99,6 +103,11 @@ public final class EchoPolicyStatus {
 
 		public Builder enemyInLos(boolean v) {
 			enemyInLos = v;
+			return this;
+		}
+
+		public Builder doorStalling(boolean v) {
+			doorStalling = v;
 			return this;
 		}
 

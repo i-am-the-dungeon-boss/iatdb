@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
@@ -24,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
@@ -33,6 +35,7 @@ import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.PathFinder;
 import com.watabou.utils.Strings;
 
 import java.util.HashMap;
@@ -58,12 +61,27 @@ public class EchoBoss extends Mob {
         properties.add(Property.INORGANIC);
     }
 
+    private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
+
     private Echo echo;
     private Hero echoHero;
     private EchoFightRecorder fightRecorder;
     private EchoPolicy echoPolicy;
     /** Recipe id → current step index (advanced when a recipe step executes). */
     private final Map<String, Integer> recipeSteps = new HashMap<>();
+    /** Door the hero is dancing through; -1 if none. */
+    private int doorStallCell = -1;
+    private int doorStallCount = 0;
+    private boolean doorStallPrevVisible = true;
+    private boolean doorStallPrevInitialized = false;
+    /**
+     * Master-style throw/zap gate: set by {@link #busy()}, cleared when
+     * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
+     * {@link #act()} returns false so Actor processing waits (like Hero.ready).
+     */
+    private boolean busy;
+    /** When true, policy already deferred turn spend to the VFX callback. */
+    private boolean vfxOwnsTurn;
 
     public Echo getEcho() {
         return echo;
@@ -135,6 +153,7 @@ public class EchoBoss extends Mob {
         if (echoHero == null) {
             throw new IllegalArgumentException("Echo boss requires restorable hero combat data");
         }
+        EchoHeroSnapshot.refillCharges(echoHero);
         if (scaleHp) {
             HP = HT = scaledHT(echo, depth);
         }
@@ -184,6 +203,97 @@ public class EchoBoss extends Mob {
                 Dungeon.depth,
                 Dungeon.hero != null ? Dungeon.hero.heroClass : null,
                 Game.version);
+    }
+
+    /**
+     * Last cell where the player was seen (Mob hunting {@code target}).
+     * Used for blind-defense aim and door-stall focus — not for CLOSE_IN /
+     * KEEP_DISTANCE movement.
+     */
+    public int lastSeenEnemyPos() {
+        return target;
+    }
+
+    /** Records where the enemy was last seen. */
+    public void noteEnemySeenAt(int cell) {
+        target = cell;
+    }
+
+    public int doorStallCell() {
+        return doorStallCell;
+    }
+
+    public int doorStallCount() {
+        return doorStallCount;
+    }
+
+    public boolean isDoorStalling() {
+        return doorStallCount >= DOOR_STALL_BREAK_THRESHOLD
+                && doorStallCell >= 0
+                && Dungeon.level != null
+                && doorStallCell < Dungeon.level.length()
+                && isDoorTerrain(Dungeon.level.map[doorStallCell]);
+    }
+
+    /**
+     * Call each turn with whether the hero is currently visible. Visibility
+     * flips near a door accumulate stall pressure for door-break reactions.
+     */
+    public void noteDoorStallVisibility(boolean heroVisible) {
+        if (!doorStallPrevInitialized) {
+            doorStallPrevVisible = heroVisible;
+            doorStallPrevInitialized = true;
+            return;
+        }
+        if (heroVisible == doorStallPrevVisible) {
+            return;
+        }
+        doorStallPrevVisible = heroVisible;
+        int door = findRelevantDoor();
+        if (door < 0) {
+            return;
+        }
+        if (door == doorStallCell) {
+            doorStallCount++;
+        } else {
+            doorStallCell = door;
+            doorStallCount = 1;
+        }
+        debugAct("door stall cell=" + doorStallCell + " count=" + doorStallCount);
+    }
+
+    public void clearDoorStall() {
+        doorStallCell = -1;
+        doorStallCount = 0;
+    }
+
+    /** Door on/near last-seen (where door-dancing usually happens). */
+    public int findRelevantDoor() {
+        if (Dungeon.level == null) {
+            return -1;
+        }
+        int focus = lastSeenEnemyPos();
+        if (focus < 0 || focus >= Dungeon.level.length()) {
+            if (Dungeon.hero != null) {
+                focus = Dungeon.hero.pos;
+            } else {
+                return -1;
+            }
+        }
+        if (isDoorTerrain(Dungeon.level.map[focus])) {
+            return focus;
+        }
+        for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+            int cell = focus + PathFinder.NEIGHBOURS8[i];
+            if (Dungeon.level.insideMap(cell) && isDoorTerrain(Dungeon.level.map[cell])) {
+                return cell;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isDoorTerrain(int terrain) {
+        return terrain == Terrain.DOOR || terrain == Terrain.OPEN_DOOR;
     }
 
     /**
@@ -289,10 +399,18 @@ public class EchoBoss extends Mob {
 
     @Override
     public void damage(int dmg, Object src) {
+        // Hits reveal the Echo (cloak / potion invis). Always dispel on damage —
+        // do not gate on invisible>0 in case the counter and buffs ever desync.
+        if (dmg > 0) {
+            Invisibility.dispel(this);
+            revealSpriteAfterInvisibility();
+        }
         if (dmg > 0 && src == Dungeon.hero) {
             fightRecorder.trackDamageTaken(dmg);
         }
+        int preHP = HP;
         super.damage(dmg, src);
+        EchoBossRegionalDeath.onDamaged(this, src, dmg, Math.max(0, preHP - HP));
     }
 
     @Override
@@ -304,6 +422,48 @@ public class EchoBoss extends Mob {
             return result;
         }
         return super.attack(enemy, dmgMulti, dmgBonus, accMulti);
+    }
+
+    @Override
+    protected boolean doAttack(Char enemy) {
+        if (sprite != null && (sprite.visible || enemy.sprite.visible)) {
+            sprite.attack(enemy.pos);
+            return false;
+        } else {
+            boolean hit = attack(enemy);
+            if (hit) {
+                Invisibility.dispel(this);
+                revealSpriteAfterInvisibility();
+            }
+            spend(attackDelay());
+            return true;
+        }
+    }
+
+    @Override
+    public void onAttackComplete() {
+        boolean hit = attack(enemy);
+        // Miss / dodge must not break invisibility. Do not call Mob.onAttackComplete
+        // (it always attacks again and always dispels).
+        if (hit) {
+            Invisibility.dispel(this);
+            revealSpriteAfterInvisibility();
+        }
+        spend(attackDelay());
+        next();
+    }
+
+    /**
+     * EchoBossSprite fully un-renders while stealthed ({@code visible=false},
+     * alpha 0). After dispel, force the INVISIBLE state off so the next sprite
+     * update restores FOV visibility / alpha even if buff {@code fx(false)} was
+     * skipped.
+     */
+    private void revealSpriteAfterInvisibility() {
+        if (invisible > 0 || sprite == null) {
+            return;
+        }
+        sprite.remove(CharSprite.State.INVISIBLE);
     }
 
     @Override
@@ -356,10 +516,41 @@ public class EchoBoss extends Mob {
         }
     }
 
+    /** Marks this boss waiting on throw/zap VFX (UseContext.TurnOwner). */
+    public void busy() {
+        busy = true;
+        vfxOwnsTurn = true;
+    }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
+    /** Clears busy and advances actor time after a deferred throw/zap. */
+    public void spendAndNext(float time) {
+        busy = false;
+        spend(time);
+        next();
+    }
+
     @Override
     protected boolean act() {
         // Pick up kit buffs attached after onAdd (e.g. MeleeWeapon.Charger).
         scheduleEchoKitBuffs();
+
+        // Wait for missile/zap callback — same pause pattern as Hero !ready.
+        if (busy) {
+            return false;
+        }
+
+        // Match Mob.act: paralysis / frost / magical sleep skip the whole turn
+        // (including policy CLOSE_IN). Roots are handled by getCloser.
+        if (paralysed > 0) {
+            enemySeen = false;
+            spend(TICK);
+            debugAct("paralysed → skip turn");
+            return true;
+        }
 
         if (state != HUNTING) {
             debugAct("state=" + state + " → default mob act (not HUNTING)");
@@ -372,6 +563,19 @@ public class EchoBoss extends Mob {
             fieldOfView = new boolean[Dungeon.level.length()];
         }
         Dungeon.level.updateFieldOfView(this, fieldOfView);
+        // Record last-seen for blind-defense aim / door-stall; movement still
+        // uses the live hero cell.
+        Hero hero = Dungeon.hero;
+        boolean heroVisible = hero != null
+                && hero.isAlive()
+                && hero.invisible <= 0
+                && hero.pos >= 0
+                && hero.pos < fieldOfView.length
+                && fieldOfView[hero.pos];
+        if (heroVisible) {
+            noteEnemySeenAt(hero.pos);
+        }
+        noteDoorStallVisibility(heroVisible);
 
         fightRecorder.trackTurn();
 
@@ -400,6 +604,8 @@ public class EchoBoss extends Mob {
                 + " ready=" + status.rolesReady
                 + " recipes=" + recipeSteps);
 
+        // Door-break / blind-defense are policy reactions (door_break,
+        // blind_defense_ranged).
         EchoPolicyChoice choice = EchoPolicyMatcher.choose(echoPolicy, status, recipeSteps);
         if (choice == null) {
             debugAct("match → no choice");
@@ -410,6 +616,7 @@ public class EchoBoss extends Mob {
                 + (choice.recipeId != null ? " recipe=" + choice.recipeId : ""));
 
         int posBefore = pos;
+        vfxOwnsTurn = false;
         boolean spent = EchoRoleExecutor.execute(this, echoPolicy, status, choice);
         if (!spent) {
             // Melee / staff fallthrough — let mob AI attack this turn.
@@ -423,6 +630,10 @@ public class EchoBoss extends Mob {
                     + " nextStep=" + recipeSteps.get(choice.recipeId));
         }
         debugAct("execute → spent turn, role=" + choice.useRole);
+        // Throw/zap VFX owns spend via spendAndNext (may already have run sync).
+        if (vfxOwnsTurn) {
+            return true;
+        }
         // Match hunting AI: movement costs 1/speed; other roles cost one tick.
         if (pos != posBefore) {
             spend(1f / speed());

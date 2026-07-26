@@ -159,6 +159,29 @@ class DebugEchoArsenalTest {
 	}
 
 	@Test
+	@DisplayName("grantAndCycle lists the potion of invisibility on the drink role")
+	void grantAndCycleGivesInvisibilityOnDrinkRole() {
+		DebugSettings.setDebugBuildOverride(true);
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoPolicy.fallback(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		DebugEchoArsenal.grantAndCycle(boss);
+
+		Assertions.assertThat(EchoInventory.count(boss.getEchoHero(), "PotionOfInvisibility"))
+				.isEqualTo(1);
+		org.json.JSONArray drinkItems = boss.getEchoPolicy().root()
+				.getJSONObject("capabilities")
+				.getJSONObject(DebugEchoArsenal.ROLE_DRINK)
+				.getJSONArray("items");
+		List<String> ids = new ArrayList<>();
+		for (int i = 0; i < drinkItems.length(); i++) {
+			ids.add(drinkItems.getString(i));
+		}
+		Assertions.assertThat(ids).contains("PotionOfInvisibility");
+	}
+
+	@Test
 	@DisplayName("grantAndCycleAll is a no-op outside debug builds")
 	void grantAndCycleAllNoOpOutsideDebugBuilds() {
 		DebugSettings.setDebugBuildOverride(false);

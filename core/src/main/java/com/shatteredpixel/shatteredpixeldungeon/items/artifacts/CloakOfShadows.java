@@ -104,6 +104,10 @@ public class CloakOfShadows extends Artifact {
 			return false;
 		}
 
+		// Echo kits restore mid-stealth cloaks onto the phantom hero; that is not
+		// fight invisibility. Clear it so we can activate on ctx.body.
+		clearStealthIfNotOn(body);
+
 		if (activeBuff == null) {
 			if (!isEquipped(kit) && !kit.hasTalent(Talent.LIGHT_CLOAK)) {
 				if (ctx.heroFX) {
@@ -237,6 +241,38 @@ public class CloakOfShadows extends Artifact {
 		updateQuickslot();
 	}
 
+	/**
+	 * True when STEALTH can turn fight invisibility on. Charge required; already
+	 * stealthed on the player or an EchoBoss blocks. A buff stuck on a phantom
+	 * echo kit (restore + {@link #activate}) does not block — {@link #useAs}
+	 * clears that and attaches to the body.
+	 */
+	public boolean canActivateStealth() {
+		if (charge <= 0) {
+			return false;
+		}
+		if (activeBuff == null || activeBuff.target == null) {
+			return true;
+		}
+		// Phantom echo kit — not real fight stealth.
+		if (activeBuff.target instanceof Hero && activeBuff.target != Dungeon.hero) {
+			return true;
+		}
+		return false;
+	}
+
+	/** Detach/drop active stealth unless it is already on {@code body}. */
+	private void clearStealthIfNotOn(Char body) {
+		if (activeBuff == null || activeBuff.target == body) {
+			return;
+		}
+		if (activeBuff.target != null) {
+			activeBuff.detach();
+		} else {
+			activeBuff = null;
+		}
+	}
+
 	@Override
 	public Item upgrade() {
 		chargeCap = Math.min(chargeCap + 1, 10);
@@ -278,8 +314,10 @@ public class CloakOfShadows extends Artifact {
 					float turnsToCharge = (45 - missing);
 					turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);
 					float chargeToGain = (1f / turnsToCharge);
-					if (!isEquipped(Dungeon.hero)) {
-						chargeToGain *= 0.75f * Dungeon.hero.pointsInTalent(Talent.LIGHT_CLOAK) / 3f;
+					// Wearer is the buff target (player or echo kit), not always Dungeon.hero.
+					Hero wearer = target instanceof Hero ? (Hero) target : Dungeon.hero;
+					if (wearer != null && !isEquipped(wearer)) {
+						chargeToGain *= 0.75f * wearer.pointsInTalent(Talent.LIGHT_CLOAK) / 3f;
 					}
 					partialCharge += chargeToGain;
 				}

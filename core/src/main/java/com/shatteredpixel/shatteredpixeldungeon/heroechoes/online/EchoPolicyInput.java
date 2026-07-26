@@ -6,6 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -107,9 +108,10 @@ public final class EchoPolicyInput {
 	private static List<String> collectItems(Hero hero) {
 		Set<String> ids = new LinkedHashSet<>();
 		for (Item item : hero.belongings) {
-			if (item != null) {
-				ids.add(item.getClass().getSimpleName());
+			if (item == null || item instanceof WandOfWarding) {
+				continue;
 			}
+			ids.add(item.getClass().getSimpleName());
 		}
 		return new ArrayList<>(ids);
 	}
