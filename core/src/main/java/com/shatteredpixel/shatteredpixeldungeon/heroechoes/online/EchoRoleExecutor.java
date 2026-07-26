@@ -96,6 +96,9 @@ public final class EchoRoleExecutor {
 		if (spent && doorBreak) {
 			boss.clearDoorStall();
 		}
+		if (spent && !doorBreak && !status.enemyInLos) {
+			boss.consumeBlindDefenseShot();
+		}
 		return spent;
 	}
 

@@ -62,6 +62,8 @@ public class EchoBoss extends Mob {
     }
 
     private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
+    /** Blind last-seen shots allowed after the hero cloaks. */
+    private static final int BLIND_DEFENSE_SHOTS = 2;
 
     private Echo echo;
     private Hero echoHero;
@@ -74,6 +76,8 @@ public class EchoBoss extends Mob {
     private int doorStallCount = 0;
     private boolean doorStallPrevVisible = true;
     private boolean doorStallPrevInitialized = false;
+    /** Remaining last-seen aims while the hero is invisible. */
+    private int blindDefenseShotsLeft = BLIND_DEFENSE_SHOTS;
     /**
      * Master-style throw/zap gate: set by {@link #busy()}, cleared when
      * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
@@ -207,8 +211,8 @@ public class EchoBoss extends Mob {
 
     /**
      * Last cell where the player was seen (Mob hunting {@code target}).
-     * Used for blind-defense aim and door-stall focus — not for CLOSE_IN /
-     * KEEP_DISTANCE movement.
+     * Used for door-stall focus and limited blind-defense aim while cloaked —
+     * not for CLOSE_IN / KEEP_DISTANCE movement.
      */
     public int lastSeenEnemyPos() {
         return target;
@@ -217,6 +221,28 @@ public class EchoBoss extends Mob {
     /** Records where the enemy was last seen. */
     public void noteEnemySeenAt(int cell) {
         target = cell;
+    }
+
+    /** Shots left that may aim at {@link #lastSeenEnemyPos()} while cloaked. */
+    public int blindDefenseShotsLeft() {
+        return blindDefenseShotsLeft;
+    }
+
+    /** Re-arms two blind last-seen shots (when the hero is visible again). */
+    public void rearmBlindDefense() {
+        blindDefenseShotsLeft = BLIND_DEFENSE_SHOTS;
+    }
+
+    /** Spends one blind last-seen shot after a successful cloak-time aim. */
+    public void consumeBlindDefenseShot() {
+        if (blindDefenseShotsLeft > 0) {
+            blindDefenseShotsLeft--;
+        }
+    }
+
+    /** Test seam for remaining blind-defense shots. */
+    public void setBlindDefenseShotsLeftForTests(int shots) {
+        blindDefenseShotsLeft = shots;
     }
 
     public int doorStallCell() {
@@ -615,8 +641,8 @@ public class EchoBoss extends Mob {
             fieldOfView = new boolean[Dungeon.level.length()];
         }
         Dungeon.level.updateFieldOfView(this, fieldOfView);
-        // Record last-seen for blind-defense aim / door-stall; movement still
-        // uses the live hero cell.
+        // Record last-seen for door-stall / blind defense; re-arm cloak shots
+        // when visible. Movement still uses the live hero cell.
         Hero hero = Dungeon.hero;
         boolean heroVisible = hero != null
                 && hero.isAlive()
@@ -626,6 +652,7 @@ public class EchoBoss extends Mob {
                 && fieldOfView[hero.pos];
         if (heroVisible) {
             noteEnemySeenAt(hero.pos);
+            rearmBlindDefense();
         }
         noteDoorStallVisibility(heroVisible);
 

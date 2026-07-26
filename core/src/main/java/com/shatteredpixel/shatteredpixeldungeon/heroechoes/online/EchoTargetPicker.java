@@ -29,9 +29,17 @@ public final class EchoTargetPicker {
 		if (enemy == null || level == null)
 			return -1;
 
-		// Visible: live cell. Unseen (cloak): last-seen guess for blind defense —
-		// no live stealth tracking.
-		int focus = status.enemyInLos ? enemy.pos : boss.lastSeenEnemyPos();
+		// Visible: live cell. Cloaked: up to two last-seen guesses. Merely
+		// occluded (out of LOS, not invisible): no aim — do not burn kit.
+		int focus;
+		if (status.enemyInLos) {
+			focus = enemy.pos;
+		} else if (status.enemyStatuses.contains("invisible")
+				&& boss.blindDefenseShotsLeft() > 0) {
+			focus = boss.lastSeenEnemyPos();
+		} else {
+			return -1;
+		}
 		if (focus < 0 || focus >= level.length()) {
 			return -1;
 		}
