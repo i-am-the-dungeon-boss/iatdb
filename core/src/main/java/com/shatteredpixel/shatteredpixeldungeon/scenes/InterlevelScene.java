@@ -58,8 +58,11 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpdateAvailable;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.input.KeyEvent;
 import com.watabou.noosa.Camera;
@@ -714,6 +717,15 @@ public class InterlevelScene extends PixelScene {
 		}
 		loadingEchoBoss = true;
 		try {
+			AvailableUpdateData requiredUpdate = Updates.checkForUpdateImmediate();
+			if (shouldBlockEchoPrefetchForUpdate(requiredUpdate)) {
+				if (Dungeon.hero != null) {
+					Dungeon.saveAll();
+				}
+				promptForcedUpdate(requiredUpdate);
+				// Unpassable: prompt never returns. Safety net if it ever does.
+				throw new EchoFetchAbortedException();
+			}
 			EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
 					depth, InterlevelScene::promptEchoFetchFailed);
 			if (outcome != null && outcome.isError()
@@ -726,6 +738,30 @@ public class InterlevelScene extends PixelScene {
 			}
 		} finally {
 			loadingEchoBoss = false;
+		}
+	}
+
+	/** True when backend reports a required game update before echo prefetch. */
+	static boolean shouldBlockEchoPrefetchForUpdate(AvailableUpdateData update) {
+		return update != null;
+	}
+
+	/**
+	 * Blocks the loading thread with an undismissable update prompt. Opens the
+	 * release URI on Update; never continues into the boss floor.
+	 */
+	private static void promptForcedUpdate(AvailableUpdateData update) {
+		CountDownLatch latch = new CountDownLatch(1);
+		Game.runOnRenderThread(() -> {
+			Game.scene().add(new WndUpdateAvailable(update, () -> {
+				Updates.launchUpdate(update);
+				// Stay blocked — update gate cannot be bypassed.
+			}));
+		});
+		try {
+			latch.await();
+		} catch (InterruptedException interrupted) {
+			Thread.currentThread().interrupt();
 		}
 	}
 

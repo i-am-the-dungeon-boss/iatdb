@@ -6,8 +6,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.watabou.noosa.Game;
 
 /**
- * Forced title-screen update gate when the installed game version does not
- * match the backend {@code version_name}. Cannot be dismissed or bypassed.
+ * Forced update gate when the installed game version does not match the
+ * backend {@code version_name} (title screen and echo prefetch). Cannot be
+ * dismissed or bypassed.
  */
 public class WndUpdateAvailable extends WndOptions {
 
