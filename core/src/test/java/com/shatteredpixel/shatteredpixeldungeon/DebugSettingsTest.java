@@ -7,7 +7,14 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.DebugStrategyKit;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
@@ -152,22 +159,81 @@ class DebugSettingsTest {
 	}
 
 	@Test
-	@DisplayName("applyDebugStart gives an identified potion of invisibility")
-	void applyDebugStartGivesPotionOfInvisibility() {
+	@DisplayName("debug strategy kit toggle requires debug build")
+	void debugStrategyKitRequiresDebugBuild() {
+		DebugSettings.setDebugBuildOverride(false);
+		DebugSettings.setDebugStrategyKit(true);
+		Assertions.assertThat(DebugSettings.debugStrategyKit()).isFalse();
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStrategyKit(false);
+		Assertions.assertThat(DebugSettings.debugStrategyKit()).isFalse();
+		DebugSettings.setDebugStrategyKit(true);
+		Assertions.assertThat(DebugSettings.debugStrategyKit()).isTrue();
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives a potion bandolier when strategy kit is on")
+	void applyDebugStartGivesPotionBandolier() {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
 		HeroClass.WARRIOR.initHero(hero);
 
 		DebugSettings.setDebugBuildOverride(true);
 		DebugSettings.setDebugStart(true);
+		DebugSettings.setDebugStrategyKit(true);
 		DebugSettings.applyDebugStart();
 
-		PotionOfInvisibility potion = hero.belongings.getItem(PotionOfInvisibility.class);
-		Assertions.assertThat(potion)
-				.as("debug kit needs invisibility to test echo stealth reveals")
-				.isNotNull();
-		Assertions.assertThat(potion.isIdentified()).isTrue();
-		Assertions.assertThat(potion.quantity()).isEqualTo(DebugSettings.DEBUG_POTION_STACK);
+		Assertions.assertThat(hero.belongings.getItem(PotionBandolier.class)).isNotNull();
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives the compact strategy kit when toggle is on")
+	void applyDebugStartGivesStrategyKit() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.setDebugStrategyKit(true);
+		DebugSettings.applyDebugStart();
+
+		Assertions.assertThat(hero.belongings.getItem(PotionOfHealing.class)).isNotNull();
+		Assertions.assertThat(hero.belongings.getItem(PotionOfHealing.class).quantity())
+				.isEqualTo(DebugSettings.DEBUG_POTION_STACK);
+		Assertions.assertThat(hero.belongings.getItem(WandOfFireblast.class)).isNotNull();
+		Assertions.assertThat(hero.belongings.getItem(WandOfMagicMissile.class)).isNotNull();
+		Assertions.assertThat(hero.belongings.getItem(StoneOfBlink.class)).isNotNull();
+
+		int potionKinds = 0;
+		for (Item item : hero.belongings) {
+			if (item instanceof Potion) {
+				potionKinds++;
+			}
+		}
+		Assertions.assertThat(potionKinds).isLessThan(20);
+		Assertions.assertThat(potionKinds).isEqualTo(
+				(int) DebugStrategyKit.createItems().stream().filter(i -> i instanceof Potion).count());
+	}
+
+	@Test
+	@DisplayName("applyDebugStart skips strategy kit items when toggle is off")
+	void applyDebugStartSkipsStrategyKitWhenOff() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.setDebugStrategyKit(false);
+		DebugSettings.applyDebugStart();
+
+		Assertions.assertThat(hero.belongings.getItem(PotionBandolier.class)).isNull();
+		Assertions.assertThat(hero.belongings.getItem(PotionOfHealing.class)).isNull();
+		Assertions.assertThat(hero.belongings.getItem(WandOfFireblast.class)).isNull();
+		Assertions.assertThat(hero.belongings.getItem(StoneOfBlink.class)).isNull();
+		Assertions.assertThat(hero.belongings.getAllItems(Ankh.class)).hasSize(2);
 	}
 
 	@Test

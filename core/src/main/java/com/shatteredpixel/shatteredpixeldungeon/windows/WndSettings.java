@@ -386,6 +386,7 @@ public class WndSettings extends WndTabbed {
 		CheckBox chkVibrate;
 		CheckBox chkDebugStart;
 		OptionSlider optDebugStartDepth;
+		CheckBox chkDebugStrategyKit;
 		CheckBox chkWeakEchoSnapshots;
 
 		@Override
@@ -657,6 +658,16 @@ public class WndSettings extends WndTabbed {
 				optDebugStartDepth.enable(DebugSettings.depthSliderEnabled());
 				add(optDebugStartDepth);
 
+				chkDebugStrategyKit = new CheckBox(Messages.get(this, "debug_strategy_kit")) {
+					@Override
+					protected void onClick() {
+						super.onClick();
+						DebugSettings.setDebugStrategyKit(checked());
+					}
+				};
+				chkDebugStrategyKit.checked(DebugSettings.debugStrategyKit());
+				add(chkDebugStrategyKit);
+
 				chkWeakEchoSnapshots = new CheckBox(Messages.get(this, "debug_weak_echo_snapshots")) {
 					@Override
 					protected void onClick() {
@@ -721,6 +732,9 @@ public class WndSettings extends WndTabbed {
 
 				optDebugStartDepth.setRect(0, height + GAP, width, SLIDER_HEIGHT);
 				height = optDebugStartDepth.bottom();
+
+				chkDebugStrategyKit.setRect(0, height + GAP, width, BTN_HEIGHT);
+				height = chkDebugStrategyKit.bottom();
 
 				chkWeakEchoSnapshots.setRect(0, height + GAP, width, BTN_HEIGHT);
 				height = chkWeakEchoSnapshots.bottom();

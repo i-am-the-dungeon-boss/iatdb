@@ -121,6 +121,15 @@ import java.util.ArrayList;
 //helper class to contain all the cursed wand zapping logic, so the main wand class doesn't get huge.
 public class CursedWand {
 
+	/**
+	 * Debug/test seam: when set, {@link #randomValidEffect} always returns this.
+	 */
+	private static CursedEffect forcedEffect;
+
+	public static void setForcedEffect(CursedEffect effect) {
+		forcedEffect = effect;
+	}
+
 	public static void cursedZap(final Item origin, final Char user, final Ballistica bolt, final Callback afterZap) {
 
 		boolean positiveOnly = user == Dungeon.hero && Random.Float() < WondrousResin.positiveCurseEffectChance();
@@ -180,6 +189,9 @@ public class CursedWand {
 	}
 
 	public static CursedEffect randomValidEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+		if (forcedEffect != null) {
+			return forcedEffect;
+		}
 		switch (Random.chances(EFFECT_CAT_CHANCES)) {
 			case 0:
 			default:

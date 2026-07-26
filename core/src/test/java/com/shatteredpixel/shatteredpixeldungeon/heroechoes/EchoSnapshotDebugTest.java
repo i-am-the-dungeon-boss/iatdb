@@ -19,6 +19,26 @@ class EchoSnapshotDebugTest {
 	}
 
 	@Test
+	@DisplayName("weak echo snapshot is level 10 with 200 max hp")
+	void weakEchoSnapshotIsLevelTenWith200MaxHp() {
+		Assertions.assertThat(EchoSnapshotDebug.WEAK_LEVEL).isEqualTo(10);
+		Assertions.assertThat(EchoSnapshotDebug.WEAK_HT).isEqualTo(200);
+	}
+
+	@Test
+	@DisplayName("weak snapshot always starts at full health")
+	void weakSnapshotAlwaysStartsAtFullHealth() {
+		Echo echo = EchoTestSupport.warriorEcho(5);
+		echo.hp = 1;
+		echo.ht = 30;
+
+		EchoSnapshotDebug.weaken(echo);
+
+		Assertions.assertThat(echo.ht).isEqualTo(EchoSnapshotDebug.WEAK_HT);
+		Assertions.assertThat(echo.hp).isEqualTo(echo.ht);
+	}
+
+	@Test
 	@DisplayName("weak snapshot flag lowers echo metadata when enabled")
 	void weakSnapshotLowersMetadata() {
 		DebugSettings.setDebugBuildOverride(true);
@@ -28,8 +48,8 @@ class EchoSnapshotDebugTest {
 		EchoSnapshotDebug.applyIfEnabled(echo);
 
 		Assertions.assertThat(echo.lvl).isEqualTo(EchoSnapshotDebug.WEAK_LEVEL);
-		Assertions.assertThat(echo.hp).isEqualTo(EchoSnapshotDebug.WEAK_HP);
 		Assertions.assertThat(echo.ht).isEqualTo(EchoSnapshotDebug.WEAK_HT);
+		Assertions.assertThat(echo.hp).isEqualTo(echo.ht);
 	}
 
 	@Test
@@ -64,8 +84,7 @@ class EchoSnapshotDebugTest {
 				hero.lvl,
 				hero.HP,
 				hero.HT,
-				EchoTestSupport.bundleHero(hero)
-		);
+				EchoTestSupport.bundleHero(hero));
 
 		EchoSnapshotDebug.weaken(echo);
 
@@ -74,8 +93,8 @@ class EchoSnapshotDebugTest {
 		restored.restoreFromBundle(echo.echoData);
 
 		Assertions.assertThat(restored.lvl).isEqualTo(EchoSnapshotDebug.WEAK_LEVEL);
-		Assertions.assertThat(restored.HP).isEqualTo(EchoSnapshotDebug.WEAK_HP);
 		Assertions.assertThat(restored.HT).isEqualTo(EchoSnapshotDebug.WEAK_HT);
+		Assertions.assertThat(restored.HP).isEqualTo(restored.HT);
 		Assertions.assertThat(restored.STR).isEqualTo(EchoSnapshotDebug.WEAK_STR);
 	}
 
@@ -96,7 +115,7 @@ class EchoSnapshotDebugTest {
 
 		Echo loaded = storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
 		Assertions.assertThat(loaded.lvl).isEqualTo(EchoSnapshotDebug.WEAK_LEVEL);
-		Assertions.assertThat(loaded.hp).isEqualTo(EchoSnapshotDebug.WEAK_HP);
 		Assertions.assertThat(loaded.ht).isEqualTo(EchoSnapshotDebug.WEAK_HT);
+		Assertions.assertThat(loaded.hp).isEqualTo(loaded.ht);
 	}
 }

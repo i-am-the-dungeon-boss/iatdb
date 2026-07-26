@@ -1,9 +1,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.watabou.utils.PathFinder;
 
 /**
@@ -19,6 +21,9 @@ public final class EchoTargetPicker {
 	 * @return target cell, or -1 if none is legal/safe
 	 */
 	public static int pick(EchoBoss boss, EchoPolicyStatus status, String itemId, boolean aoeHazard) {
+		if ("StoneOfBlink".equals(itemId)) {
+			return pickBlinkAway(boss);
+		}
 		Hero enemy = Dungeon.hero;
 		Level level = Dungeon.level;
 		if (enemy == null || level == null)
@@ -62,5 +67,52 @@ public final class EchoTargetPicker {
 			return focus;
 		}
 		return -1;
+	}
+
+	/**
+	 * Stone of Blink land cell: throwable empty tile farther from the hero than
+	 * the echo currently stands. Returns -1 when no such cell exists.
+	 */
+	public static int pickBlinkAway(EchoBoss boss) {
+		Hero enemy = Dungeon.hero;
+		Level level = Dungeon.level;
+		if (boss == null || enemy == null || level == null) {
+			return -1;
+		}
+		int curDist = level.distance(boss.pos, enemy.pos);
+		int best = -1;
+		int bestEnemyDist = curDist;
+		int bestTravel = -1;
+		for (int cell = 0; cell < level.length(); cell++) {
+			if (cell == boss.pos) {
+				continue;
+			}
+			if (!level.passable[cell] || level.solid[cell]) {
+				continue;
+			}
+			if (Actor.findChar(cell) != null) {
+				continue;
+			}
+			if (EchoAoeDots.isAoeDotAt(boss, cell)) {
+				continue;
+			}
+			int enemyDist = level.distance(cell, enemy.pos);
+			if (enemyDist <= curDist) {
+				continue;
+			}
+			Ballistica path = new Ballistica(boss.pos, cell, Ballistica.PROJECTILE);
+			if (path.collisionPos != cell) {
+				continue;
+			}
+			int travel = level.distance(boss.pos, cell);
+			if (enemyDist > bestEnemyDist
+					|| (enemyDist == bestEnemyDist && travel > bestTravel)
+					|| (enemyDist == bestEnemyDist && travel == bestTravel && cell < best)) {
+				best = cell;
+				bestEnemyDist = enemyDist;
+				bestTravel = travel;
+			}
+		}
+		return best;
 	}
 }

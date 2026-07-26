@@ -7,7 +7,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -38,17 +37,32 @@ class EchoRoleResolverTest {
 	}
 
 	@Test
-	@DisplayName("MAX_DAMAGE prefers later listed items that are available")
-	void maxDamagePrefersLastAvailable() {
+	@DisplayName("MAX_DAMAGE prefers earlier listed items that are available")
+	void maxDamagePrefersFirstAvailable() {
 		JSONObject cap = new JSONObject()
 				.put("pick", "MAX_DAMAGE")
 				.put("items", new JSONArray()
-						.put("*melee")
 						.put("WandOfFireblast")
-						.put("MagesStaff"));
+						.put("MagesStaff")
+						.put("*melee"));
 
 		String picked = EchoRoleResolver.resolveItemId(
 				cap, set("WandOfFireblast", "MagesStaff"));
+
+		Assertions.assertThat(picked).isEqualTo("WandOfFireblast");
+	}
+
+	@Test
+	@DisplayName("MAX_DAMAGE skips missing strong items and uses the next listed")
+	void maxDamageFallsThroughToNextListed() {
+		JSONObject cap = new JSONObject()
+				.put("pick", "MAX_DAMAGE")
+				.put("items", new JSONArray()
+						.put("WandOfFireblast")
+						.put("MagesStaff")
+						.put("*melee"));
+
+		String picked = EchoRoleResolver.resolveItemId(cap, set("MagesStaff"));
 
 		Assertions.assertThat(picked).isEqualTo("MagesStaff");
 	}

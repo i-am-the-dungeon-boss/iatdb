@@ -27,6 +27,27 @@ class EchoAndStorageTest {
     }
 
     @Test
+    @DisplayName("fromHero always captures full health")
+    void fromHeroAlwaysCapturesFullHealth() {
+        Hero hero = new Hero();
+        Dungeon.hero = hero;
+        HeroClass.WARRIOR.initHero(hero);
+        hero.HT = 40;
+        hero.HP = 10;
+
+        Echo echo = Echo.fromHero(hero, 5, EchoTestSupport.TEST_GAME_VERSION, 1L);
+
+        Assertions.assertThat(echo.ht).isEqualTo(40);
+        Assertions.assertThat(echo.hp).isEqualTo(echo.ht);
+        Assertions.assertThat(hero.HP).isEqualTo(10);
+
+        Hero restored = EchoHeroSnapshot.restoreHero(echo);
+        Assertions.assertThat(restored).isNotNull();
+        Assertions.assertThat(restored.HT).isEqualTo(40);
+        Assertions.assertThat(restored.HP).isEqualTo(restored.HT);
+    }
+
+    @Test
     @DisplayName("fromHero/create captures class, level, hp, and optional hero bundle")
     void fromHeroCapturesRequiredFields() {
         Bundle echoData = new Bundle();

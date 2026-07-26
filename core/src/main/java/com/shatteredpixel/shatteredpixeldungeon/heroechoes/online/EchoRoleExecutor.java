@@ -65,7 +65,7 @@ public final class EchoRoleExecutor {
 		debugExec("resolve role=" + choice.useRole + " → item=" + itemId);
 
 		if (itemId.startsWith("*")) {
-			boolean ok = executeVirtual(boss, status, itemId);
+			boolean ok = executeVirtual(boss, policy, status, itemId);
 			debugExec("virtual " + itemId + " → " + (ok ? "spent" : "fallthrough"));
 			return ok;
 		}
@@ -269,7 +269,8 @@ public final class EchoRoleExecutor {
 				|| potion instanceof PotionOfMagicalSight;
 	}
 
-	private static boolean executeVirtual(EchoBoss boss, EchoPolicyStatus status, String tag) {
+	private static boolean executeVirtual(
+			EchoBoss boss, EchoPolicy policy, EchoPolicyStatus status, String tag) {
 		Hero enemy = Dungeon.hero;
 		if ("*wait".equals(tag)) {
 			return true;
@@ -282,6 +283,13 @@ public final class EchoRoleExecutor {
 		}
 		if ("*move_closer".equals(tag)) {
 			return enemy != null && boss.policyStepCloser(enemy.pos);
+		}
+		if ("*leave_aoe".equals(tag)) {
+			if (enemy == null) {
+				return false;
+			}
+			boolean kite = EchoPolicyMatcher.wantsKeepDistance(policy, status);
+			return boss.policyStepOutOfAoe(enemy.pos, kite);
 		}
 		if (tag.startsWith("*move_to_terrain:")) {
 			String terrain = tag.substring("*move_to_terrain:".length());

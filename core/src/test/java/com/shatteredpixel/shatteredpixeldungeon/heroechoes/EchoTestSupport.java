@@ -581,19 +581,19 @@ public final class EchoTestSupport {
 				+ "\"capabilities\":{"
 				+ "\"RANGED\":{\"pick\":\"MAX_DAMAGE\",\"items\":[\"MagesStaff\"]},"
 				+ "\"MELEE\":{\"pick\":\"FIRST_LEGAL\",\"items\":[\"*melee\"]},"
-				+ "\"FINISHER\":{\"pick\":\"MAX_DAMAGE\",\"items\":[\"*melee\",\"MagesStaff\"]}"
+				+ "\"FINISHER\":{\"pick\":\"MAX_DAMAGE\",\"items\":[\"MagesStaff\",\"*melee\"]}"
 				+ "},"
 				+ "\"reactions\":[{"
 				+ "\"id\":\"finish_him\","
 				+ "\"priority\":110,"
-				+ "\"when\":{\"enemy_hp_below\":0.05},"
+				+ "\"when\":{\"enemy_hp_below\":0.15},"
 				+ "\"do\":{\"use_role\":\"FINISHER\"}"
 				+ "}],"
 				+ "\"recipes\":[],"
 				+ "\"positioning\":{\"MAGE\":{\"ideal_distance\":3,\"if_closer\":\"KEEP_DISTANCE\"}},"
 				+ "\"matchups\":{},"
 				+ "\"selection\":{\"order\":[\"reactions\",\"default\"],\"default_roles\":[\"RANGED\",\"MELEE\"]},"
-				+ "\"tuning\":{\"aggression\":0.55,\"finish_hp\":0.05}"
+				+ "\"tuning\":{\"aggression\":0.55,\"finish_hp\":0.15}"
 				+ "}");
 	}
 }

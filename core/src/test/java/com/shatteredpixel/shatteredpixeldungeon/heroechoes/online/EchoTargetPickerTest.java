@@ -113,6 +113,36 @@ class EchoTargetPickerTest {
 	}
 
 	@Test
+	@DisplayName("blink pick lands farther from the hero than the echo currently is")
+	void blinkPickLandsFartherFromHero() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		int distBefore = Dungeon.level.distance(boss.pos, hero.pos);
+
+		int cell = EchoTargetPicker.pickBlinkAway(boss);
+
+		Assertions.assertThat(cell).isGreaterThanOrEqualTo(0);
+		Assertions.assertThat(cell).isNotEqualTo(hero.pos);
+		Assertions.assertThat(Dungeon.level.distance(cell, hero.pos)).isGreaterThan(distBefore);
+	}
+
+	@Test
+	@DisplayName("StoneOfBlink item pick uses blink-away aiming not enemy cell")
+	void blinkItemPickDoesNotAimAtHero() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+
+		int cell = EchoTargetPicker.pick(
+				boss, new EchoPolicyStatus.Builder().enemyInLos(true).build(), "StoneOfBlink", false);
+
+		Assertions.assertThat(cell).isNotEqualTo(hero.pos);
+		Assertions.assertThat(Dungeon.level.distance(cell, hero.pos))
+				.isGreaterThan(Dungeon.level.distance(boss.pos, hero.pos));
+	}
+
+	@Test
 	@DisplayName("AOE pick aims near last seen cell when enemy is not in LOS")
 	void aoeAimsNearLastSeenWithoutLos() {
 		Hero hero = EchoTestSupport.warriorHero();

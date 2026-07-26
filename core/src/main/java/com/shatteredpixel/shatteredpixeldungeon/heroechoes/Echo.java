@@ -66,6 +66,12 @@ public class Echo {
             throw new IllegalArgumentException("echo requires hero_class");
         }
         Bundle data = EchoHeroSnapshot.captureFromHero(hero);
+        int ht = Math.max(1, hero.HT);
+        // Echo fights always start full — do not snapshot wounded current HP.
+        if (data != null) {
+            data.put("HP", ht);
+            data.put("HT", ht);
+        }
         String userName = SPDSettings.playerName();
         try {
             String sessionName = com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession
@@ -82,8 +88,8 @@ public class Echo {
                 hero.heroClass.name(),
                 userName,
                 hero.lvl,
-                Math.max(0, hero.HP),
-                Math.max(1, hero.HT),
+                ht,
+                ht,
                 data);
     }
 

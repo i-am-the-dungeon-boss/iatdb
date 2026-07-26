@@ -11,6 +11,12 @@ public final class EchoPolicyStatus {
 
 	public final float selfHpRatio;
 	public final float enemyHpRatio;
+	/**
+	 * Enemy
+	 * {@link com.shatteredpixel.shatteredpixeldungeon.actors.Char#shielding()} /
+	 * HT.
+	 */
+	public final float enemyShieldRatio;
 	public final int distance;
 	public final boolean enemyInLos;
 	/** Hero is door-dancing; policy may blast the stalling door. */
@@ -35,6 +41,7 @@ public final class EchoPolicyStatus {
 	private EchoPolicyStatus(Builder b) {
 		this.selfHpRatio = b.selfHpRatio;
 		this.enemyHpRatio = b.enemyHpRatio;
+		this.enemyShieldRatio = b.enemyShieldRatio;
 		this.distance = b.distance;
 		this.enemyInLos = b.enemyInLos;
 		this.doorStalling = b.doorStalling;
@@ -71,6 +78,7 @@ public final class EchoPolicyStatus {
 	public static final class Builder {
 		private float selfHpRatio = 1f;
 		private float enemyHpRatio = 1f;
+		private float enemyShieldRatio = 0f;
 		private int distance = 1;
 		private boolean enemyInLos = true;
 		private boolean doorStalling = false;
@@ -93,6 +101,11 @@ public final class EchoPolicyStatus {
 
 		public Builder enemyHpRatio(float v) {
 			enemyHpRatio = v;
+			return this;
+		}
+
+		public Builder enemyShieldRatio(float v) {
+			enemyShieldRatio = v;
 			return this;
 		}
 

@@ -5,7 +5,11 @@ import org.json.JSONObject;
 
 import java.util.Set;
 
-/** Picks an item id from a capability using FIRST_LEGAL or MAX_DAMAGE. */
+/**
+ * Picks an item id from a capability. Capability {@code items} are ordered
+ * strongest-first; both {@code FIRST_LEGAL} and {@code MAX_DAMAGE} take the
+ * first inventory-available entry (virtual {@code *} tags always count).
+ */
 public final class EchoRoleResolver {
 
 	private EchoRoleResolver() {
@@ -17,18 +21,6 @@ public final class EchoRoleResolver {
 		JSONArray items = capability.optJSONArray("items");
 		if (items == null || items.length() == 0)
 			return null;
-
-		String pick = capability.optString("pick", "FIRST_LEGAL");
-		if ("MAX_DAMAGE".equals(pick)) {
-			String best = null;
-			for (int i = 0; i < items.length(); i++) {
-				String id = items.optString(i, "");
-				if (isAvailable(id, availableItemIds)) {
-					best = id;
-				}
-			}
-			return best;
-		}
 
 		for (int i = 0; i < items.length(); i++) {
 			String id = items.optString(i, "");

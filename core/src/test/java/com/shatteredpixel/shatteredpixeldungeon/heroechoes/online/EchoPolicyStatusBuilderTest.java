@@ -1,6 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
@@ -98,6 +100,21 @@ class EchoPolicyStatusBuilderTest {
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, EchoTestSupport.healCapabilityPolicy());
 
 		Assertions.assertThat(status.enemyInLos).isFalse();
+	}
+
+	@Test
+	@DisplayName("build reports enemy shield as a fraction of HT")
+	void buildReportsEnemyShieldRatio() {
+		Hero hero = EchoTestSupport.warriorHero();
+		hero.HT = 40;
+		hero.HP = 40;
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		Buff.affect(hero, Barrier.class).setShield(20);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, EchoTestSupport.healCapabilityPolicy());
+
+		Assertions.assertThat(status.enemyShieldRatio).isEqualTo(0.5f);
 	}
 
 	@Test

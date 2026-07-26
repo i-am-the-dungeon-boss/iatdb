@@ -32,6 +32,9 @@ public final class EchoPolicyStatusBuilder {
 
 		float selfHp = boss.HT > 0 ? (float) boss.HP / boss.HT : 1f;
 		float enemyHp = enemy != null && enemy.HT > 0 ? (float) enemy.HP / enemy.HT : 1f;
+		float enemyShield = enemy != null && enemy.HT > 0
+				? (float) enemy.shielding() / enemy.HT
+				: 0f;
 		int distance = enemy != null && level != null
 				? level.distance(boss.pos, enemy.pos)
 				: 99;
@@ -70,6 +73,10 @@ public final class EchoPolicyStatusBuilder {
 		Set<String> rolesReady = new HashSet<>();
 		Set<String> safe = new HashSet<>();
 		Set<String> unsafe = new HashSet<>();
+		Set<String> selfStatuses = statusNames(boss);
+		if (EchoAoeDots.isAoeDotAt(boss, boss.pos)) {
+			selfStatuses.add(EchoAoeDots.STATUS);
+		}
 
 		JSONObject caps = policy.root().optJSONObject("capabilities");
 		if (caps != null) {
@@ -107,13 +114,14 @@ public final class EchoPolicyStatusBuilder {
 		EchoPolicyStatus.Builder b = new EchoPolicyStatus.Builder()
 				.selfHpRatio(selfHp)
 				.enemyHpRatio(enemyHp)
+				.enemyShieldRatio(enemyShield)
 				.distance(distance)
 				.enemyInLos(inLos)
 				.doorStalling(boss.isDoorStalling())
 				.selfClass(boss.getEcho().heroClass)
 				.enemyClass(enemy != null && enemy.heroClass != null ? enemy.heroClass.name() : "")
 				.onTerrain(onTerrainName(level, boss.pos))
-				.selfStatuses(statusNames(boss))
+				.selfStatuses(selfStatuses)
 				.enemyStatuses(enemy != null ? statusNames(enemy) : new HashSet<>())
 				.terrainNearTiles(nearTiles)
 				.rolesReady(rolesReady)
@@ -151,6 +159,10 @@ public final class EchoPolicyStatusBuilder {
 				return level != null
 						&& (nearestTerrainCell(level, boss.pos, Terrain.GRASS, Integer.MAX_VALUE) != null
 								|| nearestTerrainCell(level, boss.pos, Terrain.HIGH_GRASS, Integer.MAX_VALUE) != null);
+			case "LEAVE_AOE":
+				return EchoAoeDots.canLeave(boss);
+			case "BLINK":
+				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
 			default:
 				return true;
 		}

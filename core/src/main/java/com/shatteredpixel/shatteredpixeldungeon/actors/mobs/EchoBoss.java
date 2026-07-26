@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoAoeDots;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicyMatcher;
@@ -58,7 +59,6 @@ public class EchoBoss extends Mob {
         maxLvl = 30;
 
         properties.add(Property.BOSS);
-        properties.add(Property.INORGANIC);
     }
 
     private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
@@ -320,6 +320,58 @@ public class EchoBoss extends Mob {
         }
         moveSprite(oldPos, pos);
         return true;
+    }
+
+    /**
+     * Treat harmful AoE DoT cells as impassable for pathfinding (fire / toxic /
+     * corrosive / …), except the cell currently occupied so leave-steps still
+     * work.
+     */
+    @Override
+    public boolean[] modifyPassable(boolean[] passable) {
+        if (passable == null || Dungeon.level == null) {
+            return passable;
+        }
+        for (int i = 0; i < passable.length; i++) {
+            if (passable[i] && i != pos && EchoAoeDots.isAoeDotAt(this, i)) {
+                passable[i] = false;
+            }
+        }
+        return passable;
+    }
+
+    /** Adjacent steps also refuse to enter AoE DoT. */
+    @Override
+    protected boolean cellIsPathable(int cell) {
+        return super.cellIsPathable(cell) && !EchoAoeDots.isAoeDotAt(this, cell);
+    }
+
+    /** Exposes {@link Mob#cellIsPathable} for leave-AoE neighbour checks. */
+    public boolean policyCellPathable(int cell) {
+        return cellIsPathable(cell);
+    }
+
+    /**
+     * One-cell step to {@code cell} (already validated). Updates sprite like
+     * hunting AI.
+     */
+    public boolean policyStepTo(int cell) {
+        if (!policyCellPathable(cell) || !Dungeon.level.adjacent(pos, cell)) {
+            return false;
+        }
+        int oldPos = pos;
+        move(cell);
+        moveSprite(oldPos, pos);
+        return true;
+    }
+
+    /**
+     * Leave harmful AoE DoT if a safe neighbour exists. Prefers toward
+     * {@code enemyPos} unless {@code kite} (maximize distance).
+     */
+    public boolean policyStepOutOfAoe(int enemyPos, boolean kite) {
+        int step = EchoAoeDots.bestExit(this, enemyPos, kite);
+        return step >= 0 && policyStepTo(step);
     }
 
     @Override

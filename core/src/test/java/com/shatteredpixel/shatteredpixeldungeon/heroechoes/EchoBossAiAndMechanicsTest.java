@@ -1,12 +1,18 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +20,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossAiAndMechanicsTest {
+
+    @AfterEach
+    void cleanup() {
+        Dungeon.level = null;
+        EchoTestSupport.resetWorkflowState();
+    }
 
     @Test
     @DisplayName("EchoBoss spawns sleeping until the player engages it")
@@ -66,6 +78,29 @@ class EchoBossAiAndMechanicsTest {
                 .hasMessageContaining("combat data");
         Assertions.assertThatThrownBy(() -> new EchoBoss(null, 5))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("ToxicGas damages EchoBoss and Poison can attach")
+    void toxicGasDamagesEchoBoss() {
+        Hero hero = EchoTestSupport.warriorHero();
+        EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+                hero, EchoTestSupport.healCapabilityPolicy(), 5);
+        EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+        Dungeon.depth = 5;
+
+        Assertions.assertThat(boss.isImmune(ToxicGas.class)).isFalse();
+        Assertions.assertThat(boss.isImmune(Poison.class)).isFalse();
+
+        Buff.affect(boss, Poison.class).set(6f);
+        Assertions.assertThat(boss.buff(Poison.class)).isNotNull();
+
+        int hpBefore = boss.HP;
+        ToxicGas gas = Blob.seed(boss.pos, 1000, ToxicGas.class);
+        Actor.add(gas);
+        gas.act();
+
+        Assertions.assertThat(boss.HP).isLessThan(hpBefore);
     }
 
     @Test

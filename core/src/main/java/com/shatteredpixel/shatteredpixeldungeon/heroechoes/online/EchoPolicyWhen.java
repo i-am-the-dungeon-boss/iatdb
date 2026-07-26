@@ -56,6 +56,8 @@ public final class EchoPolicyWhen {
 		switch (key) {
 			case "self_status":
 				return status.selfStatuses.contains(String.valueOf(raw));
+			case "self_status_none":
+				return !anyStatus(asStrings(raw), status.selfStatuses);
 			case "enemy_status":
 				return status.enemyStatuses.contains(String.valueOf(raw));
 			case "enemy_status_any":
@@ -66,6 +68,10 @@ public final class EchoPolicyWhen {
 				return status.enemyHpRatio < asDouble(raw);
 			case "enemy_hp_above":
 				return status.enemyHpRatio > asDouble(raw);
+			case "enemy_shield_below":
+				return status.enemyShieldRatio < asDouble(raw);
+			case "enemy_shield_above":
+				return status.enemyShieldRatio > asDouble(raw);
 			case "self_hp_below":
 				return status.selfHpRatio < asDouble(raw);
 			case "self_hp_above":

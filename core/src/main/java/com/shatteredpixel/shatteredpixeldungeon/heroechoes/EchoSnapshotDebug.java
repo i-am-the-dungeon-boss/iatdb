@@ -7,12 +7,12 @@ import com.watabou.utils.Bundle;
 /** Debug helpers for weakening captured echo snapshots during testing. */
 public final class EchoSnapshotDebug {
 
-	public static final int WEAK_LEVEL = 1;
-	public static final int WEAK_HP = 1;
-	public static final int WEAK_HT = 5;
+	public static final int WEAK_LEVEL = 10;
+	public static final int WEAK_HT = 200;
 	public static final int WEAK_STR = 10;
 
-	private EchoSnapshotDebug() {}
+	private EchoSnapshotDebug() {
+	}
 
 	public static void applyIfEnabled(Echo echo) {
 		if (DebugSettings.weakEchoSnapshots()) {
@@ -26,22 +26,24 @@ public final class EchoSnapshotDebug {
 		}
 
 		echo.lvl = WEAK_LEVEL;
-		echo.hp = WEAK_HP;
+		// Always full health — current HP tracks max HT.
 		echo.ht = WEAK_HT;
+		echo.hp = WEAK_HT;
 
 		if (echo.echoData == null) {
 			return;
 		}
 
 		try {
-			// Must go through EchoHeroSnapshot so Dungeon.quickslot / ActionIndicator stay intact.
+			// Must go through EchoHeroSnapshot so Dungeon.quickslot / ActionIndicator stay
+			// intact.
 			Hero hero = EchoHeroSnapshot.restoreHero(echo);
 			if (hero == null) {
 				return;
 			}
 			hero.lvl = WEAK_LEVEL;
-			hero.HP = WEAK_HP;
 			hero.HT = WEAK_HT;
+			hero.HP = WEAK_HT;
 			hero.STR = WEAK_STR;
 
 			Bundle data = new Bundle();

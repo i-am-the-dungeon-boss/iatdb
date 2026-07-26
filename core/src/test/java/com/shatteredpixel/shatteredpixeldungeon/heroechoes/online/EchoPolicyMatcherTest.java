@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.DebugStrategyKit;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
@@ -119,7 +120,8 @@ class EchoPolicyMatcherTest {
 		reactions.put(reaction("setup_cc", 80, "SETUP_CC",
 				new JSONObject().put("role_ready", "SETUP_CC")));
 		JSONObject finishWhen = new JSONObject().put("all", new JSONArray()
-				.put(new JSONObject().put("enemy_hp_below", 0.05))
+				.put(new JSONObject().put("enemy_hp_below", 0.15))
+				.put(new JSONObject().put("enemy_shield_below", 0.25))
 				.put(new JSONObject().put("distance_lte", 1)));
 		reactions.put(reaction("finish_him", 110, "FINISHER", finishWhen));
 		root.put("reactions", reactions);
@@ -127,7 +129,8 @@ class EchoPolicyMatcherTest {
 
 		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
 				.selfHpRatio(0.8f)
-				.enemyHpRatio(0.04f)
+				.enemyHpRatio(0.10f)
+				.enemyShieldRatio(0f)
 				.distance(1)
 				.rolesReady(set("FINISHER", "SETUP_CC", "MELEE"))
 				.build();
@@ -136,6 +139,79 @@ class EchoPolicyMatcherTest {
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("FINISHER");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
+	}
+
+	@Test
+	@DisplayName("finish_him skips when enemy barrier is high even if HP is critical")
+	void finishHimSkipsHighShield() {
+		JSONObject root = basePolicyJson();
+		JSONObject finishWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("enemy_hp_below", 0.15))
+				.put(new JSONObject().put("enemy_shield_below", 0.25))
+				.put(new JSONObject().put("distance_lte", 1)));
+		root.put("reactions", new JSONArray()
+				.put(reaction("finish_him", 110, "FINISHER", finishWhen)));
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray()
+						.put("reactions").put("recipes").put("positioning")
+						.put("matchups").put("default"))
+				.put("default_roles", new JSONArray().put("MELEE")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyHpRatio(0.10f)
+				.enemyShieldRatio(0.5f)
+				.distance(1)
+				.rolesReady(set("FINISHER", "MELEE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
+		Assertions.assertThat(choice.layer).isEqualTo("default");
+	}
+
+	@Test
+	@DisplayName("kite_step skips KEEP_DISTANCE when RANGED is not ready")
+	void kiteStepSkipsWithoutRanged() {
+		EchoPolicy policy = DebugStrategyKit.policy();
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.selfHpRatio(0.8f)
+				.enemyHpRatio(0.8f)
+				.distance(1)
+				.enemyInLos(true)
+				.selfClass("MAGE")
+				.selfStatuses(set("stamina"))
+				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "WAIT", "HOLD"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
+		Assertions.assertThat(choice.layer).isEqualTo("default");
+	}
+
+	@Test
+	@DisplayName("kite_step picks KEEP_DISTANCE when RANGED is ready with kite edge")
+	void kiteStepWithRangedReady() {
+		EchoPolicy policy = DebugStrategyKit.policy();
+
+		// No LOS so ranged_poke (priority 74) does not outrank kite_step (73).
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.selfHpRatio(0.8f)
+				.enemyHpRatio(0.8f)
+				.distance(1)
+				.enemyInLos(false)
+				.selfClass("MAGE")
+				.selfStatuses(set("stamina"))
+				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "RANGED", "WAIT", "HOLD"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
 	}
 
@@ -223,6 +299,44 @@ class EchoPolicyMatcherTest {
 
 		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
 		Assertions.assertThat(choice.layer).isEqualTo("positioning");
+	}
+
+	@Test
+	@DisplayName("wantsKeepDistance is true for ranged ideal spacing even without if_closer")
+	void wantsKeepDistanceFromIdealSpacing() {
+		JSONObject root = basePolicyJson();
+		root.put("positioning", new JSONObject()
+				.put("MAGE", new JSONObject()
+						.put("ideal_distance", 3)
+						.put("if_farther", "CLOSE_IN")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.selfClass("MAGE")
+				.rolesReady(set("KEEP_DISTANCE", "RANGED", "MELEE"))
+				.build();
+
+		Assertions.assertThat(EchoPolicyMatcher.wantsKeepDistance(policy, status)).isTrue();
+	}
+
+	@Test
+	@DisplayName("wantsKeepDistance is false for melee ideal spacing without if_closer")
+	void wantsKeepDistanceFalseForMeleeIdeal() {
+		JSONObject root = basePolicyJson();
+		root.put("positioning", new JSONObject()
+				.put("WARRIOR", new JSONObject()
+						.put("ideal_distance", 1)
+						.put("if_farther", "CLOSE_IN")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.selfClass("WARRIOR")
+				.rolesReady(set("KEEP_DISTANCE", "MELEE"))
+				.build();
+
+		Assertions.assertThat(EchoPolicyMatcher.wantsKeepDistance(policy, status)).isFalse();
 	}
 
 	@Test
@@ -340,14 +454,14 @@ class EchoPolicyMatcherTest {
 		JSONObject root = basePolicyJson();
 		root.put("reactions", new JSONArray().put(reaction(
 				"finish_him", 110, "FINISHER",
-				new JSONObject().put("enemy_hp_below", 0.05))));
+				new JSONObject().put("enemy_hp_below", 0.15))));
 		root.put("selection", new JSONObject()
 				.put("order", new JSONArray().put("reactions").put("default"))
 				.put("default_roles", new JSONArray().put("MELEE")));
 		EchoPolicy policy = EchoPolicy.fromJson(root);
 
 		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
-				.enemyHpRatio(0.01f)
+				.enemyHpRatio(0.10f)
 				.distance(1)
 				.rolesReady(set("MELEE"))
 				.build();

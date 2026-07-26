@@ -1,16 +1,14 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.DebugStrategyKit;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfPrismaticLight;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.watabou.utils.DeviceCompat;
@@ -30,7 +28,7 @@ public final class DebugSettings {
 	public static final int START_LEVEL = 100;
 	public static final int START_STR = 100;
 	/** Debug consumables come as a small stack so one fight can spend several. */
-	public static final int DEBUG_POTION_STACK = 3;
+	public static final int DEBUG_POTION_STACK = DebugStrategyKit.POTION_STACK;
 	/**
 	 * Passed to {@link Dungeon#switchLevel} to place the hero on the down stairs.
 	 */
@@ -40,6 +38,7 @@ public final class DebugSettings {
 	private static Boolean debugStartOverride;
 	private static Integer startDepthOverride;
 	private static Boolean weakEchoSnapshotsOverride;
+	private static Boolean debugStrategyKitOverride;
 
 	private DebugSettings() {
 	}
@@ -164,6 +163,22 @@ public final class DebugSettings {
 		SPDSettings.echoesWeakSnapshots(value);
 	}
 
+	/** When true with debug start, grants the compact strategy-kit bag items. */
+	public static boolean debugStrategyKit() {
+		if (!isDebugBuild()) {
+			return false;
+		}
+		if (debugStrategyKitOverride != null) {
+			return debugStrategyKitOverride;
+		}
+		return SPDSettings.debugStrategyKit();
+	}
+
+	public static void setDebugStrategyKit(boolean value) {
+		debugStrategyKitOverride = value;
+		SPDSettings.debugStrategyKit(value);
+	}
+
 	public static void applyDebugStart() {
 		if (!debugStart()) {
 			return;
@@ -193,24 +208,45 @@ public final class DebugSettings {
 		blessed.bless();
 		blessed.collect();
 
-		PotionOfInvisibility invisibility = new PotionOfInvisibility();
-		invisibility.identify();
-		invisibility.quantity(DEBUG_POTION_STACK);
-		invisibility.collect();
-
-		collectDebugWand(new WandOfMagicMissile());
-		collectDebugWand(new WandOfLightning());
-		collectDebugWand(new WandOfFireblast());
-		collectDebugWand(new WandOfFrost());
-		collectDebugWand(new WandOfDisintegration());
-		collectDebugWand(new WandOfBlastWave());
-		collectDebugWand(new WandOfPrismaticLight());
+		if (debugStrategyKit()) {
+			new PotionBandolier().collect();
+			for (Item item : DebugStrategyKit.createItems()) {
+				collectStrategyItem(item);
+			}
+		}
 	}
 
-	private static void collectDebugWand(Wand wand) {
-		wand.identify();
-		wand.curCharges = wand.maxCharges;
-		wand.collect();
+	/** Bypasses bag capacity — debug only. */
+	private static void forceCollect(Item item) {
+		if (item.collect()) {
+			return;
+		}
+		Dungeon.hero.belongings.backpack.items.add(item);
+	}
+
+	private static void collectStrategyItem(Item item) {
+		if (item instanceof Potion) {
+			if (item.collect()) {
+				return;
+			}
+			PotionBandolier bandolier = Dungeon.hero.belongings.getItem(PotionBandolier.class);
+			if (bandolier != null) {
+				bandolier.items.add(item);
+			} else {
+				forceCollect(item);
+			}
+			return;
+		}
+		if (item instanceof Wand) {
+			forceCollect(item);
+			((Wand) item).charge(Dungeon.hero);
+			return;
+		}
+		if (item instanceof Runestone) {
+			forceCollect(item);
+			return;
+		}
+		forceCollect(item);
 	}
 
 	/**
@@ -228,8 +264,11 @@ public final class DebugSettings {
 		debugStartOverride = false;
 		startDepthOverride = null;
 		weakEchoSnapshotsOverride = false;
+		debugStrategyKitOverride = null;
 		SPDSettings.debugStart(false);
 		SPDSettings.debugStartDepth(DEFAULT_START_DEPTH);
 		SPDSettings.echoesWeakSnapshots(false);
+		SPDSettings.debugStrategyKit(true);
+		CursedWand.setForcedEffect(null);
 	}
 }

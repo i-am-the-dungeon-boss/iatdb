@@ -160,14 +160,40 @@ public final class EchoPolicyMatcher {
 		return null;
 	}
 
-	private static EchoPolicyChoice matchPositioning(JSONObject positioning, EchoPolicyStatus status) {
-		if (positioning == null)
+	/**
+	 * True when the echo prefers open space: active {@code KEEP_DISTANCE}
+	 * positioning, or a ranged stance ({@code ideal_distance > 1}) even when
+	 * step-away is gated to haste/CC reactions. Used by leave-AoE direction.
+	 */
+	public static boolean wantsKeepDistance(EchoPolicy policy, EchoPolicyStatus status) {
+		if (policy == null || status == null) {
+			return false;
+		}
+		JSONObject positioning = policy.root().optJSONObject("positioning");
+		EchoPolicyChoice choice = matchPositioning(positioning, status);
+		if (choice != null && "KEEP_DISTANCE".equals(choice.useRole)) {
+			return true;
+		}
+		JSONObject stance = stanceFor(positioning, status);
+		return stance != null && stance.optInt("ideal_distance", 1) > 1;
+	}
+
+	private static JSONObject stanceFor(JSONObject positioning, EchoPolicyStatus status) {
+		if (positioning == null) {
 			return null;
+		}
 		JSONObject stance = positioning.optJSONObject(status.selfClass);
-		if (stance == null)
+		if (stance == null) {
 			stance = positioning.optJSONObject(status.enemyClass);
-		if (stance == null)
+		}
+		if (stance == null) {
 			stance = positioning.optJSONObject("DEFAULT");
+		}
+		return stance;
+	}
+
+	private static EchoPolicyChoice matchPositioning(JSONObject positioning, EchoPolicyStatus status) {
+		JSONObject stance = stanceFor(positioning, status);
 		if (stance == null)
 			return null;
 

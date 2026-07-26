@@ -98,6 +98,25 @@ class EchoPolicyWhenTest {
 	}
 
 	@Test
+	@DisplayName("self_status_none is true when none of the listed statuses are present")
+	void selfStatusNone() {
+		EchoPolicyStatus hasted = new EchoPolicyStatus.Builder()
+				.selfStatuses(set("haste"))
+				.build();
+		EchoPolicyStatus clear = new EchoPolicyStatus.Builder()
+				.selfStatuses(Collections.emptySet())
+				.build();
+
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_status_none", "haste"), clear)).isTrue();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_status_none", "haste"), hasted)).isFalse();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_status_none", new JSONArray().put("haste").put("invisibility")),
+				clear)).isTrue();
+	}
+
+	@Test
 	@DisplayName("enemy_status_none is true when none of the listed statuses are present")
 	void enemyStatusNone() {
 		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
@@ -211,6 +230,29 @@ class EchoPolicyWhenTest {
 
 		Assertions.assertThat(EchoPolicyWhen.matches(
 				new JSONObject().put("future_predicate", "x"), status)).isTrue();
+	}
+
+	@Test
+	@DisplayName("enemy_shield_below matches when barrier ratio is under the threshold")
+	void enemyShieldBelow() {
+		EchoPolicyStatus low = new EchoPolicyStatus.Builder().enemyShieldRatio(0.1f).build();
+		EchoPolicyStatus high = new EchoPolicyStatus.Builder().enemyShieldRatio(0.5f).build();
+
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("enemy_shield_below", 0.25), low)).isTrue();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("enemy_shield_below", 0.25), high)).isFalse();
+	}
+
+	@Test
+	@DisplayName("enemy_shield_above matches when barrier ratio exceeds the threshold")
+	void enemyShieldAbove() {
+		EchoPolicyStatus high = new EchoPolicyStatus.Builder().enemyShieldRatio(0.4f).build();
+
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("enemy_shield_above", 0.25), high)).isTrue();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("enemy_shield_above", 0.5), high)).isFalse();
 	}
 
 	private static EchoPolicyStatus statusWith(
