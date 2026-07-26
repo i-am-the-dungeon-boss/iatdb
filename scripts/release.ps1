@@ -5,28 +5,22 @@
 
 .DESCRIPTION
   Reads appVersionName / appVersionCode from the root build.gradle, runs all
-  unit tests (`gradlew test`), then prepareRelease (optionally with
-  -PwithJpackage), ensures an unsigned iOS IPA is present (built on macOS, or
-  fetched via GitHub Actions on other OSes). On Windows/Linux, ios-unsigned.yml
-  is dispatched (or a same-commit run reused) before tests/prepareRelease so CI
-  overlaps the local build; the IPA is downloaded after dist/ is ready. Then
-  creates an annotated git tag and a GitHub Release with APK, JAR, IPA,
-  SHA256SUMS, and generated notes.
+  unit tests (`gradlew test`), then prepareRelease with -PwithJpackage (native
+  desktop zip for this OS), ensures an unsigned iOS IPA is present (built on
+  macOS, or fetched via GitHub Actions on other OSes). On Windows/Linux,
+  ios-unsigned.yml is dispatched (or a same-commit run reused) before
+  tests/prepareRelease so CI overlaps the local build; the IPA is downloaded
+  after dist/ is ready. Then creates an annotated git tag and a GitHub Release
+  with APK, JAR, IPA, jpackage zip, SHA256SUMS, and generated notes.
 
 .EXAMPLE
   .\scripts\release.ps1
-
-.EXAMPLE
-  .\scripts\release.ps1 -WithJpackage
 
 .EXAMPLE
   .\scripts\release.ps1 -SkipBuild -DryRun
 #>
 [CmdletBinding()]
 param(
-    # Also build the native desktop zip (slow; downloads a JDK).
-    [switch] $WithJpackage,
-
     # Reuse existing dist/<version>/ artifacts; skip prepareRelease (tests still run).
     [switch] $SkipBuild,
 
@@ -250,7 +244,7 @@ IATDB release
   versionCode = $versionCode
   tag         = $tagName
   github      = $($projectLinks.GithubOwnerRepo)
-  withJpackage= $WithJpackage
+  withJpackage= True
   skipBuild   = $SkipBuild
   skipTests   = $SkipTests
   dryRun      = $DryRun
@@ -325,8 +319,7 @@ environment or root .env (never commit it):
     if ($SkipBuild) {
         Write-Host '>> Skipping build (-SkipBuild)'
     } else {
-        $gradleArgs = @('prepareRelease')
-        if ($WithJpackage) { $gradleArgs += '-PwithJpackage' }
+        $gradleArgs = @('prepareRelease', '-PwithJpackage')
         Invoke-ReleaseGradle -Gradlew $gradlew -GradleArgs $gradleArgs
     }
 } finally {

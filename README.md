@@ -36,9 +36,9 @@ To build and publish a community alpha (tag + GitHub Release):
 
 ```powershell
 .\scripts\release.ps1
-# optional native desktop zip:
-.\scripts\release.ps1 -WithJpackage
 ```
+
+Always includes the native desktop zip (`-PwithJpackage`).
 
 Build-only: `./gradlew prepareRelease` → `dist/<version>/` (see [docs/release/prepare-release.md](docs/release/prepare-release.md)).
 

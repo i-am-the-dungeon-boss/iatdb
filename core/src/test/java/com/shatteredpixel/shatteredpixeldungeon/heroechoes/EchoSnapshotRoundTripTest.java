@@ -43,13 +43,14 @@ class EchoSnapshotRoundTripTest {
 		Assertions.assertThat(loaded.depth).isEqualTo(5);
 		Assertions.assertThat(loaded.heroClass).isEqualTo("MAGE");
 		Assertions.assertThat(loaded.lvl).isEqualTo(14);
-		Assertions.assertThat(loaded.hp).isEqualTo(65);
+		// Capture always stores full health even when the living hero was wounded.
+		Assertions.assertThat(loaded.hp).isEqualTo(70);
 		Assertions.assertThat(loaded.ht).isEqualTo(70);
 
 		Assertions.assertThat(restored.heroClass).isEqualTo(HeroClass.MAGE);
 		Assertions.assertThat(restored.lvl).isEqualTo(14);
 		Assertions.assertThat(restored.STR).isEqualTo(18);
-		Assertions.assertThat(restored.HP).isEqualTo(65);
+		Assertions.assertThat(restored.HP).isEqualTo(70);
 		Assertions.assertThat(restored.HT).isEqualTo(70);
 		Assertions.assertThat(restored.belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(restored.belongings.weapon()).isInstanceOf(WornShortsword.class);

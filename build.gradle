@@ -43,13 +43,10 @@ allprojects {
 }
 
 // Community alpha artifacts:
-//   ./gradlew prepareRelease
-// Optional Windows/macOS/Linux portable app (slow; downloads a JDK):
 //   ./gradlew prepareRelease -PwithJpackage
 // Unsigned iOS IPA is always included when :ios is available (macOS + Xcode).
-// End-to-end tag + GitHub Release (Windows):
+// End-to-end tag + GitHub Release (Windows; always includes jpackage zip):
 //   .\scripts\release.ps1
-//   .\scripts\release.ps1 -WithJpackage
 //
 // Release builds always upload Sentry source context (+ Android ProGuard maps).
 // SENTRY_AUTH_TOKEN is required (env or root .env) — not optional.

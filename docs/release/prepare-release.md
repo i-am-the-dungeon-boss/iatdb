@@ -5,16 +5,14 @@
 One command runs all unit tests (`gradlew test`), builds binaries, ensures an unsigned iOS IPA is present, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] with APK, JAR, unsigned IPA, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`). Failed tests abort the release before packaging.
 
 ```powershell
-# APK + desktop JAR + unsigned IPA
+# APK + desktop JAR + native desktop zip (jpackage) + unsigned IPA
 .\scripts\release.ps1
-
-# Also include native desktop zip for this OS (slow; downloads a JDK)
-.\scripts\release.ps1 -WithJpackage
 ```
+
+`prepareRelease` always runs with `-PwithJpackage` (native desktop zip for this OS; slow; may download a JDK).
 
 | Flag                 | Meaning                                                          |
 | -------------------- | ---------------------------------------------------------------- |
-| `-WithJpackage`      | Passes `-PwithJpackage` to Gradle                                |
 | `-SkipBuild`         | Reuse existing `dist/<version>/` (publish only; tests still run) |
 | `-SkipTests`         | Skip the pre-release `gradlew test` gate (not recommended)       |
 | `-DryRun`            | Print steps; no tests/build/tag/`gh release create`              |
