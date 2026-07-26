@@ -47,17 +47,17 @@ public class PotionOfMindVision extends Potion {
 		}
 		Hero hero = (Hero) ch;
 		identify();
-		Buff.prolong( hero, MindVision.class, MindVision.DURATION );
+		Buff.prolong(hero, MindVision.class, MindVision.DURATION);
 		SpellSprite.show(hero, SpellSprite.VISION, 1, 0.77f, 0.9f);
 		Dungeon.observe();
-		
+
 		if (Dungeon.level.mobs.size() > 0) {
-			GLog.i( Messages.get(this, "see_mobs") );
+			GLog.iIfHero(hero, Messages.get(this, "see_mobs"));
 		} else {
-			GLog.i( Messages.get(this, "see_none") );
+			GLog.iIfHero(hero, Messages.get(this, "see_none"));
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 30 * quantity : super.value();

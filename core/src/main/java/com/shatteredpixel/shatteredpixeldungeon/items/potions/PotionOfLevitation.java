@@ -45,28 +45,28 @@ public class PotionOfLevitation extends Potion {
 	}
 
 	@Override
-	public void shatter( int cell ) {
+	public void shatter(int cell) {
 
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
 			identify();
 
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
-			Sample.INSTANCE.play( Assets.Sounds.GAS );
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
+			Sample.INSTANCE.play(Assets.Sounds.GAS);
 		}
 
-		GameScene.add( Blob.seed( cell, 1000, ConfusionGas.class ) );
+		GameScene.add(Blob.seed(cell, 1000, ConfusionGas.class));
 	}
-	
+
 	@Override
-	public void apply( Char ch ) {
+	public void apply(Char ch) {
 		if (ch instanceof Hero) {
 			identify();
-			GLog.i( Messages.get(this, "float") );
+			GLog.iIfHero(ch, Messages.get(this, "float"));
 		}
-		Buff.prolong( ch, Levitation.class, Levitation.DURATION );
+		Buff.prolong(ch, Levitation.class, Levitation.DURATION);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

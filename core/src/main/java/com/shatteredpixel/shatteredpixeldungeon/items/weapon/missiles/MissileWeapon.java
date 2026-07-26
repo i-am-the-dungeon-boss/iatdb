@@ -315,7 +315,7 @@ abstract public class MissileWeapon extends Weapon {
 		}
 
 		if ((cursed || hasCurseEnchant()) && !cursedKnown) {
-			GLog.n(Messages.get(this, "curse_discover"));
+			GLog.nIfHero(curUser, Messages.get(this, "curse_discover"));
 		}
 		cursedKnown = true;
 		if (parent != null)
@@ -520,21 +520,21 @@ abstract public class MissileWeapon extends Weapon {
 				parent.durability = MAX_DURABILITY;
 				parent.extraThrownLeft = false;
 				if (parent.durabilityPerUse() < 100f) {
-					GLog.n(Messages.get(this, "has_broken"));
+					GLog.nIfHero(curUser, Messages.get(this, "has_broken"));
 				}
 			} else {
 				parent.durability -= parent.durabilityPerUse();
 				if (parent.durability > 0 && parent.durability <= parent.durabilityPerUse()) {
-					GLog.w(Messages.get(this, "about_to_break"));
+					GLog.wIfHero(curUser, Messages.get(this, "about_to_break"));
 				}
 			}
 			parent = null;
 		} else {
 			durability -= durabilityPerUse();
 			if (durability > 0 && durability <= durabilityPerUse()) {
-				GLog.w(Messages.get(this, "about_to_break"));
+				GLog.wIfHero(curUser, Messages.get(this, "about_to_break"));
 			} else if (durabilityPerUse() < 100f && durability <= 0) {
-				GLog.n(Messages.get(this, "has_broken"));
+				GLog.nIfHero(curUser, Messages.get(this, "has_broken"));
 			}
 		}
 	}

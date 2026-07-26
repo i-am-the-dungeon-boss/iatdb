@@ -138,14 +138,14 @@ public class ScrollOfUpgrade extends InventoryScroll {
 			item = w.upgrade();
 
 			if (w.cursedKnown && hadCursedEnchant && !w.hasCurseEnchant()) {
-				removeCurse(Dungeon.hero);
+				removeCurse(curUser);
 			} else if (w.cursedKnown && wasCursed && !w.cursed) {
-				weakenCurse(Dungeon.hero);
+				weakenCurse(curUser);
 			}
 			if (wasHardened && !w.enchantHardened) {
-				GLog.w(Messages.get(Weapon.class, "hardening_gone"));
+				GLog.wIfHero(curUser, Messages.get(Weapon.class, "hardening_gone"));
 			} else if (hadGoodEnchant && !w.hasGoodEnchant()) {
-				GLog.w(Messages.get(Weapon.class, "incompatible"));
+				GLog.wIfHero(curUser, Messages.get(Weapon.class, "incompatible"));
 			}
 
 		} else if (item instanceof Armor) {
@@ -158,14 +158,14 @@ public class ScrollOfUpgrade extends InventoryScroll {
 			item = a.upgrade();
 
 			if (a.cursedKnown && hadCursedGlyph && !a.hasCurseGlyph()) {
-				removeCurse(Dungeon.hero);
+				removeCurse(curUser);
 			} else if (a.cursedKnown && wasCursed && !a.cursed) {
-				weakenCurse(Dungeon.hero);
+				weakenCurse(curUser);
 			}
 			if (wasHardened && !a.glyphHardened) {
-				GLog.w(Messages.get(Armor.class, "hardening_gone"));
+				GLog.wIfHero(curUser, Messages.get(Armor.class, "hardening_gone"));
 			} else if (hadGoodGlyph && !a.hasGoodGlyph()) {
-				GLog.w(Messages.get(Armor.class, "incompatible"));
+				GLog.wIfHero(curUser, Messages.get(Armor.class, "incompatible"));
 			}
 
 		} else if (item instanceof Wand || item instanceof Ring) {
@@ -174,7 +174,7 @@ public class ScrollOfUpgrade extends InventoryScroll {
 			item = item.upgrade();
 
 			if (item.cursedKnown && wasCursed && !item.cursed) {
-				removeCurse(Dungeon.hero);
+				removeCurse(curUser);
 			}
 
 		} else {
@@ -197,14 +197,14 @@ public class ScrollOfUpgrade extends InventoryScroll {
 	}
 
 	public static void weakenCurse(Hero hero) {
-		GLog.p(Messages.get(ScrollOfUpgrade.class, "weaken_curse"));
+		GLog.pIfHero(hero, Messages.get(ScrollOfUpgrade.class, "weaken_curse"));
 		if (hero != null && hero.sprite != null) {
 			hero.sprite.emitter().start(ShadowParticle.UP, 0.05f, 5);
 		}
 	}
 
 	public static void removeCurse(Hero hero) {
-		GLog.p(Messages.get(ScrollOfUpgrade.class, "remove_curse"));
+		GLog.pIfHero(hero, Messages.get(ScrollOfUpgrade.class, "remove_curse"));
 		if (hero != null && hero.sprite != null) {
 			hero.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
 		}

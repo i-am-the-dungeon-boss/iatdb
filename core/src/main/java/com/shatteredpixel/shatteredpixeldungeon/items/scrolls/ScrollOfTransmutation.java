@@ -109,7 +109,7 @@ public class ScrollOfTransmutation extends InventoryScroll {
 
 		if (result == null) {
 			// This shouldn't ever trigger
-			GLog.n(Messages.get(this, "nothing"));
+			GLog.nIfHero(owner, Messages.get(this, "nothing"));
 			curItem.collect(owner.belongings.backpack);
 		} else {
 			if (result != item) {
@@ -157,7 +157,7 @@ public class ScrollOfTransmutation extends InventoryScroll {
 			if (curUser.sprite != null) {
 				curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);
 			}
-			GLog.p(Messages.get(this, "morph"));
+			GLog.pIfHero(owner, Messages.get(this, "morph"));
 		}
 
 	}

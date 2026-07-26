@@ -195,6 +195,15 @@ public final class EchoTestSupport {
 	/**
 	 * Links a stub sprite the way {@link CharSprite#link} does, without camera/VFX.
 	 */
+	/**
+	 * Adds a live {@link Char.Property} (unlike {@link Char#properties()} copy).
+	 */
+	public static void addPropertyForTests(Char ch, Char.Property property) {
+		if (ch != null) {
+			ch.addPropertyForTests(property);
+		}
+	}
+
 	public static void linkStubSprite(Char ch) {
 		StubCharSprite sprite = new StubCharSprite();
 		sprite.ch = ch;

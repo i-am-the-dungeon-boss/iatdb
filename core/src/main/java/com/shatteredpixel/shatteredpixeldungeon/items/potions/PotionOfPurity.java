@@ -44,65 +44,64 @@ import com.watabou.utils.PathFinder;
 import java.util.ArrayList;
 
 public class PotionOfPurity extends Potion {
-	
-	private static final int DISTANCE	= 3;
-	
+
+	private static final int DISTANCE = 3;
+
 	private static ArrayList<Class> affectedBlobs;
 
 	{
 		icon = ItemSpriteSheet.Icons.POTION_PURITY;
-		
+
 		affectedBlobs = new ArrayList<>(new BlobImmunity().immunities());
 	}
 
 	@Override
-	public void shatter( int cell ) {
-		
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), DISTANCE );
-		
+	public void shatter(int cell) {
+
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), DISTANCE);
+
 		ArrayList<Blob> blobs = new ArrayList<>();
-		for (Class c : affectedBlobs){
+		for (Class c : affectedBlobs) {
 			Blob b = Dungeon.level.blobs.get(c);
-			if (b != null && b.volume > 0){
+			if (b != null && b.volume > 0) {
 				blobs.add(b);
 			}
 		}
-		
-		for (int i=0; i < Dungeon.level.length(); i++) {
+
+		for (int i = 0; i < Dungeon.level.length(); i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
-				
+
 				for (Blob blob : blobs) {
 					blob.clear(i);
 				}
-				
+
 				if (Dungeon.level.heroFOV[i]) {
-					CellEmitter.get( i ).burst( Speck.factory( Speck.DISCOVER ), 2 );
+					CellEmitter.get(i).burst(Speck.factory(Speck.DISCOVER), 2);
 				}
-				
+
 			}
 		}
 
-
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
 			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 
 			identify();
 			GLog.i(Messages.get(this, "freshness"));
 		}
-		
+
 	}
-	
+
 	@Override
-	public void apply( Char ch ) {
+	public void apply(Char ch) {
 		if (ch instanceof Hero) {
-			GLog.w( Messages.get(this, "protected") );
+			GLog.wIfHero(ch, Messages.get(this, "protected"));
 			SpellSprite.show(ch, SpellSprite.PURITY);
 			identify();
 		}
-		Buff.prolong( ch, BlobImmunity.class, BlobImmunity.DURATION );
+		Buff.prolong(ch, BlobImmunity.class, BlobImmunity.DURATION);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

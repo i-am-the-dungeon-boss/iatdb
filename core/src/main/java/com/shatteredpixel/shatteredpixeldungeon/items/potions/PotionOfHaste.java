@@ -34,21 +34,21 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 public class PotionOfHaste extends Potion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_HASTE;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		if (ch instanceof Hero) {
 			identify();
-			GLog.w(Messages.get(this, "energetic"));
+			GLog.wIfHero(ch, Messages.get(this, "energetic"));
 			SpellSprite.show(ch, SpellSprite.HASTE, 1, 1, 0);
 		}
 		Buff.prolong(ch, Haste.class, Haste.DURATION);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

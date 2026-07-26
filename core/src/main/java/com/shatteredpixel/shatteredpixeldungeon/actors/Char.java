@@ -875,7 +875,9 @@ public abstract class Char extends Actor {
 		}
 
 		if (isInvulnerable(src.getClass())) {
-			sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, "invulnerable"));
+			if (sprite != null) {
+				sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, "invulnerable"));
+			}
 			return;
 		}
 
@@ -961,7 +963,9 @@ public abstract class Char extends Actor {
 				b.announced = false;
 				b.set(dmg, Sickle.HarvestBleedTracker.class);
 				b.attachTo(this);
-				sprite.showStatus(CharSprite.WARNING, Messages.titleCase(b.name()) + " " + (int) b.level());
+				if (sprite != null) {
+					sprite.showStatus(CharSprite.WARNING, Messages.titleCase(b.name()) + " " + (int) b.level());
+				}
 				return;
 			}
 		}
@@ -1002,8 +1006,10 @@ public abstract class Char extends Actor {
 				// or the hit will reduce it to half or below
 				&& (HP <= HT / 2 || HP + shielding() - dmg <= HT / 2)
 				&& shield != null && !shield.coolingDown()) {
-			sprite.showStatusWithIcon(CharSprite.POSITIVE,
-					Integer.toString(buff(BrokenSeal.WarriorShield.class).maxShield()), FloatingText.SHIELDING);
+			if (sprite != null) {
+				sprite.showStatusWithIcon(CharSprite.POSITIVE,
+						Integer.toString(buff(BrokenSeal.WarriorShield.class).maxShield()), FloatingText.SHIELDING);
+			}
 			shield.activate();
 		}
 
@@ -1022,7 +1028,9 @@ public abstract class Char extends Actor {
 				dmg += extraDmg;
 				HP -= extraDmg;
 
-				sprite.emitter().burst(ShadowParticle.UP, 5);
+				if (sprite != null) {
+					sprite.emitter().burst(ShadowParticle.UP, 5);
+				}
 				if (!isAlive() && buff(Grim.GrimTracker.class).qualifiesForBadge) {
 					Badges.validateGrimWeapon();
 				}
@@ -1443,6 +1451,13 @@ public abstract class Char extends Actor {
 	}
 
 	protected HashSet<Property> properties = new HashSet<>();
+
+	/** Test seam — {@link #properties()} returns a copy. */
+	public void addPropertyForTests(Property p) {
+		if (p != null) {
+			properties.add(p);
+		}
+	}
 
 	public HashSet<Property> properties() {
 		HashSet<Property> props = new HashSet<>(properties);

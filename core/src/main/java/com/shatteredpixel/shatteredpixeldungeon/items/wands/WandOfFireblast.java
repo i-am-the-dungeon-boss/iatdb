@@ -61,90 +61,107 @@ public class WandOfFireblast extends DamageWand {
 	{
 		image = ItemSpriteSheet.WAND_FIREBOLT;
 
-		//only used for targeting, actual projectile logic is Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID
+		// only used for targeting, actual projectile logic is Ballistica.STOP_SOLID |
+		// Ballistica.IGNORE_SOFT_SOLID
 		collisionProperties = Ballistica.WONT_STOP;
 	}
 
-	//1/2/3 base damage with 1/2/3 scaling based on charges used
-	public int min(int lvl){
-		return (1+lvl) * chargesPerCast();
+	// 1/2/3 base damage with 1/2/3 scaling based on charges used
+	public int min(int lvl) {
+		return (1 + lvl) * chargesPerCast();
 	}
 
-	//2/8/18 base damage with 2/4/6 scaling based on charges used
-	public int max(int lvl){
-		switch (chargesPerCast()){
-			case 1: default:
-				return 2 + 2*lvl;
+	// 2/8/18 base damage with 2/4/6 scaling based on charges used
+	public int max(int lvl) {
+		switch (chargesPerCast()) {
+			case 1:
+			default:
+				return 2 + 2 * lvl;
 			case 2:
-				return 2*(4 + 2*lvl);
+				return 2 * (4 + 2 * lvl);
 			case 3:
-				return 3*(6+2*lvl);
+				return 3 * (6 + 2 * lvl);
 		}
 	}
 
 	ConeAOE cone;
 
+	/** Builds cone geometry when headless zap skips {@link #fx}. */
+	private void ensureCone(Ballistica bolt) {
+		if (cone != null) {
+			return;
+		}
+		int maxDist = 3 + 2 * chargesPerCast();
+		cone = new ConeAOE(bolt,
+				maxDist,
+				30 + 20 * chargesPerCast(),
+				Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID);
+	}
+
 	@Override
 	public void onZap(Ballistica bolt) {
+		ensureCone(bolt);
 
 		ArrayList<Char> affectedChars = new ArrayList<>();
 		ArrayList<Integer> adjacentCells = new ArrayList<>();
-		for( int cell : cone.cells ){
+		for (int cell : cone.cells) {
 
-			//ignore caster cell
-			if (cell == bolt.sourcePos){
+			// ignore caster cell
+			if (cell == bolt.sourcePos) {
 				continue;
 			}
 
-			//knock doors open
-			if (Dungeon.level.map[cell] == Terrain.DOOR){
+			// knock doors open
+			if (Dungeon.level.map[cell] == Terrain.DOOR) {
 				Level.set(cell, Terrain.OPEN_DOOR);
 				GameScene.updateMap(cell);
 			}
 
-			//only ignite cells directly near caster if they are flammable or solid
+			// only ignite cells directly near caster if they are flammable or solid
 			if (Dungeon.level.adjacent(bolt.sourcePos, cell)
-					&& !(Dungeon.level.flamable[cell] || Dungeon.level.solid[cell])){
+					&& !(Dungeon.level.flamable[cell] || Dungeon.level.solid[cell])) {
 				adjacentCells.add(cell);
-				//do burn any heaps located here though
-				if (Dungeon.level.heaps.get(cell) != null){
+				// do burn any heaps located here though
+				if (Dungeon.level.heaps.get(cell) != null) {
 					Dungeon.level.heaps.get(cell).burn();
 				}
 			} else {
-				GameScene.add( Blob.seed( cell, 1+chargesPerCast(), Fire.class ) );
+				GameScene.add(Blob.seed(cell, 1 + chargesPerCast(), Fire.class));
 			}
 
-			Char ch = Actor.findChar( cell );
+			Char ch = Actor.findChar(cell);
 			if (ch != null) {
 				affectedChars.add(ch);
 			}
 		}
 
-		//if wand was shot right at a wall
-		if (cone.cells.isEmpty()){
+		// if wand was shot right at a wall
+		if (cone.cells.isEmpty()) {
 			adjacentCells.add(bolt.sourcePos);
 		}
 
-		//ignite cells that share a side with an adjacent cell, are flammable, and are closer to the collision pos
-		//This prevents short-range casts not igniting barricades or bookshelves
-		for (int cell : adjacentCells){
-			for (int i : PathFinder.NEIGHBOURS8){
-				if (Dungeon.level.trueDistance(cell+i, bolt.collisionPos) < Dungeon.level.trueDistance(cell, bolt.collisionPos)
-						&& Dungeon.level.flamable[cell+i]
-						&& Fire.volumeAt(cell+i, Fire.class) == 0){
-					GameScene.add( Blob.seed( cell+i, 1+chargesPerCast(), Fire.class ) );
+		// ignite cells that share a side with an adjacent cell, are flammable, and are
+		// closer to the collision pos
+		// This prevents short-range casts not igniting barricades or bookshelves
+		for (int cell : adjacentCells) {
+			for (int i : PathFinder.NEIGHBOURS8) {
+				if (Dungeon.level.trueDistance(cell + i, bolt.collisionPos) < Dungeon.level.trueDistance(cell,
+						bolt.collisionPos)
+						&& Dungeon.level.flamable[cell + i]
+						&& Fire.volumeAt(cell + i, Fire.class) == 0) {
+					GameScene.add(Blob.seed(cell + i, 1 + chargesPerCast(), Fire.class));
 				}
 			}
 		}
 
-		for ( Char ch : affectedChars ){
+		for (Char ch : affectedChars) {
 			wandProc(ch, chargesPerCast());
 			ch.damage(damageRoll(), this);
 			if (ch.isAlive()) {
 				Buff.affect(ch, Burning.class).reignite(ch);
 				switch (chargesPerCast()) {
 					case 1:
-						break; //no effects
+						break; // no effects
 					case 2:
 						Buff.affect(ch, Cripple.class, 4f);
 						break;
@@ -159,18 +176,18 @@ public class WandOfFireblast extends DamageWand {
 	@Override
 	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
 
-		//proc chance is initially 0..
+		// proc chance is initially 0..
 		float procChance = 0;
 		for (int i : PathFinder.NEIGHBOURS9) {
 
-			//+25% proc chance per burning char within 3x3 of target
+			// +25% proc chance per burning char within 3x3 of target
 			// this includes the attacker and defender
 			if (Actor.findChar(defender.pos + i) != null
 					&& Actor.findChar(defender.pos + i).buff(Burning.class) != null) {
 				procChance += 0.25f;
 
-			//otherwise +5% proc chance per burning tile within 3x3 of target
-			} else if (Fire.volumeAt(defender.pos+i, Fire.class) > 0){
+				// otherwise +5% proc chance per burning tile within 3x3 of target
+			} else if (Fire.volumeAt(defender.pos + i, Fire.class) > 0) {
 				procChance += 0.05f;
 			}
 
@@ -179,18 +196,18 @@ public class WandOfFireblast extends DamageWand {
 		procChance = Math.min(1f, procChance);
 		procChance *= Wand.procChanceMultiplier(attacker);
 
-		if (Random.Float() < procChance){
+		if (Random.Float() < procChance) {
 
 			float powerMulti = Math.max(1f, procChance);
 
 			Blob fire = Dungeon.level.blobs.get(Fire.class);
 
-			//explode, dealing damage to enemies in 3x3, and clearing all fire
+			// explode, dealing damage to enemies in 3x3, and clearing all fire
 			CellEmitter.center(defender.pos).burst(BlastParticle.FACTORY, 30);
 			if (fire != null) {
 				for (int i : PathFinder.NEIGHBOURS9) {
 					CellEmitter.get(defender.pos + i).burst(SmokeParticle.FACTORY, 4);
-					if (Fire.volumeAt(defender.pos+i, Fire.class) > 0){
+					if (Fire.volumeAt(defender.pos + i, Fire.class) > 0) {
 						Dungeon.level.destroy(defender.pos + i);
 						GameScene.updateMap(defender.pos + i);
 						fire.clear(defender.pos + i);
@@ -202,62 +219,62 @@ public class WandOfFireblast extends DamageWand {
 							ch.buff(Burning.class).detach();
 						}
 						if (ch.alignment == Char.Alignment.ENEMY) {
-							//damage of a 2-charge zap
-							ch.damage(Math.round(powerMulti*Hero.heroDamageIntRange(2 + 2*buffedLvl(), 8 + 4*buffedLvl())), this);
+							// damage of a 2-charge zap
+							ch.damage(Math.round(
+									powerMulti * Hero.heroDamageIntRange(2 + 2 * buffedLvl(), 8 + 4 * buffedLvl())),
+									this);
 						}
 					}
 				}
 			}
 
-			Sample.INSTANCE.play( Assets.Sounds.BLAST );
+			Sample.INSTANCE.play(Assets.Sounds.BLAST);
 
 		}
 	}
 
 	@Override
 	public void fx(Ballistica bolt, Callback callback) {
-		//need to perform flame spread logic here so we can determine what cells to put flames in.
+		// need to perform flame spread logic here so we can determine what cells to put
+		// flames in.
 
 		// 5/7/9 distance
-		int maxDist = 3 + 2*chargesPerCast();
+		cone = null;
+		ensureCone(bolt);
 
-		cone = new ConeAOE( bolt,
-				maxDist,
-				30 + 20*chargesPerCast(),
-				Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID);
-
-		//cast to cells at the tip, rather than all cells, better performance.
+		// cast to cells at the tip, rather than all cells, better performance.
 		Ballistica longestRay = null;
-		for (Ballistica ray : cone.outerRays){
-			if (longestRay == null || ray.dist > longestRay.dist){
+		for (Ballistica ray : cone.outerRays) {
+			if (longestRay == null || ray.dist > longestRay.dist) {
 				longestRay = ray;
 			}
-			((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(
+			((MagicMissile) curUser.sprite.parent.recycle(MagicMissile.class)).reset(
 					MagicMissile.FIRE_CONE,
 					curUser.sprite,
 					ray.path.get(ray.dist),
-					null
-			);
+					null);
 		}
 
-		//final zap at half distance of the longest ray, for timing of the actual wand effect
-		MagicMissile.boltFromChar( curUser.sprite.parent,
+		// final zap at half distance of the longest ray, for timing of the actual wand
+		// effect
+		MagicMissile.boltFromChar(curUser.sprite.parent,
 				MagicMissile.FIRE_CONE,
 				curUser.sprite,
-				longestRay.path.get(longestRay.dist/2),
-				callback );
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
-		Sample.INSTANCE.play( Assets.Sounds.BURNING );
+				longestRay.path.get(longestRay.dist / 2),
+				callback);
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
+		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 	}
 
 	@Override
 	protected int chargesPerCast() {
 		if (cursed ||
-				(charger != null && charger.target != null && charger.target.buff(WildMagic.WildMagicTracker.class) != null)){
+				(charger != null && charger.target != null
+						&& charger.target.buff(WildMagic.WildMagicTracker.class) != null)) {
 			return 1;
 		}
-		//consumes 30% of current charges, rounded up, with a min of 1 and a max of 3.
-		return (int) GameMath.gate(1, (int)Math.ceil(curCharges*0.3f), 3);
+		// consumes 30% of current charges, rounded up, with a min of 1 and a max of 3.
+		return (int) GameMath.gate(1, (int) Math.ceil(curCharges * 0.3f), 3);
 	}
 
 	@Override
@@ -270,27 +287,27 @@ public class WandOfFireblast extends DamageWand {
 
 	@Override
 	public String upgradeStat1(int level) {
-		return (1+level) + "-" + (2+2*level);
+		return (1 + level) + "-" + (2 + 2 * level);
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		return (2+2*level) + "-" + 2*(4+2*level);
+		return (2 + 2 * level) + "-" + 2 * (4 + 2 * level);
 	}
 
 	@Override
 	public String upgradeStat3(int level) {
-		return (3+3*level) + "-" + 3*(6+2*level);
+		return (3 + 3 * level) + "-" + 3 * (6 + 2 * level);
 	}
 
 	@Override
 	public void staffFx(MagesStaff.StaffParticle particle) {
-		particle.color( 0xEE7722 );
+		particle.color(0xEE7722);
 		particle.am = 0.5f;
 		particle.setLifespan(0.6f);
 		particle.acc.set(0, -40);
-		particle.setSize( 0f, 3f);
-		particle.shuffleXY( 1.5f );
+		particle.setSize(0f, 3f);
+		particle.shuffleXY(1.5f);
 	}
 
 }

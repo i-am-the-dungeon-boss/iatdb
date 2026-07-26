@@ -61,44 +61,47 @@ public class WandOfWarding extends Wand {
 
 	{
 		image = ItemSpriteSheet.WAND_WARDING;
-		usesTargeting = false; //player usually targets wards or spaces, not enemies
+		usesTargeting = false; // player usually targets wards or spaces, not enemies
 	}
 
 	@Override
 	public int collisionProperties(int target) {
-		if (cursed)                                 return super.collisionProperties(target);
-		else if (!Dungeon.level.heroFOV[target])    return Ballistica.PROJECTILE;
-		else                                        return Ballistica.STOP_TARGET;
+		if (cursed)
+			return super.collisionProperties(target);
+		else if (!Dungeon.level.heroFOV[target])
+			return Ballistica.PROJECTILE;
+		else
+			return Ballistica.STOP_TARGET;
 	}
 
 	@Override
 	public void execute(Hero hero, String action) {
-		//cursed warding does use targeting as it's just doing regular cursed zaps
+		// cursed warding does use targeting as it's just doing regular cursed zaps
 		usesTargeting = cursed && cursedKnown;
 		super.execute(hero, action);
 	}
 
 	private boolean wardAvailable = true;
-	
+
 	@Override
 	public boolean tryToZap(Hero owner, int target) {
 		int currentWardEnergy = wardEnergyUsed();
 		int maxWardEnergy = wardEnergyCap(owner);
 		wardAvailable = (currentWardEnergy < maxWardEnergy);
-		
+
 		Char ch = Actor.findChar(target);
-		if (ch instanceof Ward){
-			if (!wardAvailable && ((Ward) ch).tier <= 3){
-				GLog.w( Messages.get(this, "no_more_wards"));
+		if (ch instanceof Ward) {
+			if (!wardAvailable && ((Ward) ch).tier <= 3) {
+				GLog.wIfHero(owner, Messages.get(this, "no_more_wards"));
 				return false;
 			}
 		} else {
-			if ((currentWardEnergy + 1) > maxWardEnergy){
-				GLog.w( Messages.get(this, "no_more_wards"));
+			if ((currentWardEnergy + 1) > maxWardEnergy) {
+				GLog.wIfHero(owner, Messages.get(this, "no_more_wards"));
 				return false;
 			}
 		}
-		
+
 		return super.tryToZap(owner, target);
 	}
 
@@ -145,38 +148,39 @@ public class WandOfWarding extends Wand {
 		}
 		return maxWardEnergy;
 	}
-	
+
 	@Override
 	public void onZap(Ballistica bolt) {
 
 		int target = bolt.collisionPos;
 		Char ch = Actor.findChar(target);
-		if (ch != null && !(ch instanceof Ward)){
-			if (bolt.dist > 1) target = bolt.path.get(bolt.dist-1);
+		if (ch != null && !(ch instanceof Ward)) {
+			if (bolt.dist > 1)
+				target = bolt.path.get(bolt.dist - 1);
 
 			ch = Actor.findChar(target);
-			if (ch != null && !(ch instanceof Ward)){
-				GLog.w( Messages.get(this, "bad_location"));
+			if (ch != null && !(ch instanceof Ward)) {
+				GLog.wIfHero(curUser, Messages.get(this, "bad_location"));
 				Dungeon.level.pressCell(bolt.collisionPos);
 				return;
 			}
 		}
 
-		if (ch != null){
-			if (ch instanceof Ward){
+		if (ch != null) {
+			if (ch instanceof Ward) {
 				if (wardAvailable) {
-					((Ward) ch).upgrade( buffedLvl() );
+					((Ward) ch).upgrade(buffedLvl());
 				} else {
-					((Ward) ch).wandHeal( buffedLvl() );
+					((Ward) ch).wandHeal(buffedLvl());
 				}
 				ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);
 			} else {
-				GLog.w( Messages.get(this, "bad_location"));
+				GLog.wIfHero(curUser, Messages.get(this, "bad_location"));
 				Dungeon.level.pressCell(target);
 			}
-			
-		} else if (!Dungeon.level.passable[target]){
-			GLog.w( Messages.get(this, "bad_location"));
+
+		} else if (!Dungeon.level.passable[target]) {
+			GLog.wIfHero(curUser, Messages.get(this, "bad_location"));
 			Dungeon.level.pressCell(target);
 
 		} else {
@@ -198,27 +202,27 @@ public class WandOfWarding extends Wand {
 				curUser.sprite,
 				bolt.collisionPos,
 				callback);
-		
-		if (bolt.dist > 10){
-			m.setSpeed(bolt.dist*20);
+
+		if (bolt.dist > 10) {
+			m.setSpeed(bolt.dist * 20);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 	}
 
 	@Override
 	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
-		int level = Math.max( 0, staff.buffedLvl() );
+		int level = Math.max(0, staff.buffedLvl());
 
 		// lvl 0 - 20%
 		// lvl 1 - 33%
 		// lvl 2 - 43%
-		float procChance = (level+1f)/(level+5f) * procChanceMultiplier(attacker);
+		float procChance = (level + 1f) / (level + 5f) * procChanceMultiplier(attacker);
 		if (Random.Float() < procChance) {
 
 			float powerMulti = Math.max(1f, procChance);
 
-			for (Char ch : Actor.chars()){
-				if (ch instanceof Ward){
+			for (Char ch : Actor.chars()) {
+				if (ch instanceof Ward) {
 					((Ward) ch).wandHeal(staff.buffedLvl(), powerMulti);
 					ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);
 				}
@@ -228,30 +232,30 @@ public class WandOfWarding extends Wand {
 
 	@Override
 	public void staffFx(MagesStaff.StaffParticle particle) {
-		particle.color( 0x8822FF );
+		particle.color(0x8822FF);
 		particle.am = 0.3f;
 		particle.setLifespan(3f);
 		particle.speed.polar(Random.Float(PointF.PI2), 0.3f);
-		particle.setSize( 1f, 2f);
+		particle.setSize(1f, 2f);
 		particle.radiateXY(2.5f);
 	}
 
 	@Override
 	public String statsDesc() {
 		if (levelKnown)
-			return Messages.get(this, "stats_desc", level()+2);
+			return Messages.get(this, "stats_desc", level() + 2);
 		else
 			return Messages.get(this, "stats_desc", 2);
 	}
 
 	@Override
 	public String upgradeStat1(int level) {
-		return 2+level + "-" + (8+4*level);
+		return 2 + level + "-" + (8 + 4 * level);
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		return Integer.toString(level+2);
+		return Integer.toString(level + 2);
 	}
 
 	public static class Ward extends NPC {
@@ -275,20 +279,22 @@ public class WandOfWarding extends Wand {
 
 		@Override
 		public String name() {
-			return Messages.get(this, "name_" + tier );
+			return Messages.get(this, "name_" + tier);
 		}
 
-		public void upgrade(int wandLevel ){
-			if (this.wandLevel < wandLevel){
+		public void upgrade(int wandLevel) {
+			if (this.wandLevel < wandLevel) {
 				this.wandLevel = wandLevel;
 			}
 
-			switch (tier){
-				case 1: case 2: default:
-					break; //do nothing
+			switch (tier) {
+				case 1:
+				case 2:
+				default:
+					break; // do nothing
 				case 3:
 					HT = 35;
-					HP = 15 + (5-totalZaps)*4;
+					HP = 15 + (5 - totalZaps) * 4;
 					break;
 				case 4:
 					HT = 54;
@@ -303,36 +309,38 @@ public class WandOfWarding extends Wand {
 					break;
 			}
 
-			if (Actor.chars().contains(this) && tier >= 3){
+			if (Actor.chars().contains(this) && tier >= 3) {
 				Bestiary.setSeen(WardSentry.class);
 			}
 
-			if (tier < 6){
+			if (tier < 6) {
 				tier++;
 				viewDistance++;
-				if (sprite != null){
-					((WardSprite)sprite).updateTier(tier);
+				if (sprite != null) {
+					((WardSprite) sprite).updateTier(tier);
 					sprite.place(pos);
 				}
-				GameScene.updateFog(pos, viewDistance+1);
+				GameScene.updateFog(pos, viewDistance + 1);
 			}
 
 		}
 
-		//this class is used so that wards and sentries can have two entries in the Bestiary
-		public static class WardSentry extends Ward{};
+		// this class is used so that wards and sentries can have two entries in the
+		// Bestiary
+		public static class WardSentry extends Ward {
+		};
 
-		public void wandHeal( int wandLevel ){
-			wandHeal( wandLevel, 1f );
+		public void wandHeal(int wandLevel) {
+			wandHeal(wandLevel, 1f);
 		}
 
-		public void wandHeal( int wandLevel, float healFactor ){
-			if (this.wandLevel < wandLevel){
+		public void wandHeal(int wandLevel, float healFactor) {
+			if (this.wandLevel < wandLevel) {
 				this.wandLevel = wandLevel;
 			}
 
 			int heal;
-			switch(tier){
+			switch (tier) {
 				default:
 					return;
 				case 2:
@@ -342,28 +350,29 @@ public class WandOfWarding extends Wand {
 					heal = Math.round(Random.IntRange(1, 2) * healFactor);
 					break;
 				case 4:
-					heal = Math.round(9 * healFactor); //9/5 1.8
+					heal = Math.round(9 * healFactor); // 9/5 1.8
 					break;
 				case 5:
-					heal = Math.round(12 * healFactor); //12/6, 2
+					heal = Math.round(12 * healFactor); // 12/6, 2
 					break;
 				case 6:
-					heal = Math.round(16 * healFactor); //16/7, 2.28
+					heal = Math.round(16 * healFactor); // 16/7, 2.28
 					break;
 			}
 
-			if (tier <= 3){
-				totalZaps = (Math.max(0, totalZaps-heal));
+			if (tier <= 3) {
+				totalZaps = (Math.max(0, totalZaps - heal));
 			} else {
 				HP = Math.min(HT, HP + heal);
 			}
-			if (sprite != null) sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
+			if (sprite != null)
+				sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
 
 		}
 
 		@Override
 		public int defenseSkill(Char enemy) {
-			if (tier > 3){
+			if (tier > 3) {
 				defenseSkill = 4 + Dungeon.scalingDepth();
 			}
 			return super.defenseSkill(enemy);
@@ -372,23 +381,23 @@ public class WandOfWarding extends Wand {
 		@Override
 		public int drRoll() {
 			int dr = super.drRoll();
-			if (tier > 3){
-				return dr + Math.round(Random.NormalIntRange(0, 3 + Dungeon.scalingDepth()/2) / (7f - tier));
+			if (tier > 3) {
+				return dr + Math.round(Random.NormalIntRange(0, 3 + Dungeon.scalingDepth() / 2) / (7f - tier));
 			} else {
 				return dr;
 			}
 		}
 
 		@Override
-		protected boolean canAttack( Char enemy ) {
-			return new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
+		protected boolean canAttack(Char enemy) {
+			return new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
 		}
 
 		@Override
 		protected boolean doAttack(Char enemy) {
 			boolean visible = fieldOfView[pos] || fieldOfView[enemy.pos];
 			if (visible) {
-				sprite.zap( enemy.pos );
+				sprite.zap(enemy.pos);
 			} else {
 				zap();
 			}
@@ -397,26 +406,29 @@ public class WandOfWarding extends Wand {
 		}
 
 		private void zap() {
-			spend( 1f );
+			spend(1f);
 
-			//always hits
-			int dmg = Hero.heroDamageIntRange( 2 + wandLevel, 8 + 4*wandLevel );
+			// always hits
+			int dmg = Hero.heroDamageIntRange(2 + wandLevel, 8 + 4 * wandLevel);
 			Char enemy = this.enemy;
-			enemy.damage( dmg, this );
-			if (enemy.isAlive()){
+			enemy.damage(dmg, this);
+			if (enemy.isAlive()) {
 				Wand.wandProc(enemy, wandLevel, 1);
 			}
 
 			if (!enemy.isAlive() && enemy == Dungeon.hero) {
 				Badges.validateDeathFromFriendlyMagic();
-				GLog.n(Messages.capitalize(Messages.get( this, "kill", name() )));
-				Dungeon.fail( WandOfWarding.class );
+				GLog.n(Messages.capitalize(Messages.get(this, "kill", name())));
+				Dungeon.fail(WandOfWarding.class);
 			}
 
 			totalZaps++;
-			switch(tier){
-				case 1: case 2: case 3: default:
-					if (totalZaps >= (2*tier-1)){
+			switch (tier) {
+				case 1:
+				case 2:
+				case 3:
+				default:
+					if (totalZaps >= (2 * tier - 1)) {
 						die(this);
 					}
 					break;
@@ -457,38 +469,38 @@ public class WandOfWarding extends Wand {
 		@Override
 		public void updateSpriteState() {
 			super.updateSpriteState();
-			((WardSprite)sprite).updateTier(tier);
+			((WardSprite) sprite).updateTier(tier);
 			sprite.place(pos);
 		}
-		
+
 		@Override
 		public void destroy() {
 			super.destroy();
 			Dungeon.observe();
-			GameScene.updateFog(pos, viewDistance+1);
+			GameScene.updateFog(pos, viewDistance + 1);
 		}
-		
+
 		@Override
 		public boolean canInteract(Char c) {
 			return true;
 		}
 
 		@Override
-		public boolean interact( Char c ) {
-			if (c != Dungeon.hero){
+		public boolean interact(Char c) {
+			if (c != Dungeon.hero) {
 				return true;
 			}
 			Game.runOnRenderThread(new Callback() {
 				@Override
 				public void call() {
-					GameScene.show(new WndOptions( sprite(),
+					GameScene.show(new WndOptions(sprite(),
 							Messages.get(Ward.this, "dismiss_title"),
 							Messages.get(Ward.this, "dismiss_body"),
 							Messages.get(Ward.this, "dismiss_confirm"),
-							Messages.get(Ward.this, "dismiss_cancel") ){
+							Messages.get(Ward.this, "dismiss_cancel")) {
 						@Override
 						protected void onSelect(int index) {
-							if (index == 0){
+							if (index == 0) {
 								die(null);
 							}
 						}
@@ -500,9 +512,9 @@ public class WandOfWarding extends Wand {
 
 		@Override
 		public String description() {
-			if (!Actor.chars().contains(this)){
-				//for viewing in the journal
-				if (tier < 4){
+			if (!Actor.chars().contains(this)) {
+				// for viewing in the journal
+				if (tier < 4) {
 					return Messages.get(this, "desc_generic_ward");
 				} else {
 					return Messages.get(this, "desc_generic_sentry");
@@ -511,13 +523,13 @@ public class WandOfWarding extends Wand {
 				return Messages.get(this, "desc_" + tier, 2 + wandLevel, 8 + 4 * wandLevel, tier);
 			}
 		}
-		
+
 		{
-			immunities.add( Sleep.class );
-			immunities.add( Terror.class );
-			immunities.add( Dread.class );
-			immunities.add( Vertigo.class );
-			immunities.add( AllyBuff.class );
+			immunities.add(Sleep.class);
+			immunities.add(Terror.class);
+			immunities.add(Dread.class);
+			immunities.add(Vertigo.class);
+			immunities.add(AllyBuff.class);
 		}
 
 		private static final String TIER = "tier";

@@ -1,11 +1,15 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPlayerAuthTest {
@@ -14,6 +18,7 @@ class EchoPlayerAuthTest {
 	void cleanup() {
 		EchoPlayerSession.resetForTests();
 		EchoOnlineSettings.resetForTests();
+		SentryCrashReporting.resetReporter();
 	}
 
 	@Test
@@ -49,5 +54,22 @@ class EchoPlayerAuthTest {
 
 		Assertions.assertThat(result).isEqualTo(EchoPlayerAuth.SessionResult.USERNAME_TAKEN);
 		Assertions.assertThat(EchoPlayerSession.hasSession()).isFalse();
+	}
+
+	@Test
+	@DisplayName("register HTTP 401 returns FAILED without reporting to Sentry")
+	void registerHttp401ReturnsFailedWithoutSentry() {
+		List<Throwable> captured = new ArrayList<>();
+		SentryCrashReporting.setReporter(captured::add);
+
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(401, "{\"detail\":\"Unauthorized\"}");
+		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
+
+		EchoPlayerAuth.SessionResult result = EchoPlayerAuth.ensureSession(client, "NewHero");
+
+		Assertions.assertThat(result).isEqualTo(EchoPlayerAuth.SessionResult.FAILED);
+		Assertions.assertThat(EchoPlayerSession.hasSession()).isFalse();
+		Assertions.assertThat(captured).isEmpty();
 	}
 }

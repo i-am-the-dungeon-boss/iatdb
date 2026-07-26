@@ -49,7 +49,13 @@ param(
     [string] $Remote = 'origin',
 
     # Tag name override (default: v<appVersionName>).
-    [string] $Tag = ''
+    [string] $Tag = '',
+
+    # Skip vercel promote for hero-echoes after the GitHub Release.
+    [switch] $SkipVercelPromote,
+
+    # Override path to the hero-echoes repo (default: sibling ../hero-echoes or HERO_ECHOES_ROOT).
+    [string] $HeroEchoesRoot = ''
 )
 
 Set-StrictMode -Version Latest
@@ -59,6 +65,7 @@ $releaseLib = Join-Path $PSScriptRoot 'release'
 . (Join-Path $releaseLib '_common.ps1')
 . (Join-Path $releaseLib 'Fetch-UnsignedIosIpa.ps1')
 . (Join-Path $releaseLib 'New-ReleaseNotes.ps1')
+. (Join-Path $releaseLib 'Publish-HeroEchoesVercelProduction.ps1')
 . (Join-Path $releaseLib 'Update-Sha256Sums.ps1')
 
 function Assert-Command([string] $Name) {
@@ -433,9 +440,21 @@ if (-not $DryRun) {
     }
 }
 
+# Invoke hero-echoes promote-vercel.ps1 only after the GitHub Release succeeds
+# so /v1/game-version does not advertise a version whose release assets are missing.
+if ($SkipVercelPromote) {
+    Write-Host '>> Skipping Hero Echoes Vercel promote (-SkipVercelPromote)'
+} else {
+    Publish-HeroEchoesVercelProduction `
+        -IatdbRoot $root `
+        -HeroEchoesRoot $HeroEchoesRoot `
+        -Remote $Remote `
+        -DryRun:$DryRun
+}
+
 Write-Host ''
 if ($DryRun) {
-    Write-Host 'Dry run complete - no tag push or GitHub Release created.'
+    Write-Host 'Dry run complete - no tag push, GitHub Release, or Vercel promote.'
 } else {
     Write-Host "Published: $($projectLinks.GithubRepoUrl)/releases/tag/$tagName"
 }

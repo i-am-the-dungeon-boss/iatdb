@@ -25,6 +25,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
@@ -59,28 +61,31 @@ public class ScrollOfIdentify extends InventoryScroll {
 	}
 
 	public static void IDItem(Item item) {
+		// Prefer acting kit (echo phantom / hero); fall back to living hero for
+		// wells and other callers that do not set Item.curUser.
+		Char logUser = curUser != null ? curUser : Dungeon.hero;
 		if (ShardOfOblivion.passiveIDDisabled()) {
 			if (item instanceof Weapon) {
 				((Weapon) item).setIDReady();
-				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
+				GLog.pIfHero(logUser, Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
 			} else if (item instanceof Armor) {
 				((Armor) item).setIDReady();
-				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
+				GLog.pIfHero(logUser, Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
 			} else if (item instanceof Ring) {
 				((Ring) item).setIDReady();
-				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
+				GLog.pIfHero(logUser, Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
 			} else if (item instanceof Wand) {
 				((Wand) item).setIDReady();
-				GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
+				GLog.pIfHero(logUser, Messages.get(ShardOfOblivion.class, "identify_ready"), item.name());
 				return;
 			}
 		}
 
 		item.identify();
-		GLog.i(Messages.get(ScrollOfIdentify.class, "it_is", item.title()));
+		GLog.iIfHero(logUser, Messages.get(ScrollOfIdentify.class, "it_is", item.title()));
 		Badges.validateItemLevelAquired(item);
 	}
 

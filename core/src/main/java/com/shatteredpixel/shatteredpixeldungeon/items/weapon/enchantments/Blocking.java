@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HoldFast;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -41,31 +42,37 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 public class Blocking extends Weapon.Enchantment {
-	
-	private static ItemSprite.Glowing BLUE = new ItemSprite.Glowing( 0x0000FF );
-	
+
+	private static ItemSprite.Glowing BLUE = new ItemSprite.Glowing(0x0000FF);
+
 	@Override
 	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
-		
-		int level = Math.max( 0, weapon.buffedLvl() );
+
+		int level = Math.max(0, weapon.buffedLvl());
 
 		// lvl 0 - 10%
 		// lvl 1 ~ 12%
 		// lvl 2 ~ 14%
-		float procChance = (level+4f)/(level+40f) * procChanceMultiplier(attacker);
-		if (Random.Float() < procChance){
+		float procChance = (level + 4f) / (level + 40f) * procChanceMultiplier(attacker);
+		if (Random.Float() < procChance) {
 			float powerMulti = Math.max(1f, procChance);
 
 			BlockBuff b = Buff.affect(attacker, BlockBuff.class);
 			int shield = Math.round(powerMulti * (2 + weapon.buffedLvl()));
 			b.setShield(shield);
-			attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield), FloatingText.SHIELDING);
-			attacker.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 5);
+			if (UseContext.canWorldFx(attacker)) {
+				attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield),
+						FloatingText.SHIELDING);
+				attacker.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 5);
+			} else if (attacker.sprite != null) {
+				attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield),
+						FloatingText.SHIELDING);
+			}
 		}
-		
+
 		return damage;
 	}
-	
+
 	@Override
 	public ItemSprite.Glowing glowing() {
 		return BLUE;
@@ -111,7 +118,7 @@ public class Blocking extends Weapon.Enchantment {
 		public int icon() {
 			return BuffIndicator.ARMOR;
 		}
-		
+
 		@Override
 		public void tintIcon(Image icon) {
 			icon.hardlight(0.5f, 1f, 2f);
@@ -124,7 +131,7 @@ public class Blocking extends Weapon.Enchantment {
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)left);
+			return Integer.toString((int) left);
 		}
 
 		@Override

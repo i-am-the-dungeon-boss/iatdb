@@ -1,7 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
-import com.watabou.noosa.Game;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.watabou.utils.Strings;
 
 import org.json.JSONObject;
@@ -46,11 +46,13 @@ public final class EchoPlayerAuth {
 				EchoPlayerSession.clearSession();
 				return SessionResult.USERNAME_TAKEN;
 			}
-			Game.reportException(e);
+			if (!isExpectedAuthFailure(e.statusCode)) {
+				SentryCrashReporting.report(e);
+			}
 			EchoPlayerSession.clearSession();
 			return SessionResult.FAILED;
 		} catch (Exception e) {
-			Game.reportException(e);
+			SentryCrashReporting.report(e);
 			EchoPlayerSession.clearSession();
 			return SessionResult.FAILED;
 		}
@@ -81,7 +83,7 @@ public final class EchoPlayerAuth {
 				return true;
 			}
 		} catch (Exception e) {
-			Game.reportException(e);
+			SentryCrashReporting.report(e);
 		}
 
 		// Do not pass a username here — that would silently recreate a deleted player.
@@ -96,18 +98,23 @@ public final class EchoPlayerAuth {
 		try {
 			return client.authenticateDevice(EchoPlayerSession.deviceId(), null);
 		} catch (EchoHttpException e) {
-			if (e.statusCode == 404 || e.statusCode == 401 || e.statusCode == 422) {
+			if (isExpectedAuthFailure(e.statusCode)) {
 				EchoPlayerSession.clearSession();
 				return false;
 			}
-			Game.reportException(e);
+			SentryCrashReporting.report(e);
 			EchoPlayerSession.clearSession();
 			return false;
 		} catch (Exception e) {
-			Game.reportException(e);
+			SentryCrashReporting.report(e);
 			EchoPlayerSession.clearSession();
 			return false;
 		}
+	}
+
+	/** Client auth outcomes that should not page Sentry. */
+	static boolean isExpectedAuthFailure(int statusCode) {
+		return statusCode == 401 || statusCode == 403 || statusCode == 404 || statusCode == 422;
 	}
 
 	/** Preferred display name: session username, else SPDSettings player name. */

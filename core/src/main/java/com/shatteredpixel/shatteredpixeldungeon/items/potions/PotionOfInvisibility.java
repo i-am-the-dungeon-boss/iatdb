@@ -41,15 +41,15 @@ public class PotionOfInvisibility extends Potion {
 	}
 
 	@Override
-	public void apply( Char ch ) {
+	public void apply(Char ch) {
 		if (ch instanceof Hero) {
 			identify();
-			GLog.i( Messages.get(this, "invisible") );
-			Sample.INSTANCE.play( Assets.Sounds.MELD );
+			GLog.iIfHero(ch, Messages.get(this, "invisible"));
+			Sample.INSTANCE.play(Assets.Sounds.MELD);
 		}
-		Buff.prolong( ch, Invisibility.class, Invisibility.DURATION );
+		Buff.prolong(ch, Invisibility.class, Invisibility.DURATION);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

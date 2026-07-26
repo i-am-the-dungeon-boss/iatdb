@@ -290,6 +290,47 @@ class WandZapAsTest {
 		Assertions.assertThat(boss.getEchoHero().cooldown()).isEqualTo(kitBefore);
 	}
 
+	@Test
+	@DisplayName("Echo Fireblast zapAs builds cone when headless (no fx parent)")
+	void echoFireblastZapAsBuildsConeWhenHeadless() {
+		Hero player = mageHero();
+		WandOfFireblast seed = new WandOfFireblast();
+		seed.curCharges = 3;
+		seed.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, fireblastPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		WandOfFireblast wand = boss.getEchoHero().belongings.getItem(WandOfFireblast.class);
+		Assertions.assertThat(wand).isNotNull();
+		wand.curCharges = 3;
+		player.invisible = 1;
+
+		Assertions.assertThatCode(() -> wand.zapAs(UseContext.echo(boss), player.pos))
+				.doesNotThrowAnyException();
+		Assertions.assertThat(wand.curCharges).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("Echo Regrowth zapAs builds cone when headless (no fx parent)")
+	void echoRegrowthZapAsBuildsConeWhenHeadless() {
+		Hero player = mageHero();
+		WandOfRegrowth seed = new WandOfRegrowth();
+		seed.curCharges = 3;
+		seed.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, regrowthPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		WandOfRegrowth wand = boss.getEchoHero().belongings.getItem(WandOfRegrowth.class);
+		Assertions.assertThat(wand).isNotNull();
+		wand.curCharges = 3;
+
+		Assertions.assertThatCode(() -> wand.zapAs(UseContext.echo(boss), player.pos))
+				.doesNotThrowAnyException();
+		Assertions.assertThat(wand.curCharges).isEqualTo(2);
+	}
+
 	private static Hero mageHero() {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
@@ -312,6 +353,22 @@ class WandZapAsTest {
 				.put("RANGED", new JSONObject()
 						.put("pick", "FIRST_LEGAL")
 						.put("items", new JSONArray().put("MagesStaff")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy fireblastPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("RANGED", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("WandOfFireblast")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy regrowthPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("RANGED", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("WandOfRegrowth")))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 }

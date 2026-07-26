@@ -155,7 +155,7 @@ public abstract class Wand extends Item {
 	public boolean tryToZap(Hero owner, int target) {
 
 		if (owner.buff(WildMagic.WildMagicTracker.class) == null && owner.buff(MagicImmune.class) != null) {
-			GLog.w(Messages.get(this, "no_magic"));
+			GLog.wIfHero(owner, Messages.get(this, "no_magic"));
 			return false;
 		}
 
@@ -163,12 +163,15 @@ public abstract class Wand extends Item {
 		if (owner.buff(WildMagic.WildMagicTracker.class) != null || canZap()) {
 			return true;
 		} else {
-			GLog.w(Messages.get(this, "fizzles"));
+			GLog.wIfHero(owner, Messages.get(this, "fizzles"));
 			return false;
 		}
 	}
 
-	/** True when {@link #curCharges} covers {@link #chargesPerCast()} (echo AI readiness). */
+	/**
+	 * True when {@link #curCharges} covers {@link #chargesPerCast()} (echo AI
+	 * readiness).
+	 */
 	public boolean canZap() {
 		return curCharges >= chargesPerCast();
 	}

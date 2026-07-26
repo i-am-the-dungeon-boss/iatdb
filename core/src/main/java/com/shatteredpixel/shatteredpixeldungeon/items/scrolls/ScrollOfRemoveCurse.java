@@ -73,7 +73,7 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 			}
 
 			detach(curUser.belongings.backpack);
-			GLog.p(Messages.get(this, "spirit"));
+			GLog.pIfHero(curUser, Messages.get(this, "spirit"));
 			spirit.cleanse();
 		} else {
 			super.doRead();
@@ -115,9 +115,9 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 		}
 
 		if (procced) {
-			GLog.p(Messages.get(this, "cleansed"));
+			GLog.pIfHero(curUser, Messages.get(this, "cleansed"));
 		} else {
-			GLog.i(Messages.get(this, "not_cleansed"));
+			GLog.iIfHero(curUser, Messages.get(this, "not_cleansed"));
 		}
 	}
 
@@ -160,7 +160,10 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 				updateQuickslot();
 			}
 
-			Badges.validateClericUnlock();
+			// Echo kit uncurse must not unlock / announce player badges.
+			if (hero == Dungeon.hero) {
+				Badges.validateClericUnlock();
+			}
 		}
 
 		return procced;

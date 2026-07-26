@@ -120,7 +120,7 @@ public class ScrollOfTeleportation extends Scroll {
 		}
 
 		if (Char.hasProp(ch, Char.Property.IMMOVABLE) || ch.isImmune(source)) {
-			GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
+			GLog.wIfHero(ch, Messages.get(ScrollOfTeleportation.class, "no_tele"));
 			return false;
 		}
 
@@ -135,7 +135,7 @@ public class ScrollOfTeleportation extends Scroll {
 
 		if (pos == -1) {
 
-			GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
+			GLog.wIfHero(ch, Messages.get(ScrollOfTeleportation.class, "no_tele"));
 			return false;
 
 		} else {
@@ -235,7 +235,7 @@ public class ScrollOfTeleportation extends Scroll {
 	private static boolean teleportInNonRegularLevel(Char ch, boolean preferNotSeen) {
 
 		if (Char.hasProp(ch, Char.Property.IMMOVABLE)) {
-			GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
+			GLog.wIfHero(ch, Messages.get(ScrollOfTeleportation.class, "no_tele"));
 			return false;
 		}
 
@@ -274,7 +274,7 @@ public class ScrollOfTeleportation extends Scroll {
 		} else if (!visibleValid.isEmpty()) {
 			pos = Random.element(visibleValid);
 		} else {
-			GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
+			GLog.wIfHero(ch, Messages.get(ScrollOfTeleportation.class, "no_tele"));
 			return false;
 		}
 
