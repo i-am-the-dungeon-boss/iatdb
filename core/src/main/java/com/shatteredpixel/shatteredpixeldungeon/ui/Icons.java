@@ -146,8 +146,24 @@ public enum Icons {
 		return get(this);
 	}
 
+	/**
+	 * Only checkbox / close / plus / repeat chrome buttons use the tinted atlas.
+	 */
+	public static String atlasFor(Icons type) {
+		switch (type) {
+			case UNCHECKED:
+			case CHECKED:
+			case CLOSE:
+			case PLUS:
+			case REPEAT:
+				return Assets.Interfaces.ICONS_TINTED;
+			default:
+				return Assets.Interfaces.ICONS;
+		}
+	}
+
 	public static Image get(Icons type) {
-		Image icon = new Image(Assets.Interfaces.ICONS);
+		Image icon = new Image(atlasFor(type));
 		switch (type) {
 
 			case ENTER:

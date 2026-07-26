@@ -36,10 +36,16 @@ tasks.register('debug', JavaExec) {
     ignoreExitValue = true
     workingDir = rootProject.projectDir
 
+    // -PnoDebug: omit -INDEV so DeviceCompat.isDebug() / DebugSettings stay off
+    // (no title Debug button). Default keeps INDEV for local debug tools.
+    def debugVersionName = project.hasProperty('noDebug')
+            ? appVersionName
+            : appVersionName + "-INDEV"
+
     mainClass = appMainClass
     systemProperty 'Specification-Title', appName
     systemProperty 'Implementation-Title', appPackageName
-    systemProperty 'Specification-Version', appVersionName + "-INDEV"
+    systemProperty 'Specification-Version', debugVersionName
     systemProperty 'Implementation-Version', appVersionCode
 
     if (osName.contains('mac')) {

@@ -84,22 +84,22 @@ public class MenuPane extends Component {
 		versionOverflowBG = new NinePatch(bg.texture, 1, 22, 6, 8, 3, 0, 2, 0);
 		add(versionOverflowBG);
 
-		version = new BitmapText( "v" + Game.version , PixelScene.pixelFont);
-		version.hardlight( 0xCACFC2 );
+		version = new BitmapText("v" + Game.version, PixelScene.pixelFont);
+		version.hardlight(0xCACFC2);
 		add(version);
 
 		depthIcon = Icons.get(Dungeon.level.feeling);
 		add(depthIcon);
 
-		depthText = new BitmapText( Integer.toString( Dungeon.depth ), PixelScene.pixelFont);
-		depthText.hardlight( 0xCACFC2 );
+		depthText = new BitmapText(Integer.toString(Dungeon.depth), PixelScene.pixelFont);
+		depthText.hardlight(0xCACFC2);
 		depthText.measure();
-		add( depthText );
+		add(depthText);
 
-		depthButton = new Button(){
+		depthButton = new Button() {
 			@Override
 			protected String hoverText() {
-				if (Dungeon.level.feeling != Level.Feeling.NONE){
+				if (Dungeon.level.feeling != Level.Feeling.NONE) {
 					return Dungeon.level.feeling.desc();
 				} else {
 					return null;
@@ -110,7 +110,7 @@ public class MenuPane extends Component {
 			protected void onClick() {
 				super.onClick();
 
-				if (Dungeon.level.feeling == Level.Feeling.NONE){
+				if (Dungeon.level.feeling == Level.Feeling.NONE) {
 					GameScene.show(new WndJournal());
 				} else {
 					GameScene.show(new WndTitledMessage(Icons.getLarge(Dungeon.level.feeling),
@@ -121,16 +121,16 @@ public class MenuPane extends Component {
 		};
 		add(depthButton);
 
-		if (Challenges.activeChallenges() > 0){
+		if (Challenges.activeChallenges() > 0) {
 			challengeIcon = Icons.get(Icons.CHAL_COUNT);
 			add(challengeIcon);
 
-			challengeText = new BitmapText( Integer.toString( Challenges.activeChallenges() ), PixelScene.pixelFont);
-			challengeText.hardlight( 0xCACFC2 );
+			challengeText = new BitmapText(Integer.toString(Challenges.activeChallenges()), PixelScene.pixelFont);
+			challengeText.hardlight(0xCACFC2);
 			challengeText.measure();
-			add( challengeText );
+			add(challengeText);
 
-			challengeButton = new Button(){
+			challengeButton = new Button() {
 				@Override
 				protected void onClick() {
 					GameScene.show(new WndChallenges(Dungeon.challenges, false));
@@ -145,15 +145,15 @@ public class MenuPane extends Component {
 		}
 
 		btnJournal = new JournalButton();
-		add( btnJournal );
+		add(btnJournal);
 
 		btnMenu = new MenuButton();
-		add( btnMenu );
+		add(btnMenu);
 
 		danger = new DangerIndicator();
-		add( danger );
+		add(danger);
 
-		add( pickedUp = new Toolbar.PickedUpItem());
+		add(pickedUp = new Toolbar.PickedUpItem());
 	}
 
 	@Override
@@ -167,66 +167,68 @@ public class MenuPane extends Component {
 		version.measure();
 
 		float rightMargin = DeviceCompat.isDesktop() ? 1 : 8;
-		if (DeviceCompat.isDebug()) rightMargin = 1; //don't care about hiding 'indev'
-		float overFlow = version.width()-(bg.width()-4-rightMargin);
-		if (overFlow >= 1){
+		if (DeviceCompat.isDebug())
+			rightMargin = 1; // don't care about hiding 'indev'
+		float overFlow = version.width() - (bg.width() - 4 - rightMargin);
+		if (overFlow >= 1) {
 			version.x = x + 2 - overFlow;
-			versionOverflowBG.size(overFlow+3, 8);
-			versionOverflowBG.x = version.x-3;
+			versionOverflowBG.size(overFlow + 3, 8);
+			versionOverflowBG.x = version.x - 3;
 			versionOverflowBG.y = y;
 		} else {
 			version.x = x + 3;
 			versionOverflowBG.visible = false;
 		}
-		version.y = y + 3 - (version.baseLine()*version.scale.y)/2f;
+		version.y = y + 3 - (version.baseLine() * version.scale.y) / 2f;
 		version.y -= .001f;
 		PixelScene.align(version);
 
-		btnMenu.setPos( x + WIDTH - btnMenu.width(), y );
+		btnMenu.setPos(x + WIDTH - btnMenu.width(), y);
 
-		btnJournal.setPos( btnMenu.left() - btnJournal.width() + 2, y );
+		btnJournal.setPos(btnMenu.left() - btnJournal.width() + 2, y);
 
-		depthIcon.x = btnJournal.left() - 7 + (7 - depthIcon.width())/2f - 0.1f;
-		depthIcon.y = y+8;
+		depthIcon.x = btnJournal.left() - 7 + (7 - depthIcon.width()) / 2f - 0.1f;
+		depthIcon.y = y + 8;
 		PixelScene.align(depthIcon);
 
 		depthText.scale.set(PixelScene.align(0.67f));
-		depthText.x = depthIcon.x + (depthIcon.width() - depthText.width())/2f;
+		depthText.x = depthIcon.x + (depthIcon.width() - depthText.width()) / 2f;
 		depthText.y = depthIcon.y + depthIcon.height();
 		PixelScene.align(depthText);
 
 		depthButton.setRect(depthIcon.x, depthIcon.y, depthIcon.width(), depthIcon.height() + depthText.height());
 
-		if (challengeIcon != null){
-			challengeIcon.x = btnJournal.left() - 14 + (7 - challengeIcon.width())/2f - 0.1f;
+		if (challengeIcon != null) {
+			challengeIcon.x = btnJournal.left() - 14 + (7 - challengeIcon.width()) / 2f - 0.1f;
 			challengeIcon.y = depthIcon.y;
 			PixelScene.align(challengeIcon);
 
 			challengeText.scale.set(PixelScene.align(0.67f));
-			challengeText.x = challengeIcon.x + (challengeIcon.width() - challengeText.width())/2f;
+			challengeText.x = challengeIcon.x + (challengeIcon.width() - challengeText.width()) / 2f;
 			challengeText.y = challengeIcon.y + challengeIcon.height();
 			PixelScene.align(challengeText);
 
-			challengeButton.setRect(challengeIcon.x, challengeIcon.y, challengeIcon.width(), challengeIcon.height() + challengeText.height());
+			challengeButton.setRect(challengeIcon.x, challengeIcon.y, challengeIcon.width(),
+					challengeIcon.height() + challengeText.height());
 		}
 
-		danger.setPos( x + WIDTH - danger.width(), y + bg.height + 1 );
-		danger.setSize( camera.width - danger.width(), danger.height());
+		danger.setPos(x + WIDTH - danger.width(), y + bg.height + 1);
+		danger.setSize(camera.width - danger.width(), danger.height());
 	}
 
 	public void pickup(Item item, int cell) {
-		pickedUp.reset( item,
+		pickedUp.reset(item,
 				cell,
 				btnJournal.centerX(),
 				btnJournal.centerY());
 	}
 
-	public void flashForPage( Document doc, String page ){
+	public void flashForPage(Document doc, String page) {
 		btnJournal.flashingDoc = doc;
 		btnJournal.flashingPage = page;
 	}
 
-	public void updateKeys(){
+	public void updateKeys() {
 		btnJournal.updateKeyDisplay();
 	}
 
@@ -255,11 +257,11 @@ public class MenuPane extends Component {
 		protected void createChildren() {
 			super.createChildren();
 
-			bg = new Image( Assets.Interfaces.MENU_BTN_TINTED, 2, 2, 13, 11 );
-			add( bg );
+			bg = new Image(Assets.Interfaces.MENU_BTN_TINTED, 2, 2, 13, 11);
+			add(bg);
 
-			journalIcon = new Image( Assets.Interfaces.MENU_BTN, 31, 0, 11, 6);
-			add( journalIcon );
+			journalIcon = new Image(Assets.Interfaces.MENU_BTN, 31, 0, 11, 6);
+			add(journalIcon);
 
 			keyIcon = new KeyDisplay();
 			add(keyIcon);
@@ -273,8 +275,8 @@ public class MenuPane extends Component {
 			bg.x = x + 2;
 			bg.y = y + 8;
 
-			journalIcon.x = bg.x + (bg.width() - journalIcon.width())/2f;
-			journalIcon.y = bg.y + (bg.height() - journalIcon.height())/2f;
+			journalIcon.x = bg.x + (bg.width() - journalIcon.width()) / 2f;
+			journalIcon.y = bg.y + (bg.height() - journalIcon.height()) / 2f;
 			PixelScene.align(journalIcon);
 
 			keyIcon.x = bg.x + 1;
@@ -290,11 +292,11 @@ public class MenuPane extends Component {
 		public void update() {
 			super.update();
 
-			if (flashingPage != null){
-				journalIcon.am = (float)Math.abs(Math.cos( StatusPane.FLASH_RATE * (time += Game.elapsed) ));
+			if (flashingPage != null) {
+				journalIcon.am = (float) Math.abs(Math.cos(StatusPane.FLASH_RATE * (time += Game.elapsed)));
 				keyIcon.am = journalIcon.am;
 				bg.brightness(0.5f + journalIcon.am);
-				if (time >= Math.PI/StatusPane.FLASH_RATE) {
+				if (time >= Math.PI / StatusPane.FLASH_RATE) {
 					time = 0;
 				}
 			}
@@ -313,8 +315,8 @@ public class MenuPane extends Component {
 
 		@Override
 		protected void onPointerDown() {
-			bg.brightness( 1.5f );
-			Sample.INSTANCE.play( Assets.Sounds.CLICK );
+			bg.brightness(1.5f);
+			Sample.INSTANCE.play(Assets.Sounds.CLICK);
 		}
 
 		@Override
@@ -330,35 +332,35 @@ public class MenuPane extends Component {
 		protected void onClick() {
 			time = 0;
 			keyIcon.am = journalIcon.am = 1;
-			if (flashingPage != null){
-				if (flashingDoc == Document.ALCHEMY_GUIDE){
+			if (flashingPage != null) {
+				if (flashingDoc == Document.ALCHEMY_GUIDE) {
 					WndJournal.last_index = 2;
-					GameScene.show( new WndJournal() );
-				} else if (flashingDoc.pageNames().contains(flashingPage)){
-					if (flashingDoc == Document.ADVENTURERS_GUIDE){
+					GameScene.show(new WndJournal());
+				} else if (flashingDoc.pageNames().contains(flashingPage)) {
+					if (flashingDoc == Document.ADVENTURERS_GUIDE) {
 						WndJournal.last_index = 1;
-					} else if (flashingDoc.isLoreDoc()){
+					} else if (flashingDoc.isLoreDoc()) {
 						WndJournal.last_index = 3;
 						WndJournal.CatalogTab.currentItemIdx = 3;
 					}
-					GameScene.show( new WndStory( flashingDoc.pageSprite(flashingPage),
+					GameScene.show(new WndStory(flashingDoc.pageSprite(flashingPage),
 							flashingDoc.pageTitle(flashingPage),
-							flashingDoc.pageBody(flashingPage) ){
+							flashingDoc.pageBody(flashingPage)) {
 						@Override
 						public void hide() {
 							super.hide();
-							if (SPDSettings.intro()){
+							if (SPDSettings.intro()) {
 								GameScene.endIntro();
 							}
 						}
 					});
 					flashingDoc.readPage(flashingPage);
 				} else {
-					GameScene.show( new WndJournal() );
+					GameScene.show(new WndJournal());
 				}
 				flashingPage = null;
 			} else {
-				GameScene.show( new WndJournal() );
+				GameScene.show(new WndJournal());
 			}
 		}
 
@@ -383,8 +385,8 @@ public class MenuPane extends Component {
 		protected void createChildren() {
 			super.createChildren();
 
-			image = new Image( Assets.Interfaces.MENU_BTN_TINTED, 17, 2, 12, 11 );
-			add( image );
+			image = new Image(Assets.Interfaces.MENU_BTN_TINTED, 17, 2, 12, 11);
+			add(image);
 		}
 
 		@Override
@@ -397,8 +399,8 @@ public class MenuPane extends Component {
 
 		@Override
 		protected void onPointerDown() {
-			image.brightness( 1.5f );
-			Sample.INSTANCE.play( Assets.Sounds.CLICK );
+			image.brightness(1.5f);
+			Sample.INSTANCE.play(Assets.Sounds.CLICK);
 		}
 
 		@Override
@@ -408,7 +410,7 @@ public class MenuPane extends Component {
 
 		@Override
 		protected void onClick() {
-			GameScene.show( new WndGame() );
+			GameScene.show(new WndGame());
 		}
 
 		@Override

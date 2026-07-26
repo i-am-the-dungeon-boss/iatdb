@@ -95,7 +95,11 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix ".indev"
-            versionNameSuffix '-INDEV'
+            // -PnoDebug: omit -INDEV so DeviceCompat.isDebug() / DebugSettings stay off
+            // (no title Debug button). Default keeps INDEV for local debug tools.
+            // if (!rootProject.hasProperty('noDebug')) {
+            //     versionNameSuffix '-INDEV'
+            // }
             manifestPlaceholders.usesCleartextTraffic = 'true'
             // Dev builds must not report crashes to Sentry.
             manifestPlaceholders.sentryDsn = ''

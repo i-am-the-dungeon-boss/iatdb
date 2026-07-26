@@ -127,10 +127,10 @@ public class TitleScene extends PixelScene {
 		add(title);
 		title.setPos(0, 0); // measure preferred size via layout()
 
-		float topRegion = Math.max(title.height() - 6, h * 0.45f);
+		float topRegion = Math.max(title.logoHeight() - 6, h * 0.45f);
 		title.setPos(
 				insets.left + (w - title.width()) / 2f,
-				brandTitleY(insets.top, topRegion, title.height(), landscape()));
+				brandTitleY(insets.top, topRegion, title.logoHeight(), landscape()));
 		align(title);
 
 		if (landscape()) {
@@ -238,11 +238,36 @@ public class TitleScene extends PixelScene {
 
 		final int BTN_HEIGHT = 20;
 		boolean feedVisible = TitleFeedButtons.visible();
-		int buttonRows = TitleSupportLayout.buttonRows(landscape(), btnSupport != null, feedVisible);
-		float reservedTop = menuRegionTop(insets.top, topRegion, title.bottom()) - insets.top;
-		int GAP = (int) (h - reservedTop - buttonRows * BTN_HEIGHT) / 3;
-		GAP /= landscape() ? 3 : 5;
-		GAP = Math.max(GAP, 2);
+		boolean singleMetaRow = TitleSupportLayout.singleLandscapeMetaRow(landscape(), DeviceCompat.isDesktop());
+		int buttonRows = TitleSupportLayout.buttonRows(
+				landscape(), btnSupport != null, feedVisible, singleMetaRow);
+		float brandTitleHeight = title.brandTitleHeight();
+		float characterOffset = title.characterBottom() - title.top();
+		float desiredLogoTop = title.top() - insets.top;
+		float fittedLogoTop = TitleSupportLayout.logoTopForClearBrand(
+				h, characterOffset, brandTitleHeight, buttonRows, BTN_HEIGHT);
+		// Pull the hero up when brand text + menu would otherwise overlap.
+		if (desiredLogoTop > fittedLogoTop) {
+			float newTitleY = Math.max(insets.top, insets.top + fittedLogoTop);
+			title.setPos(title.left(), newTitleY);
+			align(title);
+			float torchOutset = landscape() ? TORCH_OUTSET_LANDSCAPE : TORCH_OUTSET_PORTRAIT;
+			leftFB.x = torchLeftX(title.left(), torchOutset) - leftFB.width() / 2f;
+			leftFB.y = title.logoAnchorY() - leftFB.height();
+			align(leftFB);
+			rightFB.x = torchRightX(title.right(), torchOutset) - rightFB.width() / 2f;
+			rightFB.y = title.logoAnchorY() - rightFB.height();
+			align(rightFB);
+		}
+		float desiredReserved = menuRegionTop(insets.top, topRegion, title.logoBottom()) - insets.top;
+		float reservedTop = TitleSupportLayout.menuTopClearingBrand(
+				desiredReserved,
+				h,
+				title.characterBottom() - insets.top,
+				brandTitleHeight,
+				buttonRows,
+				BTN_HEIGHT);
+		int GAP = TitleSupportLayout.buttonGap((int) (h - reservedTop), buttonRows, BTN_HEIGHT, landscape());
 
 		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L - 6 : PixelScene.MIN_WIDTH_P - 2;
 		float btnAreaLeft = insets.left + (w - buttonAreaWidth) / 2f;
@@ -254,20 +279,35 @@ public class TitleScene extends PixelScene {
 				supportBottom = btnSupport.bottom();
 			}
 			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
-			float midWidth = feedVisible
-					? (float) (Math.floor(buttonAreaWidth / 3f) - 1)
-					: (buttonAreaWidth / 2) - 1;
-			btnRankings.setRect(btnSolo.left(), rankingsTop, midWidth, BTN_HEIGHT);
-			btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
-			if (btnNews != null) {
-				btnNews.setRect(btnJournal.right() + 2, btnJournal.top(), btnRankings.width(), BTN_HEIGHT);
-			}
-			btnSettings.setRect(btnRankings.left(), btnRankings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
-			if (btnChanges != null) {
-				btnChanges.setRect(btnSettings.right() + 2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);
-				btnAbout.setRect(btnChanges.right() + 2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);
+			if (singleMetaRow) {
+				float metaWidth = TitleSupportLayout.landscapeMetaButtonWidth(buttonAreaWidth);
+				btnRankings.setRect(btnSolo.left(), rankingsTop, metaWidth, BTN_HEIGHT);
+				btnJournal.setRect(btnRankings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
+				btnSettings.setRect(btnJournal.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
+				btnAbout.setRect(btnSettings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
+				if (btnNews != null) {
+					btnNews.visible = btnNews.active = false;
+				}
+				if (btnChanges != null) {
+					btnChanges.visible = btnChanges.active = false;
+				}
 			} else {
-				btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
+				float midWidth = feedVisible
+						? (float) (Math.floor(buttonAreaWidth / 3f) - 1)
+						: (buttonAreaWidth / 2) - 1;
+				btnRankings.setRect(btnSolo.left(), rankingsTop, midWidth, BTN_HEIGHT);
+				btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
+				if (btnNews != null) {
+					btnNews.setRect(btnJournal.right() + 2, btnJournal.top(), btnRankings.width(), BTN_HEIGHT);
+				}
+				float settingsTop = TitleSupportLayout.settingsY(btnRankings.bottom(), GAP, null);
+				btnSettings.setRect(btnRankings.left(), settingsTop, btnRankings.width(), BTN_HEIGHT);
+				if (btnChanges != null) {
+					btnChanges.setRect(btnSettings.right() + 2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);
+					btnAbout.setRect(btnChanges.right() + 2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);
+				} else {
+					btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
+				}
 			}
 		} else {
 			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
@@ -289,6 +329,10 @@ public class TitleScene extends PixelScene {
 			btnSettings.setRect(btnRankings.left(), settingsTop, btnRankings.width(), BTN_HEIGHT);
 			btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
 		}
+
+		title.setBrandTitleY(TitleBrandBlock.brandTitleYBetween(
+				title.characterBottom(), btnSolo.top(), title.brandTitleHeight()));
+		align(title);
 
 		version = new BitmapText("v" + Game.version, pixelFont);
 		version.measure();

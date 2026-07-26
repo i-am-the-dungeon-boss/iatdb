@@ -69,6 +69,18 @@ public class TitleHeroLogo extends Component {
 		return viewport + 8f;
 	}
 
+	/**
+	 * Resting bottom of the hero sprite (no idle bob). Excludes flare/rays and
+	 * the extra viewport padding under the character.
+	 */
+	public static float restingCharacterBottom(float logoY, float viewport, float heroHeight) {
+		return logoY + (viewport + heroHeight) / 2f;
+	}
+
+	public float characterBottom() {
+		return restingCharacterBottom(y, viewport, hero.height());
+	}
+
 	@Override
 	public void update() {
 		super.update();

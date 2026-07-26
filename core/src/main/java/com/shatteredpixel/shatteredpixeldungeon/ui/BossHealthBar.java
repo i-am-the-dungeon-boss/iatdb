@@ -76,8 +76,10 @@ public class BossHealthBar extends Component {
 	@Override
 	public synchronized void destroy() {
 		super.destroy();
-		if (instance == this) instance = null;
-		if (buffs != null) BuffIndicator.setBossInstance(null);
+		if (instance == this)
+			instance = null;
+		if (buffs != null)
+			BuffIndicator.setBossInstance(null);
 	}
 
 	@Override
@@ -93,7 +95,7 @@ public class BossHealthBar extends Component {
 		shieldHP = large ? new Image(barAsset, 0, 55, 96, 9) : new Image(barAsset, 71, 5, 47, 4);
 		add(shieldHP);
 
-		hp =  large ? new Image(barAsset, 0, 46, 96, 9) : new Image(barAsset, 71, 0, 47, 4);
+		hp = large ? new Image(barAsset, 0, 46, 96, 9) : new Image(barAsset, 71, 0, 47, 4);
 		add(hp);
 
 		hpText = new BitmapText(PixelScene.pixelFont);
@@ -105,18 +107,18 @@ public class BossHealthBar extends Component {
 		add(nameText);
 		refreshNameLabel();
 
-		bossInfo = new Button(){
+		bossInfo = new Button() {
 			@Override
 			protected void onClick() {
 				super.onClick();
-				if (boss != null){
+				if (boss != null) {
 					GameScene.show(new WndInfoMob(boss));
 				}
 			}
 
 			@Override
 			protected String hoverText() {
-				if (boss != null){
+				if (boss != null) {
 					return boss.name();
 				}
 				return super.hoverText();
@@ -142,7 +144,7 @@ public class BossHealthBar extends Component {
 		blood.pour(BloodParticle.FACTORY, 0.3f);
 		blood.autoKill = false;
 		blood.on = false;
-		add( blood );
+		add(blood);
 	}
 
 	@Override
@@ -150,13 +152,14 @@ public class BossHealthBar extends Component {
 		bar.x = x;
 		bar.y = y;
 
-		hp.x = shieldHP.x = bar.x+(large ? 30 : 15);
-		hp.y = shieldHP.y = bar.y+(large ? 2 : 3);
+		hp.x = shieldHP.x = bar.x + (large ? 30 : 15);
+		hp.y = shieldHP.y = bar.y + (large ? 2 : 3);
 
-		if (!large) hpText.scale.set(PixelScene.align(0.5f));
-		hpText.x = hp.x + (large ? (96-hpText.width())/2f : 1);
-		hpText.y = hp.y + (hp.height - (hpText.baseLine()+hpText.scale.y))/2f;
-		hpText.y -= 0.001f; //prefer to be slightly higher
+		if (!large)
+			hpText.scale.set(PixelScene.align(0.5f));
+		hpText.x = hp.x + (large ? (96 - hpText.width()) / 2f : 1);
+		hpText.y = hp.y + (hp.height - (hpText.baseLine() + hpText.scale.y)) / 2f;
+		hpText.y -= 0.001f; // prefer to be slightly higher
 		PixelScene.align(hpText);
 
 		bossInfo.setRect(x, y, bar.width, bar.height);
@@ -164,16 +167,16 @@ public class BossHealthBar extends Component {
 		if (buffs != null) {
 			buffs.maxBuffs = 12;
 			if (large) {
-				//little extra width here for a 6th column
-				buffs.setRect(hp.x+1, hp.y + 12, 102, 34);
+				// little extra width here for a 6th column
+				buffs.setRect(hp.x + 1, hp.y + 12, 102, 34);
 			} else {
 				buffs.setRect(hp.x, hp.y + 5, 47, 16);
 			}
 		}
 
 		int paneSize = large ? 30 : 16;
-		skull.x = bar.x + (paneSize - skull.width())/2f;
-		skull.y = bar.y + (paneSize - skull.height())/2f;
+		skull.x = bar.x + (paneSize - skull.width()) / 2f;
+		skull.y = bar.y + (paneSize - skull.height()) / 2f;
 
 		if (nameText != null && nameText.visible) {
 			nameText.maxWidth((int) bar.width);
@@ -187,8 +190,8 @@ public class BossHealthBar extends Component {
 	@Override
 	public void update() {
 		super.update();
-		if (boss != null){
-			if (!boss.isAlive() || !Dungeon.level.mobs.contains(boss)){
+		if (boss != null) {
+			if (!boss.isAlive() || !Dungeon.level.mobs.contains(boss)) {
 				boss = null;
 				visible = active = false;
 				if (buffs != null) {
@@ -204,10 +207,10 @@ public class BossHealthBar extends Component {
 				int shield = boss.shielding();
 				int max = boss.HT;
 
-				float healthPercent = health/(float)max;
-				float shieldPercent = shield/(float)max;
+				float healthPercent = health / (float) max;
+				float shieldPercent = shield / (float) max;
 
-				if (healthPercent + shieldPercent > 1f){
+				if (healthPercent + shieldPercent > 1f) {
 					float excess = healthPercent + shieldPercent;
 					healthPercent /= excess;
 					shieldPercent /= excess;
@@ -216,27 +219,29 @@ public class BossHealthBar extends Component {
 				hp.scale.x = healthPercent;
 				shieldHP.scale.x = healthPercent + shieldPercent;
 
-				if (bleeding != blood.on){
-					if (bleeding)   skull.tint( 0xcc0000, large ? 0.3f : 0.6f );
-					else            skull.resetColor();
+				if (bleeding != blood.on) {
+					if (bleeding)
+						skull.tint(0xcc0000, large ? 0.3f : 0.6f);
+					else
+						skull.resetColor();
 					bringToFront(blood);
 					blood.pos(skull);
 					blood.on = bleeding;
 				}
 
-				if (shield <= 0){
+				if (shield <= 0) {
 					hpText.text(health + "/" + max);
 				} else {
-					hpText.text(health + "+" + shield +  "/" + max);
+					hpText.text(health + "+" + shield + "/" + max);
 				}
 				hpText.measure();
-				hpText.x = hp.x + (large ? (96-hpText.width())/2f : 1);
+				hpText.x = hp.x + (large ? (96 - hpText.width()) / 2f : 1);
 
 			}
 		}
 	}
 
-	public static void assignBoss(Mob boss){
+	public static void assignBoss(Mob boss) {
 		if (BossHealthBar.boss == boss) {
 			return;
 		}
@@ -247,16 +252,16 @@ public class BossHealthBar extends Component {
 				@Override
 				public void call() {
 					instance.visible = instance.active = (boss != null);
-					if (boss != null){
-						if (instance.large){
-							if (instance.skull != null){
+					if (boss != null) {
+						if (instance.large) {
+							if (instance.skull != null) {
 								instance.remove(instance.skull);
 								instance.skull.destroy();
 							}
 							instance.skull = boss.sprite();
 							instance.add(instance.skull);
 						}
-						if (instance.buffs != null){
+						if (instance.buffs != null) {
 							instance.remove(instance.buffs);
 							instance.buffs.destroy();
 						}
@@ -272,16 +277,16 @@ public class BossHealthBar extends Component {
 			});
 		}
 	}
-	
-	public static boolean isAssigned(){
+
+	public static boolean isAssigned() {
 		return boss != null && boss.isAlive() && Dungeon.level.mobs.contains(boss);
 	}
 
-	public static void bleed(boolean value){
+	public static void bleed(boolean value) {
 		bleeding = value;
 	}
 
-	public static boolean isBleeding(){
+	public static boolean isBleeding() {
 		return isAssigned() && bleeding;
 	}
 
