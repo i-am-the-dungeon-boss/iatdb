@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.lang.reflect.Field;
 
 @ExtendWith(GdxTestExtension.class)
 class PotionOfDragonsBreathBreatheAsTest {
@@ -43,8 +46,7 @@ class PotionOfDragonsBreathBreatheAsTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		PotionOfDragonsBreath potion =
-				(PotionOfDragonsBreath) kit.belongings.getItem(PotionOfDragonsBreath.class);
+		PotionOfDragonsBreath potion = (PotionOfDragonsBreath) kit.belongings.getItem(PotionOfDragonsBreath.class);
 		Assertions.assertThat(potion).isNotNull();
 
 		boolean spent = potion.drinkAs(UseContext.echo(boss));
@@ -66,8 +68,7 @@ class PotionOfDragonsBreathBreatheAsTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		PotionOfDragonsBreath potion =
-				(PotionOfDragonsBreath) kit.belongings.getItem(PotionOfDragonsBreath.class);
+		PotionOfDragonsBreath potion = (PotionOfDragonsBreath) kit.belongings.getItem(PotionOfDragonsBreath.class);
 		Assertions.assertThat(potion).isNotNull();
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
@@ -101,6 +102,34 @@ class PotionOfDragonsBreathBreatheAsTest {
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.cooldown()).isGreaterThan(before);
 		Assertions.assertThat(hero.belongings.getItem(PotionOfDragonsBreath.class)).isNull();
+		Assertions.assertThat(target.buff(Burning.class)).isNotNull();
+		Assertions.assertThat(target.buff(Cripple.class)).isNotNull();
+	}
+
+	@Test
+	@DisplayName("Hero breatheAs ends actor turn wait after cone VFX (spendAndNext)")
+	void heroBreatheAsEndsActorTurnWait() throws Exception {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss target = EchoTestSupport.createBossWithPolicy(
+				hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, target, 2);
+		EchoTestSupport.attachInstantProjectileParent(hero);
+
+		PotionOfDragonsBreath breath = new PotionOfDragonsBreath();
+		breath.identify();
+		breath.collect(hero.belongings.backpack);
+
+		Field current = Actor.class.getDeclaredField("current");
+		current.setAccessible(true);
+		current.set(null, hero);
+		Assertions.assertThat(Actor.processing()).isTrue();
+
+		boolean spent = breath.breatheAs(UseContext.hero(hero), target.pos);
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(Actor.processing())
+				.as("spendAndNext must clear Actor.current or the hero soft-locks")
+				.isFalse();
 		Assertions.assertThat(target.buff(Burning.class)).isNotNull();
 		Assertions.assertThat(target.buff(Cripple.class)).isNotNull();
 	}

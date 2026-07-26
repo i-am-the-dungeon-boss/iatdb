@@ -75,8 +75,8 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 
 	/**
 	 * Shared fire-cone execute for Hero and Echo. Mechanics apply from
-	 * {@code ctx.body}; inventory/talents on {@code ctx.kit}; VFX / spend when
-	 * {@code ctx.heroFX}.
+	 * {@code ctx.body}; inventory/talents on {@code ctx.kit}. Hero turn matches
+	 * master: {@code busy} before VFX, {@code spendAndNext} after the cone bolt.
 	 */
 	public boolean breatheAs(UseContext ctx, int cell) {
 		if (ctx == null || ctx.kit == null || ctx.body == null || cell < 0) {
@@ -91,27 +91,53 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 		}
 		setCurrent(ctx.kit);
 
-		Char body = ctx.body;
-		applyCone(body.pos, cell);
+		final Char body = ctx.body;
+		final int targetCell = cell;
 
-		if (UseContext.canWorldFx(body)) {
-			Sample.INSTANCE.play(Assets.Sounds.DRINK);
-			Sample.INSTANCE.play(Assets.Sounds.BURNING);
-			body.sprite.operate(body.pos);
-			body.sprite.zap(cell);
-			playConeVfx(body, cell);
-		}
 		if (ctx.heroFX) {
-			if (!anonymous) {
-				Catalog.countUse(PotionOfDragonsBreath.class);
-				if (Random.Float() < talentChance) {
-					Talent.onPotionUsed(ctx.kit, body.pos, talentFactor);
-				}
-			}
-			ctx.kit.spend(1f);
 			ctx.turns.busy();
+			if (UseContext.canWorldFx(body)) {
+				Sample.INSTANCE.play(Assets.Sounds.DRINK);
+				body.sprite.operate(body.pos, new Callback() {
+					@Override
+					public void call() {
+						body.sprite.idle();
+						body.sprite.zap(targetCell);
+						Sample.INSTANCE.play(Assets.Sounds.BURNING);
+						playConeVfx(body, targetCell, new Callback() {
+							@Override
+							public void call() {
+								applyCone(body.pos, targetCell);
+								finishHeroBreath(ctx, body);
+							}
+						});
+					}
+				});
+			} else {
+				applyCone(body.pos, targetCell);
+				finishHeroBreath(ctx, body);
+			}
+		} else {
+			applyCone(body.pos, targetCell);
+			if (UseContext.canWorldFx(body)) {
+				Sample.INSTANCE.play(Assets.Sounds.DRINK);
+				Sample.INSTANCE.play(Assets.Sounds.BURNING);
+				body.sprite.operate(body.pos);
+				body.sprite.zap(targetCell);
+				playConeVfx(body, targetCell, null);
+			}
 		}
 		return true;
+	}
+
+	private void finishHeroBreath(UseContext ctx, Char body) {
+		ctx.kit.spendAndNext(1f);
+		if (!anonymous) {
+			Catalog.countUse(PotionOfDragonsBreath.class);
+			if (Random.Float() < talentChance) {
+				Talent.onPotionUsed(ctx.kit, body.pos, talentFactor);
+			}
+		}
 	}
 
 	/** Fire blobs, Burning, Cripple, doors — same for Hero and Echo. */
@@ -155,8 +181,11 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 		}
 	}
 
-	private static void playConeVfx(Char body, int cell) {
+	private static void playConeVfx(Char body, int cell, Callback onComplete) {
 		if (body.sprite == null || body.sprite.parent == null) {
+			if (onComplete != null) {
+				onComplete.call();
+			}
 			return;
 		}
 		Ballistica bolt = new Ballistica(body.pos, cell, Ballistica.WONT_STOP);
@@ -175,7 +204,7 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 				MagicMissile.FIRE_CONE,
 				body.sprite,
 				bolt.path.get(dist / 2),
-				null);
+				onComplete);
 	}
 
 	@Override
