@@ -152,8 +152,9 @@ public class HeroSelectScene extends PixelScene {
 		PixelScene.align(title);
 		add(title);
 
-		String modeDescKey = modeDescriptionKey(GamesInProgress.selectedEchoPlayMode);
-		final String modeDescText = modeDescKey == null ? null : Messages.get(this, modeDescKey);
+		final String modeDescText = modeDescriptionText(
+				GamesInProgress.selectedEchoPlayMode,
+				SPDSettings.easyMode());
 
 		startBtn = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
@@ -208,17 +209,17 @@ public class HeroSelectScene extends PixelScene {
 			heroBtns.add(button);
 		}
 
+		// Built now, added after modeDesc so the pane draws above the blurbs.
 		optionsPane = new GameOptions();
 		optionsPane.visible = optionsPane.active = false;
 		optionsPane.layout();
-		add(optionsPane);
 
 		btnOptions = new IconButton(Icons.get(Icons.PREFS)) {
 			@Override
 			protected void onClick() {
 				super.onClick();
 				optionsPane.visible = !optionsPane.visible;
-				optionsPane.active = !optionsPane.active;
+				optionsPane.active = optionsPane.visible;
 			}
 
 			@Override
@@ -238,9 +239,6 @@ public class HeroSelectScene extends PixelScene {
 		};
 		updateOptionsColor();
 		btnOptions.visible = false;
-		if (gameOptionsAllowed(GamesInProgress.selectedEchoPlayMode) && !SPDSettings.intro()) {
-			add(btnOptions);
-		}
 
 		Challenges.clearIfDisallowed(GamesInProgress.selectedEchoPlayMode);
 		SPDSettings.clearEasyModeIfDisallowed(GamesInProgress.selectedEchoPlayMode);
@@ -383,6 +381,11 @@ public class HeroSelectScene extends PixelScene {
 
 			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height - HeroBtn.HEIGHT - 16, 20, 21);
 			optionsPane.setPos(heroBtns.get(0).left(), 0);
+		}
+
+		add(optionsPane);
+		if (gameOptionsAllowed(GamesInProgress.selectedEchoPlayMode) && !SPDSettings.intro()) {
+			add(btnOptions);
 		}
 
 		btnExit = new ExitButton();
@@ -563,6 +566,22 @@ public class HeroSelectScene extends PixelScene {
 		return null;
 	}
 
+	/**
+	 * Full choose-hero mode blurb. Solo appends the easy-mode status line when
+	 * easy mode is on.
+	 */
+	static String modeDescriptionText(EchoPlayMode mode, boolean easyMode) {
+		String key = modeDescriptionKey(mode);
+		if (key == null) {
+			return null;
+		}
+		String text = Messages.get(HeroSelectScene.class, key);
+		if (mode == EchoPlayMode.SOLO && easyMode) {
+			return text + "\n\n" + Messages.get(HeroSelectScene.class, "easy_mode_enabled");
+		}
+		return text;
+	}
+
 	/** Game options (challenges, seeds, etc.) are only available in solo. */
 	public static boolean gameOptionsAllowed(EchoPlayMode mode) {
 		return mode == EchoPlayMode.SOLO;
@@ -617,6 +636,31 @@ public class HeroSelectScene extends PixelScene {
 				left + (contentWidth - modeDesc.width()) / 2f,
 				modeDescAbove(anchorTop, modeDesc.height()));
 		align(modeDesc);
+	}
+
+	private void refreshModeDesc() {
+		if (modeDesc == null) {
+			return;
+		}
+		String text = modeDescriptionText(GamesInProgress.selectedEchoPlayMode, SPDSettings.easyMode());
+		if (text == null) {
+			modeDesc.visible = false;
+			return;
+		}
+		float contentW = Camera.main.width - insets.left - insets.right;
+		float available = landscape() ? Math.max(100, contentW / 3f) : contentW;
+		modeDesc.text(text, modeDescMaxWidth(available));
+		if (landscape()) {
+			float leftArea = Math.max(100, contentW / 3f);
+			modeDesc.setPos(insets.left + (leftArea - modeDesc.width()) / 2f, title.bottom() + 2);
+			align(modeDesc);
+		} else if (GamesInProgress.selectedClass != null) {
+			modeDesc.visible = modeDescVisibleAfterHeroSelected(false);
+			placeModeDescAbove(insets.left, contentW, startBtn.top());
+		} else {
+			placeModeDescAbove(insets.left, contentW, title.top());
+		}
+		modeDesc.alpha(modeDescAlpha(GameMath.gate(0f, uiAlpha, 1f)));
 	}
 
 	private void updateFade() {
@@ -962,6 +1006,7 @@ public class HeroSelectScene extends PixelScene {
 					SPDSettings.easyMode(!SPDSettings.easyMode());
 					icon(Icons.get(SPDSettings.easyMode() ? Icons.CHECKED : Icons.UNCHECKED));
 					updateOptionsColor();
+					refreshModeDesc();
 				}
 
 				@Override

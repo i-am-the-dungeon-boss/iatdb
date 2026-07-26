@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
@@ -8,6 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.watabou.utils.GameSettings;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,13 +22,34 @@ class EasyModeTest {
 	@AfterEach
 	void cleanup() {
 		SPDSettings.easyMode(false);
+		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE)
+				.remove(SPDSettings.KEY_EASY_MODE_SOLO_DEFAULT_APPLIED);
+		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE).flush();
 		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test
-	@DisplayName("easy mode setting defaults to off")
-	void easyModeSettingDefaultsOff() {
+	@DisplayName("easy mode setting defaults to on for solo")
+	void easyModeSettingDefaultsOn() {
+		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE).remove(SPDSettings.KEY_EASY_MODE);
+		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE).flush();
+
+		Assertions.assertThat(SPDSettings.easyMode()).isTrue();
+	}
+
+	@Test
+	@DisplayName("selecting solo applies easy mode default once for existing installs")
+	void selectingSoloAppliesEasyModeDefaultOnce() {
+		SPDSettings.easyMode(false);
+
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.SOLO);
+
+		Assertions.assertThat(SPDSettings.easyMode()).isTrue();
+
+		SPDSettings.easyMode(false);
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.SOLO);
+
 		Assertions.assertThat(SPDSettings.easyMode()).isFalse();
 	}
 
@@ -39,14 +62,14 @@ class EasyModeTest {
 	}
 
 	@Test
-	@DisplayName("ranked mode clears applied easy mode settings")
-	void rankedModeClearsAppliedEasyModeSettings() {
+	@DisplayName("ranked mode clears run easy mode but keeps solo preference")
+	void rankedModeClearsRunEasyModeButKeepsSoloPreference() {
 		SPDSettings.easyMode(true);
 		Dungeon.easyMode = true;
 
 		SPDSettings.clearEasyModeIfDisallowed(EchoPlayMode.RANKED);
 
-		Assertions.assertThat(SPDSettings.easyMode()).isFalse();
+		Assertions.assertThat(SPDSettings.easyMode()).isTrue();
 		Assertions.assertThat(Dungeon.easyMode).isFalse();
 	}
 
@@ -63,14 +86,14 @@ class EasyModeTest {
 	}
 
 	@Test
-	@DisplayName("selecting ranked mode clears applied easy mode settings")
-	void selectingRankedModeClearsAppliedEasyModeSettings() {
+	@DisplayName("selecting ranked mode clears run easy mode but keeps solo preference")
+	void selectingRankedModeClearsRunEasyModeButKeepsSoloPreference() {
 		SPDSettings.easyMode(true);
 		Dungeon.easyMode = true;
 
 		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
 
-		Assertions.assertThat(SPDSettings.easyMode()).isFalse();
+		Assertions.assertThat(SPDSettings.easyMode()).isTrue();
 		Assertions.assertThat(Dungeon.easyMode).isFalse();
 	}
 

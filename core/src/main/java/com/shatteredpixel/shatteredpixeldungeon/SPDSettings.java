@@ -233,6 +233,11 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_LAST_CLASS = "last_class";
 	public static final String KEY_CHALLENGES = "challenges";
 	public static final String KEY_EASY_MODE = "easy_mode";
+	/**
+	 * One-time migration: force easy mode on for installs that had it cleared to
+	 * false.
+	 */
+	public static final String KEY_EASY_MODE_SOLO_DEFAULT_APPLIED = "easy_mode_solo_default_applied";
 	public static final String KEY_CUSTOM_SEED = "custom_seed";
 	public static final String KEY_LAST_DAILY = "last_daily";
 	public static final String KEY_INTRO = "intro";
@@ -308,7 +313,7 @@ public class SPDSettings extends GameSettings {
 	}
 
 	public static boolean easyMode() {
-		return getBoolean(KEY_EASY_MODE, false);
+		return getBoolean(KEY_EASY_MODE, true);
 	}
 
 	/** Easy mode is only offered / applied in solo echo runs. */
@@ -316,11 +321,25 @@ public class SPDSettings extends GameSettings {
 		return mode == EchoPlayMode.SOLO;
 	}
 
-	/** Clears run + settings easy mode when the play mode disallows it. */
+	/**
+	 * One-time: turn easy mode on for solo so older installs that had it forced
+	 * off still get the new default. After this, the player's own toggle is kept.
+	 */
+	public static void applyEasyModeSoloDefaultIfNeeded() {
+		if (getBoolean(KEY_EASY_MODE_SOLO_DEFAULT_APPLIED, false)) {
+			return;
+		}
+		easyMode(true);
+		put(KEY_EASY_MODE_SOLO_DEFAULT_APPLIED, true);
+	}
+
+	/**
+	 * Clears run easy mode when the play mode disallows it; keeps the solo
+	 * preference.
+	 */
 	public static void clearEasyModeIfDisallowed(EchoPlayMode mode) {
 		if (!easyModeAllowedForPlayMode(mode)) {
 			Dungeon.easyMode = false;
-			easyMode(false);
 		}
 	}
 
