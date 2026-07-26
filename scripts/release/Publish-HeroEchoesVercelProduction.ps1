@@ -51,8 +51,12 @@ function Publish-HeroEchoesVercelProduction {
         throw "Missing hero-echoes promote script: $scriptPath"
     }
 
-    $promoteArgs = @('-Remote', $Remote)
-    if ($DryRun) { $promoteArgs += '-DryRun' }
+    # Hashtable splat (named params). Array splat would bind positionally and
+    # turn `-Remote origin` into ProjectName=origin.
+    $promoteArgs = @{
+        Remote = $Remote
+    }
+    if ($DryRun) { $promoteArgs['DryRun'] = $true }
 
     Write-Host ">> Invoking hero-echoes promote-vercel.ps1"
     & $scriptPath @promoteArgs

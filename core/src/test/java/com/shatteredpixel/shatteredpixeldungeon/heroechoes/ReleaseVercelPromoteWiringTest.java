@@ -44,6 +44,16 @@ class ReleaseVercelPromoteWiringTest {
 		Assertions.assertThat(source).doesNotContain("githubCommitSha=");
 	}
 
+	@Test
+	@DisplayName("promote wrapper passes named params via hashtable splat so Remote is not ProjectName")
+	void promoteWrapperUsesHashtableSplatForNamedParams() throws IOException {
+		String source = readSource("scripts/release/Publish-HeroEchoesVercelProduction.ps1");
+
+		Assertions.assertThat(source).contains("Remote = $Remote");
+		Assertions.assertThat(source).doesNotContain("@('-Remote'");
+		Assertions.assertThat(source).doesNotContain("@(\"-Remote\"");
+	}
+
 	private static String readSource(String relativePath) throws IOException {
 		Path file = findRepoFile(relativePath);
 		return Files.readString(file, StandardCharsets.UTF_8);
