@@ -15,7 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoL
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoWireCodec;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;

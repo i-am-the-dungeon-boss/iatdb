@@ -1,5 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardStorage;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardEntry;
+
 import com.badlogic.gdx.Files;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;

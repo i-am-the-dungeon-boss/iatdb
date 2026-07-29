@@ -1,6 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardEntry;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

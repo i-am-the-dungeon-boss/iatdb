@@ -1,5 +1,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyInput;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import org.assertj.core.api.Assertions;
@@ -231,7 +237,7 @@ class EchoWireCodecTest {
 	@DisplayName("encodes leaderboard fight results for upload")
 	void encodesLeaderboardResult() {
 		String json = EchoWireCodec.encodeLeaderboardResult(
-				new com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult(
+				new com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult(
 						"5-1", true, 5, 99L, "0.0.1", "MAGE", 40, 12, 20));
 
 		Assertions.assertThat(json).contains("\"boss_win\":true");
@@ -244,7 +250,7 @@ class EchoWireCodecTest {
 	@DisplayName("rejects leaderboard encode when player class is missing")
 	void rejectsLeaderboardEncodeWithoutPlayerClass() {
 		Assertions.assertThatThrownBy(() -> EchoWireCodec.encodeLeaderboardResult(
-				new com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult(
+				new com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult(
 						"5-1", true, 5, 99L, "0.0.1", null, 40, 12, 20)))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("player_class");

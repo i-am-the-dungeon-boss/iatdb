@@ -1,7 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 
 import java.util.ArrayList;

@@ -1,8 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;

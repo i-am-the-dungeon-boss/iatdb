@@ -1,5 +1,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+
 import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 
 import org.assertj.core.api.Assertions;

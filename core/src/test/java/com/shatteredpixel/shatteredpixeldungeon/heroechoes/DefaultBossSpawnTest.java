@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;

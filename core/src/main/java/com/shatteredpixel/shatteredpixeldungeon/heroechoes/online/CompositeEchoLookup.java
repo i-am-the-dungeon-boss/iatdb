@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.watabou.utils.DeviceCompat;
 

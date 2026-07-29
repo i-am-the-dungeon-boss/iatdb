@@ -116,7 +116,7 @@ class SpiritBowThrowAsTest {
 		return target;
 	}
 
-	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy rangedBowPolicy() {
+	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy rangedBowPolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("RANGED", new JSONObject()
 						.put("pick", "MAX_DAMAGE")

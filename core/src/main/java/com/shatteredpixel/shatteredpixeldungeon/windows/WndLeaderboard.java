@@ -2,9 +2,9 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardEntry;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoClient;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;

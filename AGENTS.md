@@ -35,18 +35,24 @@ Windows: `gradlew.bat`. Prefer targeted `:core:test` unless a full build is requ
 
 ## Package map (`…shatteredpixeldungeon`)
 
-| Package                    | Contents                                   |
-| -------------------------- | ------------------------------------------ |
-| `actors/`                  | `Hero`, `Mob`, buffs, turns                |
-| `heroechoes/`              | Echo capture, storage, boss, online policy |
-| `items/`                   | Weapons, potions, `UseContext`, …          |
-| `levels/`                  | Generation, terrain                        |
-| `scenes/` `ui/` `windows/` | Screens and widgets                        |
-| `messages/`                | i18n (`Messages.get`)                      |
-| `sprites/` `effects/`      | Visuals / VFX                              |
-| `utils/`                   | Game-side helpers                          |
+| Package                    | Contents                                                        |
+| -------------------------- | --------------------------------------------------------------- |
+| `actors/`                  | `Hero`, `Mob`, buffs, turns                                     |
+| `heroechoes/`              | Echo DTO, storage, capture, play modes                          |
+| `heroechoes/boss/`         | Spawner, regional death, fight recorder, leaderboard            |
+| `heroechoes/policy/`       | Offline fight brain: policy match/execute, inventory, targeting |
+| `heroechoes/online/`       | HTTP client, auth, lookup, sync, wire codec                     |
+| `heroechoes/debug/`        | Debug arena kits / arsenal / snapshot weaken                    |
+| `items/`                   | Weapons, potions, `UseContext`, …                               |
+| `levels/`                  | Generation, terrain, `EchoBossLevel`                            |
+| `scenes/` `ui/` `windows/` | Screens and widgets                                             |
+| `messages/`                | i18n (`Messages.get`)                                           |
+| `sprites/` `effects/`      | Visuals / VFX (`EchoBossSprite`)                                |
+| `utils/`                   | Game-side helpers                                               |
 
 Engine: `com.watabou.utils`, `com.watabou.noosa` in `SPD-classes`.
+
+`EchoBoss` stays in `actors/mobs/` (Mob on the Actor clock).
 
 ## Hard constraints
 

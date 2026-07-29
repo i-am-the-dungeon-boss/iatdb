@@ -1,9 +1,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

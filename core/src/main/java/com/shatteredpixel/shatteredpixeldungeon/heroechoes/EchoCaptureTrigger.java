@@ -2,6 +2,9 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.EchoSnapshotDebug;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
 import com.watabou.noosa.Game;
 

@@ -88,7 +88,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoL
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;

@@ -2,9 +2,11 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFightResult;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoLeaderboardEntry;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardEntry;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyInput;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Strings;
 

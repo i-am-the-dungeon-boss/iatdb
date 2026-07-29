@@ -1,5 +1,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -256,7 +260,7 @@ class EchoHeroMessageSilenceTest {
 		return hero;
 	}
 
-	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy wandPolicy() {
+	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy wandPolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("RANGED", new JSONObject()
 						.put("pick", "FIRST_LEGAL")
@@ -264,7 +268,7 @@ class EchoHeroMessageSilenceTest {
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
-	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy corruptionPolicy() {
+	private static com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy corruptionPolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("RANGED", new JSONObject()
 						.put("pick", "FIRST_LEGAL")

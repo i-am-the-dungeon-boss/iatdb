@@ -3,7 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.badlogic.gdx.files.FileHandle;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
