@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCorrosiveGas;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
@@ -59,6 +60,7 @@ public final class DebugStrategyKit {
 			items.add(stackPotion(new PotionOfFrost()));
 			items.add(stackPotion(new PotionOfLiquidFlame()));
 			items.add(stackPotion(new PotionOfCorrosiveGas()));
+			items.add(stackPotion(new PotionOfParalyticGas()));
 			items.add(prepare(new StoneOfBlink()));
 			items.add(prepare(new StoneOfFear()));
 			items.add(prepare(new StoneOfShock()));
@@ -83,11 +85,12 @@ public final class DebugStrategyKit {
 		caps.put("CLEANSE_BURN", role("FIRST_LEGAL", "PotionOfFrost"));
 		caps.put("HASTE", role("FIRST_LEGAL", "PotionOfHaste", "PotionOfStamina"));
 		caps.put("INVIS", role("FIRST_LEGAL", "PotionOfInvisibility"));
-		caps.put("SETUP_CC", role("FIRST_LEGAL", "StoneOfShock"));
+		caps.put("SETUP_CC", role("FIRST_LEGAL", "StoneOfShock", "PotionOfParalyticGas"));
 		caps.put("KNOCKBACK", role("FIRST_LEGAL", "WandOfBlastWave"));
 		caps.put("BLINK", role("FIRST_LEGAL", "StoneOfBlink"));
 		caps.put("FEAR", role("FIRST_LEGAL", "StoneOfFear"));
-		caps.put("PAYOFF_AOE", role("MAX_DAMAGE", "PotionOfCorrosiveGas", "PotionOfLiquidFlame")
+		caps.put("PAYOFF_AOE", role("MAX_DAMAGE", "PotionOfCorrosiveGas", "PotionOfLiquidFlame",
+				"PotionOfParalyticGas")
 				.put("hazard", "fire_aoe"));
 		caps.put("RANGED", role("MAX_DAMAGE",
 				"WandOfFireblast", "WandOfBlastWave", "WandOfMagicMissile"));

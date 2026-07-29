@@ -6,6 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShroudingFog;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -108,12 +109,17 @@ public final class EchoPolicyInput {
 	private static List<String> collectItems(Hero hero) {
 		Set<String> ids = new LinkedHashSet<>();
 		for (Item item : hero.belongings) {
-			if (item == null || item instanceof WandOfWarding) {
+			if (item == null || isExcludedFromPolicy(item)) {
 				continue;
 			}
 			ids.add(item.getClass().getSimpleName());
 		}
 		return new ArrayList<>(ids);
+	}
+
+	/** Matches hero-echoes {@code POLICY_EXCLUDED_ITEMS}. */
+	private static boolean isExcludedFromPolicy(Item item) {
+		return item instanceof WandOfWarding || item instanceof PotionOfShroudingFog;
 	}
 
 	private static Map<String, Integer> collectTalents(Hero hero) {

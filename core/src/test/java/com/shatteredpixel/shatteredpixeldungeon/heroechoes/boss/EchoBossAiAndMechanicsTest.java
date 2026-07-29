@@ -42,13 +42,15 @@ class EchoBossAiAndMechanicsTest {
     }
 
     @Test
-    @DisplayName("EchoBoss from snapshot applies boss HP scaling")
-    void heroicBossFromSnapshotAppliesBossHpScaling() {
+    @DisplayName("EchoBoss HT matches captured hero HT with no boss multiplier")
+    void heroicBossFromSnapshotMatchesCapturedHt() {
         Echo snap = EchoTestSupport.warriorEchoWithData(5);
 
         EchoBoss boss = EchoTestSupport.createBoss(snap, 5);
 
-        Assertions.assertThat(boss.HT).isEqualTo(EchoBoss.scaledHT(snap, 5));
+        Assertions.assertThat(EchoBoss.scaledHT(snap, 5)).isEqualTo(snap.ht);
+        Assertions.assertThat(EchoBoss.scaledHT(snap, 25)).isEqualTo(snap.ht);
+        Assertions.assertThat(boss.HT).isEqualTo(snap.ht);
         Assertions.assertThat(boss.HP).isEqualTo(boss.HT);
         Assertions.assertThat(boss.getEcho()).isEqualTo(snap);
         Assertions.assertThat(boss.getEcho().heroClass).isEqualTo("WARRIOR");

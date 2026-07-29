@@ -48,12 +48,12 @@ class DebugStrategyKitTest {
 				PotionOfInvisibility.class,
 				PotionOfLiquidFlame.class,
 				PotionOfCorrosiveGas.class,
+				PotionOfParalyticGas.class,
 				StoneOfBlink.class,
 				StoneOfFear.class,
 				WandOfFireblast.class,
 				WandOfMagicMissile.class,
 				WandOfBlastWave.class);
-		Assertions.assertThat(classes).doesNotContain(PotionOfParalyticGas.class);
 	}
 
 	@Test

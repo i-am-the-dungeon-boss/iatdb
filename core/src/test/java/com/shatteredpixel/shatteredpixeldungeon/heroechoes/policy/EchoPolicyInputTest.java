@@ -4,6 +4,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShroudingFog;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import org.assertj.core.api.Assertions;
@@ -91,5 +93,23 @@ class EchoPolicyInputTest {
 		Assertions.assertThat(input.items)
 				.contains("WandOfMagicMissile")
 				.doesNotContain("WandOfWarding");
+	}
+
+	@Test
+	@DisplayName("fromHero omits PotionOfShroudingFog from policy kit items")
+	void fromHeroOmitsPotionOfShroudingFog() {
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfShroudingFog fog = new PotionOfShroudingFog();
+		fog.identify();
+		fog.collect(hero.belongings.backpack);
+		PotionOfInvisibility invis = new PotionOfInvisibility();
+		invis.identify();
+		invis.collect(hero.belongings.backpack);
+
+		EchoPolicyInput input = EchoPolicyInput.fromHero(hero);
+
+		Assertions.assertThat(input.items)
+				.contains("PotionOfInvisibility")
+				.doesNotContain("PotionOfShroudingFog");
 	}
 }

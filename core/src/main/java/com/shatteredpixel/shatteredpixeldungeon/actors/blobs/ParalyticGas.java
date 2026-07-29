@@ -29,21 +29,26 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 
 public class ParalyticGas extends Blob {
-	
+
+	/** Shorter lockout for player / echo boss (potion gas + cursed wand gas). */
+	public static final float HERO_ECHO_DURATION = 3f;
+
 	{
-		//acts after mobs, to give them a chance to resist paralysis
+		// acts after mobs, to give them a chance to resist paralysis
 		actPriority = MOB_PRIO - 1;
 	}
-	
+
 	@Override
 	protected void evolve() {
 		super.evolve();
-		
+
 		Char ch;
 		int cell;
 
@@ -51,20 +56,29 @@ public class ParalyticGas extends Blob {
 			for (int j = area.top; j < area.bottom; j++) {
 				cell = i + j * Dungeon.level.width();
 				if (cur[cell] > 0 && (ch = Actor.findChar(cell)) != null) {
-					if (!ch.isImmune(this.getClass()))
+					if (ch.isImmune(this.getClass())) {
+						continue;
+					}
+					if (ch instanceof Hero || ch instanceof EchoBoss) {
+						// One-shot apply — do not prolong each gas tick.
+						if (ch.buff(Paralysis.class) == null) {
+							Buff.affect(ch, Paralysis.class, HERO_ECHO_DURATION);
+						}
+					} else {
 						Buff.prolong(ch, Paralysis.class, Paralysis.DURATION);
+					}
 				}
 			}
 		}
 	}
-	
+
 	@Override
-	public void use( BlobEmitter emitter ) {
-		super.use( emitter );
-		
-		emitter.pour( Speck.factory( Speck.PARALYSIS ), 0.4f );
+	public void use(BlobEmitter emitter) {
+		super.use(emitter);
+
+		emitter.pour(Speck.factory(Speck.PARALYSIS), 0.4f);
 	}
-	
+
 	@Override
 	public String tileDesc() {
 		return Messages.get(this, "desc");

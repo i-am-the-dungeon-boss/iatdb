@@ -44,8 +44,6 @@ import java.util.Map;
 
 public class EchoBoss extends Mob {
 
-    public static final float BOSS_HP_MULTIPLIER = 1.3f;
-
     private static final String ECHO = "echo";
     private static final String ECHO_POLICY = "echo_policy";
 
@@ -136,11 +134,11 @@ public class EchoBoss extends Mob {
         initFromEcho(echo, depth, policy, true);
     }
 
+    /** Boss HT matches the captured hero HT (no depth / boss multiplier). */
     public static int scaledHT(Echo echo, int depth) {
         if (echo == null)
             return 200;
-        float depthBonus = 1f + depth * 0.02f;
-        return Math.round(echo.ht * BOSS_HP_MULTIPLIER * depthBonus);
+        return Math.max(1, echo.ht);
     }
 
     private void initFromEcho(Echo echo, int depth, EchoPolicy policy, boolean scaleHp) {
