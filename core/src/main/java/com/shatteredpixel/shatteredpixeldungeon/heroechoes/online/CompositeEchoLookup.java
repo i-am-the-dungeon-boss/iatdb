@@ -69,10 +69,10 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 			}
 			if (!EchoOnlineSettings.isConfigured()) {
 				DeviceCompat.log("EchoFetch", "local depth=" + depth + " UNAVAILABLE (online not configured)");
-				return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
+				return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNAVAILABLE);
 			}
 			Echo echo = local.result.echo;
-			EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+			EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.NETWORK);
 			for (int attempt = 0; attempt < RANKED_ATTEMPTS; attempt++) {
 				if (attempt > 0) {
 					sleepRetryDelay();
@@ -81,11 +81,11 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 						+ "/" + RANKED_ATTEMPTS + " echo_id=" + echo.echoId);
 				EchoPolicy remotePolicy = client.fetchEchoPolicy(echo);
 				if (remotePolicy == null) {
-					last = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+					last = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.NETWORK);
 					continue;
 				}
 				if (!remotePolicy.isSupported()) {
-					last = EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
+					last = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.DECODE);
 					continue;
 				}
 				if (localLookup instanceof EchoStorage) {
@@ -99,16 +99,16 @@ public final class CompositeEchoLookup implements EchoReplacementDecider.EchoLoo
 		} catch (Exception unexpected) {
 			DeviceCompat.log("EchoFetch", "local depth=" + depth + " UNKNOWN: " + unexpected.getMessage());
 			SentryCrashReporting.report(unexpected);
-			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNKNOWN);
 		}
 	}
 
 	private EchoLookupOutcome fetchRankedEcho(int depth) {
 		if (!EchoOnlineSettings.canSyncOnline()) {
 			DeviceCompat.log("EchoFetch", "ranked depth=" + depth + " UNAVAILABLE (cannot sync)");
-			return EchoLookupOutcome.error(EchoLookupFailureKind.UNAVAILABLE);
+			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNAVAILABLE);
 		}
-		EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+		EchoLookupOutcome last = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNKNOWN);
 		for (int attempt = 0; attempt < RANKED_ATTEMPTS; attempt++) {
 			if (attempt > 0) {
 				sleepRetryDelay();

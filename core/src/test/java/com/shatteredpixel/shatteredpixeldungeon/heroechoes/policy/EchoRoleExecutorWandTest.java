@@ -1,4 +1,4 @@
-package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
+package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;

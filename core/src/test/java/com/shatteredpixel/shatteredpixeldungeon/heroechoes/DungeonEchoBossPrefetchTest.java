@@ -2,7 +2,6 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
@@ -28,8 +27,8 @@ class DungeonEchoBossPrefetchTest {
 	}
 
 	@Test
-	@DisplayName("prefetch reports to Sentry when echo lookup returns NOT_FOUND")
-	void prefetchReportsNotFound() {
+	@DisplayName("prefetch does not report to Sentry for SOLO NOT_FOUND")
+	void prefetchDoesNotReportSoloNotFound() {
 		String previous = Game.version;
 		Game.version = "1.0.0";
 		try {
@@ -40,11 +39,30 @@ class DungeonEchoBossPrefetchTest {
 
 			Dungeon.prefetchEchoBossForDepth(10);
 
+			Assertions.assertThat(captured).isEmpty();
+		} finally {
+			Game.version = previous;
+		}
+	}
+
+	@Test
+	@DisplayName("prefetch reports to Sentry when ranked echo lookup returns NOT_FOUND")
+	void prefetchReportsRankedNotFound() {
+		String previous = Game.version;
+		Game.version = "1.0.0";
+		try {
+			List<Throwable> captured = new ArrayList<>();
+			SentryCrashReporting.setReporter(captured::add);
+			CompositeEchoLookup.setEchoLookupForTests(d -> EchoLookupOutcome.notFound());
+			Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+
+			Dungeon.prefetchEchoBossForDepth(10);
+
 			Assertions.assertThat(captured).hasSize(1);
 			Assertions.assertThat(captured.get(0).getMessage())
 					.contains("echo boss prefetch failed")
 					.contains("depth=10")
-					.contains("mode=SOLO")
+					.contains("mode=RANKED")
 					.contains("reason=NOT_FOUND");
 		} finally {
 			Game.version = previous;
@@ -60,7 +78,7 @@ class DungeonEchoBossPrefetchTest {
 			List<Throwable> captured = new ArrayList<>();
 			SentryCrashReporting.setReporter(captured::add);
 			CompositeEchoLookup.setEchoLookupForTests(
-					d -> EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK));
+					d -> EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.NETWORK));
 			Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
 
 			Dungeon.prefetchEchoBossForDepth(15);

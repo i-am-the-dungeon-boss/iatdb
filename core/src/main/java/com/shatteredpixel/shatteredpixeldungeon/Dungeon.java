@@ -86,7 +86,6 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -587,7 +586,7 @@ public class Dungeon {
 			return outcome;
 		} catch (Exception unexpected) {
 			SentryCrashReporting.report(unexpected);
-			return EchoLookupOutcome.error(EchoLookupFailureKind.UNKNOWN);
+			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNKNOWN);
 		}
 	}
 
@@ -610,6 +609,10 @@ public class Dungeon {
 				+ " mode=" + echoPlayMode
 				+ " reason=" + reason;
 		DeviceCompat.log("EchoFetch", message);
+		// Solo with no local echo is expected — not a crash.
+		if (echoPlayMode == EchoPlayMode.SOLO && outcome != null && outcome.isNotFound()) {
+			return;
+		}
 		SentryCrashReporting.report(new IllegalStateException(message));
 	}
 

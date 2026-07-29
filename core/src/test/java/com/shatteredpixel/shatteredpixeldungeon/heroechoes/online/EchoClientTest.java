@@ -93,7 +93,7 @@ public class EchoClientTest {
 
 		EchoLookupOutcome outcome = client.fetchEcho(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.DECODE);
 	}
 
 	@Test
@@ -106,7 +106,7 @@ public class EchoClientTest {
 
 		EchoLookupOutcome outcome = client.fetchEcho(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.DECODE);
 	}
 
 	@Test
@@ -119,7 +119,7 @@ public class EchoClientTest {
 
 		EchoLookupOutcome outcome = client.fetchEcho(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.SERVER);
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.SERVER);
 		Assertions.assertThat(outcome.httpStatus).isEqualTo(503);
 	}
 
@@ -134,7 +134,7 @@ public class EchoClientTest {
 
 		EchoLookupOutcome outcome = client.fetchEcho(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.NETWORK);
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.NETWORK);
 	}
 
 	@Test
@@ -163,8 +163,8 @@ public class EchoClientTest {
 		new EchoClient("https://echo.test", "secret", transport).fetchEcho(5);
 
 		Assertions.assertThat(captured).hasSize(1);
-		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
-		Assertions.assertThat(((EchoHttpException) captured.get(0)).statusCode).isEqualTo(503);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpTransport.HttpException.class);
+		Assertions.assertThat(((EchoHttpTransport.HttpException) captured.get(0)).statusCode).isEqualTo(503);
 	}
 
 	@Test
@@ -206,7 +206,7 @@ public class EchoClientTest {
 				.fetchEchoPolicy(EchoTestSupport.warriorEchoWithData(5));
 
 		Assertions.assertThat(captured).hasSize(1);
-		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpTransport.HttpException.class);
 	}
 
 	@Test
@@ -233,7 +233,7 @@ public class EchoClientTest {
 		Assertions.assertThat(policy).isNotNull();
 		Assertions.assertThat(policy.isSupported()).isTrue();
 		Assertions.assertThat(policy.root().getJSONObject("capabilities").has("RANGED")).isTrue();
-		EchoHttpRequest request = transport.requests.get(0);
+		EchoHttpTransport.Request request = transport.requests.get(0);
 		Assertions.assertThat(request.method).isEqualTo("POST");
 		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes/policy");
 		Assertions.assertThat(request.body).contains("\"hero_class\":\"WARRIOR\"");
@@ -264,7 +264,7 @@ public class EchoClientTest {
 		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
 
 		Assertions.assertThatThrownBy(() -> client.uploadEcho(echo))
-				.isInstanceOf(EchoHttpException.class)
+				.isInstanceOf(EchoHttpTransport.HttpException.class)
 				.hasMessageContaining("401");
 	}
 
@@ -278,7 +278,7 @@ public class EchoClientTest {
 		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
 		client.uploadEcho(echo);
 
-		EchoHttpRequest request = transport.requests.get(0);
+		EchoHttpTransport.Request request = transport.requests.get(0);
 		Assertions.assertThat(request.method).isEqualTo("POST");
 		Assertions.assertThat(request.url).isEqualTo("https://echo.test/v1/echoes");
 		Assertions.assertThat(request.headers.get("X-API-Key")).isEqualTo("secret-key");
@@ -377,18 +377,18 @@ public class EchoClientTest {
 
 	public static final class FakeEchoHttpTransport implements EchoHttpTransport {
 
-		public final List<EchoHttpRequest> requests = new CopyOnWriteArrayList<>();
-		final List<EchoHttpResponse> responses = new CopyOnWriteArrayList<>();
+		public final List<EchoHttpTransport.Request> requests = new CopyOnWriteArrayList<>();
+		final List<EchoHttpTransport.Response> responses = new CopyOnWriteArrayList<>();
 
 		public void enqueue(int status, String body) {
-			responses.add(new EchoHttpResponse(status, body));
+			responses.add(new EchoHttpTransport.Response(status, body));
 		}
 
 		@Override
-		public EchoHttpResponse send(EchoHttpRequest request) {
+		public EchoHttpTransport.Response send(EchoHttpTransport.Request request) {
 			requests.add(request);
 			if (responses.isEmpty()) {
-				return new EchoHttpResponse(500, "");
+				return new EchoHttpTransport.Response(500, "");
 			}
 			return responses.remove(0);
 		}

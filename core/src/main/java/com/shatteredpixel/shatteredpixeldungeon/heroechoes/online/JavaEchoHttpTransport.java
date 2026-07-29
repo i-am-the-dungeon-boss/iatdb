@@ -15,7 +15,7 @@ public final class JavaEchoHttpTransport implements EchoHttpTransport {
 	public static final int READ_TIMEOUT_MS = 8000;
 
 	@Override
-	public EchoHttpResponse send(EchoHttpRequest request) throws Exception {
+	public EchoHttpTransport.Response send(EchoHttpTransport.Request request) throws Exception {
 		HttpURLConnection connection = (HttpURLConnection) new URL(request.url).openConnection();
 		connection.setRequestMethod(request.method);
 		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
@@ -39,7 +39,7 @@ public final class JavaEchoHttpTransport implements EchoHttpTransport {
 		InputStream stream = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
 		String body = readBody(stream);
 		connection.disconnect();
-		return new EchoHttpResponse(status, body);
+		return new EchoHttpTransport.Response(status, body);
 	}
 
 	private static String readBody(InputStream stream) throws Exception {

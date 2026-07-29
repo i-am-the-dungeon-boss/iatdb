@@ -116,7 +116,7 @@ class EchoOnlineSyncTest {
 		sync.awaitBackgroundTasksForTests();
 
 		Assertions.assertThat(captured).hasSize(1);
-		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpException.class);
-		Assertions.assertThat(((EchoHttpException) captured.get(0)).statusCode).isEqualTo(500);
+		Assertions.assertThat(captured.get(0)).isInstanceOf(EchoHttpTransport.HttpException.class);
+		Assertions.assertThat(((EchoHttpTransport.HttpException) captured.get(0)).statusCode).isEqualTo(500);
 	}
 }

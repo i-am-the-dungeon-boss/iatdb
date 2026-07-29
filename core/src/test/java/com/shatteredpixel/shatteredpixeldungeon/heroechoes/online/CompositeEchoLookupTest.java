@@ -74,7 +74,7 @@ class CompositeEchoLookupTest {
 
 		EchoLookupOutcome outcome = lookup.findEchoForDepth(5);
 		Assertions.assertThat(outcome.isError()).isTrue();
-		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupFailureKind.DECODE);
+		Assertions.assertThat(outcome.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.DECODE);
 		Assertions.assertThat(transport.requests).hasSize(CompositeEchoLookup.RANKED_ATTEMPTS);
 	}
 
@@ -170,7 +170,7 @@ class CompositeEchoLookupTest {
 		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
 		Assertions.assertThat(result.isError()).isTrue();
-		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupFailureKind.NETWORK);
+		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.NETWORK);
 	}
 
 	@Test
@@ -315,7 +315,7 @@ class CompositeEchoLookupTest {
 		EchoLookupOutcome result = lookup.findEchoForDepth(5);
 
 		Assertions.assertThat(result.isError()).isTrue();
-		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupFailureKind.UNAVAILABLE);
+		Assertions.assertThat(result.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.UNAVAILABLE);
 		Assertions.assertThat(transport.requests).isEmpty();
 	}
 }

@@ -38,7 +38,7 @@ public final class EchoClient {
 	}
 
 	public boolean checkHealth() throws Exception {
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"GET",
 				baseUrl + "/health",
 				jsonHeaders(false, false),
@@ -61,18 +61,18 @@ public final class EchoClient {
 	/**
 	 * Ranked echo lookup. Outcomes:
 	 * <ul>
-	 * <li>200 + valid body → {@link EchoLookupStatus#FOUND}</li>
-	 * <li>200 + bad/incomplete body → {@link EchoLookupFailureKind#DECODE}</li>
-	 * <li>404 → {@link EchoLookupStatus#NOT_FOUND} (empty pool)</li>
-	 * <li>other HTTP → {@link EchoLookupFailureKind#SERVER}</li>
-	 * <li>transport throw → {@link EchoLookupFailureKind#NETWORK}</li>
+	 * <li>200 + valid body → {@link EchoLookupOutcome.Status#FOUND}</li>
+	 * <li>200 + bad/incomplete body → {@link EchoLookupOutcome.FailureKind#DECODE}</li>
+	 * <li>404 → {@link EchoLookupOutcome.Status#NOT_FOUND} (empty pool)</li>
+	 * <li>other HTTP → {@link EchoLookupOutcome.FailureKind#SERVER}</li>
+	 * <li>transport throw → {@link EchoLookupOutcome.FailureKind#NETWORK}</li>
 	 * </ul>
 	 */
 	public EchoLookupOutcome fetchEcho(int depth) {
 		String url = baseUrl + "/v1/echoes/" + depth + easyModeQuery();
 		logFetch("GET " + url);
 		try {
-			EchoHttpResponse response = transport.send(new EchoHttpRequest(
+			EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 					"GET",
 					url,
 					jsonHeaders(false, false),
@@ -87,7 +87,7 @@ public final class EchoClient {
 				} catch (Exception corruptBody) {
 					logFetch("depth=" + depth + " status=200 DECODE: " + corruptBody.getMessage());
 					SentryCrashReporting.report(corruptBody);
-					return EchoLookupOutcome.error(EchoLookupFailureKind.DECODE);
+					return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.DECODE);
 				}
 			}
 			if (response.statusCode == 404) {
@@ -95,12 +95,12 @@ public final class EchoClient {
 				return EchoLookupOutcome.notFound();
 			}
 			logFetch("depth=" + depth + " status=" + response.statusCode + " SERVER");
-			SentryCrashReporting.report(new EchoHttpException(response.statusCode, response.body));
-			return EchoLookupOutcome.error(EchoLookupFailureKind.SERVER, response.statusCode);
+			SentryCrashReporting.report(new EchoHttpTransport.HttpException(response.statusCode, response.body));
+			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.SERVER, response.statusCode);
 		} catch (Exception networkError) {
 			logFetch("depth=" + depth + " NETWORK: " + networkError.getMessage());
 			SentryCrashReporting.report(networkError);
-			return EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.NETWORK);
 		}
 	}
 
@@ -113,14 +113,14 @@ public final class EchoClient {
 		String echoId = echo != null ? echo.echoId : null;
 		logFetch("POST policy echo_id=" + echoId);
 		try {
-			EchoHttpResponse response = transport.send(new EchoHttpRequest(
+			EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 					"POST",
 					baseUrl + "/v1/echoes/policy",
 					jsonHeaders(true, true),
 					EchoWireCodec.encodeEchoPolicyRequest(EchoPolicyInput.fromEcho(echo))));
 			if (response.statusCode != 200) {
 				logFetch("policy echo_id=" + echoId + " status=" + response.statusCode + " FAIL");
-				SentryCrashReporting.report(new EchoHttpException(response.statusCode, response.body));
+				SentryCrashReporting.report(new EchoHttpTransport.HttpException(response.statusCode, response.body));
 				return null;
 			}
 			EchoPolicy policy = EchoWireCodec.decodeEchoPolicyResponse(response.body);
@@ -144,7 +144,7 @@ public final class EchoClient {
 	 * @return true when the token is accepted by the server
 	 */
 	public boolean fetchMe() throws Exception {
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"GET",
 				baseUrl + "/v1/auth/me",
 				jsonHeaders(true, true),
@@ -173,13 +173,13 @@ public final class EchoClient {
 		if (!Strings.isBlank(username)) {
 			body.put("username", username.trim());
 		}
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"POST",
 				baseUrl + "/v1/auth/device",
 				jsonHeaders(true, false),
 				body.toString()));
 		if (response.statusCode != 200 && response.statusCode != 201) {
-			throw new EchoHttpException(response.statusCode, response.body);
+			throw new EchoHttpTransport.HttpException(response.statusCode, response.body);
 		}
 		applySessionJson(response.body);
 		return EchoPlayerSession.hasSession();
@@ -188,7 +188,7 @@ public final class EchoClient {
 	public void changeUsername(String username) throws Exception {
 		JSONObject body = new JSONObject();
 		body.put("username", username != null ? username.trim() : "");
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"PATCH",
 				baseUrl + "/v1/auth/username",
 				jsonHeaders(true, true),
@@ -201,7 +201,7 @@ public final class EchoClient {
 		JSONObject body = new JSONObject();
 		body.put("email", email != null ? email.trim() : "");
 		body.put("password", password != null ? password : "");
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"PUT",
 				baseUrl + "/v1/auth/credentials",
 				jsonHeaders(true, true),
@@ -212,7 +212,7 @@ public final class EchoClient {
 
 	public void uploadEcho(Echo echo) throws Exception {
 		String body = EchoWireCodec.encodeEchoUpload(echo, SOURCE_CLIENT);
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"POST",
 				baseUrl + "/v1/echoes",
 				jsonHeaders(true, true),
@@ -222,7 +222,7 @@ public final class EchoClient {
 
 	public void postLeaderboardResult(EchoFightResult result) throws Exception {
 		String body = EchoWireCodec.encodeLeaderboardResult(result);
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"POST",
 				baseUrl + "/v1/leaderboard/results",
 				jsonHeaders(true, true),
@@ -232,7 +232,7 @@ public final class EchoClient {
 
 	public List<EchoLeaderboardEntry> fetchLeaderboard(int depth, int limit) throws Exception {
 		String url = baseUrl + "/v1/leaderboard/" + depth + "?limit=" + limit + easyModeQueryAmp();
-		EchoHttpResponse response = transport.send(new EchoHttpRequest(
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"GET",
 				url,
 				jsonHeaders(false, false),
@@ -283,9 +283,9 @@ public final class EchoClient {
 		return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
 	}
 
-	private static void ensureSuccess(EchoHttpResponse response) throws EchoHttpException {
+	private static void ensureSuccess(EchoHttpTransport.Response response) throws EchoHttpTransport.HttpException {
 		if (response.statusCode >= 400) {
-			throw new EchoHttpException(response.statusCode, response.body);
+			throw new EchoHttpTransport.HttpException(response.statusCode, response.body);
 		}
 	}
 

@@ -9,15 +9,35 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
  */
 public final class EchoLookupOutcome {
 
-	public final EchoLookupStatus status;
+	public enum Status {
+		FOUND,
+		NOT_FOUND,
+		ERROR
+	}
+
+	/** Why a ranked/local echo lookup failed (for UI hints). */
+	public enum FailureKind {
+		/** Transport threw (timeout, connection refused, etc.). */
+		NETWORK,
+		/** HTTP response was an error status other than 404. */
+		SERVER,
+		/** 200 body could not be decoded. */
+		DECODE,
+		/** Ranked online sync is not configured / available. */
+		UNAVAILABLE,
+		/** Unexpected failure. */
+		UNKNOWN
+	}
+
+	public final Status status;
 	public final EchoFetchResult result;
-	public final EchoLookupFailureKind failureKind;
+	public final FailureKind failureKind;
 	public final int httpStatus;
 
 	private EchoLookupOutcome(
-			EchoLookupStatus status,
+			Status status,
 			EchoFetchResult result,
-			EchoLookupFailureKind failureKind,
+			FailureKind failureKind,
 			int httpStatus) {
 		this.status = status;
 		this.result = result;
@@ -29,38 +49,38 @@ public final class EchoLookupOutcome {
 		if (result == null) {
 			throw new IllegalArgumentException("result is required for FOUND");
 		}
-		return new EchoLookupOutcome(EchoLookupStatus.FOUND, result, null, -1);
+		return new EchoLookupOutcome(Status.FOUND, result, null, -1);
 	}
 
 	public static EchoLookupOutcome notFound() {
-		return new EchoLookupOutcome(EchoLookupStatus.NOT_FOUND, null, null, -1);
+		return new EchoLookupOutcome(Status.NOT_FOUND, null, null, -1);
 	}
 
 	public static EchoLookupOutcome error() {
-		return error(EchoLookupFailureKind.UNKNOWN, -1);
+		return error(FailureKind.UNKNOWN, -1);
 	}
 
-	public static EchoLookupOutcome error(EchoLookupFailureKind kind) {
+	public static EchoLookupOutcome error(FailureKind kind) {
 		return error(kind, -1);
 	}
 
-	public static EchoLookupOutcome error(EchoLookupFailureKind kind, int httpStatus) {
+	public static EchoLookupOutcome error(FailureKind kind, int httpStatus) {
 		if (kind == null) {
-			kind = EchoLookupFailureKind.UNKNOWN;
+			kind = FailureKind.UNKNOWN;
 		}
-		return new EchoLookupOutcome(EchoLookupStatus.ERROR, null, kind, httpStatus);
+		return new EchoLookupOutcome(Status.ERROR, null, kind, httpStatus);
 	}
 
 	public boolean isFound() {
-		return status == EchoLookupStatus.FOUND;
+		return status == Status.FOUND;
 	}
 
 	public boolean isError() {
-		return status == EchoLookupStatus.ERROR;
+		return status == Status.ERROR;
 	}
 
 	public boolean isNotFound() {
-		return status == EchoLookupStatus.NOT_FOUND;
+		return status == Status.NOT_FOUND;
 	}
 
 	/** Localized one-line hint for dialogs; empty when not an ERROR. */
@@ -68,7 +88,7 @@ public final class EchoLookupOutcome {
 		if (!isError()) {
 			return "";
 		}
-		EchoLookupFailureKind kind = failureKind != null ? failureKind : EchoLookupFailureKind.UNKNOWN;
+		FailureKind kind = failureKind != null ? failureKind : FailureKind.UNKNOWN;
 		switch (kind) {
 			case NETWORK:
 				return Messages.get(WndEchoFetchFailed.class, "reason_network");

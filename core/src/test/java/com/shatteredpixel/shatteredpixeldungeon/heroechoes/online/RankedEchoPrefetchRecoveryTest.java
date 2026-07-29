@@ -80,7 +80,7 @@ class RankedEchoPrefetchRecoveryTest {
 
 		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(5, failed -> {
 			prompts.incrementAndGet();
-			Assertions.assertThat(failed.failureKind).isEqualTo(EchoLookupFailureKind.SERVER);
+			Assertions.assertThat(failed.failureKind).isEqualTo(EchoLookupOutcome.FailureKind.SERVER);
 			Assertions.assertThat(failed.httpStatus).isEqualTo(503);
 			return EchoPrefetchUserChoice.RETRY;
 		});

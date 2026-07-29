@@ -1,6 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupFailureKind;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 import org.assertj.core.api.Assertions;
@@ -20,7 +19,7 @@ class WndEchoFetchFailedTest {
 	@Test
 	@DisplayName("dialog message includes server HTTP failure hint")
 	void dialogMessageIncludesServerHint() {
-		EchoLookupOutcome failed = EchoLookupOutcome.error(EchoLookupFailureKind.SERVER, 503);
+		EchoLookupOutcome failed = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.SERVER, 503);
 		String message = WndEchoFetchFailed.buildMessage(failed.failureHint());
 
 		Assertions.assertThat(message).contains("HTTP 503");
@@ -30,7 +29,7 @@ class WndEchoFetchFailedTest {
 	@Test
 	@DisplayName("dialog message includes network failure hint")
 	void dialogMessageIncludesNetworkHint() {
-		EchoLookupOutcome failed = EchoLookupOutcome.error(EchoLookupFailureKind.NETWORK);
+		EchoLookupOutcome failed = EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.NETWORK);
 		String message = WndEchoFetchFailed.buildMessage(failed.failureHint());
 
 		Assertions.assertThat(message).containsIgnoringCase("network");

@@ -41,7 +41,7 @@ public final class EchoPlayerAuth {
 				SPDSettings.playerName(EchoPlayerSession.username());
 			}
 			return ok ? SessionResult.OK : SessionResult.FAILED;
-		} catch (EchoHttpException e) {
+		} catch (EchoHttpTransport.HttpException e) {
 			if (isUsernameTaken(e)) {
 				EchoPlayerSession.clearSession();
 				return SessionResult.USERNAME_TAKEN;
@@ -97,7 +97,7 @@ public final class EchoPlayerAuth {
 	static boolean refreshExistingDevice(EchoClient client) {
 		try {
 			return client.authenticateDevice(EchoPlayerSession.deviceId(), null);
-		} catch (EchoHttpException e) {
+		} catch (EchoHttpTransport.HttpException e) {
 			if (isExpectedAuthFailure(e.statusCode)) {
 				EchoPlayerSession.clearSession();
 				return false;
@@ -126,7 +126,7 @@ public final class EchoPlayerAuth {
 		return local != null ? local.trim() : "";
 	}
 
-	static boolean isUsernameTaken(EchoHttpException e) {
+	static boolean isUsernameTaken(EchoHttpTransport.HttpException e) {
 		if (e == null || e.statusCode != 422) {
 			return false;
 		}
