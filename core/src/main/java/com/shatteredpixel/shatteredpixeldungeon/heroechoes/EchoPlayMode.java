@@ -6,7 +6,6 @@ import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
  * How hero echoes are sourced for a run.
  */
 public enum EchoPlayMode {
-	NONE,
 	RANKED,
 	SOLO,
 	/** Sandbox arena — debug builds only; never for release. */
@@ -14,8 +13,8 @@ public enum EchoPlayMode {
 
 	/** False for {@link #DEBUG} outside {@link DebugSettings#isDebugBuild()}. */
 	public static boolean isAllowed(EchoPlayMode mode) {
-		if (mode == null || mode == NONE) {
-			return true;
+		if (mode == null) {
+			return false;
 		}
 		if (mode == DEBUG) {
 			return DebugSettings.isDebugBuild();
@@ -24,11 +23,11 @@ public enum EchoPlayMode {
 	}
 
 	/**
-	 * Coerces disallowed modes (e.g. DEBUG in release) to {@link #SOLO}.
+	 * Coerces null / disallowed modes (e.g. DEBUG in release) to {@link #SOLO}.
 	 */
 	public static EchoPlayMode sanitize(EchoPlayMode mode) {
 		if (mode == null) {
-			return NONE;
+			return SOLO;
 		}
 		return isAllowed(mode) ? mode : SOLO;
 	}

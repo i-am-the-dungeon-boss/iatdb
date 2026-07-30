@@ -21,7 +21,6 @@ class RankedEchoFetchIntegrationTest {
 	void cleanup() {
 		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 	}
 
 	@Test

@@ -19,7 +19,6 @@ class ChallengesPlayModeTest {
 	@AfterEach
 	void cleanup() {
 		SPDSettings.challenges(0);
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 		EchoTestSupport.resetWorkflowState();
 	}
 
@@ -28,7 +27,7 @@ class ChallengesPlayModeTest {
 	void challengesAllowedInSoloOnly() {
 		Assertions.assertThat(Challenges.allowedForPlayMode(EchoPlayMode.SOLO)).isTrue();
 		Assertions.assertThat(Challenges.allowedForPlayMode(EchoPlayMode.RANKED)).isFalse();
-		Assertions.assertThat(Challenges.allowedForPlayMode(EchoPlayMode.NONE)).isFalse();
+		Assertions.assertThat(Challenges.allowedForPlayMode(EchoPlayMode.DEBUG)).isFalse();
 	}
 
 	@Test
@@ -37,7 +36,6 @@ class ChallengesPlayModeTest {
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.SOLO)).isTrue();
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.RANKED)).isFalse();
 		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.DEBUG)).isFalse();
-		Assertions.assertThat(HeroSelectScene.gameOptionsAllowed(EchoPlayMode.NONE)).isFalse();
 	}
 
 	@Test

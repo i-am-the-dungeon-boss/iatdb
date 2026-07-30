@@ -33,12 +33,6 @@ class HeroSelectSceneModeDescTest {
 	}
 
 	@Test
-	@DisplayName("none mode has no description key")
-	void noneModeHasNoDescriptionKey() {
-		Assertions.assertThat(HeroSelectScene.modeDescriptionKey(EchoPlayMode.NONE)).isNull();
-	}
-
-	@Test
 	@DisplayName("debug mode uses debug_desc message key")
 	void debugModeUsesDebugDescKey() {
 		com.shatteredpixel.shatteredpixeldungeon.DebugSettings.setDebugBuildOverride(true);

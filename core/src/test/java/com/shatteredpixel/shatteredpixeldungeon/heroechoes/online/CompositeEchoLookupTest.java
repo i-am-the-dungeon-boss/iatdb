@@ -233,15 +233,15 @@ class CompositeEchoLookupTest {
 	}
 
 	@Test
-	@DisplayName("non-ranked mode never fetches online even when backend is configured")
-	void nonRankedNeverFetchesOnline() {
+	@DisplayName("debug mode never fetches online even when backend is configured")
+	void debugModeNeverFetchesOnline() {
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{\"unused\":true}");
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
 
 		Echo localEcho = EchoTestSupport.warriorEchoWithData(5);
 		EchoStorage local = new EchoStorage();

@@ -25,9 +25,4 @@ class StartSceneModeDescTest {
 				.isEqualTo(Messages.get(HeroSelectScene.class, "ranked_desc"));
 	}
 
-	@Test
-	@DisplayName("continue screen has no description when mode is none")
-	void continueScreenHasNoDescriptionWhenNone() {
-		Assertions.assertThat(StartScene.modeDescriptionText(EchoPlayMode.NONE)).isNull();
-	}
 }

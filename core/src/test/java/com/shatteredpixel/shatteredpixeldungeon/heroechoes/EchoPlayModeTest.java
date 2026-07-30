@@ -15,8 +15,23 @@ class EchoPlayModeTest {
 	@AfterEach
 	void cleanup() {
 		EchoTestSupport.resetWorkflowState();
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
-		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
+	}
+
+	@Test
+	@DisplayName("sanitize maps null to solo")
+	void sanitizeMapsNullToSolo() {
+		Assertions.assertThat(EchoPlayMode.sanitize(null)).isEqualTo(EchoPlayMode.SOLO);
+	}
+
+	@Test
+	@DisplayName("selecting a play mode also sets dungeon mode")
+	void selectingPlayModeAlsoSetsDungeonMode() {
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
+
+		Assertions.assertThat(GamesInProgress.selectedEchoPlayMode).isEqualTo(EchoPlayMode.RANKED);
+		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.RANKED);
 	}
 
 	@Test

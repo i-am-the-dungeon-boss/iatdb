@@ -232,7 +232,7 @@ public class Dungeon {
 	public static boolean daily;
 	public static boolean dailyReplay;
 	public static boolean easyMode;
-	public static EchoPlayMode echoPlayMode = EchoPlayMode.NONE;
+	public static EchoPlayMode echoPlayMode = EchoPlayMode.SOLO;
 	public static String customSeedText = "";
 	public static long seed;
 	public static long lastPlayed;
@@ -525,22 +525,19 @@ public class Dungeon {
 
 	public static void resetEchoStateForTests() {
 		clearPendingEcho();
-		echoPlayMode = EchoPlayMode.NONE;
+		echoPlayMode = EchoPlayMode.SOLO;
 		easyMode = false;
 		CompositeEchoLookup.resetForTests();
 	}
 
 	private static EchoPlayMode readEchoPlayMode(Bundle bundle) {
 		String raw = bundle.getString(ECHO_PLAY_MODE);
-		if (raw == null) {
+		// Legacy saves used NONE; treat that and unknown values as solo.
+		if (raw == null || raw.isEmpty() || "NONE".equals(raw)) {
 			return EchoPlayMode.SOLO;
 		}
 		try {
-			EchoPlayMode mode = EchoPlayMode.valueOf(raw);
-			if (mode == EchoPlayMode.NONE) {
-				return EchoPlayMode.SOLO;
-			}
-			return EchoPlayMode.sanitize(mode);
+			return EchoPlayMode.sanitize(EchoPlayMode.valueOf(raw));
 		} catch (IllegalArgumentException ignored) {
 			return EchoPlayMode.SOLO;
 		}

@@ -16,13 +16,13 @@ public final class EchoPlayModePaths {
 	}
 
 	public static EchoPlayMode storageMode() {
-		if (Dungeon.echoPlayMode != null && Dungeon.echoPlayMode != EchoPlayMode.NONE) {
+		if (Dungeon.echoPlayMode != null) {
 			return Dungeon.echoPlayMode;
 		}
-		if (GamesInProgress.selectedEchoPlayMode != EchoPlayMode.NONE) {
+		if (GamesInProgress.selectedEchoPlayMode != null) {
 			return GamesInProgress.selectedEchoPlayMode;
 		}
-		return EchoPlayMode.NONE;
+		return EchoPlayMode.SOLO;
 	}
 
 	public static String easySuffix() {
@@ -33,13 +33,10 @@ public final class EchoPlayModePaths {
 		if (mode == EchoPlayMode.RANKED) {
 			return "-ranked";
 		}
-		if (mode == EchoPlayMode.SOLO) {
-			return "-solo";
-		}
 		if (mode == EchoPlayMode.DEBUG) {
 			return "-debug";
 		}
-		return "";
+		return "-solo";
 	}
 
 	public static String gameFolderSuffix() {
@@ -47,7 +44,7 @@ public final class EchoPlayModePaths {
 	}
 
 	public static String echoesDir(EchoPlayMode mode) {
-		if (mode == null || mode == EchoPlayMode.NONE) {
+		if (mode == null) {
 			mode = EchoPlayMode.SOLO;
 		}
 		return ECHOES_BASE + gameFolderSuffix(mode) + easySuffix();
@@ -58,11 +55,10 @@ public final class EchoPlayModePaths {
 	}
 
 	public static String leaderboardFile(EchoPlayMode mode) {
-		String suffix = gameFolderSuffix(mode) + easySuffix();
-		if (suffix.isEmpty()) {
-			return LEADERBOARD_BASE + ".json";
+		if (mode == null) {
+			mode = EchoPlayMode.SOLO;
 		}
-		return LEADERBOARD_BASE + suffix + ".json";
+		return LEADERBOARD_BASE + gameFolderSuffix(mode) + easySuffix() + ".json";
 	}
 
 	public static String leaderboardFile() {

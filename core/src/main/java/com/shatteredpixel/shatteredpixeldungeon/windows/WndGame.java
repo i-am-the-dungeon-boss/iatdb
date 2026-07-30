@@ -198,7 +198,7 @@ public class WndGame extends Window {
 				} catch (IOException e) {
 					ShatteredPixelDungeon.reportException(e);
 				}
-				Dungeon.echoPlayMode = EchoPlayMode.NONE;
+				Dungeon.echoPlayMode = EchoPlayMode.sanitize(GamesInProgress.selectedEchoPlayMode);
 				Game.switchScene(TitleScene.class);
 			}
 		});

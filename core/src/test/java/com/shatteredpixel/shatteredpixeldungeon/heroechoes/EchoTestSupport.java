@@ -78,7 +78,7 @@ public final class EchoTestSupport {
 		Dungeon.easyMode = false;
 		Dungeon.resetEchoStateForTests();
 		GamesInProgress.clearSlotCache();
-		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
+		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.SOLO;
 		DebugSettings.resetForTests();
 		SPDSettings.playerName("");
 		SPDSettings.easyMode(false);

@@ -34,37 +34,34 @@ class EchoPlayModePathsTest {
 		Assertions.assertThat(EchoPlayModePaths.gameFolderSuffix()).isEqualTo("-debug");
 
 		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.DEBUG;
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Dungeon.echoPlayMode = EchoPlayMode.DEBUG;
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-debug");
 	}
 
 	@Test
-	@DisplayName("unset play mode uses solo echo directory, not legacy echoes/")
-	void unsetPlayModeUsesSoloEchoDir() {
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
-		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.NONE;
-
-		Assertions.assertThat(EchoPlayModePaths.echoesDir()).isEqualTo("echoes-solo");
-		Assertions.assertThat(EchoPlayModePaths.echoesDir(EchoPlayMode.NONE)).isEqualTo("echoes-solo");
+	@DisplayName("null play mode argument uses solo echo directory, not legacy echoes/")
+	void nullPlayModeArgumentUsesSoloEchoDir() {
+		Assertions.assertThat(EchoPlayModePaths.echoesDir(null)).isEqualTo("echoes-solo");
 	}
 
 	@Test
 	@DisplayName("ranked and solo use separate game save folders")
 	void rankedAndSoloUseSeparateGameFolders() {
-		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.RANKED;
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-ranked");
 
-		GamesInProgress.selectedEchoPlayMode = EchoPlayMode.SOLO;
+		GamesInProgress.selectEchoPlayMode(EchoPlayMode.SOLO);
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-solo");
 	}
 
 	@Test
-	@DisplayName("selecting ranked mode clears stale solo dungeon mode for save folders")
-	void selectingRankedModeClearsStaleSoloDungeonMode() {
+	@DisplayName("selecting ranked mode updates dungeon mode for save folders")
+	void selectingRankedModeUpdatesDungeonModeForSaveFolders() {
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
 
 		GamesInProgress.selectEchoPlayMode(EchoPlayMode.RANKED);
 
+		Assertions.assertThat(Dungeon.echoPlayMode).isEqualTo(EchoPlayMode.RANKED);
 		Assertions.assertThat(GamesInProgress.gameFolder(1)).isEqualTo("game1-ranked");
 	}
 

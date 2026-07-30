@@ -25,7 +25,6 @@ class EasyModeTest {
 		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE)
 				.remove(SPDSettings.KEY_EASY_MODE_SOLO_DEFAULT_APPLIED);
 		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE).flush();
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 		EchoTestSupport.resetWorkflowState();
 	}
 
@@ -58,7 +57,7 @@ class EasyModeTest {
 	void easyModeAllowedInSoloOnly() {
 		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.SOLO)).isTrue();
 		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.RANKED)).isFalse();
-		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.NONE)).isFalse();
+		Assertions.assertThat(SPDSettings.easyModeAllowedForPlayMode(EchoPlayMode.DEBUG)).isFalse();
 	}
 
 	@Test

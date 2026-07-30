@@ -48,16 +48,16 @@ public class GamesInProgress {
 
 	public static HeroClass selectedClass;
 	public static boolean randomizedClass = false;
-	public static EchoPlayMode selectedEchoPlayMode = EchoPlayMode.NONE;
+	public static EchoPlayMode selectedEchoPlayMode = EchoPlayMode.SOLO;
 
 	/**
-	 * Menu selection for ranked/solo. Clears any leftover run mode so save
-	 * listing and loading use the selected mode's folder, not a prior run's.
+	 * Menu selection for ranked/solo. Updates run mode so save listing and
+	 * loading use the selected mode's folder.
 	 */
 	public static void selectEchoPlayMode(EchoPlayMode mode) {
-		EchoPlayMode allowed = EchoPlayMode.sanitize(mode == null ? EchoPlayMode.NONE : mode);
+		EchoPlayMode allowed = EchoPlayMode.sanitize(mode);
 		selectedEchoPlayMode = allowed;
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
+		Dungeon.echoPlayMode = allowed;
 		Challenges.clearIfDisallowed(allowed);
 		SPDSettings.clearEasyModeIfDisallowed(allowed);
 		if (SPDSettings.easyModeAllowedForPlayMode(allowed)) {
@@ -67,9 +67,7 @@ public class GamesInProgress {
 	}
 
 	public static void applySelectedEchoPlayMode() {
-		if (selectedEchoPlayMode != EchoPlayMode.NONE) {
-			Dungeon.echoPlayMode = EchoPlayMode.sanitize(selectedEchoPlayMode);
-		}
+		Dungeon.echoPlayMode = EchoPlayMode.sanitize(selectedEchoPlayMode);
 	}
 
 	public static void clearSlotCache() {

@@ -47,10 +47,7 @@ public final class EchoOnlineSettings {
 		if (testOnlineOverride != null) {
 			return testOnlineOverride;
 		}
-		if (Dungeon.echoPlayMode != null && Dungeon.echoPlayMode != EchoPlayMode.NONE) {
-			return Dungeon.echoPlayMode == EchoPlayMode.RANKED && isConfigured();
-		}
-		return true;
+		return Dungeon.echoPlayMode == EchoPlayMode.RANKED && isConfigured();
 	}
 
 	public static void setOnlineEnabled(boolean enabled) {

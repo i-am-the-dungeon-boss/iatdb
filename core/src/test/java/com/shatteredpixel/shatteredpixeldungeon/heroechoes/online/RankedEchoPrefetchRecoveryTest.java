@@ -25,7 +25,6 @@ class RankedEchoPrefetchRecoveryTest {
 		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
 		CompositeEchoLookup.rankedRetryDelayMs = 0L;
-		Dungeon.echoPlayMode = EchoPlayMode.NONE;
 	}
 
 	@Test
