@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSess
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.watabou.utils.FileUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,11 +19,6 @@ import java.io.File;
 
 @ExtendWith(GdxTestExtension.class)
 class AutoEchoCaptureTest {
-
-    @AfterEach
-    void cleanup() {
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("shouldCapture is true on boss depths when hero is alive")

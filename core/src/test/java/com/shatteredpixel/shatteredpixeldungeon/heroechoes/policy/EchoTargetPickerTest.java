@@ -8,7 +8,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,12 +18,6 @@ import java.util.Set;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoTargetPickerTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("non-AOE pick returns enemy cell")

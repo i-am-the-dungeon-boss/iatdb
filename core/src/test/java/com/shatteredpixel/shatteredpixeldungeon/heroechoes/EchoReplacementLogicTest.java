@@ -5,7 +5,6 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoL
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,11 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class BossReplacementLogicTest {
-
-    @AfterEach
-    void cleanup() {
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("Uses hero boss when snapshot available on boss depth")

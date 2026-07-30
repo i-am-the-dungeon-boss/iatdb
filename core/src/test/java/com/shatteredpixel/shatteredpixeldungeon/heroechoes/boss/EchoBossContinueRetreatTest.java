@@ -1,13 +1,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
-
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
-
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
-
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -23,7 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +28,6 @@ class EchoBossContinueRetreatTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		GamesInProgress.curSlot = 0;
 	}
 

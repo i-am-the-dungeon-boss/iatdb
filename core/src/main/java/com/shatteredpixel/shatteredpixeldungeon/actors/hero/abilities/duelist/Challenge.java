@@ -92,14 +92,17 @@ public class Challenge extends ArmorAbility {
 		Char body = ctx.body;
 		Hero kit = ctx.kit;
 		if (target == null) {
+			ctx.turns.cancelBusy();
 			return;
 		}
 
 		Char targetCh = Actor.findChar(target);
-		if (targetCh == null || !Dungeon.level.heroFOV[target]) {
+		boolean[] fov = body.fieldOfView != null ? body.fieldOfView : Dungeon.level.heroFOV;
+		if (targetCh == null || fov == null || !fov[target]) {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_target"));
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -107,6 +110,7 @@ public class Challenge extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "already_dueling"));
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -115,6 +119,7 @@ public class Challenge extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "ally_target"));
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -157,6 +162,7 @@ public class Challenge extends ArmorAbility {
 				if (body.rooted)
 					PixelScene.shake(1, 1f);
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -166,6 +172,7 @@ public class Challenge extends ArmorAbility {
 				if (body.rooted)
 					PixelScene.shake(1, 1f);
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -185,7 +192,11 @@ public class Challenge extends ArmorAbility {
 
 		boolean bossTarget = Char.hasProp(targetCh, Char.Property.BOSS);
 		for (Char toFreeze : Actor.chars()) {
-			if (toFreeze != targetCh && toFreeze.alignment != Char.Alignment.ALLY && !(toFreeze instanceof NPC)
+			// Exclude both duelists — Hero casters are ALLY so they skipped the
+			// alignment filter; EchoBoss is ENEMY and must not freeze itself
+			// (SpectatorFreeze blocks attaching DuelParticipant).
+			if (toFreeze != targetCh && toFreeze != body
+					&& toFreeze.alignment != Char.Alignment.ALLY && !(toFreeze instanceof NPC)
 					&& (!bossTarget || !(Char.hasProp(targetCh, Char.Property.BOSS)
 							|| Char.hasProp(targetCh, Char.Property.BOSS_MINION)))) {
 				Actor.delayChar(toFreeze, DuelParticipant.DURATION);
@@ -212,6 +223,8 @@ public class Challenge extends ArmorAbility {
 		Invisibility.dispel(body);
 		if (ctx.heroFX) {
 			kit.next();
+		} else {
+			ctx.turns.spendAfterThrow(Actor.TICK);
 		}
 
 		if (kit.buff(EliminationMatchTracker.class) != null) {

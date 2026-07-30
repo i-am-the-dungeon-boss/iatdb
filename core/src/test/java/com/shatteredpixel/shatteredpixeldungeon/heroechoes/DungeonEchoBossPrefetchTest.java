@@ -23,7 +23,6 @@ class DungeonEchoBossPrefetchTest {
 	@AfterEach
 	void cleanup() {
 		SentryCrashReporting.resetReporter();
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

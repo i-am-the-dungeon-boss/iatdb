@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
@@ -18,6 +20,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,12 @@ import java.util.Set;
 
 @ExtendWith(GdxTestExtension.class)
 class DebugStrategyKitTest {
+
+	@AfterEach
+	void tearDown() {
+		Item.clearCurrent();
+		Dungeon.hero = null;
+	}
 
 	@Test
 	@DisplayName("strategy kit is a small balanced loadout for kite/shield/finish tests")
@@ -54,6 +63,36 @@ class DebugStrategyKitTest {
 				WandOfFireblast.class,
 				WandOfMagicMissile.class,
 				WandOfBlastWave.class);
+	}
+
+	@Test
+	@DisplayName("strategy kit items are identified for the living hero")
+	void strategyKitItemsAreIdentified() {
+		List<Item> items = DebugStrategyKit.createItems();
+		for (Item item : items) {
+			Assertions.assertThat(item.isIdentified())
+					.as("%s must be identified for debug bag use", item.getClass().getSimpleName())
+					.isTrue();
+		}
+	}
+
+	@Test
+	@DisplayName("strategy kit stays identified even if echo curUser is stale")
+	void strategyKitIdentifiesDespiteStaleEchoCurUser() {
+		Hero player = new Hero();
+		Dungeon.hero = player;
+		player.HP = player.HT = 20;
+		Hero echoKit = new Hero();
+		echoKit.HP = echoKit.HT = 20;
+		new PotionOfHealing().setCurrent(echoKit);
+
+		List<Item> items = DebugStrategyKit.createItems();
+		for (Item item : items) {
+			Assertions.assertThat(item.isIdentified())
+					.as("%s must stay identified when curUser is an echo kit", item.getClass().getSimpleName())
+					.isTrue();
+		}
+		Assertions.assertThat(new PotionOfLiquidFlame().isKnown()).isTrue();
 	}
 
 	@Test

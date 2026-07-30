@@ -15,7 +15,6 @@ class WndGameDebugToolsTest {
 	@AfterEach
 	void cleanup() {
 		DebugSettings.resetForTests();
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test
@@ -58,6 +57,15 @@ class WndGameDebugToolsTest {
 				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
 		Assertions.assertThat(source).contains("give_echo_arsenal");
 		Assertions.assertThat(source).contains("DebugEchoArsenal.grantAndCycleAll");
+	}
+
+	@Test
+	@DisplayName("pause menu includes give-echo-armor-ability action in debug builds")
+	void pauseMenuIncludesGiveEchoArmorAbilityInDebugBuilds() throws Exception {
+		String source = java.nio.file.Files.readString(
+				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
+		Assertions.assertThat(source).contains("give_echo_armor_ability");
+		Assertions.assertThat(source).contains("DebugEchoArsenal.grantArmorAbilityAll");
 	}
 
 	@Test

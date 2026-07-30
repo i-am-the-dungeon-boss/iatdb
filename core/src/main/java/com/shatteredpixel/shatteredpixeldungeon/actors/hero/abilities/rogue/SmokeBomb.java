@@ -97,6 +97,7 @@ public class SmokeBomb extends ArmorAbility {
 				if (ctx.heroFX) {
 					PixelScene.shake(1, 1f);
 				}
+				refuse(ctx);
 				return;
 			}
 
@@ -109,6 +110,7 @@ public class SmokeBomb extends ArmorAbility {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(this, "fov"));
 				}
+				refuse(ctx);
 				return;
 			}
 
@@ -161,11 +163,13 @@ public class SmokeBomb extends ArmorAbility {
 				GameScene.updateFog();
 			}
 
-			if (!shadowStepping) {
-				ctx.turns.spendAfterThrow(Actor.TICK);
-			} else if (ctx.heroFX) {
+			if (shadowStepping && ctx.heroFX) {
 				kit.next();
+			} else {
+				ctx.turns.spendAfterThrow(Actor.TICK);
 			}
+		} else {
+			refuse(ctx);
 		}
 	}
 

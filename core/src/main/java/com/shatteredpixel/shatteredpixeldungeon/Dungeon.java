@@ -454,6 +454,12 @@ public class Dungeon {
 
 	private static Echo pendingEcho;
 	private static EchoPolicy pendingEchoPolicy;
+	/** Last prefetch status for {@link #lastEchoLookupDepth}; null = unset. */
+	private static EchoLookupOutcome.Status lastEchoLookupStatus;
+	private static int lastEchoLookupDepth = -1;
+
+	private static final String ECHO_LOOKUP_STATUS = "echo_lookup_status";
+	private static final String ECHO_LOOKUP_DEPTH = "echo_lookup_depth";
 
 	public static Echo getPendingEcho() {
 		return pendingEcho;
@@ -463,9 +469,44 @@ public class Dungeon {
 		return pendingEchoPolicy;
 	}
 
+	/**
+	 * Clears pending echo/policy only. Does <em>not</em> clear a {@code NOT_FOUND}
+	 * lookup latch — spawn still needs that status for the regional default boss.
+	 */
 	public static void clearPendingEcho() {
 		pendingEcho = null;
 		pendingEchoPolicy = null;
+	}
+
+	/** Clears pending echo and the lookup latch (abandon / test reset). */
+	public static void clearEchoLookupLatch() {
+		lastEchoLookupStatus = null;
+		lastEchoLookupDepth = -1;
+	}
+
+	public static boolean wasEchoLookupFound() {
+		return lastEchoLookupStatus == EchoLookupOutcome.Status.FOUND
+				&& lastEchoLookupDepth == depth;
+	}
+
+	public static boolean wasEchoLookupNotFound() {
+		return lastEchoLookupStatus == EchoLookupOutcome.Status.NOT_FOUND
+				&& lastEchoLookupDepth == depth;
+	}
+
+	public static boolean wasEchoLookupError() {
+		return lastEchoLookupStatus == EchoLookupOutcome.Status.ERROR
+				&& lastEchoLookupDepth == depth;
+	}
+
+	/** True when no latch is recorded for the current depth. */
+	public static boolean isEchoLookupUnset() {
+		return lastEchoLookupStatus == null || lastEchoLookupDepth != depth;
+	}
+
+	private static void recordEchoLookup(EchoLookupOutcome.Status status, int lookupDepth) {
+		lastEchoLookupStatus = status;
+		lastEchoLookupDepth = lookupDepth;
 	}
 
 	/**
@@ -480,6 +521,7 @@ public class Dungeon {
 		}
 		pendingEcho = echo;
 		pendingEchoPolicy = policy;
+		recordEchoLookup(EchoLookupOutcome.Status.FOUND, echo.depth);
 	}
 
 	/**
@@ -513,6 +555,7 @@ public class Dungeon {
 			FileUtils.deleteFile(GamesInProgress.depthFile(GamesInProgress.curSlot, depth, branch));
 		}
 		clearPendingEcho();
+		clearEchoLookupLatch();
 		if (hero != null && hero.buff(LockedFloor.class) != null) {
 			hero.buff(LockedFloor.class).detach();
 		}
@@ -525,6 +568,7 @@ public class Dungeon {
 
 	public static void resetEchoStateForTests() {
 		clearPendingEcho();
+		clearEchoLookupLatch();
 		echoPlayMode = EchoPlayMode.SOLO;
 		easyMode = false;
 		CompositeEchoLookup.resetForTests();
@@ -566,10 +610,12 @@ public class Dungeon {
 	 */
 	public static EchoLookupOutcome prefetchEchoBossOutcome(int depth) {
 		if (pendingEcho != null && pendingEchoPolicy != null && pendingEcho.depth == depth) {
+			recordEchoLookup(EchoLookupOutcome.Status.FOUND, depth);
 			return EchoLookupOutcome.found(new EchoFetchResult(pendingEcho, pendingEchoPolicy));
 		}
 		clearPendingEcho();
 		if (!EchoReplacementDecider.isBossDepth(depth)) {
+			recordEchoLookup(EchoLookupOutcome.Status.NOT_FOUND, depth);
 			return EchoLookupOutcome.notFound();
 		}
 		try {
@@ -577,12 +623,15 @@ public class Dungeon {
 			if (outcome.isFound()) {
 				pendingEcho = outcome.result.echo;
 				pendingEchoPolicy = outcome.result.policy;
+				recordEchoLookup(EchoLookupOutcome.Status.FOUND, depth);
 			} else {
 				reportEchoPrefetchFailure(depth, outcome);
+				recordEchoLookup(outcome.status, depth);
 			}
 			return outcome;
 		} catch (Exception unexpected) {
 			SentryCrashReporting.report(unexpected);
+			recordEchoLookup(EchoLookupOutcome.Status.ERROR, depth);
 			return EchoLookupOutcome.error(EchoLookupOutcome.FailureKind.UNKNOWN);
 		}
 	}
@@ -658,6 +707,12 @@ public class Dungeon {
 		if (pendingEchoPolicy != null) {
 			bundle.put("pending_echo_policy", pendingEchoPolicy.toBundle());
 		}
+		// Persist latch for current depth so NOT_FOUND still yields the default boss
+		// after continue (pending is null in that case).
+		if (lastEchoLookupStatus != null && lastEchoLookupDepth == depth) {
+			bundle.put(ECHO_LOOKUP_STATUS, lastEchoLookupStatus.name());
+			bundle.put(ECHO_LOOKUP_DEPTH, lastEchoLookupDepth);
+		}
 	}
 
 	public static void restoreEchoChoiceFromBundle(Bundle bundle) {
@@ -679,6 +734,20 @@ public class Dungeon {
 		}
 		if (!isPendingEchoForCurrentBossFloor()) {
 			clearPendingEcho();
+		}
+		if (bundle.contains(ECHO_LOOKUP_STATUS) && bundle.contains(ECHO_LOOKUP_DEPTH)) {
+			try {
+				recordEchoLookup(
+						EchoLookupOutcome.Status.valueOf(bundle.getString(ECHO_LOOKUP_STATUS)),
+						bundle.getInt(ECHO_LOOKUP_DEPTH));
+			} catch (IllegalArgumentException ignored) {
+				clearEchoLookupLatch();
+			}
+		} else if (isPendingEchoForCurrentBossFloor()) {
+			// Legacy saves: armed pending implies FOUND for this boss floor.
+			recordEchoLookup(EchoLookupOutcome.Status.FOUND, depth);
+		} else {
+			clearEchoLookupLatch();
 		}
 	}
 

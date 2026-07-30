@@ -101,6 +101,8 @@ public final class EchoPolicyWhen {
 				return status.isSafeFor(String.valueOf(raw));
 			case "self_unsafe_for":
 				return status.isUnsafeFor(String.valueOf(raw));
+			case "self_speed_gt_enemy":
+				return status.selfSpeedGtEnemy == asBoolean(raw);
 			default:
 				// Unknown keys ignored for forward compatibility.
 				return true;

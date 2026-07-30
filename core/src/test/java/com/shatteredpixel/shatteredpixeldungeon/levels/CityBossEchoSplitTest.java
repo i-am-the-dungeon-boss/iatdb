@@ -24,7 +24,6 @@ class CityBossEchoSplitTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Statistics.qualifiedForBossChallengeBadge = false;
 	}
 

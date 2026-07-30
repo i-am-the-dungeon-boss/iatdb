@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -277,11 +278,22 @@ public class HallsBossLevel extends Level {
 
 		Dungeon.observe();
 
-		if (EchoBossSpawner.shouldSpawn()) {
-			startEchoFight();
-		} else {
-			startYogFight();
-		}
+		EchoBossSpawner.ensureReadyThen(new EchoBossSpawner.SpawnRecoveryActions() {
+			@Override
+			public void onEcho() {
+				startEchoFight();
+			}
+
+			@Override
+			public void onDefault() {
+				startYogFight();
+			}
+
+			@Override
+			public void onAbort() {
+				EchoBossFetchRecovery.abortToTitle();
+			}
+		});
 	}
 
 	private void startEchoFight() {

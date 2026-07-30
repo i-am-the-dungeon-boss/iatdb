@@ -20,7 +20,6 @@ class CompositeEchoLookupTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
 		CompositeEchoLookup.rankedRetryDelayMs = 0L;
 		Dungeon.echoPlayMode = EchoPlayMode.SOLO;

@@ -24,7 +24,6 @@ class UiUxAndPolishTest {
     @AfterEach
     void reset() {
         BossHealthBar.assignBoss(null);
-        EchoTestSupport.resetWorkflowState();
     }
 
     @Test

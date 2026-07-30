@@ -39,8 +39,6 @@ class EchoBossArsenalScrollKindsTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	private static Fight fight() {

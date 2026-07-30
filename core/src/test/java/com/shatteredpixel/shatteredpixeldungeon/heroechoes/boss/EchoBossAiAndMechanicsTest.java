@@ -18,7 +18,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,12 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossAiAndMechanicsTest {
-
-    @AfterEach
-    void cleanup() {
-        Dungeon.level = null;
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("EchoBoss spawns sleeping until the player engages it")
@@ -42,15 +35,17 @@ class EchoBossAiAndMechanicsTest {
     }
 
     @Test
-    @DisplayName("EchoBoss HT matches captured hero HT with no boss multiplier")
-    void heroicBossFromSnapshotMatchesCapturedHt() {
+    @DisplayName("EchoBoss from snapshot applies boss HP scaling")
+    void heroicBossFromSnapshotAppliesBossHpScaling() {
         Echo snap = EchoTestSupport.warriorEchoWithData(5);
 
         EchoBoss boss = EchoTestSupport.createBoss(snap, 5);
 
-        Assertions.assertThat(EchoBoss.scaledHT(snap, 5)).isEqualTo(snap.ht);
-        Assertions.assertThat(EchoBoss.scaledHT(snap, 25)).isEqualTo(snap.ht);
-        Assertions.assertThat(boss.HT).isEqualTo(snap.ht);
+        Assertions.assertThat(EchoBoss.scaledHT(snap, 5))
+                .isEqualTo(Math.round(snap.ht * EchoBoss.BOSS_HP_MULTIPLIER * (1f + 5 * 0.02f)));
+        Assertions.assertThat(EchoBoss.scaledHT(snap, 25))
+                .isEqualTo(Math.round(snap.ht * EchoBoss.BOSS_HP_MULTIPLIER * (1f + 25 * 0.02f)));
+        Assertions.assertThat(boss.HT).isEqualTo(EchoBoss.scaledHT(snap, 5));
         Assertions.assertThat(boss.HP).isEqualTo(boss.HT);
         Assertions.assertThat(boss.getEcho()).isEqualTo(snap);
         Assertions.assertThat(boss.getEcho().heroClass).isEqualTo("WARRIOR");

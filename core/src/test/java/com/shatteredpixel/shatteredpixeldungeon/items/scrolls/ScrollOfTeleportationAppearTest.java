@@ -26,8 +26,6 @@ class ScrollOfTeleportationAppearTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

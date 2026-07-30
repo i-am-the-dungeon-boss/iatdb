@@ -4,18 +4,12 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSettings;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPlayModeTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("sanitize maps null to solo")

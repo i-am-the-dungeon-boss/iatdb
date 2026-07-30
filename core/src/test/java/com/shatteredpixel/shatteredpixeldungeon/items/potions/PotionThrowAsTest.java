@@ -21,13 +21,51 @@ class PotionThrowAsTest {
 	@BeforeEach
 	void installUiStubs() {
 		new TargetHealthIndicator();
+		Potion.initColors();
 	}
 
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Test
+	@DisplayName("echo potion throw does not identify type for the hero")
+	void echoPotionThrowDoesNotIdentifyForHero() {
+		Hero player = EchoTestSupport.warriorHero();
+		PotionOfLiquidFlame seed = new PotionOfLiquidFlame();
+		Assertions.assertThat(seed.isKnown()).isFalse();
+		seed.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Potion potion = boss.getEchoHero().belongings.getItem(PotionOfLiquidFlame.class);
+		Assertions.assertThat(potion).isNotNull();
+		Assertions.assertThat(potion.isKnown()).isFalse();
+
+		Assertions.assertThat(potion.throwAs(UseContext.echo(boss), player.pos)).isTrue();
+
+		Assertions.assertThat(new PotionOfLiquidFlame().isKnown())
+				.as("echo shatter must not teach the living hero the potion type")
+				.isFalse();
+	}
+
+	@Test
+	@DisplayName("hero potion throw still identifies type when seen")
+	void heroPotionThrowStillIdentifiesWhenSeen() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss target = EchoTestSupport.createBossWithPolicy(
+				hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, target, 2);
+
+		PotionOfLiquidFlame flame = new PotionOfLiquidFlame();
+		Assertions.assertThat(flame.isKnown()).isFalse();
+		flame.collect(hero.belongings.backpack);
+
+		Assertions.assertThat(flame.throwAs(UseContext.hero(hero), target.pos)).isTrue();
+
+		Assertions.assertThat(new PotionOfLiquidFlame().isKnown()).isTrue();
 	}
 
 	@Test

@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
@@ -73,7 +74,10 @@ public abstract class GooBossRoom extends StandardRoom {
 
 	/** Places either the pending echo boss or Goo at the room center. */
 	protected void placeBoss(Level level) {
-		if (EchoBossSpawner.shouldSpawn()) {
+		EchoBossSpawner.BossSpawnChoice choice = EchoBossSpawner.resolveBossSpawn(
+				EchoBossFetchRecovery::promptRetryOrAbort);
+		EchoBossFetchRecovery.throwIfAborted(choice);
+		if (choice == EchoBossSpawner.BossSpawnChoice.ECHO) {
 			placeEchoBoss(level);
 		} else {
 			placeGoo(level);

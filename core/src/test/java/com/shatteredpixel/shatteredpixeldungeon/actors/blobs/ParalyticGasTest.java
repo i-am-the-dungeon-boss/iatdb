@@ -10,19 +10,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class ParalyticGasTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("paralytic gas applies Hero paralysis for 3 turns")

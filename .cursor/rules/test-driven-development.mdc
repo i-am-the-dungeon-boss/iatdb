@@ -1,5 +1,5 @@
 ---
-description: Test-Driven Development on main — failing test first for production behavior (master base game has no unit tests)
+description: Test-Driven Development on main — cover existing logic first, then red → implement → green for changes
 alwaysApply: true
 ---
 
@@ -9,14 +9,24 @@ alwaysApply: true
 
 ## Iron Law
 
-No production behavior without a failing test first. If implementation landed before the test, delete it and start over.
+No production behavior change without a failing test first. If a change landed before its test, delete the change and start over.
 
-## Red → Green → Refactor
+## Workflow
 
-1. **RED** — One minimal test for one behavior. `@DisplayName` + AssertJ (`Assertions.assertThat`).
+### 1. Lock in current logic (if untested)
+
+Before changing behavior, check for coverage of the logic you will touch.
+
+- If tests are missing, **write characterization tests for the current behavior first**.
+- Those tests should **pass against today's code** (document what it does now).
+- Do not change production code in this step.
+
+### 2. Red → Implement → Green (for new or changed behavior)
+
+1. **RED** — One minimal test for the desired new/changed behavior. `@DisplayName` + AssertJ (`Assertions.assertThat`).
 2. **Verify RED** — Fails for missing behavior, not a typo/setup error.
-3. **GREEN** — Smallest change that passes.
-4. **Verify GREEN** — Re-run; all must pass.
+3. **IMPLEMENT** — Smallest production change that passes.
+4. **Verify GREEN** — Re-run; all must pass (including characterization tests from step 1).
 5. **REFACTOR** — Clean up only after green; no new behavior.
 
 ```bash
@@ -52,7 +62,8 @@ void testSnapshot() {
 
 ## Done checklist
 
-- [ ] Behavior had a failing test first
+- [ ] Untested current logic was characterized with passing tests before changes
+- [ ] New/changed behavior had a failing test before implementation
 - [ ] Minimal green; `./gradlew :core:test` clean
 - [ ] Feature work: report **tests created**, **gaps**, **redundant** (`@DisplayName` titles); ask before filling/removing
 

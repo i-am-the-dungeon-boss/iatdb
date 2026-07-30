@@ -7,7 +7,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,11 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(GdxTestExtension.class)
 class EndToEndWorkflowTest {
-
-    @AfterEach
-    void cleanup() {
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("Boss victory snapshot enables echo boss on next depth-5 visit")
@@ -42,7 +36,7 @@ class EndToEndWorkflowTest {
 
         EchoBoss boss = EchoBossSpawner.create(5);
         Assertions.assertThat(boss.getEcho()).isEqualTo(pending);
-        Assertions.assertThat(boss.HT).isGreaterThan(pending.ht);
+        Assertions.assertThat(boss.HT).isEqualTo(EchoBoss.scaledHT(pending, 5));
     }
 
     @Test

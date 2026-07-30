@@ -12,25 +12,19 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPolicyStatusBuilderTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("nearestTerrainCell returns closest matching terrain within max distance")
@@ -182,6 +176,41 @@ class EchoPolicyStatusBuilderTest {
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("default");
+	}
+
+	@Test
+	@DisplayName("build marks selfSpeedGtEnemy when echo Ring of Haste outspeeds the hero")
+	void buildMarksSelfSpeedGtEnemyWithRingOfHaste() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		RingOfHaste ring = new RingOfHaste();
+		kit.belongings.ring = ring;
+		ring.activate(kit);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(
+				boss, EchoTestSupport.healCapabilityPolicy());
+
+		Assertions.assertThat(boss.speed()).isGreaterThan(hero.combatSpeed());
+		Assertions.assertThat(status.selfSpeedGtEnemy).isTrue();
+	}
+
+	@Test
+	@DisplayName("build clears selfSpeedGtEnemy when speeds are equal")
+	void buildClearsSelfSpeedGtEnemyWhenEqual() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(
+				boss, EchoTestSupport.healCapabilityPolicy());
+
+		Assertions.assertThat(boss.speed()).isEqualTo(hero.combatSpeed());
+		Assertions.assertThat(status.selfSpeedGtEnemy).isFalse();
 	}
 
 	private static void drainRangedCharges(Hero echoHero) {

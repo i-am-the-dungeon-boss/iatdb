@@ -17,12 +17,14 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.ShadowClone;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
@@ -50,19 +52,12 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKn
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoRoleExecutorTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("WAIT virtual tag spends the turn without attacking")
@@ -544,13 +539,60 @@ class EchoRoleExecutorTest {
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
 				boss.getEchoPolicy(),
-				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("RANGED")).build(),
+				new EchoPolicyStatus.Builder().distance(2).rolesReady(java.util.Set.of("RANGED")).build(),
 				new EchoPolicyChoice("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
 		// Borrowed boss sprite must not stick on the phantom hero.
 		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+	}
+
+	@Test
+	@DisplayName("RANGED SpiritBow at melee range falls through so mob AI can melee")
+	void rangedSpiritBowAtMeleeFallsThrough() {
+		Hero hero = huntressHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, rangedBowPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isEqualTo(1);
+		Assertions.assertThat(hero.invisible).isEqualTo(0);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().distance(1).rolesReady(java.util.Set.of("RANGED")).build(),
+				new EchoPolicyChoice("RANGED", "default", null));
+
+		Assertions.assertThat(spent).isFalse();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(SpiritBow.class)).isNotNull();
+	}
+
+	@Test
+	@DisplayName("RANGED SpiritBow at melee still fires when the hero is invisible")
+	void rangedSpiritBowAtMeleeFiresWhenHeroInvisible() {
+		Hero hero = huntressHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, rangedBowPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isEqualTo(1);
+		hero.invisible = 1;
+		boss.noteEnemySeenAt(hero.pos);
+		boss.setBlindDefenseShotsLeftForTests(2);
+		boss.getEchoHero().invisible = 1; // guarantee hit
+
+		int hpBefore = hero.HP;
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder()
+						.distance(1)
+						.enemyInLos(false)
+						.enemyStatuses(java.util.Set.of("invisible"))
+						.rolesReady(java.util.Set.of("RANGED"))
+						.build(),
+				new EchoPolicyChoice("RANGED", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
 	}
 
 	@Test
@@ -572,7 +614,7 @@ class EchoRoleExecutorTest {
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
 				boss.getEchoPolicy(),
-				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("RANGED")).build(),
+				new EchoPolicyStatus.Builder().distance(2).rolesReady(java.util.Set.of("RANGED")).build(),
 				new EchoPolicyChoice("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
@@ -857,6 +899,40 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNull();
 	}
 
+	@Test
+	@DisplayName("ARMOR_ABILITY ShadowClone spawns ally via executor without a targeting reticle")
+	void armorAbilityShadowCloneSpawnsViaExecutor() {
+		Hero hero = rogueHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, armorRoguePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		RogueArmor armor = new RogueArmor();
+		armor.charge = 100;
+		kit.belongings.armor = armor;
+		armor.activate(kit);
+		kit.armorAbility = new ShadowClone();
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
+				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(armor.charge).isLessThan(100);
+		Assertions.assertThat(boss.isBusy()).isFalse();
+		ShadowClone.ShadowAlly ally = null;
+		for (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m : Dungeon.level.mobs) {
+			if (m instanceof ShadowClone.ShadowAlly) {
+				ally = (ShadowClone.ShadowAlly) m;
+				break;
+			}
+		}
+		Assertions.assertThat(ally).isNotNull();
+		Assertions.assertThat(Dungeon.level.distance(boss.pos, ally.pos)).isEqualTo(1);
+	}
+
 	private static Hero clericHero() {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
@@ -996,6 +1072,14 @@ class EchoRoleExecutorTest {
 				.put("ARMOR_ABILITY", new JSONObject()
 						.put("pick", "FIRST_LEGAL")
 						.put("items", new JSONArray().put("WarriorArmor")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy armorRoguePolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("ARMOR_ABILITY", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("RogueArmor")))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 

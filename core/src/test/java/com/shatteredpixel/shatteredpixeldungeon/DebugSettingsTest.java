@@ -36,7 +36,6 @@ class DebugSettingsTest {
 	@AfterEach
 	void cleanup() {
 		DebugSettings.resetForTests();
-		EchoTestSupport.resetWorkflowState();
 		InterlevelScene.mode = InterlevelScene.Mode.NONE;
 		InterlevelScene.returnDepth = 0;
 		InterlevelScene.returnBranch = -1;
@@ -205,6 +204,15 @@ class DebugSettingsTest {
 		Assertions.assertThat(hero.belongings.getItem(WandOfFireblast.class)).isNotNull();
 		Assertions.assertThat(hero.belongings.getItem(WandOfMagicMissile.class)).isNotNull();
 		Assertions.assertThat(hero.belongings.getItem(StoneOfBlink.class)).isNotNull();
+
+		for (Item item : hero.belongings) {
+			if (item instanceof Ankh || item instanceof PotionBandolier) {
+				continue;
+			}
+			Assertions.assertThat(item.isIdentified())
+					.as("debug bag %s must be identified for the hero", item.getClass().getSimpleName())
+					.isTrue();
+		}
 
 		int potionKinds = 0;
 		for (Item item : hero.belongings) {

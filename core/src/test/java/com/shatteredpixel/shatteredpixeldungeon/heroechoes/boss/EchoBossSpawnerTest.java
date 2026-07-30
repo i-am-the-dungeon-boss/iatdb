@@ -30,8 +30,6 @@ class EchoBossSpawnerTest {
 	@AfterEach
 	void cleanup() {
 		BossHealthBar.assignBoss(null);
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

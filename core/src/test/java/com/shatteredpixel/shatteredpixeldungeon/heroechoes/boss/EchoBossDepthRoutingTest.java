@@ -12,18 +12,12 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
 import com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossDepthRoutingTest {
-
-    @AfterEach
-    void reset() {
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("All boss depths resolve pending echo via prefetch when snapshot exists")

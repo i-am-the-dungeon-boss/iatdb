@@ -25,7 +25,6 @@ class PrisonBossEchoSplitTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Statistics.qualifiedForBossChallengeBadge = false;
 	}
 

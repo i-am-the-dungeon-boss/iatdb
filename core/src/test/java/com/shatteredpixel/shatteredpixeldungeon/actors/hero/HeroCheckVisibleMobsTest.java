@@ -28,8 +28,6 @@ class HeroCheckVisibleMobsTest {
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
 		QuickSlotButton.reset();
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

@@ -13,7 +13,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,11 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoSnapshotRoundTripTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("boss-win hero with inventory snapshots and reloads equipped and backpack items")

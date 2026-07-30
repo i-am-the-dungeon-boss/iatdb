@@ -30,7 +30,6 @@ class EchoHeroSnapshotTest {
 		ActionIndicator.clearAction();
 		GameScene.updateItemDisplays = false;
 		Belongings.bundleRestoring = false;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

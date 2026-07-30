@@ -5,11 +5,12 @@ import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugArenaItems;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugArenaItems;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
@@ -30,6 +31,8 @@ import java.util.List;
 public class DebugArenaLevel extends Level {
 
 	private static final int SIZE = 34;
+
+	private Actor endlessRecharge;
 
 	{
 		color1 = 0x534f3e;
@@ -113,7 +116,47 @@ public class DebugArenaLevel extends Level {
 
 	@Override
 	public Actor addRespawner() {
-		return null;
+		if (!DebugSettings.isDebugBuild()) {
+			return null;
+		}
+		if (endlessRecharge == null) {
+			endlessRecharge = new EndlessRecharge();
+			Actor.add(endlessRecharge);
+		} else {
+			Actor.add(endlessRecharge);
+		}
+		EndlessRecharge.refreshAll();
+		return endlessRecharge;
+	}
+
+	/**
+	 * Keeps {@link LockedFloor} regen continuous in the debug arena so natural
+	 * chargers do not stall when the boss-fight window expires. Does not hard-fill
+	 * item charges.
+	 */
+	public static class EndlessRecharge extends Actor {
+
+		{
+			actPriority = BUFF_PRIO;
+		}
+
+		@Override
+		public boolean act() {
+			refreshAll();
+			spend(TICK);
+			return true;
+		}
+
+		public static void refreshAll() {
+			if (Dungeon.hero == null) {
+				return;
+			}
+			LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
+			if (lock != null) {
+				// Caps at 50; refresh every turn so regenOn stays true without boss hits.
+				lock.addTime(50f);
+			}
+		}
 	}
 
 	@Override

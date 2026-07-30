@@ -19,7 +19,6 @@ class RankedEchoFetchIntegrationTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
 	}
 

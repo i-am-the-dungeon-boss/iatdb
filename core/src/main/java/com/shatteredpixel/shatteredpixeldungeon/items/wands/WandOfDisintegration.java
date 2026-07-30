@@ -35,12 +35,14 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Callback;
 import com.watabou.utils.Random;
 
@@ -54,15 +56,14 @@ public class WandOfDisintegration extends DamageWand {
 		collisionProperties = Ballistica.WONT_STOP;
 	}
 
-
-	public int min(int lvl){
-		return 2+lvl;
+	public int min(int lvl) {
+		return 2 + lvl;
 	}
 
-	public int max(int lvl){
-		return 8+4*lvl;
+	public int max(int lvl) {
+		return 8 + 4 * lvl;
 	}
-	
+
 	@Override
 	public int targetingPos(Hero user, int dst) {
 		if (!cursed || !cursedKnown) {
@@ -74,31 +75,33 @@ public class WandOfDisintegration extends DamageWand {
 
 	@Override
 	public void onZap(Ballistica beam) {
-		
+
 		boolean terrainAffected = false;
-		
+
 		int level = buffedLvl();
-		
+
 		int maxDistance = Math.min(distance(), beam.dist);
-		
+
 		ArrayList<Char> chars = new ArrayList<>();
 
 		Blob web = Dungeon.level.blobs.get(Web.class);
 
 		int terrainPassed = 2, terrainBonus = 0;
 		for (int c : beam.subPath(1, maxDistance)) {
-			
-			Char ch;
-			if ((ch = Actor.findChar( c )) != null) {
 
-				//we don't want to count passed terrain after the last enemy hit. That would be a lot of bonus levels.
-				//terrainPassed starts at 2, equivalent of rounding up when /3 for integer arithmetic.
-				terrainBonus += terrainPassed/3;
-				terrainPassed = terrainPassed%3;
+			Char ch;
+			if ((ch = Actor.findChar(c)) != null) {
+
+				// we don't want to count passed terrain after the last enemy hit. That would be
+				// a lot of bonus levels.
+				// terrainPassed starts at 2, equivalent of rounding up when /3 for integer
+				// arithmetic.
+				terrainBonus += terrainPassed / 3;
+				terrainPassed = terrainPassed % 3;
 
 				if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).PASSIVE
-						&& !(Dungeon.level.mapped[c] || Dungeon.level.visited[c])){
-					//avoid harming undiscovered passive chars
+						&& !(Dungeon.level.mapped[c] || Dungeon.level.visited[c])) {
+					// avoid harming undiscovered passive chars
 				} else {
 					chars.add(ch);
 				}
@@ -110,48 +113,61 @@ public class WandOfDisintegration extends DamageWand {
 
 			if (Dungeon.level.flamable[c]) {
 
-				Dungeon.level.destroy( c );
-				GameScene.updateMap( c );
+				Dungeon.level.destroy(c);
+				GameScene.updateMap(c);
 				terrainAffected = true;
-				
+
 			}
-			
-			CellEmitter.center( c ).burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );
+
+			Emitter beamFx = CellEmitter.center(c);
+			if (beamFx != null) {
+				beamFx.burst(PurpleParticle.BURST, Random.IntRange(1, 2));
+			}
 		}
-		
+
 		if (terrainAffected) {
 			Dungeon.observe();
 		}
-		
-		int lvl = level + (chars.size()-1) + terrainBonus;
+
+		int lvl = level + (chars.size() - 1) + terrainBonus;
 		for (Char ch : chars) {
 			wandProc(ch, chargesPerCast());
-			ch.damage( damageRoll(lvl), this );
-			ch.sprite.centerEmitter().burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );
-			ch.sprite.flash();
+			ch.damage(damageRoll(lvl), this);
+			if (ch.sprite != null) {
+				Emitter hitFx = ch.sprite.centerEmitter();
+				if (hitFx != null) {
+					hitFx.burst(PurpleParticle.BURST, Random.IntRange(1, 2));
+				}
+				ch.sprite.flash();
+			}
 		}
 	}
 
 	@Override
 	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
-		//no direct effect, see magesStaff.reachfactor
+		// no direct effect, see magesStaff.reachfactor
 	}
 
 	private int distance() {
-		return buffedLvl()*2 + 6;
+		return buffedLvl() * 2 + 6;
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		return Integer.toString(6 + level*2);
+		return Integer.toString(6 + level * 2);
 	}
 
 	@Override
 	public void fx(Ballistica beam, Callback callback) {
-		
+
 		int cell = beam.path.get(Math.min(beam.dist, distance()));
-		curUser.sprite.parent.add(new Beam.DeathRay(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld( cell )));
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
+		// Echo kit is headless unless the caller borrowed body.sprite; skip DeathRay
+		// but still apply the zap (ANDROID-1C).
+		if (UseContext.canWorldFx(curUser)) {
+			curUser.sprite.parent
+					.add(new Beam.DeathRay(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(cell)));
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
+		}
 		callback.call();
 	}
 
@@ -161,7 +177,7 @@ public class WandOfDisintegration extends DamageWand {
 		particle.am = 0.6f;
 		particle.setLifespan(1f);
 		particle.acc.set(10, -10);
-		particle.setSize( 0.5f, 3f);
+		particle.setSize(0.5f, 3f);
 		particle.shuffleXY(1f);
 	}
 

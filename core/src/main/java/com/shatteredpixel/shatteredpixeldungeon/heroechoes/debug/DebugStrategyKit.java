@@ -41,8 +41,10 @@ public final class DebugStrategyKit {
 	}
 
 	public static List<Item> createItems() {
-		Potion.initColors();
+		Potion.ensureColors();
 		// Potion.identify → setKnown needs a live Dungeon.hero (tests often have none).
+		// Clear stale Echo curUser so grantsPlayerKnowledge stays true for the kit.
+		Item.clearCurrent();
 		Hero previous = Dungeon.hero;
 		boolean stubbed = previous == null || !previous.isAlive();
 		if (stubbed) {
@@ -162,7 +164,11 @@ public final class DebugStrategyKit {
 						.put(new JSONObject().put("distance_gte", 2))
 						.put(new JSONObject().put("enemy_in_los", true))
 						.put(new JSONObject().put("role_ready", "RANGED"))), "enemy_cell"))
-				.put(reaction("kite_step", 73, "KEEP_DISTANCE", kiteEdgeWhen("KEEP_DISTANCE")));
+				.put(reaction("kite_step", 73, "KEEP_DISTANCE", kiteEdgeWhen("KEEP_DISTANCE")))
+				.put(reaction("melee_adjacent", 72, "MELEE", new JSONObject().put("all", new JSONArray()
+						.put(new JSONObject().put("distance_lte", 1))
+						.put(new JSONObject().put("enemy_status_none", new JSONArray().put("invisible")))
+						.put(new JSONObject().put("role_ready", "MELEE")))));
 
 		JSONObject positioning = new JSONObject()
 				.put("MAGE", new JSONObject().put("ideal_distance", 3).put("if_farther", "CLOSE_IN"))
@@ -195,7 +201,8 @@ public final class DebugStrategyKit {
 						.put(new JSONObject().put("self_status", "haste"))
 						.put(new JSONObject().put("self_status", "stamina"))
 						.put(new JSONObject().put("enemy_status_any",
-								new JSONArray().put("paralysed").put("frozen").put("terror")))))
+								new JSONArray().put("paralysed").put("frozen").put("terror")))
+						.put(new JSONObject().put("self_speed_gt_enemy", true))))
 				.put(new JSONObject().put("role_ready", role))
 				.put(new JSONObject().put("role_ready", "RANGED")));
 	}

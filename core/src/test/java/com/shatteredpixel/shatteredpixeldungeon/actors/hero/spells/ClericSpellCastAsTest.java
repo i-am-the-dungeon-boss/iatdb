@@ -10,19 +10,12 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class ClericSpellCastAsTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("Echo Sunray castAs damages the player from boss body aim")

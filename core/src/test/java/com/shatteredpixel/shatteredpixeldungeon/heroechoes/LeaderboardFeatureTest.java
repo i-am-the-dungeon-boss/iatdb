@@ -31,7 +31,6 @@ class LeaderboardFeatureTest {
     void cleanup() {
         FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
         EchoTestSupport.deleteRecursively(new File("app-files"));
-        EchoTestSupport.resetWorkflowState();
     }
 
     @Test

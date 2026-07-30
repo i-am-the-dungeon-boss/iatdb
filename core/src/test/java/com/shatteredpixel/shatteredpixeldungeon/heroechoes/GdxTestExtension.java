@@ -12,11 +12,16 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.noosa.Game;
 import com.watabou.utils.FileUtils;
 
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-/** Initializes libGDX headless runtime once for unit tests that touch game actors. */
-public class GdxTestExtension implements BeforeAllCallback {
+/**
+ * Initializes libGDX headless once, and resets shared game statics around every
+ * test so cases stay isolated ({@link EchoTestSupport#resetWorkflowState()}).
+ */
+public class GdxTestExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
 
 	private static boolean initialized;
 
@@ -25,11 +30,23 @@ public class GdxTestExtension implements BeforeAllCallback {
 		initIfNeeded();
 	}
 
+	@Override
+	public void beforeEach(ExtensionContext context) {
+		EchoTestSupport.resetWorkflowState();
+	}
+
+	@Override
+	public void afterEach(ExtensionContext context) {
+		EchoTestSupport.resetWorkflowState();
+	}
+
 	public static void initIfNeeded() {
-		if (initialized) return;
+		if (initialized)
+			return;
 		HeadlessApplicationConfiguration config = new HeadlessApplicationConfiguration();
 		config.updatesPerSecond = 30;
-		new HeadlessApplication(new ApplicationAdapter() {}, config);
+		new HeadlessApplication(new ApplicationAdapter() {
+		}, config);
 		FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
 		Game.version = EchoTestSupport.TEST_GAME_VERSION;
 		Messages.setup(Languages.ENGLISH);

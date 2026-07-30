@@ -44,6 +44,8 @@ import java.util.Map;
 
 public class EchoBoss extends Mob {
 
+    public static final float BOSS_HP_MULTIPLIER = 1.3f;
+
     private static final String ECHO = "echo";
     private static final String ECHO_POLICY = "echo_policy";
 
@@ -134,11 +136,12 @@ public class EchoBoss extends Mob {
         initFromEcho(echo, depth, policy, true);
     }
 
-    /** Boss HT matches the captured hero HT (no depth / boss multiplier). */
+    /** Boss HT = captured HT × {@link #BOSS_HP_MULTIPLIER} × depth bonus. */
     public static int scaledHT(Echo echo, int depth) {
         if (echo == null)
             return 200;
-        return Math.max(1, echo.ht);
+        float depthBonus = 1f + depth * 0.02f;
+        return Math.round(echo.ht * BOSS_HP_MULTIPLIER * depthBonus);
     }
 
     private void initFromEcho(Echo echo, int depth, EchoPolicy policy, boolean scaleHp) {
@@ -600,6 +603,15 @@ public class EchoBoss extends Mob {
 
     public boolean isBusy() {
         return busy;
+    }
+
+    /**
+     * Drops a pending VFX/turn gate without spending time — refused
+     * {@link com.shatteredpixel.shatteredpixeldungeon.items.UseContext} actions.
+     */
+    public void cancelBusy() {
+        busy = false;
+        vfxOwnsTurn = false;
     }
 
     /** Clears busy and advances actor time after a deferred throw/zap. */

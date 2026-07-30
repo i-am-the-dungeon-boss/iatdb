@@ -14,7 +14,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSt
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,11 +23,6 @@ import java.util.List;
 
 @ExtendWith(GdxTestExtension.class)
 class DebugEchoArsenalPotionRolesTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("healing potions are classified as drink, gas potions and brews as throw")
@@ -67,23 +61,30 @@ class DebugEchoArsenalPotionRolesTest {
 	}
 
 	@Test
-	@DisplayName("cycle policy puts bombs, missiles, and throwable stones on THROW")
-	void cyclePolicyPutsNonPotionThrowablesOnThrowRole() {
+	@DisplayName("cycle policy puts bombs on BOMB role (light+throw), other throwables on THROW")
+	void cyclePolicyPutsBombsOnBombRole() {
 		List<Item> items = new ArrayList<>();
 		items.add(new Bomb());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bombs.Firebomb());
 		items.add(new ThrowingStone());
 		items.add(new StoneOfBlast());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify());
 
-		JSONObject caps = DebugEchoArsenal.cyclePolicy(items).root().getJSONObject("capabilities");
+		JSONObject root = DebugEchoArsenal.cyclePolicy(items).root();
+		JSONObject caps = root.getJSONObject("capabilities");
+		JSONArray bombItems = caps.getJSONObject(DebugEchoArsenal.ROLE_BOMB).getJSONArray("items");
 		JSONArray throwItems = caps.getJSONObject(DebugEchoArsenal.ROLE_THROW).getJSONArray("items");
 		JSONArray other = caps.getJSONObject(DebugEchoArsenal.ROLE).getJSONArray("items");
 
+		Assertions.assertThat(jsonStrings(bombItems))
+				.containsExactlyInAnyOrder("Bomb", "Firebomb");
 		Assertions.assertThat(jsonStrings(throwItems))
-				.containsExactlyInAnyOrder("Bomb", "ThrowingStone", "StoneOfBlast");
+				.containsExactlyInAnyOrder("ThrowingStone", "StoneOfBlast");
 		Assertions.assertThat(jsonStrings(other))
 				.containsExactlyInAnyOrder("WandOfMagicMissile", "ScrollOfIdentify");
+		Assertions.assertThat(root.getJSONObject("selection").getJSONArray("default_roles").getString(0))
+				.isEqualTo(DebugEchoArsenal.ROLE_BOMB);
 	}
 
 	@Test
@@ -99,6 +100,20 @@ class DebugEchoArsenalPotionRolesTest {
 				.getJSONObject(DebugEchoArsenal.ROLE_THROW);
 
 		Assertions.assertThat(throwCap.optString("hazard", "")).isEmpty();
+	}
+
+	@Test
+	@DisplayName("cycle policy BOMB role has no AOE hazard so bombs aim at the hero cell")
+	void cyclePolicyBombRoleHasNoAoeHazard() {
+		List<Item> items = new ArrayList<>();
+		items.add(new Bomb());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bombs.ArcaneBomb());
+
+		JSONObject bombCap = DebugEchoArsenal.cyclePolicy(items).root()
+				.getJSONObject("capabilities")
+				.getJSONObject(DebugEchoArsenal.ROLE_BOMB);
+
+		Assertions.assertThat(bombCap.optString("hazard", "")).isEmpty();
 	}
 
 	private static List<String> jsonStrings(JSONArray arr) {

@@ -12,18 +12,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossAnkhTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("blessed ankh revives EchoBoss at quarter HP with invulnerability")

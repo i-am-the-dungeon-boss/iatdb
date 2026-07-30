@@ -3,18 +3,12 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPlayModePathsTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("ranked and solo use separate echo directories")

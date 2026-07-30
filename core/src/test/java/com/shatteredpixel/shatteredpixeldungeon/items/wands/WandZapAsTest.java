@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
@@ -32,8 +33,6 @@ class WandZapAsTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test
@@ -329,6 +328,27 @@ class WandZapAsTest {
 		Assertions.assertThatCode(() -> wand.zapAs(UseContext.echo(boss), player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(wand.curCharges).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("Disintegration fx skips DeathRay but still callbacks when curUser sprite has no parent")
+	void disintegrationFxSkipsDeathRayWhenCurUserHasNoWorldFx() {
+		Hero player = mageHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		Assertions.assertThat(kit.sprite).isNull();
+
+		WandOfDisintegration wand = new WandOfDisintegration();
+		wand.setCurrent(kit);
+		Ballistica beam = new Ballistica(boss.pos, player.pos, Ballistica.WONT_STOP);
+		boolean[] called = { false };
+
+		Assertions.assertThatCode(() -> wand.fx(beam, () -> called[0] = true))
+				.doesNotThrowAnyException();
+		Assertions.assertThat(called[0]).isTrue();
 	}
 
 	private static Hero mageHero() {

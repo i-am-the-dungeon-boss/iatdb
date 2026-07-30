@@ -43,7 +43,6 @@ class PrisonBossTenguFightTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Statistics.qualifiedForBossChallengeBadge = false;
 		TargetHealthIndicator.instance = null;
 		Camera.reset();

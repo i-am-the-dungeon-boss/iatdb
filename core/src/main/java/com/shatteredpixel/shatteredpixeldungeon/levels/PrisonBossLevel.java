@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
@@ -433,12 +434,27 @@ public class PrisonBossLevel extends Level {
 				if (spawnPos < 0) {
 					return;
 				}
-				sealPrisonBossArena();
-				if (EchoBossSpawner.shouldSpawn()) {
-					startEchoFight(spawnPos);
-				} else {
-					startTenguFight(spawnPos);
+				// Seal first so re-entry while recovery runs is a no-op (locked).
+				if (locked) {
+					return;
 				}
+				sealPrisonBossArena();
+				EchoBossSpawner.ensureReadyThen(new EchoBossSpawner.SpawnRecoveryActions() {
+					@Override
+					public void onEcho() {
+						startEchoFight(spawnPos);
+					}
+
+					@Override
+					public void onDefault() {
+						startTenguFight(spawnPos);
+					}
+
+					@Override
+					public void onAbort() {
+						EchoBossFetchRecovery.abortToTitle();
+					}
+				});
 				break;
 			}
 
@@ -700,7 +716,8 @@ public class PrisonBossLevel extends Level {
 	@Override
 	protected void createMobs() {
 		// Echo fights never prepare Tengu; keep him out of the level entirely.
-		if (EchoBossSpawner.shouldSpawn()) {
+		// Tengu is only prepared when lookup was NOT_FOUND (default boss path).
+		if (EchoBossSpawner.shouldSpawn() || !EchoBossSpawner.shouldSpawnDefault()) {
 			tengu = null;
 			return;
 		}

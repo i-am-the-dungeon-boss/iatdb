@@ -45,14 +45,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 public class ExoticPotion extends Potion {
-	
+
 	{
-		//sprite = equivalent potion sprite but one row down
+		// sprite = equivalent potion sprite but one row down
 	}
-	
-	public static final LinkedHashMap<Class<?extends Potion>, Class<?extends ExoticPotion>> regToExo = new LinkedHashMap<>();
-	public static final LinkedHashMap<Class<?extends ExoticPotion>, Class<?extends Potion>> exoToReg = new LinkedHashMap<>();
-	static{
+
+	public static final LinkedHashMap<Class<? extends Potion>, Class<? extends ExoticPotion>> regToExo = new LinkedHashMap<>();
+	public static final LinkedHashMap<Class<? extends ExoticPotion>, Class<? extends Potion>> exoToReg = new LinkedHashMap<>();
+	static {
 		regToExo.put(PotionOfStrength.class, PotionOfMastery.class);
 		exoToReg.put(PotionOfMastery.class, PotionOfStrength.class);
 
@@ -76,7 +76,7 @@ public class ExoticPotion extends Potion {
 
 		regToExo.put(PotionOfInvisibility.class, PotionOfShroudingFog.class);
 		exoToReg.put(PotionOfShroudingFog.class, PotionOfInvisibility.class);
-		
+
 		regToExo.put(PotionOfLevitation.class, PotionOfStormClouds.class);
 		exoToReg.put(PotionOfStormClouds.class, PotionOfLevitation.class);
 
@@ -90,20 +90,23 @@ public class ExoticPotion extends Potion {
 		exoToReg.put(PotionOfDivineInspiration.class, PotionOfExperience.class);
 
 	}
-	
+
 	@Override
 	public boolean isKnown() {
-		return anonymous || (handler != null && handler.isKnown( exoToReg.get(this.getClass()) ));
+		return anonymous || (handler != null && handler.isKnown(exoToReg.get(this.getClass())));
 	}
-	
+
 	@Override
 	public void setKnown() {
+		if (!Item.grantsPlayerKnowledge()) {
+			return;
+		}
 		if (!isKnown()) {
 			handler.know(exoToReg.get(this.getClass()));
 			updateQuickslot();
 		}
 	}
-	
+
 	@Override
 	public void reset() {
 		super.reset();
@@ -112,30 +115,30 @@ public class ExoticPotion extends Potion {
 			color = handler.label(exoToReg.get(this.getClass()));
 		}
 	}
-	
+
 	@Override
-	//20 gold more than its none-exotic equivalent
+	// 20 gold more than its none-exotic equivalent
 	public int value() {
 		return (Reflection.newInstance(exoToReg.get(getClass())).value() + 20) * quantity;
 	}
 
 	@Override
-	//4 more energy than its none-exotic equivalent
+	// 4 more energy than its none-exotic equivalent
 	public int energyVal() {
 		return (Reflection.newInstance(exoToReg.get(getClass())).energyVal() + 4) * quantity;
 	}
 
-	public static class PotionToExotic extends Recipe{
+	public static class PotionToExotic extends Recipe {
 
 		@Override
 		public boolean testIngredients(ArrayList<Item> ingredients) {
-			if (ingredients.size() == 1 && regToExo.containsKey(ingredients.get(0).getClass())){
+			if (ingredients.size() == 1 && regToExo.containsKey(ingredients.get(0).getClass())) {
 				return true;
 			}
 
 			return false;
 		}
-		
+
 		@Override
 		public int cost(ArrayList<Item> ingredients) {
 			return 4;
@@ -143,8 +146,8 @@ public class ExoticPotion extends Potion {
 
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
-			for (Item i : ingredients){
-				i.quantity(i.quantity()-1);
+			for (Item i : ingredients) {
+				i.quantity(i.quantity() - 1);
 			}
 
 			return Reflection.newInstance(regToExo.get(ingredients.get(0).getClass()));

@@ -41,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
@@ -66,6 +67,7 @@ public class WildMagic extends ArmorAbility {
 		Char body = ctx.body;
 		Hero kit = ctx.kit;
 		if (target == null) {
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -73,6 +75,7 @@ public class WildMagic extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "self_target"));
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -120,6 +123,7 @@ public class WildMagic extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_wands"));
 			}
+			ctx.turns.cancelBusy();
 			return;
 		}
 
@@ -146,92 +150,110 @@ public class WildMagic extends ArmorAbility {
 
 		Ballistica aim = new Ballistica(body.pos, cell, cur.collisionProperties(cell));
 
-		if (body.sprite != null) {
-			body.sprite.zap(cell);
+		// Wand.fx / CursedWand use curUser/kit.sprite; Echo kit is headless — borrow
+		// body.
+		int savedPos = kit.pos;
+		CharSprite savedSprite = kit.sprite;
+		boolean borrow = body != kit;
+		if (borrow) {
+			kit.pos = body.pos;
+			kit.sprite = body.sprite;
 		}
+		try {
+			// Hero armor UI sets curUser; Echo activateAs does not — wand.fx needs it.
+			cur.setCurrent(kit);
+			if (UseContext.canWorldFx(kit)) {
+				kit.sprite.zap(cell);
+			}
 
-		float startTime = Game.timeTotal;
-		if (cur.tryToZap(kit, cell)) {
-			if (!cur.cursed) {
-				if (body.sprite != null && body.sprite.parent != null) {
-					cur.fx(aim, new Callback() {
-						@Override
-						public void call() {
-							cur.onZap(aim);
-							boolean alsoCursedZap = ctx.heroFX
-									&& Random.Float() < WondrousResin.extraCurseEffectChance();
-							if (ctx.heroFX && Game.timeTotal - startTime < 0.33f) {
-								body.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
+			float startTime = Game.timeTotal;
+			if (cur.tryToZap(kit, cell)) {
+				if (!cur.cursed) {
+					if (UseContext.canWorldFx(kit)) {
+						cur.fx(aim, new Callback() {
+							@Override
+							public void call() {
+								cur.onZap(aim);
+								boolean alsoCursedZap = ctx.heroFX
+										&& Random.Float() < WondrousResin.extraCurseEffectChance();
+								if (ctx.heroFX && Game.timeTotal - startTime < 0.33f) {
+									body.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
+										@Override
+										protected void onComplete() {
+											if (alsoCursedZap) {
+												WondrousResin.forcePositive = true;
+												CursedWand.cursedZap(cur,
+														kit,
+														new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
+														new Callback() {
+															@Override
+															public void call() {
+																WondrousResin.forcePositive = false;
+																afterZap(cur, wands, ctx, cell);
+															}
+														});
+											} else {
+												afterZap(cur, wands, ctx, cell);
+											}
+										}
+									});
+								} else {
+									if (alsoCursedZap) {
+										WondrousResin.forcePositive = true;
+										CursedWand.cursedZap(cur,
+												kit,
+												new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
+												new Callback() {
+													@Override
+													public void call() {
+														WondrousResin.forcePositive = false;
+														afterZap(cur, wands, ctx, cell);
+													}
+												});
+									} else {
+										afterZap(cur, wands, ctx, cell);
+									}
+								}
+							}
+						});
+					} else {
+						cur.onZap(aim);
+						afterZap(cur, wands, ctx, cell);
+					}
+
+				} else {
+					if (UseContext.canWorldFx(kit)) {
+						CursedWand.cursedZap(cur,
+								kit,
+								new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
+								new Callback() {
 									@Override
-									protected void onComplete() {
-										if (alsoCursedZap) {
-											WondrousResin.forcePositive = true;
-											CursedWand.cursedZap(cur,
-													kit,
-													new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
-													new Callback() {
-														@Override
-														public void call() {
-															WondrousResin.forcePositive = false;
-															afterZap(cur, wands, ctx, cell);
-														}
-													});
+									public void call() {
+										if (ctx.heroFX && Game.timeTotal - startTime < 0.33f) {
+											body.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
+												@Override
+												protected void onComplete() {
+													afterZap(cur, wands, ctx, cell);
+												}
+											});
 										} else {
 											afterZap(cur, wands, ctx, cell);
 										}
 									}
 								});
-							} else {
-								if (alsoCursedZap) {
-									WondrousResin.forcePositive = true;
-									CursedWand.cursedZap(cur,
-											kit,
-											new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
-											new Callback() {
-												@Override
-												public void call() {
-													WondrousResin.forcePositive = false;
-													afterZap(cur, wands, ctx, cell);
-												}
-											});
-								} else {
-									afterZap(cur, wands, ctx, cell);
-								}
-							}
-						}
-					});
-				} else {
-					cur.onZap(aim);
-					afterZap(cur, wands, ctx, cell);
+					} else {
+						cur.onZap(aim);
+						afterZap(cur, wands, ctx, cell);
+					}
 				}
-
 			} else {
-				if (body.sprite != null && body.sprite.parent != null) {
-					CursedWand.cursedZap(cur,
-							kit,
-							new Ballistica(body.pos, cell, Ballistica.MAGIC_BOLT),
-							new Callback() {
-								@Override
-								public void call() {
-									if (ctx.heroFX && Game.timeTotal - startTime < 0.33f) {
-										body.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
-											@Override
-											protected void onComplete() {
-												afterZap(cur, wands, ctx, cell);
-											}
-										});
-									} else {
-										afterZap(cur, wands, ctx, cell);
-									}
-								}
-							});
-				} else {
-					cur.onZap(aim);
-					afterZap(cur, wands, ctx, cell);
-				}
+				afterZap(cur, wands, ctx, cell);
 			}
-		} else {
-			afterZap(cur, wands, ctx, cell);
+		} finally {
+			if (borrow) {
+				kit.sprite = savedSprite;
+				kit.pos = savedPos;
+			}
 		}
 	}
 
@@ -249,21 +271,24 @@ public class WildMagic extends ArmorAbility {
 
 		Char ch = Actor.findChar(target);
 		if (!wands.isEmpty() && kit.isAlive()) {
-			Actor.add(new Actor() {
-				{
-					actPriority = VFX_PRIO - 1;
-				}
-
-				@Override
-				protected boolean act() {
-					wildMagicActor = this;
-					zapWand(wands, ctx, ch == null ? target : ch.pos);
-					Actor.remove(this);
-					return false;
-				}
-			});
 			if (ctx.heroFX) {
+				Actor.add(new Actor() {
+					{
+						actPriority = VFX_PRIO - 1;
+					}
+
+					@Override
+					protected boolean act() {
+						wildMagicActor = this;
+						zapWand(wands, ctx, ch == null ? target : ch.pos);
+						Actor.remove(this);
+						return false;
+					}
+				});
 				kit.next();
+			} else {
+				// Echo has no Hero ready/next wake — drain the chain synchronously.
+				zapWand(wands, ctx, ch == null ? target : ch.pos);
 			}
 		} else {
 			if (kit.buff(WildMagicTracker.class) != null) {
@@ -273,10 +298,10 @@ public class WildMagic extends ArmorAbility {
 				Item.updateQuickslot();
 			}
 			Invisibility.dispel(ctx.body);
-			if (Random.Int(4) >= kit.pointsInTalent(Talent.CONSERVED_MAGIC)) {
-				ctx.turns.spendAfterThrow(Actor.TICK);
-			} else if (ctx.heroFX) {
+			if (ctx.heroFX && Random.Int(4) < kit.pointsInTalent(Talent.CONSERVED_MAGIC)) {
 				kit.next();
+			} else {
+				ctx.turns.spendAfterThrow(Actor.TICK);
 			}
 		}
 	}

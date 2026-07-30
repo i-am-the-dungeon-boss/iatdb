@@ -87,6 +87,7 @@ public class Feint extends ArmorAbility {
 		Char body = ctx.body;
 		Hero kit = ctx.kit;
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 
@@ -94,6 +95,7 @@ public class Feint extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "too_far"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -102,6 +104,7 @@ public class Feint extends ArmorAbility {
 				PixelScene.shake(1, 1f);
 				GLog.w(Messages.get(this, "bad_location"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -109,6 +112,7 @@ public class Feint extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "bad_location"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -141,6 +145,8 @@ public class Feint extends ArmorAbility {
 		if (ctx.heroFX) {
 			kit.spend(1f);
 			kit.next();
+		} else {
+			ctx.turns.spendAfterThrow(1f);
 		}
 
 		int imageAttackPos;

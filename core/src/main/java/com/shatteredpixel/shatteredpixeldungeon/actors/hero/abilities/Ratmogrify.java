@@ -85,6 +85,7 @@ public class Ratmogrify extends ArmorAbility {
 		Hero kit = ctx.kit;
 
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 
@@ -94,12 +95,14 @@ public class Ratmogrify extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_target"));
 			}
+			refuse(ctx);
 			return;
 		} else if (ch == body) {
 			if (!kit.hasTalent(Talent.RATFORCEMENTS)) {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(this, "self_target"));
 				}
+				refuse(ctx);
 				return;
 			} else {
 				ArrayList<Integer> spawnPoints = new ArrayList<>();
@@ -132,12 +135,14 @@ public class Ratmogrify extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "cant_transform"));
 			}
+			refuse(ctx);
 			return;
 		} else if (ch instanceof TransmogRat) {
 			if (((TransmogRat) ch).allied || !kit.hasTalent(Talent.RATLOMACY)) {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(this, "cant_transform"));
 				}
+				refuse(ctx);
 				return;
 			} else {
 				((TransmogRat) ch).makeAlly();
@@ -153,6 +158,7 @@ public class Ratmogrify extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "too_strong"));
 			}
+			refuse(ctx);
 			return;
 		} else {
 			TransmogRat rat = new TransmogRat();
@@ -178,8 +184,12 @@ public class Ratmogrify extends ArmorAbility {
 			}
 
 			GameScene.add(rat);
+			// Headless tests have no GameScene — still register the actor
+			if (rat.sprite == null) {
+				Actor.add(rat);
+			}
 
-			if (ctx.heroFX) {
+			if (ctx.heroFX && TargetHealthIndicator.instance != null) {
 				TargetHealthIndicator.instance.target(null);
 			}
 			if (UseContext.canWorldFx(rat)) {

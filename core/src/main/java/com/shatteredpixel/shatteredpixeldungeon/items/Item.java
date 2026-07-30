@@ -470,7 +470,27 @@ public class Item implements Bundlable {
 	}
 
 	public final Item identify() {
-		return identify(true);
+		// Echo phantom kit (and other non-player curUsers) must not teach the
+		// living hero item identities via Catalog / potion-scroll-ring handlers.
+		return identify(grantsPlayerKnowledge());
+	}
+
+	/**
+	 * Whether {@link #identify()} / {@code setKnown()} should update the living
+	 * hero's knowledge. False while an Echo kit (or other non-player Hero) is
+	 * {@link #curUser}.
+	 */
+	public static boolean grantsPlayerKnowledge() {
+		return curUser == null || curUser == Dungeon.hero;
+	}
+
+	/**
+	 * Clears acting user/item — e.g. end-of-run
+	 * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings#identify()}.
+	 */
+	public static void clearCurrent() {
+		curUser = null;
+		curItem = null;
 	}
 
 	public Item identify(boolean byHero) {
@@ -712,6 +732,9 @@ public class Item implements Bundlable {
 		final float delay = castDelay(ctx.kit, cell);
 
 		castVisual(ctx.body.sprite, ctx.body.pos, dst, () -> {
+			// Re-apply throw intent here: MissileSprite can delay this callback, and
+			// static flags (e.g. Bomb.lightingFuse) must not be assumed to still hold.
+			beforeThrown(ctx, cell);
 			Hero kit = ctx.kit;
 			Char body = ctx.body;
 			int savedPos = kit.pos;
@@ -725,6 +748,7 @@ public class Item implements Bundlable {
 				AiItemActions.withUser(kit, Item.this, () -> {
 					Item i = Item.this.detach(kit.belongings.backpack);
 					if (i != null) {
+						prepareThrownItem(i, ctx, cell);
 						i.onThrow(cell);
 					}
 
@@ -750,6 +774,20 @@ public class Item implements Bundlable {
 			}
 		});
 		return true;
+	}
+
+	/**
+	 * Hook run immediately before inventory detach / {@link #onThrow} inside
+	 * {@link #throwAs} (after any missile VFX delay). Default no-op.
+	 */
+	protected void beforeThrown(UseContext ctx, int cell) {
+	}
+
+	/**
+	 * Hook after detach and before {@link #onThrow} so subclasses can mark the
+	 * specific thrown instance (important for stack splits).
+	 */
+	protected void prepareThrownItem(Item thrown, UseContext ctx, int cell) {
 	}
 
 	/** Player Hero convenience — aim already resolved; opens no selector. */

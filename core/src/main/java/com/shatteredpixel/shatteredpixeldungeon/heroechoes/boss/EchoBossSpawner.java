@@ -5,6 +5,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
@@ -17,6 +19,23 @@ import com.watabou.utils.DeviceCompat;
  */
 public final class EchoBossSpawner {
 
+	public enum BossSpawnChoice {
+		ECHO,
+		DEFAULT,
+		ABORT
+	}
+
+	/**
+	 * Callbacks when spawn must recover asynchronously (mid-seal on render thread).
+	 */
+	public interface SpawnRecoveryActions {
+		void onEcho();
+
+		void onDefault();
+
+		void onAbort();
+	}
+
 	private EchoBossSpawner() {
 	}
 
@@ -24,6 +43,14 @@ public final class EchoBossSpawner {
 		boolean spawn = canSpawnEchoBoss();
 		DeviceCompat.log("EchoBoss", shouldSpawnDecision(spawn));
 		return spawn;
+	}
+
+	/**
+	 * True only when the last lookup for the current depth was {@code NOT_FOUND}.
+	 * Regional default bosses must not spawn for ERROR / unset.
+	 */
+	public static boolean shouldSpawnDefault() {
+		return Dungeon.wasEchoLookupNotFound();
 	}
 
 	/** Diagnostic line for {@link #shouldSpawn()} (also used by tests). */
@@ -57,6 +84,93 @@ public final class EchoBossSpawner {
 			return "pending_depth_mismatch pending=" + pending.depth;
 		}
 		return "unknown";
+	}
+
+	/**
+	 * Resolves which boss to spawn. On unset/ERROR, reports to Sentry then runs
+	 * prefetch recovery (Retry/Abort). Sync — safe from Interlevel loading thread
+	 * and tests; mid-seal on the render thread should use
+	 * {@link #ensureReadyThen(SpawnRecoveryActions)} instead.
+	 */
+	public static BossSpawnChoice resolveBossSpawn(Dungeon.PrefetchErrorHandler onError) {
+		BossSpawnChoice ready = readyChoice();
+		if (ready != null) {
+			return ready;
+		}
+		reportSpawnRecoveryNeeded();
+		EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(Dungeon.depth, onError);
+		return choiceAfterRecovery(outcome);
+	}
+
+	/**
+	 * Like {@link #resolveBossSpawn} but never blocks the render thread: if a
+	 * fetch recovery is needed, runs it on a background thread and invokes
+	 * {@code actions} on the render thread when done.
+	 */
+	public static void ensureReadyThen(SpawnRecoveryActions actions) {
+		BossSpawnChoice ready = readyChoice();
+		if (ready == BossSpawnChoice.ECHO) {
+			actions.onEcho();
+			return;
+		}
+		if (ready == BossSpawnChoice.DEFAULT) {
+			actions.onDefault();
+			return;
+		}
+		reportSpawnRecoveryNeeded();
+		Thread recovery = new Thread(() -> {
+			EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
+					Dungeon.depth, EchoBossFetchRecovery::promptRetryOrAbort);
+			final BossSpawnChoice choice = choiceAfterRecovery(outcome);
+			com.watabou.noosa.Game.runOnRenderThread(() -> {
+				if (choice == BossSpawnChoice.ECHO) {
+					actions.onEcho();
+				} else if (choice == BossSpawnChoice.DEFAULT) {
+					actions.onDefault();
+				} else {
+					actions.onAbort();
+				}
+			});
+		}, "EchoBossSpawnRecovery");
+		recovery.setDaemon(true);
+		recovery.start();
+	}
+
+	private static BossSpawnChoice readyChoice() {
+		if (canSpawnEchoBoss()) {
+			return BossSpawnChoice.ECHO;
+		}
+		if (shouldSpawnDefault()) {
+			return BossSpawnChoice.DEFAULT;
+		}
+		return null;
+	}
+
+	private static BossSpawnChoice choiceAfterRecovery(EchoLookupOutcome outcome) {
+		if (outcome != null && outcome.isFound() && canSpawnEchoBoss()) {
+			return BossSpawnChoice.ECHO;
+		}
+		if (outcome != null && outcome.isNotFound() && shouldSpawnDefault()) {
+			return BossSpawnChoice.DEFAULT;
+		}
+		return BossSpawnChoice.ABORT;
+	}
+
+	private static void reportSpawnRecoveryNeeded() {
+		String reason;
+		if (Dungeon.isEchoLookupUnset()) {
+			reason = "unset";
+		} else if (Dungeon.wasEchoLookupError()) {
+			reason = "ERROR";
+		} else {
+			reason = "inconsistent";
+		}
+		String message = "echo boss spawn requires recovery"
+				+ " depth=" + Dungeon.depth
+				+ " mode=" + Dungeon.echoPlayMode
+				+ " reason=" + reason;
+		DeviceCompat.log("EchoBoss", message);
+		SentryCrashReporting.report(new IllegalStateException(message));
 	}
 
 	public static EchoBoss create(int depth) {

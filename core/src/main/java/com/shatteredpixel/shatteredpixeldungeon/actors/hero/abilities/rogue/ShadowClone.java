@@ -115,6 +115,10 @@ public class ShadowClone extends ArmorAbility {
 				ally = new ShadowAlly(kit.lvl);
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
+				// Headless tests have no GameScene — still register the actor
+				if (ally.sprite == null) {
+					Actor.add(ally);
+				}
 
 				ShadowAlly.appear(ally, ally.pos);
 
@@ -319,17 +323,20 @@ public class ShadowClone extends ArmorAbility {
 
 		private static void appear(Char ch, int pos) {
 
-			ch.sprite.interruptMotion();
+			if (ch.sprite != null) {
+				ch.sprite.interruptMotion();
+			}
 
 			if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[ch.pos]) {
 				Sample.INSTANCE.play(Assets.Sounds.PUFF);
 			}
 
 			ch.move(pos);
-			if (ch.pos == pos)
+			if (ch.pos == pos && ch.sprite != null) {
 				ch.sprite.place(pos);
+			}
 
-			if (Dungeon.level.heroFOV[pos] || ch == Dungeon.hero) {
+			if ((Dungeon.level.heroFOV[pos] || ch == Dungeon.hero) && ch.sprite != null) {
 				ch.sprite.emitter().burst(SmokeParticle.FACTORY, 10);
 			}
 		}

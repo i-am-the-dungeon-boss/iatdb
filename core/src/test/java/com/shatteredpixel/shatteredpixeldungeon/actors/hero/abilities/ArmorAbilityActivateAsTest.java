@@ -9,16 +9,19 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Feint;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Challenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpectralBlades;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WarpBeacon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WildMagic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.SmokeBomb;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Shockwave;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
@@ -32,7 +35,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,12 +43,6 @@ import java.util.Arrays;
 
 @ExtendWith(GdxTestExtension.class)
 class ArmorAbilityActivateAsTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("Hero activateAs applies Endure tracker on the hero and spends charge")
@@ -87,6 +83,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(boss.buff(NaturesPower.naturesPowerTracker.class)).isNotNull();
 		Assertions.assertThat(boss.getEchoHero().buff(NaturesPower.naturesPowerTracker.class)).isNull();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -105,6 +103,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNotNull();
 		Assertions.assertThat(boss.getEchoHero().buff(Endure.EndureTracker.class)).isNull();
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -131,6 +131,8 @@ class ArmorAbilityActivateAsTest {
 				player.buff(Paralysis.class) != null || player.buff(Cripple.class) != null)
 				.isTrue();
 		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -150,6 +152,8 @@ class ArmorAbilityActivateAsTest {
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -175,6 +179,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(boss.pos).isNotEqualTo(start);
 		Assertions.assertThat(boss.getEchoHero().pos).isEqualTo(kitPosBefore);
 		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(boss)).isEqualTo(dest);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -196,6 +202,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.pos).isEqualTo(dest);
 		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(boss)).isEqualTo(dest);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -219,42 +227,34 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(EchoTestSupport.stubSpriteJumpCalls(boss))
 				.isGreaterThan(jumpsBefore);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
-	@DisplayName("Echo WarpBeacon recall teleports boss to beacon like Hero tele option")
-	void echoWarpBeaconRecallTeleportsBody() {
+	@DisplayName("Echo Challenge activateAs clears busy so the boss turn can resume")
+	void echoChallengeClearsBusy() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+		boss.fieldOfView = new boolean[Dungeon.level.length()];
+		Arrays.fill(boss.fieldOfView, true);
+		Dungeon.level.heroFOV = boss.fieldOfView;
 
-		int beacon = boss.pos;
-		Dungeon.level.visited[beacon] = true;
-		Dungeon.level.mapped[beacon] = true;
-
-		MageArmor armor = new MageArmor();
+		DuelistArmor armor = new DuelistArmor();
 		armor.charge = 100;
-		Hero kit = boss.getEchoHero();
 
-		boolean placed = new WarpBeacon().activateAs(UseContext.echo(boss), armor, beacon);
-		Assertions.assertThat(placed).isTrue();
-		Assertions.assertThat(kit.buff(WarpBeacon.WarpBeaconTracker.class)).isNotNull();
+		boolean ok = new Challenge().activateAs(UseContext.echo(boss), armor, player.pos);
 
-		int away = emptyAdjacent(boss.pos);
-		Assertions.assertThat(away).isGreaterThanOrEqualTo(0);
-		boss.pos = away;
-		Dungeon.level.occupyCell(boss);
-
-		boolean recalled = new WarpBeacon().activateAs(UseContext.echo(boss), armor, boss.pos);
-		Assertions.assertThat(recalled).isTrue();
-		Assertions.assertThat(boss.pos).isEqualTo(beacon);
-		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(boss)).isEqualTo(beacon);
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(player.buff(Challenge.DuelParticipant.class)).isNotNull();
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
-	@DisplayName("Echo Feint moves boss body and leaves AfterImage at departure cell")
-	void echoFeintMovesBodyAndLeavesImage() {
+	@DisplayName("Echo SmokeBomb activateAs clears busy so the boss turn can resume")
+	void echoSmokeBombClearsBusy() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
@@ -262,26 +262,64 @@ class ArmorAbilityActivateAsTest {
 
 		int dest = emptyAdjacent(boss.pos);
 		Assertions.assertThat(dest).isGreaterThanOrEqualTo(0);
-		int start = boss.pos;
 
-		DuelistArmor armor = new DuelistArmor();
+		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new Feint().activateAs(UseContext.echo(boss), armor, dest);
+		boolean ok = new SmokeBomb().activateAs(UseContext.echo(boss), armor, dest);
+
+		Assertions.assertThat(ok).isTrue();
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
+	}
+
+	@Test
+	@DisplayName("Echo SmokeBomb shadow-step clears busy so the boss turn can resume")
+	void echoSmokeBombShadowStepClearsBusy() {
+		Hero player = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		Hero kit = boss.getEchoHero();
+		grantTalent(kit, Talent.SHADOW_STEP, 1);
+		kit.invisible = 1;
+
+		int dest = emptyAdjacent(boss.pos);
+		Assertions.assertThat(dest).isGreaterThanOrEqualTo(0);
+
+		RogueArmor armor = new RogueArmor();
+		armor.charge = 100;
+
+		boolean ok = new SmokeBomb().activateAs(UseContext.echo(boss), armor, dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.pos).isEqualTo(dest);
-		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(boss)).isEqualTo(dest);
-		Feint.AfterImage image = null;
-		for (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m : Dungeon.level.mobs) {
-			if (m instanceof Feint.AfterImage) {
-				image = (Feint.AfterImage) m;
-				break;
-			}
-		}
-		Assertions.assertThat(image).isNotNull();
-		Assertions.assertThat(image.pos).isEqualTo(start);
-		Assertions.assertThat(image.alignment).isEqualTo(boss.alignment);
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
+	}
+
+	@Test
+	@DisplayName("Echo WildMagic with Conserved Magic free finish clears busy")
+	void echoWildMagicConservedMagicClearsBusy() {
+		Hero player = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+		EchoTestSupport.attachInstantProjectileParent(boss);
+
+		Hero kit = boss.getEchoHero();
+		grantTalent(kit, Talent.CONSERVED_MAGIC, 4);
+		WandOfMagicMissile wand = new WandOfMagicMissile();
+		wand.cursed = false;
+		wand.curCharges = 5;
+		wand.collect(kit.belongings.backpack);
+
+		MageArmor armor = new MageArmor();
+		armor.charge = 100;
+
+		boolean ok = new WildMagic().activateAs(UseContext.echo(boss), armor, player.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -313,6 +351,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
 		Assertions.assertThat(boss.getEchoHero().pos).isNotEqualTo(boss.pos);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -389,6 +429,8 @@ class ArmorAbilityActivateAsTest {
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.buff(Invisibility.class)).isNull();
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	private static void assertHeroAbilityDispelsInvisibility(
@@ -467,6 +509,8 @@ class ArmorAbilityActivateAsTest {
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.buff(BodyForm.BodyFormBuff.class)).isNotNull();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
+	
+		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
@@ -483,6 +527,13 @@ class ArmorAbilityActivateAsTest {
 
 		Assertions.assertThat(ability.activateAs(UseContext.hero(hero), armor, hero.pos))
 				.isFalse();
+	}
+
+	private static void grantTalent(Hero kit, Talent talent, int points) {
+		while (kit.talents.size() < 4) {
+			kit.talents.add(new java.util.LinkedHashMap<>());
+		}
+		kit.talents.get(3).put(talent, points);
 	}
 
 	private static Hero huntressHero() {

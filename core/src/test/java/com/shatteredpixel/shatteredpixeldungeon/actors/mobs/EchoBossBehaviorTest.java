@@ -13,7 +13,6 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,12 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossBehaviorTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("notice does not reseal when the floor is already locked")

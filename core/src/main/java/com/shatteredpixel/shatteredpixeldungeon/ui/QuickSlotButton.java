@@ -312,9 +312,9 @@ public class QuickSlotButton extends Button {
 	}
 
 	private void enableSlot() {
-		slot.enable(Dungeon.quickslot.isNonePlaceholder(slotNum)
-				&& (!Dungeon.hero.belongings.lostInventory()
-						|| Dungeon.quickslot.getItem(slotNum).keptThroughLostInventory()));
+		Item item = Dungeon.quickslot.getItem(slotNum);
+		slot.enable(item != null && item.quantity() > 0
+				&& (!Dungeon.hero.belongings.lostInventory() || item.keptThroughLostInventory()));
 	}
 
 	public void slotMargins(int left, int top, int right, int bottom) {

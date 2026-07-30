@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.EchoDetailsFormatter;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoDetail;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,11 +21,6 @@ import java.util.stream.Collectors;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoViewerTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("loadAll returns empty list when echoes folder is empty")

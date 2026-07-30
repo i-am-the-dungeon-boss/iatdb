@@ -11,18 +11,12 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutc
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class Depth5EchoBossSelectionTest {
-
-	@AfterEach
-	void reset() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("Depth 5 keeps SewerBossLevel; prefetch activates echo when snapshot available")
@@ -91,14 +85,15 @@ class Depth5EchoBossSelectionTest {
 	}
 
 	@Test
-	@DisplayName("Corrupted snapshot prefetch falls back without activating echo")
-	void corruptedSnapshotFallsBackToDefaultBoss() {
+	@DisplayName("Corrupted snapshot prefetch leaves ERROR without activating echo or default")
+	void corruptedSnapshotDoesNotActivateEchoOrDefault() {
 		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.error());
 
 		Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
 		Assertions.assertThat(Dungeon.prefetchEchoBossOutcome(5).isError()).isTrue();
 		Assertions.assertThat(Dungeon.isEchoBossActive()).isFalse();
 		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isFalse();
+		Assertions.assertThat(EchoBossSpawner.shouldSpawnDefault()).isFalse();
 	}
 
 	@Test

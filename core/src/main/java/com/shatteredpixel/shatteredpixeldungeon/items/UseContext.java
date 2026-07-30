@@ -104,6 +104,9 @@ public final class UseContext {
 
 		void spendAfterThrow(float delay);
 
+		/** Drop {@link #busy()} without spending a turn (refused targeted actions). */
+		void cancelBusy();
+
 		TurnOwner NO_OP = new TurnOwner() {
 			@Override
 			public void busy() {
@@ -111,6 +114,10 @@ public final class UseContext {
 
 			@Override
 			public void spendAfterThrow(float delay) {
+			}
+
+			@Override
+			public void cancelBusy() {
 			}
 		};
 
@@ -130,6 +137,11 @@ public final class UseContext {
 						hero.spendAndNext(delay);
 					}
 				}
+
+				@Override
+				public void cancelBusy() {
+					hero.ready = true;
+				}
 			};
 		}
 
@@ -146,6 +158,11 @@ public final class UseContext {
 				@Override
 				public void spendAfterThrow(float delay) {
 					boss.spendAndNext(delay);
+				}
+
+				@Override
+				public void cancelBusy() {
+					boss.cancelBusy();
 				}
 			};
 		}

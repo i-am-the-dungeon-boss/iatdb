@@ -55,7 +55,6 @@ class BossLevelQuickslotSimulationTest {
 		QuickSlotButton.reset();
 		ActionIndicator.clearAction();
 		Statistics.qualifiedForBossChallengeBadge = false;
-		EchoTestSupport.resetWorkflowState();
 		Assertions.assertThat(DebugSettings.isDebugBuild()).isFalse();
 		Assertions.assertThat(DebugSettings.weakEchoSnapshots()).isFalse();
 		Assertions.assertThat(DebugSettings.debugStart()).isFalse();

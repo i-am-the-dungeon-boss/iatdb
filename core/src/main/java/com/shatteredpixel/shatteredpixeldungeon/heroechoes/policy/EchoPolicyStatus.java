@@ -37,6 +37,11 @@ public final class EchoPolicyStatus {
 	public final Set<String> safeHazards;
 	public final Set<String> unsafeHazards;
 	public final int terrainNearTiles;
+	/**
+	 * True when echo move speed strictly exceeds the hero's (rings, glyphs,
+	 * potions, armor).
+	 */
+	public final boolean selfSpeedGtEnemy;
 
 	private EchoPolicyStatus(Builder b) {
 		this.selfHpRatio = b.selfHpRatio;
@@ -56,6 +61,7 @@ public final class EchoPolicyStatus {
 		this.safeHazards = Collections.unmodifiableSet(new HashSet<>(b.safeHazards));
 		this.unsafeHazards = Collections.unmodifiableSet(new HashSet<>(b.unsafeHazards));
 		this.terrainNearTiles = b.terrainNearTiles;
+		this.selfSpeedGtEnemy = b.selfSpeedGtEnemy;
 	}
 
 	public boolean isTerrainNear(String type) {
@@ -93,6 +99,7 @@ public final class EchoPolicyStatus {
 		private Set<String> safeHazards = new HashSet<>();
 		private Set<String> unsafeHazards = new HashSet<>();
 		private int terrainNearTiles = 3;
+		private boolean selfSpeedGtEnemy = false;
 
 		public Builder selfHpRatio(float v) {
 			selfHpRatio = v;
@@ -176,6 +183,11 @@ public final class EchoPolicyStatus {
 
 		public Builder terrainNearCell(String type, int cell) {
 			terrainNearCell.put(type, cell);
+			return this;
+		}
+
+		public Builder selfSpeedGtEnemy(boolean v) {
+			selfSpeedGtEnemy = v;
 			return this;
 		}
 

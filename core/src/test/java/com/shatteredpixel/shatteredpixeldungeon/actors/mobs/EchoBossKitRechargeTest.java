@@ -16,7 +16,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,12 +25,6 @@ import java.util.HashSet;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossKitRechargeTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("Echo kit wand Charger is scheduled as an Actor when the boss is added")

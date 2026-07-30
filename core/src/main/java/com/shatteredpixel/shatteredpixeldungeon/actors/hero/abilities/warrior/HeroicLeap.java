@@ -77,6 +77,7 @@ public class HeroicLeap extends ArmorAbility {
 				if (ctx.heroFX) {
 					PixelScene.shake(1, 1f);
 				}
+				refuse(ctx);
 				return;
 			}
 
@@ -151,6 +152,8 @@ public class HeroicLeap extends ArmorAbility {
 			} else {
 				afterJump.run();
 			}
+		} else {
+			refuse(ctx);
 		}
 	}
 

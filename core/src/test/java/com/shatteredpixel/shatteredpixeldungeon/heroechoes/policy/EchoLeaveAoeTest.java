@@ -18,7 +18,6 @@ import com.watabou.utils.PointF;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,12 +28,6 @@ import java.util.Set;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoLeaveAoeTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("status marks aoe_dot and LEAVE_AOE when standing in fire with a safe exit")

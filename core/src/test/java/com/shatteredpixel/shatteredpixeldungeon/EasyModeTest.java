@@ -25,7 +25,6 @@ class EasyModeTest {
 		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE)
 				.remove(SPDSettings.KEY_EASY_MODE_SOLO_DEFAULT_APPLIED);
 		Gdx.app.getPreferences(GameSettings.DEFAULT_PREFS_FILE).flush();
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

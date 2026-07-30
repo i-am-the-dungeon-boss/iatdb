@@ -80,6 +80,7 @@ public class DeathMark extends ArmorAbility {
 	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
 		Hero kit = ctx.kit;
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 
@@ -89,11 +90,13 @@ public class DeathMark extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_target"));
 			}
+			refuse(ctx);
 			return;
 		} else if (ch.alignment == ctx.body.alignment) {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "ally_target"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -107,6 +110,8 @@ public class DeathMark extends ArmorAbility {
 
 		if (ctx.heroFX) {
 			kit.next();
+		} else {
+			ctx.turns.spendAfterThrow(Actor.TICK);
 		}
 
 		if (kit.buff(DoubleMarkTracker.class) != null) {

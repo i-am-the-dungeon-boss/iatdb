@@ -120,6 +120,14 @@ public abstract class ArmorAbility implements Bundlable {
 
 	protected abstract void activate(ClassArmor armor, UseContext ctx, Integer target);
 
+	/**
+	 * Refuse after {@link #activateAs} already called {@link UseContext.TurnOwner#busy()}.
+	 * EchoBoss stays stuck if busy is not cleared.
+	 */
+	protected static void refuse(UseContext ctx) {
+		ctx.turns.cancelBusy();
+	}
+
 	public String name() {
 		return Messages.get(this, "name");
 	}

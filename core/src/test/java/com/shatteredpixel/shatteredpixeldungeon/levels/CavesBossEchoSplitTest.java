@@ -24,7 +24,6 @@ class CavesBossEchoSplitTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Statistics.qualifiedForBossChallengeBadge = false;
 	}
 

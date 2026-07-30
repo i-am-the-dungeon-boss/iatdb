@@ -71,12 +71,14 @@ public class Shockwave extends ArmorAbility {
 		Char body = ctx.body;
 		Hero kit = ctx.kit;
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 		if (target == body.pos) {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "self_target"));
 			}
+			refuse(ctx);
 			return;
 		}
 

@@ -22,7 +22,6 @@ class HallsBossEchoSplitTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Statistics.qualifiedForBossChallengeBadge = false;
 	}
 

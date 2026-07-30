@@ -164,6 +164,7 @@ public class ElementalBlast extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_staff"));
 			}
+			refuse(ctx);
 			return;
 		}
 

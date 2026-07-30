@@ -126,7 +126,8 @@ public final class EchoPolicyStatusBuilder {
 				.terrainNearTiles(nearTiles)
 				.rolesReady(rolesReady)
 				.safeHazards(safe)
-				.unsafeHazards(unsafe);
+				.unsafeHazards(unsafe)
+				.selfSpeedGtEnemy(enemy != null && boss.speed() > enemy.combatSpeed());
 
 		for (Map.Entry<String, Integer> e : nearDist.entrySet()) {
 			b.terrainNear(e.getKey(), e.getValue());

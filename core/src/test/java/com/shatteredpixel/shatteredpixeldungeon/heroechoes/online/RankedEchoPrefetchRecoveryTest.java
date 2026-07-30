@@ -22,7 +22,6 @@ class RankedEchoPrefetchRecoveryTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		EchoOnlineSettings.resetForTests();
 		CompositeEchoLookup.rankedRetryDelayMs = 0L;
 	}

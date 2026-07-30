@@ -83,6 +83,7 @@ public class WarpBeacon extends ArmorAbility {
 		Hero kit = ctx.kit;
 		Char body = ctx.body;
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 
@@ -107,12 +108,16 @@ public class WarpBeacon extends ArmorAbility {
 						recallToBeacon(armor, ctx, tracker);
 					} else if (index == 1) {
 						kit.buff(WarpBeaconTracker.class).detach();
+						refuse(ctx);
+					} else {
+						refuse(ctx);
 					}
 				}
 			});
 
 		} else {
 			if (!Dungeon.level.mapped[target] && !Dungeon.level.visited[target]) {
+				refuse(ctx);
 				return;
 			}
 
@@ -120,6 +125,7 @@ public class WarpBeacon extends ArmorAbility {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(WarpBeacon.class, "too_far"));
 				}
+				refuse(ctx);
 				return;
 			}
 
@@ -131,6 +137,7 @@ public class WarpBeacon extends ArmorAbility {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(WarpBeacon.class, "invalid_beacon"));
 				}
+				refuse(ctx);
 				return;
 			}
 
@@ -158,6 +165,7 @@ public class WarpBeacon extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(WarpBeacon.class, "depths"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -171,6 +179,7 @@ public class WarpBeacon extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(ClassArmor.class, "low_charge"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -236,6 +245,8 @@ public class WarpBeacon extends ArmorAbility {
 				GameScene.updateFog();
 				kit.checkVisibleMobs();
 				AttackIndicator.updateState();
+			} else {
+				ctx.turns.spendAfterThrow(Actor.TICK);
 			}
 
 		} else {
@@ -274,7 +285,9 @@ public class WarpBeacon extends ArmorAbility {
 		public void fx(boolean on) {
 			if (on && depth == Dungeon.depth) {
 				e = CellEmitter.center(pos);
-				e.pour(MagicMissile.WardParticle.UP, 0.05f);
+				if (e != null) {
+					e.pour(MagicMissile.WardParticle.UP, 0.05f);
+				}
 			} else if (e != null)
 				e.on = false;
 		}

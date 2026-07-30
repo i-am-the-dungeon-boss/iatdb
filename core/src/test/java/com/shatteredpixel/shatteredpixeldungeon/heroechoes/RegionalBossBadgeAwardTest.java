@@ -26,7 +26,6 @@ class RegionalBossBadgeAwardTest {
 
 	@AfterEach
 	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
 		Dungeon.customSeedText = "";
 		Statistics.qualifiedForBossRemainsBadge = false;
 		Statistics.qualifiedForBossChallengeBadge = false;

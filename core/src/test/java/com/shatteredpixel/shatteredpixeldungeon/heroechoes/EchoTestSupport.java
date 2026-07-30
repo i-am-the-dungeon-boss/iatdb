@@ -30,6 +30,7 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
 import com.watabou.utils.FileUtils;
 import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
 import com.watabou.utils.SparseArray;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -85,6 +86,10 @@ public final class EchoTestSupport {
 		EchoOnlineSettings.resetForTests();
 		EchoPlayerSession.resetForTests();
 		CompositeEchoLookup.resetForTests();
+		// Clear RNG stack so push/pop from one test cannot leak into the next,
+		// then seed so combat accuracy is order-independent.
+		Random.resetGenerators();
+		Random.pushGenerator(0xC0FFEEL);
 	}
 
 	public static Echo warriorEcho(int depth) {

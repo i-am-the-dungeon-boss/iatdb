@@ -188,6 +188,20 @@ public class WndGame extends Window {
 				}
 			});
 			curBtn.icon(Icons.get(Icons.TALENT));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "give_echo_armor_ability")) {
+				@Override
+				protected void onClick() {
+					int updated = DebugEchoArsenal.grantArmorAbilityAll();
+					hide();
+					if (updated > 0) {
+						GLog.p(Messages.get(WndGame.class, "echo_armor_ability_granted", updated));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "echo_armor_ability_none"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.TALENT));
 		}
 
 		addButton(curBtn = new RedButton(Messages.get(this, "menu")) {

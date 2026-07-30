@@ -111,6 +111,13 @@ public abstract class Scroll extends Item {
 		handler = new ItemStatusHandler<>((Class<? extends Scroll>[]) Generator.Category.SCROLL.classes, runes);
 	}
 
+	/** Initializes labels only when unset — never wipe mid-run knowledge. */
+	public static void ensureLabels() {
+		if (handler == null) {
+			initLabels();
+		}
+	}
+
 	public static void clearLabels() {
 		handler = null;
 	}
@@ -270,6 +277,9 @@ public abstract class Scroll extends Item {
 
 	public void setKnown() {
 		if (!anonymous) {
+			if (!Item.grantsPlayerKnowledge()) {
+				return;
+			}
 			if (!isKnown()) {
 				handler.know(this);
 				updateQuickslot();

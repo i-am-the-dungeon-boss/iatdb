@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
 
 public class NaturesPower extends ArmorAbility {
 
@@ -53,7 +54,10 @@ public class NaturesPower extends ArmorAbility {
 		if (UseContext.canWorldFx(body)) {
 			body.sprite.operate(body.pos);
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-			body.sprite.emitter().burst(LeafParticle.GENERAL, 10);
+			Emitter e = body.sprite.emitter();
+			if (e != null) {
+				e.burst(LeafParticle.GENERAL, 10);
+			}
 		}
 
 		armor.charge -= chargeUse(ctx.kit);

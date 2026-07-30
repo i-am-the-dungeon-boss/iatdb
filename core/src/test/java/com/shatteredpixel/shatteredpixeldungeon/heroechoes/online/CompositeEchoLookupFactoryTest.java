@@ -16,7 +16,6 @@ class CompositeEchoLookupFactoryTest {
 	@AfterEach
 	void cleanup() {
 		CompositeEchoLookup.resetForTests();
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

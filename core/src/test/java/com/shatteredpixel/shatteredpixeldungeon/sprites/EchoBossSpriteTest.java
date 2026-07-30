@@ -42,8 +42,6 @@ class EchoBossSpriteTest {
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
 		stage = null;
-		com.shatteredpixel.shatteredpixeldungeon.Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

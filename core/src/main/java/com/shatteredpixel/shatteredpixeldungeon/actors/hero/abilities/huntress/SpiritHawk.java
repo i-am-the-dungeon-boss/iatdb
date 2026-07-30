@@ -113,6 +113,10 @@ public class SpiritHawk extends ArmorAbility {
 				ally = new HawkAlly();
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
+				// Headless tests have no GameScene — still register the actor
+				if (ally.sprite == null) {
+					Actor.add(ally);
+				}
 
 				ScrollOfTeleportation.appear(ally, ally.pos);
 				Dungeon.observe();

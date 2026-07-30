@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -336,12 +337,6 @@ public class CityBossLevel extends Level {
 		Mob.holdAllies(this, doorPos);
 		Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
 
-		if (EchoBossSpawner.shouldSpawn()) {
-			startEchoFight();
-		} else {
-			startDwarfKingFight();
-		}
-
 		set(bottomDoor, Terrain.LOCKED_DOOR);
 		GameScene.updateMap(bottomDoor);
 		Dungeon.observe();
@@ -350,6 +345,23 @@ public class CityBossLevel extends Level {
 			@Override
 			public void call() {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS, true);
+			}
+		});
+
+		EchoBossSpawner.ensureReadyThen(new EchoBossSpawner.SpawnRecoveryActions() {
+			@Override
+			public void onEcho() {
+				startEchoFight();
+			}
+
+			@Override
+			public void onDefault() {
+				startDwarfKingFight();
+			}
+
+			@Override
+			public void onAbort() {
+				EchoBossFetchRecovery.abortToTitle();
 			}
 		});
 	}

@@ -9,7 +9,6 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,12 +20,6 @@ import java.util.Set;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoPolicyMatcherTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("blind_defense_ranged reaction picks RANGED when enemy is invisible and out of LOS")
@@ -173,7 +166,7 @@ class EchoPolicyMatcherTest {
 	}
 
 	@Test
-	@DisplayName("kite_step skips KEEP_DISTANCE when RANGED is not ready")
+	@DisplayName("without RANGED ready, melee_adjacent is chosen over KEEP_DISTANCE")
 	void kiteStepSkipsWithoutRanged() {
 		EchoPolicy policy = DebugStrategyKit.policy();
 
@@ -190,7 +183,7 @@ class EchoPolicyMatcherTest {
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
-		Assertions.assertThat(choice.layer).isEqualTo("default");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
 	}
 
 	@Test
@@ -499,6 +492,107 @@ class EchoPolicyMatcherTest {
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("WAIT");
 		Assertions.assertThat(choice.layer).isEqualTo("rules");
+	}
+
+	@Test
+	@DisplayName("melee_adjacent beats default RANGED when adjacent without kite edge")
+	void meleeAdjacentBeatsDefaultRangedWhenAdjacent() {
+		JSONObject root = basePolicyJson();
+		JSONObject pokeWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_gte", 2))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		JSONObject kiteWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_lte", 1))
+				.put(new JSONObject().put("any", new JSONArray()
+						.put(new JSONObject().put("self_status", "haste"))
+						.put(new JSONObject().put("self_speed_gt_enemy", true))))
+				.put(new JSONObject().put("role_ready", "KEEP_DISTANCE"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		JSONObject meleeWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_lte", 1))
+				.put(new JSONObject().put("enemy_status_none", new JSONArray().put("invisible")))
+				.put(new JSONObject().put("role_ready", "MELEE")));
+		root.put("reactions", new JSONArray()
+				.put(reaction("ranged_poke", 74, "RANGED", pokeWhen))
+				.put(reaction("kite_step", 73, "KEEP_DISTANCE", kiteWhen))
+				.put(reaction("melee_adjacent", 72, "MELEE", meleeWhen)));
+		root.put("selection", new JSONObject()
+				.put("order", new JSONArray().put("reactions").put("default"))
+				.put("default_roles", new JSONArray().put("RANGED").put("MELEE")));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.selfSpeedGtEnemy(false)
+				.rolesReady(set("RANGED", "MELEE", "KEEP_DISTANCE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
+	}
+
+	@Test
+	@DisplayName("melee_adjacent skips when hero is invisible so blind defense can use RANGED")
+	void meleeAdjacentSkipsWhenHeroInvisible() {
+		JSONObject root = basePolicyJson();
+		JSONObject blindWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("enemy_in_los", false))
+				.put(new JSONObject().put("enemy_status", "invisible"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		JSONObject meleeWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_lte", 1))
+				.put(new JSONObject().put("enemy_status_none", new JSONArray().put("invisible")))
+				.put(new JSONObject().put("role_ready", "MELEE")));
+		root.put("reactions", new JSONArray()
+				.put(reaction("blind_defense_ranged", 100, "RANGED", blindWhen))
+				.put(reaction("melee_adjacent", 72, "MELEE", meleeWhen)));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.enemyInLos(false)
+				.enemyStatuses(set("invisible"))
+				.rolesReady(set("RANGED", "MELEE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
+	}
+
+	@Test
+	@DisplayName("kite_step wins over melee_adjacent when self is faster than enemy")
+	void kiteStepWinsWhenSelfFasterThanEnemy() {
+		JSONObject root = basePolicyJson();
+		JSONObject kiteWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_lte", 1))
+				.put(new JSONObject().put("any", new JSONArray()
+						.put(new JSONObject().put("self_status", "haste"))
+						.put(new JSONObject().put("self_speed_gt_enemy", true))))
+				.put(new JSONObject().put("role_ready", "KEEP_DISTANCE"))
+				.put(new JSONObject().put("role_ready", "RANGED")));
+		JSONObject meleeWhen = new JSONObject().put("all", new JSONArray()
+				.put(new JSONObject().put("distance_lte", 1))
+				.put(new JSONObject().put("enemy_status_none", new JSONArray().put("invisible")))
+				.put(new JSONObject().put("role_ready", "MELEE")));
+		root.put("reactions", new JSONArray()
+				.put(reaction("kite_step", 73, "KEEP_DISTANCE", kiteWhen))
+				.put(reaction("melee_adjacent", 72, "MELEE", meleeWhen)));
+		EchoPolicy policy = EchoPolicy.fromJson(root);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.distance(1)
+				.selfSpeedGtEnemy(true)
+				.rolesReady(set("RANGED", "MELEE", "KEEP_DISTANCE"))
+				.build();
+
+		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+
+		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
+		Assertions.assertThat(choice.layer).isEqualTo("reactions");
 	}
 
 	@Test

@@ -24,8 +24,6 @@ class EchoBossLockedFloorTest {
 	@AfterEach
 	void cleanup() {
 		Dungeon.challenges = 0;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@ParameterizedTest(name = "depth {0} restores LockedFloor regen like the regional boss")

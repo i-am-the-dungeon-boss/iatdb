@@ -19,7 +19,6 @@ class ChallengesPlayModeTest {
 	@AfterEach
 	void cleanup() {
 		SPDSettings.challenges(0);
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test

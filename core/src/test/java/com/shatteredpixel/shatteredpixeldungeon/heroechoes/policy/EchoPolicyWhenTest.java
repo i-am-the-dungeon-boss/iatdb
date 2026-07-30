@@ -257,6 +257,20 @@ class EchoPolicyWhenTest {
 				new JSONObject().put("enemy_shield_above", 0.5), high)).isFalse();
 	}
 
+	@Test
+	@DisplayName("self_speed_gt_enemy follows status.selfSpeedGtEnemy")
+	void selfSpeedGtEnemyFollowsStatus() {
+		EchoPolicyStatus faster = new EchoPolicyStatus.Builder().selfSpeedGtEnemy(true).build();
+		EchoPolicyStatus equal = new EchoPolicyStatus.Builder().selfSpeedGtEnemy(false).build();
+
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_speed_gt_enemy", true), faster)).isTrue();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_speed_gt_enemy", true), equal)).isFalse();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("self_speed_gt_enemy", false), equal)).isTrue();
+	}
+
 	private static EchoPolicyStatus statusWith(
 			float selfHp, float enemyHp, int distance, Set<String> roles) {
 		return new EchoPolicyStatus.Builder()

@@ -156,6 +156,13 @@ public class Potion extends Item {
 		handler = new ItemStatusHandler<>((Class<? extends Potion>[]) Generator.Category.POTION.classes, colors);
 	}
 
+	/** Initializes colors only when unset — never wipe mid-run knowledge. */
+	public static void ensureColors() {
+		if (handler == null) {
+			initColors();
+		}
+	}
+
 	public static void clearColors() {
 		handler = null;
 	}
@@ -377,6 +384,9 @@ public class Potion extends Item {
 
 	public void setKnown() {
 		if (!anonymous) {
+			if (!Item.grantsPlayerKnowledge()) {
+				return;
+			}
 			if (!isKnown()) {
 				handler.know(this);
 				updateQuickslot();

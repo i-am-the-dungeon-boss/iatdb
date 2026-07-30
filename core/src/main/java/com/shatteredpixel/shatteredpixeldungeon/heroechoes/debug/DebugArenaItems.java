@@ -28,10 +28,13 @@ public final class DebugArenaItems {
 	}
 
 	public static List<Item> createAll() {
-		// Identity handlers are required before identify(); safe to re-init in debug.
-		Scroll.initLabels();
-		Potion.initColors();
-		Ring.initGems();
+		// Identity handlers required before identify(); never re-init mid-run
+		// (that wipes the living hero's known potion/scroll/ring types).
+		Scroll.ensureLabels();
+		Potion.ensureColors();
+		Ring.ensureGems();
+		// Clear stale Echo curUser so identify/setKnown teaches the living hero.
+		Item.clearCurrent();
 
 		Hero previous = Dungeon.hero;
 		boolean stubbedHero = previous == null || !previous.isAlive();

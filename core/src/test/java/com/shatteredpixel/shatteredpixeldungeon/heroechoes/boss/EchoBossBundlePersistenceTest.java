@@ -15,18 +15,12 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossBundlePersistenceTest {
-
-	@AfterEach
-	void cleanup() {
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("EchoBoss level save restores the same echo after pending echo is cleared")

@@ -131,6 +131,12 @@ public final class EchoRoleExecutor {
 			return ok;
 		}
 		if (item instanceof SpiritBow) {
+			// Visible melee: fall through to mob AI. Cloaked hero: keep blind-defense
+			// shots.
+			if (adjacentToVisibleHero(boss)) {
+				debugExec("spirit bow refused at melee");
+				return false;
+			}
 			boolean ok = cell >= 0 && Dungeon.level != null
 					&& ((SpiritBow) item).knockArrow().throwAs(UseContext.echo(boss), cell);
 			debugExec("spirit bow cell=" + cell + " → " + (ok ? "spent" : "fail"));
@@ -203,6 +209,18 @@ public final class EchoRoleExecutor {
 	/** Inventory stones need a bag UI; throwable runestones activate on land. */
 	private static boolean isThrowableRunestone(Item item) {
 		return item instanceof Runestone && !(item instanceof InventoryStone);
+	}
+
+	/**
+	 * Visible melee adjacency — refuse SpiritBow point-blank. Cloaked heroes are
+	 * excluded so blind-defense shots can still land / dispel invisibility.
+	 */
+	private static boolean adjacentToVisibleHero(EchoBoss boss) {
+		Hero enemy = Dungeon.hero;
+		return enemy != null
+				&& enemy.invisible <= 0
+				&& Dungeon.level != null
+				&& Dungeon.level.adjacent(boss.pos, enemy.pos);
 	}
 
 	private static void debugExec(String message) {
@@ -335,7 +353,9 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 		Integer target = null;
-		if (ability.useTargeting()) {
+		// Match activateAs: a non-null targetingPrompt requires a cell, even when
+		// useTargeting() is false (ShadowClone / SpiritHawk / PowerOfMany).
+		if (ability.targetingPrompt() != null) {
 			if (cell < 0) {
 				return false;
 			}

@@ -139,15 +139,19 @@ public class PowerOfMany extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "ally_exists"));
 			}
+			ctx.turns.cancelBusy();
 		} else {
 			if (target == null) {
+				ctx.turns.cancelBusy();
 				return;
 			}
 
-			if (!Dungeon.level.heroFOV[target]) {
+			boolean[] fov = body.fieldOfView != null ? body.fieldOfView : Dungeon.level.heroFOV;
+			if (fov == null || !fov[target]) {
 				if (ctx.heroFX) {
 					GLog.w(Messages.get(this, "no_vision"));
 				}
+				ctx.turns.cancelBusy();
 				return;
 			}
 
@@ -156,10 +160,12 @@ public class PowerOfMany extends ArmorAbility {
 
 			Char ch = Actor.findChar(target);
 			if (ch != null) {
-				if (ch.alignment != Char.Alignment.ALLY || ch == body) {
+				// Allies of the caster — not hardcoded ALLY (EchoBoss is ENEMY).
+				if (ch.alignment != body.alignment || ch == body) {
 					if (ctx.heroFX) {
 						GLog.w(Messages.get(this, "only_allies"));
 					}
+					ctx.turns.cancelBusy();
 					return;
 				}
 			} else {
@@ -168,12 +174,17 @@ public class PowerOfMany extends ArmorAbility {
 					if (ctx.heroFX) {
 						GLog.w(Messages.get(ClericSpell.class, "invalid_target"));
 					}
+					ctx.turns.cancelBusy();
 					return;
 				}
 
 				ch = new LightAlly(kit.lvl);
 				ch.pos = target;
 				GameScene.add((Mob) ch);
+				// Headless tests have no GameScene — still register the actor
+				if (ch.sprite == null) {
+					Actor.add(ch);
+				}
 				ScrollOfTeleportation.appear(ch, ch.pos);
 			}
 

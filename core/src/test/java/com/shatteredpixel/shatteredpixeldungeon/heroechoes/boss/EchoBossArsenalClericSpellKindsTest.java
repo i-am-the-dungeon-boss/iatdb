@@ -33,7 +33,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,12 +45,6 @@ import java.util.Arrays;
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoBossArsenalClericSpellKindsTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	private static Fight fight() {
 		return fight(1, HeroSubClass.PALADIN);

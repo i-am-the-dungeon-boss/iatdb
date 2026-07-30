@@ -55,12 +55,11 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoFetchAbortedException;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpdateAvailable;
 import com.watabou.gltextures.TextureCache;
@@ -81,7 +80,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class InterlevelScene extends PixelScene {
 
@@ -620,7 +618,8 @@ public class InterlevelScene extends PixelScene {
 				}
 
 				if (error != null) {
-					if (error instanceof EchoFetchAbortedException) {
+					if (error instanceof EchoFetchAbortedException
+							|| error instanceof EchoBossFetchRecovery.SpawnAbortedException) {
 						thread = null;
 						error = null;
 						Game.switchScene(TitleScene.class);
@@ -711,7 +710,8 @@ public class InterlevelScene extends PixelScene {
 	private void prefetchEchoBossIfNeeded(int depth, int branch) throws IOException {
 		// Boss floors must re-resolve pending echo even when the level was already
 		// generated (debug start pregenerates 1..N; later depths clear pending).
-		// Skipping left Prison/etc. with shouldSpawn() false → regional boss.
+		// Skipping left spawn latch unset → spawn recovery (Sentry + Retry), not a
+		// silent regional boss.
 		if (!Dungeon.shouldPrefetchEchoBoss(depth, branch)) {
 			return;
 		}
@@ -727,7 +727,7 @@ public class InterlevelScene extends PixelScene {
 				throw new EchoFetchAbortedException();
 			}
 			EchoLookupOutcome outcome = Dungeon.prefetchEchoBossWithRankedRecovery(
-					depth, InterlevelScene::promptEchoFetchFailed);
+					depth, EchoBossFetchRecovery::promptRetryOrAbort);
 			if (outcome != null && outcome.isError()
 					&& (Dungeon.echoPlayMode == EchoPlayMode.RANKED
 							|| Dungeon.echoPlayMode == EchoPlayMode.SOLO)) {
@@ -763,36 +763,6 @@ public class InterlevelScene extends PixelScene {
 		} catch (InterruptedException interrupted) {
 			Thread.currentThread().interrupt();
 		}
-	}
-
-	/**
-	 * Blocks the loading thread until the user chooses Retry or Abort.
-	 */
-	private static EchoPrefetchUserChoice promptEchoFetchFailed(EchoLookupOutcome failed) {
-		CountDownLatch latch = new CountDownLatch(1);
-		AtomicReference<EchoPrefetchUserChoice> choice = new AtomicReference<>(EchoPrefetchUserChoice.ABORT);
-		String hint = failed != null ? failed.failureHint() : "";
-		Game.runOnRenderThread(() -> {
-			Game.scene().add(new WndEchoFetchFailed(new WndEchoFetchFailed.Listener() {
-				@Override
-				public void onRetry() {
-					choice.set(EchoPrefetchUserChoice.RETRY);
-					latch.countDown();
-				}
-
-				@Override
-				public void onAbort() {
-					choice.set(EchoPrefetchUserChoice.ABORT);
-					latch.countDown();
-				}
-			}, hint));
-		});
-		try {
-			latch.await();
-		} catch (InterruptedException interrupted) {
-			Thread.currentThread().interrupt();
-		}
-		return choice.get();
 	}
 
 	private Level newLevelWithEchoPrefetch(int depth, int branch) throws IOException {

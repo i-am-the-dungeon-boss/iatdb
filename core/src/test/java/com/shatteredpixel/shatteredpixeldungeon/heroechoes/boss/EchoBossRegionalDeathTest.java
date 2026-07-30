@@ -24,7 +24,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
 import com.shatteredpixel.shatteredpixeldungeon.items.remains.SealShard;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,11 +34,6 @@ import java.io.File;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoBossRegionalDeathTest {
-
-    @AfterEach
-    void cleanup() {
-        EchoTestSupport.resetWorkflowState();
-    }
 
     @Test
     @DisplayName("regional death applies sewer boss score at depth 5")

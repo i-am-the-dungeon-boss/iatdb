@@ -23,19 +23,12 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKn
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GdxTestExtension.class)
 class EchoInventoryTest {
-
-	@AfterEach
-	void cleanup() {
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
-	}
 
 	@Test
 	@DisplayName("availableIds omits CloakOfShadows when charge is zero")

@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -344,13 +345,34 @@ public class CavesBossLevel extends Level {
 		if (state != State.START) {
 			return;
 		}
+		// Arena may already be sealed while spawn recovery is in flight.
+		if (locked) {
+			return;
+		}
 
 		sealArena();
-		if (EchoBossSpawner.shouldSpawn()) {
-			startEchoFight();
-		} else {
-			startDM300Fight();
-		}
+		EchoBossSpawner.ensureReadyThen(new EchoBossSpawner.SpawnRecoveryActions() {
+			@Override
+			public void onEcho() {
+				if (state != State.START) {
+					return;
+				}
+				startEchoFight();
+			}
+
+			@Override
+			public void onDefault() {
+				if (state != State.START) {
+					return;
+				}
+				startDM300Fight();
+			}
+
+			@Override
+			public void onAbort() {
+				EchoBossFetchRecovery.abortToTitle();
+			}
+		});
 	}
 
 	/**

@@ -31,8 +31,6 @@ class SpiritBowThrowAsTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test
@@ -70,6 +68,7 @@ class SpiritBowThrowAsTest {
 		float kitCooldownBefore = kit.cooldown();
 		int hpBefore = player.HP;
 		kit.invisible = 1;
+		EchoTestSupport.attachInstantProjectileParent(boss);
 
 		boolean spent = bow.knockArrow().throwAs(UseContext.echo(boss), player.pos);
 

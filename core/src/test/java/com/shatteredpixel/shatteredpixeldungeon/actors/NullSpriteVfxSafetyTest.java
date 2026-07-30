@@ -38,8 +38,6 @@ class NullSpriteVfxSafetyTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
-		Dungeon.level = null;
-		EchoTestSupport.resetWorkflowState();
 	}
 
 	@Test
@@ -109,12 +107,13 @@ class NullSpriteVfxSafetyTest {
 	void bleedingTickDamagesWhenSpriteNull() {
 		Hero hero = EchoTestSupport.warriorHero();
 		hero.sprite = null;
-		hero.HP = 20;
+		hero.HP = hero.HT = 200;
 		Bleeding bleeding = Buff.affect(hero, Bleeding.class);
-		bleeding.set(10f);
+		// High enough that Math.round(NormalFloat(level/2, level)) cannot be 0.
+		bleeding.set(100f);
 
 		Assertions.assertThatCode(bleeding::act).doesNotThrowAnyException();
-		Assertions.assertThat(hero.HP).isLessThan(20);
+		Assertions.assertThat(hero.HP).isLessThan(200);
 	}
 
 	@Test

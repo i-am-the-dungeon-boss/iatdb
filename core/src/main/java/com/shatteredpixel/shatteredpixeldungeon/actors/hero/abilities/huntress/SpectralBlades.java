@@ -62,6 +62,7 @@ public class SpectralBlades extends ArmorAbility {
 		Char body = ctx.body;
 		Hero kit = ctx.kit;
 		if (target == null) {
+			refuse(ctx);
 			return;
 		}
 
@@ -69,6 +70,7 @@ public class SpectralBlades extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "self_target"));
 			}
+			refuse(ctx);
 			return;
 		}
 
@@ -99,6 +101,7 @@ public class SpectralBlades extends ArmorAbility {
 			if (ctx.heroFX) {
 				GLog.w(Messages.get(this, "no_target"));
 			}
+			refuse(ctx);
 			return;
 		}
 
