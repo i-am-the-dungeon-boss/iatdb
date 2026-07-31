@@ -309,6 +309,8 @@ public class Dungeon {
 
 		Badges.reset();
 
+		// Drop stale Echo/item acting state before class starting knowledge identify().
+		Item.clearCurrent();
 		GamesInProgress.selectedClass.initHero(hero);
 
 		applyDebugStartIfNeeded();

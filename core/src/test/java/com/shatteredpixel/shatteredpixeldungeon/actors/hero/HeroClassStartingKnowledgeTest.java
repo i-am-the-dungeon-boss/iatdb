@@ -6,6 +6,9 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -21,6 +24,16 @@ import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMirrorImag
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRage;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Cudgel;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Rapier;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpike;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Reflection;
 import org.assertj.core.api.Assertions;
@@ -50,18 +63,59 @@ class HeroClassStartingKnowledgeTest {
 		Scroll.initLabels();
 	}
 
-	@ParameterizedTest(name = "{0} starts knowing {1} and {2}")
-	@MethodSource("classStartingKnowledge")
-	@DisplayName("initHero identifies each class's starting potion and scroll")
-	void initHeroIdentifiesClassStartingPotionAndScroll(
+	@ParameterizedTest(name = "{0} starts knowing {1}")
+	@MethodSource("startingKnownTypes")
+	@DisplayName("initHero marks each default-known potion and scroll type as known")
+	void initHeroMarksDefaultKnownTypeAsKnown(
 			HeroClass heroClass,
-			Class<? extends Potion> startingPotion,
-			Class<? extends Scroll> startingScroll) {
+			Class<? extends Item> knownType) {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
 		heroClass.initHero(hero);
 
-		assertStartingKnowledge(heroClass, startingPotion, startingScroll);
+		Assertions.assertThat(isTypeKnown(knownType))
+				.as("%s must start knowing %s", heroClass, knownType.getSimpleName())
+				.isTrue();
+	}
+
+	@ParameterizedTest(name = "{0} still starts knowing {1} when curUser is a stale Echo kit")
+	@MethodSource("startingKnownTypes")
+	@DisplayName("initHero teaches default-known types even when Item.curUser is a leftover Echo")
+	void initHeroTeachesDefaultKnownTypesDespiteStaleEchoCurUser(
+			HeroClass heroClass,
+			Class<? extends Item> knownType) {
+		Hero living = new Hero();
+		Dungeon.hero = living;
+
+		Hero staleEchoKit = new Hero();
+		staleEchoKit.heroClass = HeroClass.WARRIOR;
+		// Simulate Echo combat leaving Item.curUser set after returning to a new run.
+		new ClothArmor().setCurrent(staleEchoKit);
+
+		heroClass.initHero(living);
+
+		Assertions.assertThat(isTypeKnown(knownType))
+				.as("%s must start knowing %s despite stale Echo curUser", heroClass, knownType.getSimpleName())
+				.isTrue();
+	}
+
+	@ParameterizedTest(name = "{0} starts with identified {1}")
+	@MethodSource("startingIdentifiedEquipment")
+	@DisplayName("initHero leaves each default starting equipment item identified")
+	void initHeroLeavesStartingEquipmentIdentified(
+			HeroClass heroClass,
+			Class<? extends Item> itemClass) {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		heroClass.initHero(hero);
+
+		Item item = hero.belongings.getItem(itemClass);
+		Assertions.assertThat(item)
+				.as("%s must start with %s", heroClass, itemClass.getSimpleName())
+				.isNotNull();
+		Assertions.assertThat(item.isIdentified())
+				.as("%s starting %s must be identified", heroClass, itemClass.getSimpleName())
+				.isTrue();
 	}
 
 	@ParameterizedTest(name = "{0} still knows {1} and {2} after EchoBoss load")
@@ -78,21 +132,23 @@ class HeroClassStartingKnowledgeTest {
 
 		loadEchoBossRoundTrip(hero);
 
-		assertStartingKnowledge(heroClass, startingPotion, startingScroll);
+		Assertions.assertThat(new ScrollOfIdentify().isKnown()).isTrue();
+		Assertions.assertThat(Reflection.newInstance(startingPotion).isKnown()).isTrue();
+		Assertions.assertThat(Reflection.newInstance(startingScroll).isKnown()).isTrue();
 	}
 
 	@ParameterizedTest(name = "{0} does not start knowing {1}")
-	@MethodSource("otherClassPotionKnowledge")
-	@DisplayName("initHero does not identify another class's starting potion")
-	void initHeroDoesNotIdentifyOtherClassStartingPotion(
+	@MethodSource("otherClassTypeKnowledge")
+	@DisplayName("initHero does not identify another class's starting potion or scroll")
+	void initHeroDoesNotIdentifyOtherClassStartingType(
 			HeroClass heroClass,
-			Class<? extends Potion> otherClassPotion) {
+			Class<? extends Item> otherClassType) {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
 		heroClass.initHero(hero);
 
-		Assertions.assertThat(Reflection.newInstance(otherClassPotion).isKnown())
-				.as("%s must not start knowing %s", heroClass, otherClassPotion.getSimpleName())
+		Assertions.assertThat(isTypeKnown(otherClassType))
+				.as("%s must not start knowing %s", heroClass, otherClassType.getSimpleName())
 				.isFalse();
 	}
 
@@ -127,19 +183,15 @@ class HeroClassStartingKnowledgeTest {
 				.isFalse();
 	}
 
-	private static void assertStartingKnowledge(
-			HeroClass heroClass,
-			Class<? extends Potion> startingPotion,
-			Class<? extends Scroll> startingScroll) {
-		Assertions.assertThat(new ScrollOfIdentify().isKnown())
-				.as("every class starts knowing identify")
-				.isTrue();
-		Assertions.assertThat(Reflection.newInstance(startingPotion).isKnown())
-				.as("%s starting potion", heroClass)
-				.isTrue();
-		Assertions.assertThat(Reflection.newInstance(startingScroll).isKnown())
-				.as("%s starting scroll", heroClass)
-				.isTrue();
+	private static boolean isTypeKnown(Class<? extends Item> type) {
+		Item sample = Reflection.newInstance(type);
+		if (sample instanceof Potion) {
+			return ((Potion) sample).isKnown();
+		}
+		if (sample instanceof Scroll) {
+			return ((Scroll) sample).isKnown();
+		}
+		throw new IllegalArgumentException("expected potion or scroll type, got " + type);
 	}
 
 	private static void loadEchoBossRoundTrip(Hero hero) {
@@ -165,6 +217,55 @@ class HeroClassStartingKnowledgeTest {
 		return bundle;
 	}
 
+	/**
+	 * Potion/scroll types marked known via throwaway {@code identify()} in
+	 * {@link HeroClass#initHero}.
+	 */
+	static Stream<Arguments> startingKnownTypes() {
+		return Stream.of(
+				Arguments.of(HeroClass.WARRIOR, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.WARRIOR, PotionOfHealing.class),
+				Arguments.of(HeroClass.WARRIOR, ScrollOfRage.class),
+				Arguments.of(HeroClass.MAGE, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.MAGE, PotionOfLiquidFlame.class),
+				Arguments.of(HeroClass.MAGE, ScrollOfUpgrade.class),
+				Arguments.of(HeroClass.ROGUE, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.ROGUE, PotionOfInvisibility.class),
+				Arguments.of(HeroClass.ROGUE, ScrollOfMagicMapping.class),
+				Arguments.of(HeroClass.HUNTRESS, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.HUNTRESS, PotionOfMindVision.class),
+				Arguments.of(HeroClass.HUNTRESS, ScrollOfLullaby.class),
+				Arguments.of(HeroClass.DUELIST, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.DUELIST, PotionOfStrength.class),
+				Arguments.of(HeroClass.DUELIST, ScrollOfMirrorImage.class),
+				Arguments.of(HeroClass.CLERIC, ScrollOfIdentify.class),
+				Arguments.of(HeroClass.CLERIC, PotionOfPurity.class),
+				Arguments.of(HeroClass.CLERIC, ScrollOfRemoveCurse.class));
+	}
+
+	/** Instances given to the hero that {@link HeroClass#initHero} identifies. */
+	static Stream<Arguments> startingIdentifiedEquipment() {
+		return Stream.of(
+				Arguments.of(HeroClass.WARRIOR, ClothArmor.class),
+				Arguments.of(HeroClass.WARRIOR, WornShortsword.class),
+				Arguments.of(HeroClass.WARRIOR, ThrowingStone.class),
+				Arguments.of(HeroClass.MAGE, ClothArmor.class),
+				Arguments.of(HeroClass.MAGE, MagesStaff.class),
+				Arguments.of(HeroClass.ROGUE, ClothArmor.class),
+				Arguments.of(HeroClass.ROGUE, Dagger.class),
+				Arguments.of(HeroClass.ROGUE, CloakOfShadows.class),
+				Arguments.of(HeroClass.ROGUE, ThrowingKnife.class),
+				Arguments.of(HeroClass.HUNTRESS, ClothArmor.class),
+				Arguments.of(HeroClass.HUNTRESS, Gloves.class),
+				Arguments.of(HeroClass.HUNTRESS, SpiritBow.class),
+				Arguments.of(HeroClass.DUELIST, ClothArmor.class),
+				Arguments.of(HeroClass.DUELIST, Rapier.class),
+				Arguments.of(HeroClass.DUELIST, ThrowingSpike.class),
+				Arguments.of(HeroClass.CLERIC, ClothArmor.class),
+				Arguments.of(HeroClass.CLERIC, Cudgel.class),
+				Arguments.of(HeroClass.CLERIC, HolyTome.class));
+	}
+
 	static Stream<Arguments> classStartingKnowledge() {
 		return Stream.of(
 				Arguments.of(HeroClass.WARRIOR, PotionOfHealing.class, ScrollOfRage.class),
@@ -175,14 +276,20 @@ class HeroClassStartingKnowledgeTest {
 				Arguments.of(HeroClass.CLERIC, PotionOfPurity.class, ScrollOfRemoveCurse.class));
 	}
 
-	static Stream<Arguments> otherClassPotionKnowledge() {
+	static Stream<Arguments> otherClassTypeKnowledge() {
 		return Stream.of(
 				Arguments.of(HeroClass.WARRIOR, PotionOfLiquidFlame.class),
+				Arguments.of(HeroClass.WARRIOR, ScrollOfUpgrade.class),
 				Arguments.of(HeroClass.MAGE, PotionOfHealing.class),
+				Arguments.of(HeroClass.MAGE, ScrollOfRage.class),
 				Arguments.of(HeroClass.ROGUE, PotionOfStrength.class),
+				Arguments.of(HeroClass.ROGUE, ScrollOfMirrorImage.class),
 				Arguments.of(HeroClass.HUNTRESS, PotionOfInvisibility.class),
+				Arguments.of(HeroClass.HUNTRESS, ScrollOfMagicMapping.class),
 				Arguments.of(HeroClass.DUELIST, PotionOfMindVision.class),
-				Arguments.of(HeroClass.CLERIC, PotionOfHealing.class));
+				Arguments.of(HeroClass.DUELIST, ScrollOfLullaby.class),
+				Arguments.of(HeroClass.CLERIC, PotionOfHealing.class),
+				Arguments.of(HeroClass.CLERIC, ScrollOfRage.class));
 	}
 
 	static Stream<Arguments> otherClassEchoBossKnowledge() {
