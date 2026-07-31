@@ -240,13 +240,18 @@ public class Dungeon {
 	// we initialize the seed separately so that things like interlevelscene can
 	// access it early
 	public static void initSeed() {
+		if (!SPDSettings.dailyAllowedForPlayMode(echoPlayMode)) {
+			daily = false;
+			dailyReplay = false;
+		}
 		if (daily) {
 			// Ensures that daily seeds are not in the range of user-enterable seeds
 			seed = SPDSettings.lastDaily() + DungeonSeed.TOTAL_SEEDS;
 			DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
 			format.setTimeZone(TimeZone.getTimeZone("UTC"));
 			customSeedText = format.format(new Date(SPDSettings.lastDaily()));
-		} else if (!SPDSettings.customSeed().isEmpty()) {
+		} else if (SPDSettings.customSeedAllowedForPlayMode(echoPlayMode)
+				&& !SPDSettings.customSeed().isEmpty()) {
 			customSeedText = SPDSettings.customSeed();
 			seed = DungeonSeed.convertFromText(customSeedText);
 		} else {

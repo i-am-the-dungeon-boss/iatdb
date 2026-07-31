@@ -242,6 +242,9 @@ public class HeroSelectScene extends PixelScene {
 
 		Challenges.clearIfDisallowed(GamesInProgress.selectedEchoPlayMode);
 		SPDSettings.clearEasyModeIfDisallowed(GamesInProgress.selectedEchoPlayMode);
+		SPDSettings.clearCustomSeedIfDisallowed(GamesInProgress.selectedEchoPlayMode);
+		SPDSettings.clearDailyIfDisallowed(GamesInProgress.selectedEchoPlayMode);
+		GamesInProgress.clearRandomizeIfDisallowed(GamesInProgress.selectedEchoPlayMode);
 
 		if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()) {
 			Dungeon.challenges = 0;
@@ -582,7 +585,10 @@ public class HeroSelectScene extends PixelScene {
 		return text;
 	}
 
-	/** Game options (challenges, seeds, etc.) are only available in solo. */
+	/**
+	 * Game options are only available in solo: custom seed, daily, challenges,
+	 * easy mode, and randomize.
+	 */
 	public static boolean gameOptionsAllowed(EchoPlayMode mode) {
 		return mode == EchoPlayMode.SOLO;
 	}

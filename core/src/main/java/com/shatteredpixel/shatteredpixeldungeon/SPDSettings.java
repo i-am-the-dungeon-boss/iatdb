@@ -360,6 +360,32 @@ public class SPDSettings extends GameSettings {
 		return getString(KEY_CUSTOM_SEED, "", 20);
 	}
 
+	/** Custom seeds are only offered / applied in solo echo runs. */
+	public static boolean customSeedAllowedForPlayMode(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
+	}
+
+	/** Clears custom seed settings when the play mode disallows them. */
+	public static void clearCustomSeedIfDisallowed(EchoPlayMode mode) {
+		if (!customSeedAllowedForPlayMode(mode)) {
+			customSeed("");
+			Dungeon.customSeedText = "";
+		}
+	}
+
+	/** Daily runs are only offered / applied in solo echo runs. */
+	public static boolean dailyAllowedForPlayMode(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
+	}
+
+	/** Clears daily run flags when the play mode disallows them. */
+	public static void clearDailyIfDisallowed(EchoPlayMode mode) {
+		if (!dailyAllowedForPlayMode(mode)) {
+			Dungeon.daily = false;
+			Dungeon.dailyReplay = false;
+		}
+	}
+
 	public static void lastDaily(long value) {
 		put(KEY_LAST_DAILY, value);
 	}

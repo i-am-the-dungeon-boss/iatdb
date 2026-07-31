@@ -115,7 +115,8 @@ public class Statistics {
 		qualifiedForNoKilling = false;
 		qualifiedForBossRemainsBadge = false;
 		qualifiedForBossChallengeBadge = false;
-		qualifiedForRandomVictoryBadge = GamesInProgress.randomizedClass;
+		qualifiedForRandomVictoryBadge = GamesInProgress.randomizeAllowedForPlayMode(Dungeon.echoPlayMode)
+				&& GamesInProgress.randomizedClass;
 		
 		amuletObtained = false;
 		gameWon = false;

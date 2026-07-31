@@ -60,6 +60,9 @@ public class GamesInProgress {
 		Dungeon.echoPlayMode = allowed;
 		Challenges.clearIfDisallowed(allowed);
 		SPDSettings.clearEasyModeIfDisallowed(allowed);
+		SPDSettings.clearCustomSeedIfDisallowed(allowed);
+		SPDSettings.clearDailyIfDisallowed(allowed);
+		clearRandomizeIfDisallowed(allowed);
 		if (SPDSettings.easyModeAllowedForPlayMode(allowed)) {
 			SPDSettings.applyEasyModeSoloDefaultIfNeeded();
 		}
@@ -68,6 +71,18 @@ public class GamesInProgress {
 
 	public static void applySelectedEchoPlayMode() {
 		Dungeon.echoPlayMode = EchoPlayMode.sanitize(selectedEchoPlayMode);
+	}
+
+	/** Hero/challenge randomize is only offered / applied in solo echo runs. */
+	public static boolean randomizeAllowedForPlayMode(EchoPlayMode mode) {
+		return mode == EchoPlayMode.SOLO;
+	}
+
+	/** Clears randomized-class flag when the play mode disallows it. */
+	public static void clearRandomizeIfDisallowed(EchoPlayMode mode) {
+		if (!randomizeAllowedForPlayMode(mode)) {
+			randomizedClass = false;
+		}
 	}
 
 	public static void clearSlotCache() {
