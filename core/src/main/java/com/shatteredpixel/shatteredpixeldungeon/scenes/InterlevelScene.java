@@ -770,6 +770,16 @@ public class InterlevelScene extends PixelScene {
 		return Dungeon.newLevel();
 	}
 
+	/**
+	 * Loads an already-generated floor after re-resolving echo boss data. Skipping
+	 * prefetch here left FOUND-without-pending (or unset) after players left a
+	 * boss floor and returned — seal then hit spawn recovery.
+	 */
+	private Level loadLevelWithEchoPrefetch(int depth, int branch) throws IOException {
+		prefetchEchoBossIfNeeded(depth, branch);
+		return Dungeon.loadLevel(GamesInProgress.curSlot);
+	}
+
 	private void descend() throws IOException {
 
 		if (Dungeon.hero == null) {
@@ -816,7 +826,7 @@ public class InterlevelScene extends PixelScene {
 			Dungeon.branch = curTransition.destBranch;
 
 			if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
-				level = Dungeon.loadLevel(GamesInProgress.curSlot);
+				level = loadLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 			} else {
 				level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 			}
@@ -840,7 +850,7 @@ public class InterlevelScene extends PixelScene {
 		Level level;
 		Dungeon.depth++;
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
-			level = Dungeon.loadLevel(GamesInProgress.curSlot);
+			level = loadLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		} else {
 			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
@@ -862,7 +872,7 @@ public class InterlevelScene extends PixelScene {
 		Dungeon.branch = curTransition.destBranch;
 
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
-			level = Dungeon.loadLevel(GamesInProgress.curSlot);
+			level = loadLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		} else {
 			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
@@ -873,6 +883,7 @@ public class InterlevelScene extends PixelScene {
 	}
 
 	private void returnTo() throws IOException {
+
 		Mob.holdAllies(Dungeon.level);
 		Dungeon.saveAll();
 
@@ -880,7 +891,7 @@ public class InterlevelScene extends PixelScene {
 		Dungeon.depth = returnDepth;
 		Dungeon.branch = returnBranch;
 		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
-			level = Dungeon.loadLevel(GamesInProgress.curSlot);
+			level = loadLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		} else {
 			level = newLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch);
 		}
@@ -904,6 +915,11 @@ public class InterlevelScene extends PixelScene {
 			if (Dungeon.shouldRetreatEchoBossOnContinue(level)) {
 				retreatFromSealedEchoBoss();
 			} else {
+				// Unsealed boss START can continue without pending after leave/save —
+				// re-resolve before play. Skip while locked (Tengu / sealed fight).
+				if (!level.locked) {
+					prefetchEchoBossIfNeeded(Dungeon.depth, Dungeon.branch);
+				}
 				Dungeon.switchLevel(level, Dungeon.hero.pos);
 			}
 		}

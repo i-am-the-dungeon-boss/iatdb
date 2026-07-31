@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -9,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
@@ -232,6 +234,71 @@ class WandZapAsTest {
 	}
 
 	@Test
+	@DisplayName("Echo LivingEarth zapAs applies deferred onZap after borrow restore without NPE")
+	void echoLivingEarthZapAsSurvivesDeferredCallbackAfterBorrowRestore() {
+		Hero player = mageHero();
+		WandOfLivingEarth seed = new WandOfLivingEarth();
+		seed.curCharges = 3;
+		seed.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, livingEarthPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		EchoTestSupport.DeferredMagicMissileGroup fx = EchoTestSupport.attachDeferredMagicMissileParent(boss);
+		Hero kit = boss.getEchoHero();
+		Wand wand = kit.belongings.getItem(WandOfLivingEarth.class);
+		Assertions.assertThat(wand).isNotNull();
+		wand.curCharges = 3;
+		int hpBefore = player.HP;
+		player.invisible = 1;
+		// LivingEarth only emits on curUser when hitting a non-ally; force that path
+		// (ANDROID-1N) so deferred onZap touches curUser.sprite after borrow restore.
+		player.alignment = Char.Alignment.ENEMY;
+
+		boolean ok = wand.zapAs(UseContext.echo(boss), player.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(fx.hasPending()).isTrue();
+		Assertions.assertThat(kit.sprite)
+				.as("borrowed body sprite must stay until deferred onZap")
+				.isSameAs(boss.sprite);
+
+		Assertions.assertThatCode(fx::complete).doesNotThrowAnyException();
+		Assertions.assertThat(player.HP).isLessThan(hpBefore);
+		Assertions.assertThat(kit.sprite)
+				.as("phantom kit sprite restored after deferred onZap")
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("Echo MagicMissile zapAs applies deferred onZap even if curUser was cleared")
+	void echoMagicMissileZapAsSurvivesClearedCurUserBeforeDeferredCallback() {
+		Hero player = mageHero();
+		WandOfMagicMissile seed = new WandOfMagicMissile();
+		seed.curCharges = 3;
+		seed.collect(player.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, wandPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		EchoTestSupport.DeferredMagicMissileGroup fx = EchoTestSupport.attachDeferredMagicMissileParent(boss);
+		Hero kit = boss.getEchoHero();
+		Wand wand = kit.belongings.getItem(WandOfMagicMissile.class);
+		Assertions.assertThat(wand).isNotNull();
+		wand.curCharges = 3;
+		int hpBefore = player.HP;
+		player.invisible = 1;
+
+		boolean ok = wand.zapAs(UseContext.echo(boss), player.pos);
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(fx.hasPending()).isTrue();
+		Item.clearCurrent();
+
+		Assertions.assertThatCode(fx::complete).doesNotThrowAnyException();
+		Assertions.assertThat(player.HP).isLessThan(hpBefore);
+		Assertions.assertThat(kit.sprite).isNull();
+	}
+
+	@Test
 	@DisplayName("Echo zapAs refuses when wand has no charges")
 	void echoZapAsRefusesEmptyWand() {
 		Hero player = mageHero();
@@ -389,6 +456,14 @@ class WandZapAsTest {
 				.put("RANGED", new JSONObject()
 						.put("pick", "FIRST_LEGAL")
 						.put("items", new JSONArray().put("WandOfRegrowth")))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+	}
+
+	private static EchoPolicy livingEarthPolicy() {
+		return EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("RANGED", new JSONObject()
+						.put("pick", "FIRST_LEGAL")
+						.put("items", new JSONArray().put("WandOfLivingEarth")))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 }

@@ -707,6 +707,12 @@ public class Dungeon {
 		// Pending echo is only meaningful on the boss floor it was fetched for.
 		if (!isPendingEchoForCurrentBossFloor()) {
 			clearPendingEcho();
+			// FOUND without pending is never spawnable (Sentry "inconsistent"). Drop it
+			// when leaving the boss floor so re-entry is unset and must prefetch again.
+			// Keep NOT_FOUND — that latch is valid with null pending for Tengu/default.
+			if (lastEchoLookupStatus == EchoLookupOutcome.Status.FOUND) {
+				clearEchoLookupLatch();
+			}
 		}
 		if (pendingEcho != null) {
 			bundle.put("pending_echo", pendingEcho.toBundle());

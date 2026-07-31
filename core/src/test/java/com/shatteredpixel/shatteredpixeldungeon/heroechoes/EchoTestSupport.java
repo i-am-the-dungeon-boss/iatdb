@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Visual;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
 import com.watabou.utils.FileUtils;
@@ -272,6 +273,19 @@ public final class EchoTestSupport {
 		return group;
 	}
 
+	/**
+	 * MagicMissile holds its arrive callback until
+	 * {@link DeferredMagicMissileGroup#complete()} — reproduces production
+	 * zapAs timing where borrow restore runs before onZap.
+	 */
+	public static DeferredMagicMissileGroup attachDeferredMagicMissileParent(Char ch) {
+		DeferredMagicMissileGroup group = new DeferredMagicMissileGroup();
+		if (ch != null && ch.sprite != null) {
+			ch.sprite.parent = group;
+		}
+		return group;
+	}
+
 	public static final class DeferredProjectileGroup extends Group {
 		private Callback pending;
 
@@ -341,6 +355,42 @@ public final class EchoTestSupport {
 				return add(new InstantMissileSprite());
 			}
 			return super.recycle(c);
+		}
+	}
+
+	public static final class DeferredMagicMissileGroup extends Group {
+		public int magicMissileRecycles;
+		private Callback pending;
+
+		@Override
+		public synchronized Gizmo recycle(Class<? extends Gizmo> c) {
+			if (c == MagicMissile.class) {
+				magicMissileRecycles++;
+				return add(new DeferredMagicMissile());
+			}
+			if (c == MissileSprite.class) {
+				return add(new InstantMissileSprite());
+			}
+			return super.recycle(c);
+		}
+
+		public void complete() {
+			Callback cb = pending;
+			pending = null;
+			if (cb != null) {
+				cb.call();
+			}
+		}
+
+		public boolean hasPending() {
+			return pending != null;
+		}
+
+		private final class DeferredMagicMissile extends MagicMissile {
+			@Override
+			public void reset(int type, PointF from, PointF to, Callback callback) {
+				pending = callback;
+			}
 		}
 	}
 
@@ -506,6 +556,20 @@ public final class EchoTestSupport {
 			if (callback != null) {
 				callback.call();
 			}
+		}
+
+		@Override
+		public Emitter emitter() {
+			Emitter emitter = new Emitter();
+			emitter.pos(this);
+			return emitter;
+		}
+
+		@Override
+		public Emitter centerEmitter() {
+			Emitter emitter = new Emitter();
+			emitter.pos(center());
+			return emitter;
 		}
 	}
 

@@ -477,12 +477,15 @@ public abstract class Wand extends Item {
 
 		Hero kit = ctx.kit;
 		int savedPos = kit.pos;
-		com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite savedSprite = kit.sprite;
+		CharSprite savedSprite = kit.sprite;
 		boolean borrow = ctx.body != kit;
 		if (borrow) {
 			kit.pos = ctx.body.pos;
 			kit.sprite = ctx.body.sprite;
 		}
+		// Keep borrowed sprite/pos until deferred onZap finishes (ANDROID-1N /
+		// ANDROID-1K).
+		boolean restoreDeferred = false;
 		try {
 			setCurrent(kit);
 			final Ballistica shot = new Ballistica(ctx.body.pos, target, collisionProperties(target));
@@ -512,10 +515,20 @@ public abstract class Wand extends Item {
 
 			boolean canFx = UseContext.canWorldFx(kit);
 			Callback afterZap = () -> {
-				onZap(shot);
-				wandUsed(ctx);
+				try {
+					AiItemActions.withUser(kit, this, () -> {
+						onZap(shot);
+						wandUsed(ctx);
+					});
+				} finally {
+					if (borrow) {
+						kit.sprite = savedSprite;
+						kit.pos = savedPos;
+					}
+				}
 			};
 			if (canFx) {
+				restoreDeferred = true;
 				kit.sprite.zap(cell);
 				if (cursed) {
 					if (ctx.heroFX && !cursedKnown) {
@@ -544,11 +557,12 @@ public abstract class Wand extends Item {
 			}
 
 			// Headless / off-stage: apply immediately (no MagicMissile parent).
-			AiItemActions.withUser(kit, this, afterZap::call);
+			restoreDeferred = true;
+			afterZap.call();
 			cursedKnown = true;
 			return true;
 		} finally {
-			if (borrow) {
+			if (borrow && !restoreDeferred) {
 				kit.sprite = savedSprite;
 				kit.pos = savedPos;
 			}

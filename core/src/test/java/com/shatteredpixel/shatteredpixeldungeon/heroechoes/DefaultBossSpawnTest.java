@@ -157,6 +157,48 @@ class DefaultBossSpawnTest {
 	}
 
 	@Test
+	@DisplayName("store on boss floor keeps NOT_FOUND latch for default spawn")
+	void storeOnBossFloorKeepsNotFoundLatch() {
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
+		Dungeon.depth = 10;
+		Dungeon.prefetchEchoBossForDepth(10);
+
+		Dungeon.storeEchoChoiceInBundle(new Bundle());
+
+		Assertions.assertThat(EchoBossSpawner.shouldSpawnDefault()).isTrue();
+	}
+
+	@Test
+	@DisplayName("leave and re-prefetch boss floor restores echo without spawn recovery")
+	void leaveAndReprefetchRestoresEchoWithoutSpawnRecovery() {
+		String previous = Game.version;
+		Game.version = "1.0.0";
+		try {
+			List<Throwable> captured = new ArrayList<>();
+			SentryCrashReporting.setReporter(captured::add);
+			CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
+					.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(10)));
+			Dungeon.depth = 10;
+			Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+			Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(10)).isTrue();
+
+			Dungeon.depth = 9;
+			Dungeon.storeEchoChoiceInBundle(new Bundle());
+
+			Dungeon.depth = 10;
+			Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(10)).isTrue();
+
+			EchoBossSpawner.BossSpawnChoice choice = EchoBossSpawner.resolveBossSpawn(
+					failed -> EchoPrefetchUserChoice.ABORT);
+
+			Assertions.assertThat(choice).isEqualTo(EchoBossSpawner.BossSpawnChoice.ECHO);
+			Assertions.assertThat(captured).isEmpty();
+		} finally {
+			Game.version = previous;
+		}
+	}
+
+	@Test
 	@DisplayName("unset resolve reports Sentry then Retry FOUND returns ECHO")
 	void unsetResolveRetryFoundReturnsEcho() {
 		String previous = Game.version;

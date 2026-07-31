@@ -40,6 +40,19 @@ class InterlevelEchoPrefetchUpdateGateTest {
 		Assertions.assertThat(source).contains("promptForcedUpdate");
 	}
 
+	@Test
+	@DisplayName("generated boss floors still prefetch before loadLevel")
+	void generatedBossFloorsStillPrefetch() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java");
+
+		Assertions.assertThat(source).contains("loadLevelWithEchoPrefetch");
+		Assertions.assertThat(source).contains(
+				"level = loadLevelWithEchoPrefetch(Dungeon.depth, Dungeon.branch)");
+		Assertions.assertThat(source).contains(
+				"if (!level.locked) {\n\t\t\t\t\tprefetchEchoBossIfNeeded");
+	}
+
 	private static String readSource(String relativePath) throws IOException {
 		Path dir = Paths.get("").toAbsolutePath();
 		for (int i = 0; i < 8 && dir != null; i++) {

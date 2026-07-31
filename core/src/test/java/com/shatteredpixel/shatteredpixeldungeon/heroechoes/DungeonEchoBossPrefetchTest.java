@@ -232,6 +232,24 @@ class DungeonEchoBossPrefetchTest {
 	}
 
 	@Test
+	@DisplayName("store off boss floor clears FOUND latch so re-entry is not inconsistent")
+	void storeOffBossFloorClearsFoundLatch() {
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
+				.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(10)));
+		Dungeon.depth = 10;
+		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(10)).isTrue();
+		Assertions.assertThat(Dungeon.wasEchoLookupFound()).isTrue();
+
+		Dungeon.depth = 9;
+		Dungeon.storeEchoChoiceInBundle(new Bundle());
+
+		Dungeon.depth = 10;
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+		Assertions.assertThat(Dungeon.wasEchoLookupFound()).isFalse();
+		Assertions.assertThat(Dungeon.isEchoLookupUnset()).isTrue();
+	}
+
+	@Test
 	@DisplayName("restore ignores legacy echo_boss_active without pending echo data")
 	void restoreIgnoresLegacyActiveFlagWithoutPending() {
 		Bundle bundle = new Bundle();
