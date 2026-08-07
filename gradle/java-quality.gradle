@@ -1,0 +1,66 @@
+// Spotless + Error Prone + SpotBugs for JVM modules (not Android AGP).
+// Applied from root when the `java` plugin is present.
+//
+// Avoid importing plugin classes here — applied scripts are compiled before
+// plugin jars are on the script classpath.
+
+apply plugin: 'com.diffplug.spotless'
+apply plugin: 'net.ltgt.errorprone'
+apply plugin: 'com.github.spotbugs'
+
+dependencies {
+	errorprone 'com.google.errorprone:error_prone_core:2.50.0'
+}
+
+// --- Spotless ----------------------------------------------------------------
+// Light hygiene only. Full Eclipse / google-java-format rewrite fights Shattered
+// master layout (enums one-per-line, tab indent). Prefs live in
+// config/spotless/eclipse-java.prefs if you opt in later with eclipse().
+// ratchetFrom: only files changed vs the baseline are checked/applied.
+spotless {
+	encoding 'UTF-8'
+
+	def ratchet = project.findProperty('spotlessRatchet')
+	if (ratchet == null) {
+		ratchet = 'origin/main'
+	}
+	if (ratchet != 'none' && !ratchet.toString().trim().isEmpty()) {
+		ratchetFrom ratchet.toString()
+	}
+
+	java {
+		target 'src/*/java/**/*.java'
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
+// --- Error Prone -------------------------------------------------------------
+// Full SPD sources trip many ERROR-severity checks. Default: warnings only so
+// compile stays green. Fail the build with: ./gradlew … -PerrorProneErrors
+tasks.withType(JavaCompile).configureEach { compile ->
+	// Default javac -Xmaxwarns is 100; this codebase exceeds that easily.
+	options.compilerArgs.addAll(['-Xmaxwarns', '5000'])
+	options.errorprone {
+		disableWarningsInGeneratedCode = true
+		if (!project.hasProperty('errorProneErrors')) {
+			allErrorsAsWarnings = true
+		}
+	}
+}
+
+// --- SpotBugs ----------------------------------------------------------------
+// Reports always; failures optional via -PspotbugsErrors
+spotbugs {
+	ignoreFailures = !project.hasProperty('spotbugsErrors')
+	excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
+}
+
+['spotbugsMain', 'spotbugsTest'].each { taskName ->
+	tasks.matching { it.name == taskName }.configureEach { task ->
+		task.reports { reports ->
+			reports.maybeCreate('html').required = true
+			reports.maybeCreate('xml').required = true
+		}
+	}
+}

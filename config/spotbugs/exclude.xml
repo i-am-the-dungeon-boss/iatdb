@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Baseline excludes for SpotBugs on the SPD fork. Tighten over time. -->
+<FindBugsFilter>
+	<!-- LibGDX / RoboVM reflection and serialization look "unused" statically. -->
+	<Match>
+		<Bug
+			pattern="UUF_UNUSED_FIELD,UWF_UNWRITTEN_FIELD,SS_SHOULD_BE_STATIC,MS_SHOULD_BE_FINAL,MS_MUTABLE_COLLECTION,MS_CANNOT_BE_FINAL" />
+	</Match>
+	<!-- Intentional fall-through and similar game-engine patterns. -->
+	<Match>
+		<Bug pattern="SF_SWITCH_FALLTHROUGH,SF_SWITCH_NO_DEFAULT" />
+	</Match>
+</FindBugsFilter>

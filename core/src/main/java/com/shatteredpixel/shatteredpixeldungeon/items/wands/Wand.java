@@ -577,7 +577,7 @@ public abstract class Wand extends Item {
 				|| charger.target != user) {
 			return;
 		}
-		// regular: if hero owns wand but it isn't in belongings it must be in the staff
+		// regular: if hero owns wand, but it isn't in belongings it must be in the staff
 		if (user.heroClass == HeroClass.MAGE && !user.belongings.contains(this)) {
 			// grants 3/5 shielding
 			int shieldToGive = 1 + 2 * user.pointsInTalent(Talent.BACKUP_BARRIER);
@@ -691,7 +691,7 @@ public abstract class Wand extends Item {
 				}
 			}
 
-			// If hero owns wand but it isn't in belongings it must be in the staff
+			// If hero owns wand, but it isn't in belongings it must be in the staff
 			if (Dungeon.hero.hasTalent(Talent.EMPOWERED_STRIKE)
 					&& charger != null && charger.target == Dungeon.hero
 					&& !Dungeon.hero.belongings.contains(this)) {
@@ -791,7 +791,7 @@ public abstract class Wand extends Item {
 	private static final String AVAILABLE_USES = "available_uses";
 	private static final String CUR_CHARGES = "curCharges";
 	private static final String CUR_CHARGE_KNOWN = "curChargeKnown";
-	private static final String PARTIALCHARGE = "partialCharge";
+	private static final String PARTIAL_CHARGE = "partialCharge";
 	private static final String CURSE_INFUSION_BONUS = "curse_infusion_bonus";
 	private static final String RESIN_BONUS = "resin_bonus";
 
@@ -802,7 +802,7 @@ public abstract class Wand extends Item {
 		bundle.put(AVAILABLE_USES, availableUsesToID);
 		bundle.put(CUR_CHARGES, curCharges);
 		bundle.put(CUR_CHARGE_KNOWN, curChargeKnown);
-		bundle.put(PARTIALCHARGE, partialCharge);
+		bundle.put(PARTIAL_CHARGE, partialCharge);
 		bundle.put(CURSE_INFUSION_BONUS, curseInfusionBonus);
 		bundle.put(RESIN_BONUS, resinBonus);
 	}
@@ -819,7 +819,7 @@ public abstract class Wand extends Item {
 
 		curCharges = bundle.getInt(CUR_CHARGES);
 		curChargeKnown = bundle.getBoolean(CUR_CHARGE_KNOWN);
-		partialCharge = bundle.getFloat(PARTIALCHARGE);
+		partialCharge = bundle.getFloat(PARTIAL_CHARGE);
 	}
 
 	@Override

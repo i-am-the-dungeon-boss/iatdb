@@ -22,6 +22,22 @@ When matching “master style,” compare against the `master` branch. Implement
 
 Windows: `gradlew.bat`. Prefer targeted `:core:test` unless a full build is requested.
 
+Concurrent Gradle: check `./gradlew --status` first; use a **git worktree** for a second run — never two builds in the same checkout (see `.cursor/rules/gradle-worktree.mdc`).
+
+## Quality checks (Spotless / Error Prone / SpotBugs)
+
+Shared config: [`gradle/java-quality.gradle`](gradle/java-quality.gradle). Details: [`.cursor/rules/java-quality-checks.mdc`](.cursor/rules/java-quality-checks.mdc).
+
+| When                 | Run                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Day-to-day           | Nothing special — match **master** style                                                                                       |
+| Optional mid-work    | `./gradlew :core:spotlessApply`                                                                                                |
+| Before PR            | `./gradlew :core:spotlessCheck :core:test`                                                                                     |
+| Optional deeper pass | `./gradlew :core:compileJava` (Error Prone warnings), `./gradlew :core:spotbugsMain` → `core/build/reports/spotbugs/main.html` |
+| Strict (opt-in)      | `-PerrorProneErrors` / `-PspotbugsErrors` — do not use as default                                                              |
+
+Do **not** mass-fix repo-wide findings. Prefer issues in code you changed (especially `heroechoes/`). Spotless is trailing whitespace + newline only (`ratchetFrom origin/main`).
+
 ## Modules
 
 | Path                         | Role                                                 |

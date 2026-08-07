@@ -35,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -48,6 +49,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.BArray;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
@@ -73,12 +75,20 @@ public class WandOfLightning extends DamageWand {
 	@Override
 	public void onZap(Ballistica bolt) {
 
+		// Always resolve targets here. Headless zapAs skips fx(); when fx did run,
+		// re-gather is cheap and avoids stale affected from a prior zap.
+		gatherTargets(bolt);
+
 		for (Char ch : affected.toArray(new Char[0])) {
 			if (ch != curUser && ch.alignment == curUser.alignment && ch.pos != bolt.collisionPos) {
 				affected.remove(ch);
 			} else if (ch.buff(LightningCharge.class) != null) {
 				affected.remove(ch);
 			}
+		}
+
+		if (affected.isEmpty()) {
+			return;
 		}
 
 		// lightning deals less damage per-target, the more targets that are hit.
@@ -90,8 +100,10 @@ public class WandOfLightning extends DamageWand {
 		for (Char ch : affected) {
 			if (ch == Dungeon.hero)
 				PixelScene.shake(2, 0.3f);
-			ch.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);
-			ch.sprite.flash();
+			if (UseContext.canWorldFx(ch)) {
+				ch.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);
+				ch.sprite.flash();
+			}
 
 			wandProc(ch, chargesPerCast());
 			if (ch == curUser && ch.isAlive()) {
@@ -119,9 +131,12 @@ public class WandOfLightning extends DamageWand {
 			float powerMulti = Math.min(1f, procChance);
 
 			FlavourBuff.prolong(attacker, LightningCharge.class, powerMulti * LightningCharge.DURATION);
-			attacker.sprite.centerEmitter().burst(SparkParticle.FACTORY, 10);
-			attacker.sprite.flash();
-			Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
+			// Echo kit is headless — charge still applies (ANDROID-1T).
+			if (UseContext.canWorldFx(attacker)) {
+				attacker.sprite.centerEmitter().burst(SparkParticle.FACTORY, 10);
+				attacker.sprite.flash();
+				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
+			}
 
 		}
 	}
@@ -142,6 +157,48 @@ public class WandOfLightning extends DamageWand {
 		@Override
 		public void tintIcon(Image icon) {
 			icon.hardlight(1, 1, 0);
+		}
+	}
+
+	private void gatherTargets(Ballistica bolt) {
+		affected.clear();
+		arcs.clear();
+
+		int cell = bolt.collisionPos;
+
+		Char ch = Actor.findChar(cell);
+		if (ch != null) {
+			if (ch instanceof DwarfKing) {
+				Statistics.qualifiedForBossChallengeBadge = false;
+			}
+
+			affected.add(ch);
+			addArc(curUser, ch);
+			arc(ch);
+		} else {
+			addArcToCell(curUser, bolt.collisionPos);
+			if (Dungeon.level.heroFOV[cell]) {
+				CellEmitter.center(cell).burst(SparkParticle.FACTORY, 3);
+			}
+		}
+	}
+
+	private void addArc(Char from, Char to) {
+		if (UseContext.canWorldFx(from) && UseContext.canWorldFx(to)) {
+			arcs.add(new Lightning.Arc(from.sprite.center(), to.sprite.center()));
+		} else if (UseContext.canWorldFx(from)) {
+			arcs.add(new Lightning.Arc(from.sprite.center(),
+					DungeonTilemap.raisedTileCenterToWorld(to.pos)));
+		} else if (UseContext.canWorldFx(to)) {
+			arcs.add(new Lightning.Arc(DungeonTilemap.raisedTileCenterToWorld(from.pos),
+					to.sprite.center()));
+		}
+	}
+
+	private void addArcToCell(Char from, int cell) {
+		PointF to = DungeonTilemap.raisedTileCenterToWorld(cell);
+		if (UseContext.canWorldFx(from)) {
+			arcs.add(new Lightning.Arc(from.sprite.center(), to));
 		}
 	}
 
@@ -169,7 +226,7 @@ public class WandOfLightning extends DamageWand {
 
 		affected.addAll(hitThisArc);
 		for (Char hit : hitThisArc) {
-			arcs.add(new Lightning.Arc(ch.sprite.center(), hit.sprite.center()));
+			addArc(ch, hit);
 			arc(hit);
 		}
 	}
@@ -177,29 +234,14 @@ public class WandOfLightning extends DamageWand {
 	@Override
 	public void fx(Ballistica bolt, Callback callback) {
 
-		affected.clear();
-		arcs.clear();
+		gatherTargets(bolt);
 
-		int cell = bolt.collisionPos;
-
-		Char ch = Actor.findChar(cell);
-		if (ch != null) {
-			if (ch instanceof DwarfKing) {
-				Statistics.qualifiedForBossChallengeBadge = false;
-			}
-
-			affected.add(ch);
-			arcs.add(new Lightning.Arc(curUser.sprite.center(), ch.sprite.center()));
-			arc(ch);
-		} else {
-			arcs.add(new Lightning.Arc(curUser.sprite.center(),
-					DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos)));
-			CellEmitter.center(cell).burst(SparkParticle.FACTORY, 3);
+		// Echo kit / headless curUser: skip Lightning group, still apply zap
+		// (ANDROID-1N).
+		if (UseContext.canWorldFx(curUser) && !arcs.isEmpty()) {
+			curUser.sprite.parent.addToFront(new Lightning(arcs, null));
+			Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 		}
-
-		// don't want to wait for the effect before processing damage.
-		curUser.sprite.parent.addToFront(new Lightning(arcs, null));
-		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 		callback.call();
 	}
 

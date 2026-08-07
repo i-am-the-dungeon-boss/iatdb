@@ -1,0 +1,31 @@
+---
+description: When to run Spotless, Error Prone, and SpotBugs (not on every edit)
+alwaysApply: true
+---
+
+# Java quality checks (Spotless / Error Prone / SpotBugs)
+
+Config: [`gradle/java-quality.gradle`](gradle/java-quality.gradle). JVM modules only (not Android AGP).
+
+## When to run
+
+| When                                | What                                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| Day-to-day editing                  | Nothing — match **master** style by hand                                         |
+| Optional after a chunk of edits     | `./gradlew :core:spotlessApply`                                                  |
+| Before PR / finishing a feature     | `./gradlew :core:spotlessCheck :core:test`                                       |
+| Feature done / bug hunt (optional)  | `./gradlew :core:compileJava` (Error Prone warnings) and/or `:core:spotbugsMain` |
+| Release / strict gate (opt-in only) | `-PerrorProneErrors` / `-PspotbugsErrors` — **not** default                      |
+
+Do **not** run SpotBugs or Error Prone on every save, every small edit, or as a substitute for tests.
+
+## How to treat findings
+
+- **Baseline is noisy** (especially outside `heroechoes/`). Do not mass-fix upstream SPD style hits (`PA_PUBLIC_*`, `ReferenceEquality` on Char/Item identity, public fields).
+- Prefer fixing issues in **code you touched**, especially `heroechoes/` empty catches / unused code from Error Prone.
+- SpotBugs HTML: `core/build/reports/spotbugs/main.html`. Error Prone: compile console only (no report folder).
+- Spotless is light hygiene (trailing whitespace + newline) with `ratchetFrom origin/main` — not google-java-format.
+
+## Concurrent Gradle
+
+Same as other long runs: `./gradlew --status` first; use a worktree if another build is active (see `gradle-worktree` rule).

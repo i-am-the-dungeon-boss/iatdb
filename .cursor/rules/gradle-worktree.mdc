@@ -1,0 +1,34 @@
+---
+description: Isolate concurrent Gradle runs with git worktrees; check daemon status first
+alwaysApply: true
+---
+
+# Concurrent Gradle
+
+Never run two full Gradle builds in the same checkout — they contend on `build/` and `.gradle` (especially painful on Windows).
+
+## Before a long run
+
+```bash
+./gradlew --status
+```
+
+`BUSY` means another build may already be using a daemon. Idle daemons are fine to share across **different** directories.
+
+## Parallel work → separate worktree
+
+```bash
+git worktree add ../iatdb-<purpose> <branch>
+cd ../iatdb-<purpose>
+./gradlew :core:test
+```
+
+Windows: `gradlew.bat`. Keep the game (`:desktop:run`) in one tree and tests in another.
+
+## Do not
+
+- Start a second `./gradlew` in the same tree while another build or IDE sync is writing `build/`
+- Rely on `--project-cache-dir` alone — it does not isolate `build/` output
+- Use a separate `GRADLE_USER_HOME` unless you need daemon isolation (duplicates caches)
+
+`org.gradle.parallel=true` only parallelizes tasks **inside one build**, not multiple CLI runs.

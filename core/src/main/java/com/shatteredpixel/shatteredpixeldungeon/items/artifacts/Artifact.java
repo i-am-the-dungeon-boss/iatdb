@@ -150,7 +150,7 @@ public class Artifact extends KindofMisc {
 
 	public void resetForTrinity(int visibleLevel) {
 		level(Math.round((visibleLevel * levelCap) / 10f));
-		exp = Integer.MIN_VALUE; // ensures no levelling
+		exp = Integer.MIN_VALUE; // ensures no leveling
 		charge = chargeCap;
 		cooldown = 0;
 	}

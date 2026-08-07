@@ -9,6 +9,12 @@ buildscript {
     }
 }
 
+plugins {
+    id 'com.diffplug.spotless' version '8.9.0' apply false
+    id 'net.ltgt.errorprone' version '5.1.0' apply false
+    id 'com.github.spotbugs' version '6.5.9' apply false
+}
+
 allprojects {
 
     ext {
@@ -217,4 +223,17 @@ static String osFamilySlug() {
     if (os.contains('mac')) return 'macos'
     if (os.contains('linux')) return 'linux'
     return 'unknown'
+}
+
+// Spotless / Error Prone / SpotBugs for JVM modules (java / java-library).
+// Skips Android AGP. See gradle/java-quality.gradle.
+subprojects { sub ->
+    sub.pluginManager.withPlugin('java') {
+        if (sub.plugins.hasPlugin('com.android.base')
+                || sub.plugins.hasPlugin('com.android.application')
+                || sub.plugins.hasPlugin('com.android.library')) {
+            return
+        }
+        sub.apply from: rootProject.file('gradle/java-quality.gradle')
+    }
 }
