@@ -1,6 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoScrollAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 
@@ -12,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
@@ -78,7 +81,7 @@ class EchoHeroMessageSilenceTest {
 		Assertions.assertThat(wand).isNotNull();
 		wand.curCharges = 0;
 
-		boolean ok = wand.zapAs(UseContext.echo(boss), player.pos);
+		boolean ok = EchoWandAdapter.zap(boss, wand, player.pos);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(log.lines())
@@ -100,7 +103,7 @@ class EchoHeroMessageSilenceTest {
 		Assertions.assertThat(wand).isNotNull();
 		wand.curCharges = 0;
 
-		boolean ok = wand.zapAs(UseContext.hero(hero), target.pos);
+		boolean ok = wand.zap(hero, target.pos);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(log.lines())
@@ -123,7 +126,7 @@ class EchoHeroMessageSilenceTest {
 		kit.belongings.weapon = sword;
 
 		ScrollOfIdentify item = kit.belongings.getItem(ScrollOfIdentify.class);
-		Assertions.assertThat(item.readAs(UseContext.echo(boss))).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(boss, item)).isTrue();
 		Assertions.assertThat(sword.isIdentified()).isTrue();
 		Assertions.assertThat(log.isEmpty())
 				.as("echo identify must not print 'it is…' to the player log")
@@ -147,8 +150,8 @@ class EchoHeroMessageSilenceTest {
 		sword.cursedKnown = true;
 		kit.belongings.weapon = sword;
 
-		Assertions.assertThat(kit.belongings.getItem(ScrollOfRemoveCurse.class)
-				.readAs(UseContext.echo(boss))).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(boss,
+				kit.belongings.getItem(ScrollOfRemoveCurse.class))).isTrue();
 		Assertions.assertThat(sword.cursed).isFalse();
 		Assertions.assertThat(log.lines())
 				.as("echo remove-curse must not print 'cleansed' to the player log")
@@ -225,7 +228,7 @@ class EchoHeroMessageSilenceTest {
 		stone.cursedKnown = false;
 		boss.getEchoHero().STR = 20;
 
-		Assertions.assertThat(stone.throwAs(UseContext.echo(boss), player.pos)).isTrue();
+		Assertions.assertThat(EchoThrowAdapter.throwItem(boss, stone, player.pos)).isTrue();
 		Assertions.assertThat(log.lines())
 				.as("echo cursed missile must not print hero curse-discovery feedback")
 				.noneMatch(line -> line.contains(Messages.get(stone, "curse_discover")));

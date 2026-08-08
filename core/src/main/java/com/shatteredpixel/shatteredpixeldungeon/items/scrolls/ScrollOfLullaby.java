@@ -30,7 +30,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Drowsy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -44,49 +43,24 @@ public class ScrollOfLullaby extends Scroll {
 
 	@Override
 	public void doRead() {
-		doReadAs(UseContext.hero(curUser));
-	}
 
-	@Override
-	protected boolean doReadAs(UseContext ctx) {
-		detach(ctx.kit.belongings.backpack);
+		detach(curUser.belongings.backpack);
+		curUser.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+		Sample.INSTANCE.play( Assets.Sounds.LULLABY );
 
-		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.centerEmitter().start(Speck.factory(Speck.NOTE), 0.3f, 5);
-			Sample.INSTANCE.play(Assets.Sounds.LULLABY);
-		}
-
-		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
 			if (Dungeon.level.heroFOV[mob.pos]) {
-				Buff.affect(mob, Drowsy.class, Drowsy.DURATION);
-				if (UseContext.canWorldFx(mob)) {
-					mob.sprite.centerEmitter().start(Speck.factory(Speck.NOTE), 0.3f, 5);
-				}
+				Buff.affect( mob, Drowsy.class, Drowsy.DURATION );
+				mob.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
 			}
 		}
-		// Echo: also soothe the opposing Hero (not in level.mobs)
-		ctx.forEachVisibleHostile(ch -> {
-			if (ch instanceof Mob) {
-				return; // already handled
-			}
-			Buff.affect(ch, Drowsy.class, Drowsy.DURATION);
-			if (UseContext.canWorldFx(ch)) {
-				com.watabou.noosa.particles.Emitter e = ch.sprite.centerEmitter();
-				if (e != null) {
-					e.start(Speck.factory(Speck.NOTE), 0.3f, 5);
-				}
-			}
-		});
 
-		Buff.affect(ctx.body, Drowsy.class, Drowsy.DURATION);
+		Buff.affect( curUser, Drowsy.class, Drowsy.DURATION );
 
-		if (ctx.heroFX) {
-			GLog.i(Messages.get(this, "sooth"));
-			identify();
-		}
+		GLog.i( Messages.get(this, "sooth") );
 
-		readAnimation(ctx);
-		return true;
+		identify();
+		readAnimation();
 	}
 
 	@Override

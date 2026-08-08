@@ -9,7 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCloakAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
@@ -53,7 +53,7 @@ class EchoInventoryTest {
 		CloakOfShadows cloak = kit.belongings.getItem(CloakOfShadows.class);
 		Assertions.assertThat(cloak).isNotNull();
 		cloak.directCharge(2);
-		Assertions.assertThat(cloak.useAs(UseContext.echo(boss))).isTrue();
+		Assertions.assertThat(EchoCloakAdapter.toggleStealth(boss, cloak)).isTrue();
 
 		Assertions.assertThat(EchoInventory.availableIds(kit)).doesNotContain("CloakOfShadows");
 	}
@@ -70,11 +70,11 @@ class EchoInventoryTest {
 		CloakOfShadows live = kit.belongings.getItem(CloakOfShadows.class);
 		Assertions.assertThat(live).isNotNull();
 		live.directCharge(2);
-		Assertions.assertThat(live.useAs(UseContext.echo(boss))).isTrue();
+		Assertions.assertThat(EchoCloakAdapter.toggleStealth(boss, live)).isTrue();
 
 		Bundle bundle = new Bundle();
 		live.storeInBundle(bundle);
-		live.useAs(UseContext.echo(boss)); // clear boss stealth
+		EchoCloakAdapter.toggleStealth(boss, live); // clear boss stealth
 
 		CloakOfShadows restored = new CloakOfShadows();
 		restored.restoreFromBundle(bundle);

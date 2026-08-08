@@ -5,11 +5,20 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 
 import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoInventory;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.MageArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
@@ -24,9 +33,13 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @ExtendWith(GdxTestExtension.class)
 class DebugEchoArsenalTest {
@@ -237,61 +250,82 @@ class DebugEchoArsenalTest {
 		Assertions.assertThat(abilityAfter).isEqualTo(abilityBefore);
 	}
 
-	@Test
-	@DisplayName("grantArmorAbility equips charged ClassArmor and lists it on ARMOR role")
-	void grantArmorAbilityEquipsClassArmorOnArmorRole() {
+	@ParameterizedTest(name = "{0} echo kit gets {1}")
+	@MethodSource("classArmorByHeroClass")
+	@DisplayName("grantArmorAbility equips latest-tier class armor for the kit hero class")
+	void grantArmorAbilityEquipsLatestTierClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
 		DebugSettings.setDebugBuildOverride(true);
-		Hero hero = EchoTestSupport.warriorHero();
+		Hero hero = heroOf(heroClass);
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoPolicy.fallback(), 5);
 		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
 
 		String abilityName = DebugEchoArsenal.grantArmorAbility(boss);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.belongings.armor)
-				.isInstanceOf(com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor.class);
-		com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor armor = (com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor) kit.belongings.armor;
+		Assertions.assertThat(kit.heroClass).isEqualTo(heroClass);
+		Assertions.assertThat(kit.belongings.armor).isInstanceOf(armorType);
+		ClassArmor armor = (ClassArmor) kit.belongings.armor;
+		Assertions.assertThat(armor.tier)
+				.as("plate-tier class armor")
+				.isEqualTo(5);
+		Assertions.assertThat(armor.level()).isEqualTo(100);
 		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
-		Assertions.assertThat(kit.armorAbility).isNotNull();
-		Assertions.assertThat(abilityName).isEqualTo(kit.armorAbility.name());
-		Assertions.assertThat(EchoInventory.availableIds(kit))
-				.contains(armor.getClass().getSimpleName());
+		Assertions.assertThat(kit.armorAbility).isNull();
+		Assertions.assertThat(abilityName).isEmpty();
+	}
 
-		org.json.JSONArray armorItems = boss.getEchoPolicy().root()
-				.getJSONObject("capabilities")
-				.getJSONObject(DebugEchoArsenal.ROLE_ARMOR)
-				.getJSONArray("items");
-		List<String> ids = new ArrayList<>();
-		for (int i = 0; i < armorItems.length(); i++) {
-			ids.add(armorItems.getString(i));
-		}
-		Assertions.assertThat(ids).containsExactly(armor.getClass().getSimpleName());
-		Assertions.assertThat(boss.getEchoPolicy().root()
-				.getJSONObject("selection").getJSONArray("default_roles").getString(0))
-				.isEqualTo(DebugEchoArsenal.ROLE_ARMOR);
+	@ParameterizedTest(name = "{0} living hero gets {1}")
+	@MethodSource("classArmorByHeroClass")
+	@DisplayName("grantHeroClassArmor equips latest-tier class armor for the living hero class")
+	void grantHeroClassArmorEquipsLatestTierClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
+		DebugSettings.setDebugBuildOverride(true);
+		Hero hero = heroOf(heroClass);
+
+		Assertions.assertThat(DebugEchoArsenal.grantHeroClassArmor()).isTrue();
+
+		Assertions.assertThat(hero.belongings.armor).isInstanceOf(armorType);
+		ClassArmor armor = (ClassArmor) hero.belongings.armor;
+		Assertions.assertThat(armor.tier).isEqualTo(5);
+		Assertions.assertThat(armor.level()).isEqualTo(100);
+		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
+		Assertions.assertThat(hero.armorAbility).isNull();
 	}
 
 	@Test
-	@DisplayName("grantArmorAbility rotates the echo kit armor ability each press")
-	void grantArmorAbilityRotatesArmorAbility() {
+	@DisplayName("grantArmorAbility keeps class armor with no ability on repeated presses")
+	void grantArmorAbilityKeepsClassArmorWithoutAbility() {
 		DebugSettings.setDebugBuildOverride(true);
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoPolicy.fallback(), 5);
 		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
 
 		DebugEchoArsenal.grantArmorAbility(boss);
-		Class<?> first = boss.getEchoHero().armorAbility.getClass();
-
 		DebugEchoArsenal.grantArmorAbility(boss);
-		Class<?> second = boss.getEchoHero().armorAbility.getClass();
 
-		Assertions.assertThat(second).isNotEqualTo(first);
-		List<Class<?>> allowed = new ArrayList<>();
-		for (com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility ability : boss
-				.getEchoHero().heroClass.armorAbilities()) {
-			allowed.add(ability.getClass());
-		}
-		Assertions.assertThat(allowed).contains(first, second);
+		Assertions.assertThat(boss.getEchoHero().armorAbility).isNull();
+		Assertions.assertThat(boss.getEchoHero().belongings.armor)
+				.isInstanceOf(WarriorArmor.class);
+		Assertions.assertThat(boss.getEchoHero().belongings.armor.level()).isEqualTo(100);
+		Assertions.assertThat(((ClassArmor) boss.getEchoHero().belongings.armor).tier).isEqualTo(5);
+	}
+
+	static Stream<Arguments> classArmorByHeroClass() {
+		return Stream.of(
+				Arguments.of(HeroClass.WARRIOR, WarriorArmor.class),
+				Arguments.of(HeroClass.MAGE, MageArmor.class),
+				Arguments.of(HeroClass.ROGUE, RogueArmor.class),
+				Arguments.of(HeroClass.HUNTRESS, HuntressArmor.class),
+				Arguments.of(HeroClass.DUELIST, DuelistArmor.class),
+				Arguments.of(HeroClass.CLERIC, ClericArmor.class));
+	}
+
+	private static Hero heroOf(HeroClass heroClass) {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		heroClass.initHero(hero);
+		hero.lvl = 6;
+		hero.HP = hero.HT = 30;
+		return hero;
 	}
 
 	@Test

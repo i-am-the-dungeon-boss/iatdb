@@ -6,8 +6,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.He
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link HeroicLeap} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityHeroicLeapTest {
@@ -40,13 +40,10 @@ class EchoArmorAbilityHeroicLeapTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo HeroicLeap activateAs moves the boss body to the landing cell")
+	@DisplayName("Echo HeroicLeap adapter activate moves the boss body to the landing cell")
 	void movesBossBody() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -55,7 +52,7 @@ class EchoArmorAbilityHeroicLeapTest {
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new HeroicLeap().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new HeroicLeap(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.pos).isEqualTo(dest);
@@ -65,7 +62,7 @@ class EchoArmorAbilityHeroicLeapTest {
 	}
 
 	@Test
-	@DisplayName("Echo HeroicLeap activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo HeroicLeap adapter activate spends ClassArmor charge from the kit")
 	void spendsCharge() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -74,7 +71,7 @@ class EchoArmorAbilityHeroicLeapTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new HeroicLeap().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new HeroicLeap(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
@@ -82,7 +79,7 @@ class EchoArmorAbilityHeroicLeapTest {
 	}
 
 	@Test
-	@DisplayName("Echo HeroicLeap activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo HeroicLeap adapter activate clears busy so the boss turn can resume")
 	void clearsBusy() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -90,7 +87,7 @@ class EchoArmorAbilityHeroicLeapTest {
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new HeroicLeap().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new HeroicLeap(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -107,7 +104,7 @@ class EchoArmorAbilityHeroicLeapTest {
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new HeroicLeap().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new HeroicLeap(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(EchoTestSupport.stubSpriteJumpCalls(f.boss))

@@ -35,12 +35,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
@@ -62,22 +59,22 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 
 public class SpiritBow extends Weapon {
-	
+
 	public static final String AC_SHOOT		= "SHOOT";
-	
+
 	{
 		image = ItemSpriteSheet.SPIRIT_BOW;
-		
+
 		defaultAction = AC_SHOOT;
 		usesTargeting = true;
-		
+
 		unique = true;
 		bones = false;
 	}
-	
+
 	public boolean sniperSpecial = false;
 	public float sniperSpecialBonusDamage = 0f;
-	
+
 	@Override
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
@@ -85,18 +82,18 @@ public class SpiritBow extends Weapon {
 		actions.add(AC_SHOOT);
 		return actions;
 	}
-	
+
 	@Override
 	public void execute(Hero hero, String action) {
-		
+
 		super.execute(hero, action);
-		
+
 		if (action.equals(AC_SHOOT)) {
-			
+
 			curUser = hero;
 			curItem = this;
 			GameScene.selectCell( shooter );
-			
+
 		}
 	}
 
@@ -143,18 +140,18 @@ public class SpiritBow extends Weapon {
 	@Override
 	public String info() {
 		String info = super.info();
-		
+
 		info += "\n\n" + Messages.get( SpiritBow.class, "stats",
 				Math.round(augment.damageFactor(min())),
 				Math.round(augment.damageFactor(max())),
 				STRReq());
-		
+
 		if (STRReq() > Dungeon.hero.STR()) {
 			info += " " + Messages.get(Weapon.class, "too_heavy");
 		} else if (Dungeon.hero.STR() > STRReq()){
 			info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
 		}
-		
+
 		switch (augment) {
 			case SPEED:
 				info += "\n\n" + Messages.get(Weapon.class, "faster");
@@ -172,7 +169,7 @@ public class SpiritBow extends Weapon {
 		} else if (enchantHardened){
 			info += "\n\n" + Messages.get(Weapon.class, "hardened_no_enchant");
 		}
-		
+
 		if (cursed && isEquipped( Dungeon.hero )) {
 			info += "\n\n" + Messages.get(Weapon.class, "cursed_worn");
 		} else if (cursedKnown && cursed) {
@@ -180,17 +177,17 @@ public class SpiritBow extends Weapon {
 		} else if (!isIdentified() && cursedKnown){
 			info += "\n\n" + Messages.get(Weapon.class, "not_cursed");
 		}
-		
+
 		info += "\n\n" + Messages.get(MissileWeapon.class, "distance");
-		
+
 		return info;
 	}
-	
+
 	@Override
 	public int STRReq(int lvl) {
 		return STRReq(1, lvl); //tier 1
 	}
-	
+
 	@Override
 	public int min(int lvl) {
 		int dmg = 1 + Dungeon.hero.lvl/5
@@ -198,7 +195,7 @@ public class SpiritBow extends Weapon {
 				+ (curseInfusionBonus ? 1 + Dungeon.hero.lvl/30 : 0);
 		return Math.max(0, dmg);
 	}
-	
+
 	@Override
 	public int max(int lvl) {
 		int dmg = 6 + (int)(Dungeon.hero.lvl/2.5f)
@@ -211,13 +208,13 @@ public class SpiritBow extends Weapon {
 	public int targetingPos(Hero user, int dst) {
 		return knockArrow().targetingPos(user, dst);
 	}
-	
+
 	private int targetPos;
-	
+
 	@Override
 	public int damageRoll(Char owner) {
 		int damage = augment.damageFactor(super.damageRoll(owner));
-		
+
 		if (owner instanceof Hero) {
 			int exStr = ((Hero)owner).STR() - STRReq();
 			if (exStr > 0) {
@@ -244,10 +241,10 @@ public class SpiritBow extends Weapon {
 					break;
 			}
 		}
-		
+
 		return damage;
 	}
-	
+
 	@Override
 	protected float baseDelay(Char owner) {
 		if (sniperSpecial){
@@ -286,18 +283,18 @@ public class SpiritBow extends Weapon {
 		//level isn't affected by buffs/debuffs
 		return level();
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	public SpiritArrow knockArrow(){
 		return new SpiritArrow();
 	}
-	
+
 	public class SpiritArrow extends MissileWeapon {
-		
+
 		{
 			image = ItemSpriteSheet.SPIRIT_ARROW;
 
@@ -338,22 +335,22 @@ public class SpiritBow extends Weapon {
 		public int damageRoll(Char owner) {
 			return SpiritBow.this.damageRoll(owner);
 		}
-		
+
 		@Override
 		public boolean hasEnchant(Class<? extends Enchantment> type, Char owner) {
 			return SpiritBow.this.hasEnchant(type, owner);
 		}
-		
+
 		@Override
 		public int proc(Char attacker, Char defender, int damage) {
 			return SpiritBow.this.proc(attacker, defender, damage);
 		}
-		
+
 		@Override
 		public float delayFactor(Char user) {
 			return SpiritBow.this.delayFactor(user);
 		}
-		
+
 		@Override
 		public float accuracyFactor(Char owner, Char target) {
 			if (sniperSpecial && SpiritBow.this.augment == Augment.DAMAGE){
@@ -362,7 +359,7 @@ public class SpiritBow extends Weapon {
 				return super.accuracyFactor(owner, target);
 			}
 		}
-		
+
 		@Override
 		public int STRReq(int lvl) {
 			return SpiritBow.this.STRReq();
@@ -395,188 +392,113 @@ public class SpiritBow extends Weapon {
 		int flurryCount = -1;
 		Actor flurryActor = null;
 
+		/** Package access for {@link SpiritBowEchoBridge}. */
+		void markTargetCell(int cell) {
+			SpiritBow.this.targetPos = cell;
+		}
+
 		@Override
 		public void cast(final Hero user, final int dst) {
-			throwAs(UseContext.hero(user), dst);
-		}
-
-		/**
-		 * Shared SpiritBow shot for Hero and Echo. Sniper flurry / Seer Shot stay
-		 * behind {@code heroFX}; Echo requires a valid target Char.
-		 */
-		@Override
-		public boolean throwAs(UseContext ctx, int dst) {
-			final int cell = throwPos(ctx.body.pos, dst);
+			final int cell = throwPos( user, dst );
 			SpiritBow.this.targetPos = cell;
+			if (sniperSpecial && SpiritBow.this.augment == Augment.SPEED){
+				// Hero-only sniper SPEED flurry (unchanged behavior).
+				if (flurryCount == -1) flurryCount = 3;
 
-			if (ctx.heroFX && sniperSpecial && SpiritBow.this.augment == Augment.SPEED) {
-				castSniperFlurry(ctx.kit, dst, cell);
-				return true;
-			}
+				final Char enemy = Actor.findChar( cell );
 
-			if (ctx.heroFX) {
-				applySeerShot(ctx.kit, dst);
-			}
-
-			Char found = Actor.findChar(cell);
-			if (!ctx.heroFX) {
-				Hero enemy = Dungeon.hero;
-				if (found == null && enemy != null && cell == enemy.pos) {
-					found = enemy;
-				}
-				if (found == null || found == ctx.kit || found == ctx.body) {
-					return false;
-				}
-			}
-
-			ctx.turns.busy();
-			if (ctx.heroFX) {
-				QuickSlotButton.target(found);
-			}
-
-			final float delay = castDelay(ctx.kit, cell);
-			final Char target = found;
-			Callback onArrive = () -> {
-				applySpiritShot(ctx, cell);
-				ctx.turns.spendAfterThrow(delay);
-			};
-
-			CharSprite sprite = ctx.body.sprite;
-			if (sprite != null && sprite.parent != null
-					&& (sprite.visible
-							|| (target != null && target.sprite != null && target.sprite.visible)
-							|| (Dungeon.level != null && cell >= 0
-									&& cell < Dungeon.level.heroFOV.length
-									&& Dungeon.level.heroFOV[cell]))) {
-				castVisual(sprite, ctx.body.pos, dst, onArrive);
-			} else {
-				onArrive.call();
-			}
-			return true;
-		}
-
-		/** Hit via kit; borrow body sprite/pos when body ≠ kit (Echo hit VFX). */
-		private void applySpiritShot(UseContext ctx, int cell) {
-			Hero kit = ctx.kit;
-			Char body = ctx.body;
-			int savedPos = kit.pos;
-			CharSprite savedSprite = kit.sprite;
-			boolean borrow = body != kit;
-			if (borrow) {
-				kit.pos = body.pos;
-				kit.sprite = body.sprite;
-			}
-			try {
-				AiItemActions.withUser(kit, this, () -> {
-					Item i = detach(kit.belongings.backpack);
-					if (i != null) {
-						AiItemActions.onThrow(i, cell);
+				if (enemy == null){
+					if (user.buff(Talent.LethalMomentumTracker.class) != null){
+						user.buff(Talent.LethalMomentumTracker.class).detach();
+						user.next();
+					} else {
+						user.spendAndNext(castDelay(user, cell));
 					}
-				});
-			} finally {
-				if (borrow) {
-					kit.sprite = savedSprite;
-					kit.pos = savedPos;
+					sniperSpecial = false;
+					flurryCount = -1;
+
+					if (flurryActor != null){
+						flurryActor.next();
+						flurryActor = null;
+					}
+					return;
 				}
-			}
-		}
 
-		private void applySeerShot(Hero user, int dst) {
-			if (user.hasTalent(Talent.SEER_SHOT)
-					&& user.buff(Talent.SeerShotCooldown.class) == null) {
-				int shotPos = throwPos(user, dst);
-				if (Actor.findChar(shotPos) == null) {
-					RevealedArea a = Buff.affect(user, RevealedArea.class,
-							5 * user.pointsInTalent(Talent.SEER_SHOT));
-					a.depth = Dungeon.depth;
-					a.branch = Dungeon.branch;
-					a.pos = shotPos;
-					Buff.affect(user, Talent.SeerShotCooldown.class, 20f);
-				}
-			}
-		}
+				QuickSlotButton.target(enemy);
 
-		/** Hero-only sniper SPEED flurry (unchanged behavior). */
-		private void castSniperFlurry(Hero user, int dst, int cell) {
-			if (flurryCount == -1) flurryCount = 3;
+				user.busy();
 
-			final Char enemy = Actor.findChar(cell);
+				throwSound();
 
-			if (enemy == null) {
-				if (user.buff(Talent.LethalMomentumTracker.class) != null) {
-					user.buff(Talent.LethalMomentumTracker.class).detach();
-					user.next();
-				} else {
-					user.spendAndNext(castDelay(user, cell));
-				}
-				sniperSpecial = false;
-				flurryCount = -1;
-
-				if (flurryActor != null) {
-					flurryActor.next();
-					flurryActor = null;
-				}
-				return;
-			}
-
-			QuickSlotButton.target(enemy);
-
-			user.busy();
-
-			throwSound();
-
-			user.sprite.zap(cell);
-			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
-					reset(user.sprite,
-							cell,
-							this,
-							new Callback() {
-								@Override
-								public void call() {
-									if (enemy.isAlive()) {
-										curUser = user;
-										onThrow(cell);
-									}
-
-									flurryCount--;
-									if (flurryCount > 0) {
-										Actor.add(new Actor() {
-
-											{
-												actPriority = VFX_PRIO - 1;
-											}
-
-											@Override
-											protected boolean act() {
-												flurryActor = this;
-												int target = QuickSlotButton.autoAim(enemy, SpiritArrow.this);
-												if (target == -1) target = cell;
-												cast(user, target);
-												Actor.remove(this);
-												return false;
-											}
-										});
-										curUser.next();
-									} else {
-										if (user.buff(Talent.LethalMomentumTracker.class) != null) {
-											user.buff(Talent.LethalMomentumTracker.class).detach();
-											user.next();
-										} else {
-											user.spendAndNext(castDelay(user, cell));
+				user.sprite.zap(cell);
+				((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
+						reset(user.sprite,
+								cell,
+								this,
+								new Callback() {
+									@Override
+									public void call() {
+										if (enemy.isAlive()) {
+											curUser = user;
+											onThrow(cell);
 										}
-										sniperSpecial = false;
-										flurryCount = -1;
-									}
 
-									if (flurryActor != null) {
-										flurryActor.next();
-										flurryActor = null;
+										flurryCount--;
+										if (flurryCount > 0){
+											Actor.add(new Actor() {
+
+												{
+													actPriority = VFX_PRIO-1;
+												}
+
+												@Override
+												protected boolean act() {
+													flurryActor = this;
+													int target = QuickSlotButton.autoAim(enemy, SpiritArrow.this);
+													if (target == -1) target = cell;
+													cast(user, target);
+													Actor.remove(this);
+													return false;
+												}
+											});
+											curUser.next();
+										} else {
+											if (user.buff(Talent.LethalMomentumTracker.class) != null){
+												user.buff(Talent.LethalMomentumTracker.class).detach();
+												user.next();
+											} else {
+												user.spendAndNext(castDelay(user, cell));
+											}
+											sniperSpecial = false;
+											flurryCount = -1;
+										}
+
+										if (flurryActor != null){
+											flurryActor.next();
+											flurryActor = null;
+										}
 									}
-								}
-							});
+								});
+
+			} else {
+
+				if (user.hasTalent(Talent.SEER_SHOT)
+						&& user.buff(Talent.SeerShotCooldown.class) == null){
+					int shotPos = throwPos(user, dst);
+					if (Actor.findChar(shotPos) == null) {
+						RevealedArea a = Buff.affect(user, RevealedArea.class, 5 * user.pointsInTalent(Talent.SEER_SHOT));
+						a.depth = Dungeon.depth;
+						a.branch = Dungeon.branch;
+						a.pos = shotPos;
+						Buff.affect(user, Talent.SeerShotCooldown.class, 20f);
+					}
+				}
+
+				super.cast(user, dst);
+			}
 		}
 	}
-	
+
 	private CellSelector.Listener shooter = new CellSelector.Listener() {
 		@Override
 		public void onSelect( Integer target ) {

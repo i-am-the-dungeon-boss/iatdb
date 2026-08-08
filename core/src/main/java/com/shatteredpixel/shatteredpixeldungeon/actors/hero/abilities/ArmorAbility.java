@@ -27,7 +27,6 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -43,14 +42,12 @@ public abstract class ArmorAbility implements Bundlable {
 
 	public void use(ClassArmor armor, Hero hero) {
 		if (targetingPrompt() == null) {
-			activateAs(UseContext.hero(hero), armor, hero.pos);
+			activate(armor, hero, hero.pos);
 		} else {
 			GameScene.selectCell(new CellSelector.Listener() {
 				@Override
 				public void onSelect(Integer cell) {
-					if (cell != null) {
-						activateAs(UseContext.hero(hero), armor, cell);
-					}
+					activate(armor, hero, cell);
 				}
 
 				@Override
@@ -59,27 +56,6 @@ public abstract class ArmorAbility implements Bundlable {
 				}
 			});
 		}
-	}
-
-	/**
-	 * Shared armor-ability execute (cell already chosen). Self-effects target
-	 * {@code ctx.body}; charge/talents use {@code ctx.kit}; turn via
-	 * {@code ctx.turns}.
-	 */
-	public boolean activateAs(UseContext ctx, ClassArmor armor, Integer target) {
-		if (armor == null) {
-			return false;
-		}
-		if (targetingPrompt() != null && target == null) {
-			return false;
-		}
-		if (armor.charge < chargeUse(ctx.kit)) {
-			return false;
-		}
-		int cell = target != null ? target : ctx.body.pos;
-		ctx.turns.busy();
-		activate(armor, ctx, cell);
-		return true;
 	}
 
 	// leave null for no targeting
@@ -118,15 +94,7 @@ public abstract class ArmorAbility implements Bundlable {
 		return chargeUse;
 	}
 
-	protected abstract void activate(ClassArmor armor, UseContext ctx, Integer target);
-
-	/**
-	 * Refuse after {@link #activateAs} already called {@link UseContext.TurnOwner#busy()}.
-	 * EchoBoss stays stuck if busy is not cleared.
-	 */
-	protected static void refuse(UseContext ctx) {
-		ctx.turns.cancelBusy();
-	}
+	protected abstract void activate(ClassArmor armor, Hero hero, Integer target);
 
 	public String name() {
 		return Messages.get(this, "name");

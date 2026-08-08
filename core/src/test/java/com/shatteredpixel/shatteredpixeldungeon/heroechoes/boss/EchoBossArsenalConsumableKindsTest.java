@@ -1,10 +1,12 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blizzard;
@@ -20,7 +22,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ToxicImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -103,10 +104,6 @@ class EchoBossArsenalConsumableKindsTest {
 		Hero kit() {
 			return boss.getEchoHero();
 		}
-
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Nested
@@ -114,7 +111,7 @@ class EchoBossArsenalConsumableKindsTest {
 	class StandardPotions {
 
 		@Test
-		@DisplayName("Echo Liquid Flame throwAs seeds Fire on the Hero's cell")
+		@DisplayName("Echo Liquid Flame throw seeds Fire on the Hero's cell")
 		void liquidFlameThrowSeedsFireOnHero() {
 			Fight f = fight();
 			PotionOfLiquidFlame pot = new PotionOfLiquidFlame();
@@ -122,40 +119,40 @@ class EchoBossArsenalConsumableKindsTest {
 			pot.collect(f.kit().belongings.backpack);
 			Arrays.fill(Dungeon.level.heroFOV, false);
 
-			Assertions.assertThat(pot.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, pot, f.player.pos)).isTrue();
 			Assertions.assertThat(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob
 					.volumeAt(f.player.pos, Fire.class)).isGreaterThan(0);
 			Assertions.assertThat(f.kit().belongings.getItem(PotionOfLiquidFlame.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Invisibility drinkAs buffs the boss body not the kit")
+		@DisplayName("Echo Invisibility drink buffs the boss body not the kit")
 		void invisibilityDrinkBuffsBody() {
 			Fight f = fight();
 			PotionOfInvisibility pot = new PotionOfInvisibility();
 			pot.identify();
 			pot.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 			Assertions.assertThat(f.boss.buff(Invisibility.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Invisibility.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Levitation drinkAs buffs the boss body")
+		@DisplayName("Echo Levitation drink buffs the boss body")
 		void levitationDrinkBuffsBody() {
 			Fight f = fight();
 			PotionOfLevitation pot = new PotionOfLevitation();
 			pot.identify();
 			pot.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 			Assertions.assertThat(f.boss.buff(Levitation.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Levitation.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Purity drinkAs via CLEANSE role spends without phantom kit cooldown")
+		@DisplayName("Echo Purity drink via CLEANSE role spends without phantom kit cooldown")
 		void purityDrinkViaExecutor() {
 			Fight f = fight();
 			PotionOfPurity pot = new PotionOfPurity();
@@ -216,176 +213,150 @@ class EchoBossArsenalConsumableKindsTest {
 	class ExoticBrewsElixirs {
 
 		@Test
-		@DisplayName("Echo Stamina drinkAs applies Stamina on the boss body")
+		@DisplayName("Echo Stamina drink applies Stamina on the boss body")
 		void staminaDrinkBuffsBody() {
 			Fight f = fight();
 			PotionOfStamina pot = new PotionOfStamina();
 			pot.identify();
 			pot.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 			Assertions.assertThat(f.boss.buff(Stamina.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Stamina.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Shielding drinkAs applies Barrier on the boss body")
+		@DisplayName("Echo Shielding drink applies Barrier on the boss body")
 		void shieldingDrinkBuffsBody() {
 			Fight f = fight();
 			PotionOfShielding pot = new PotionOfShielding();
 			pot.identify();
 			pot.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 			Assertions.assertThat(f.boss.buff(Barrier.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Barrier.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Earthen Armor drinkAs applies Barkskin on the boss body")
+		@DisplayName("Echo Earthen Armor drink applies Barkskin on the boss body")
 		void earthenArmorDrinkBuffsBody() {
 			Fight f = fight();
 			PotionOfEarthenArmor pot = new PotionOfEarthenArmor();
 			pot.identify();
 			pot.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 			Assertions.assertThat(f.boss.buff(Barkskin.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Barkskin.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Blizzard Brew throwAs seeds Blizzard on the Hero's cell")
+		@DisplayName("Echo Blizzard Brew throw seeds Blizzard on the Hero's cell")
 		void blizzardBrewThrowSeedsBlobOnHero() {
 			Fight f = fight();
 			BlizzardBrew brew = new BlizzardBrew();
 			brew.collect(f.kit().belongings.backpack);
 			Arrays.fill(Dungeon.level.heroFOV, false);
 
-			Assertions.assertThat(brew.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, brew, f.player.pos)).isTrue();
 			Assertions.assertThat(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob
 					.volumeAt(f.player.pos, Blizzard.class)).isGreaterThan(0);
 		}
 
 		@Test
-		@DisplayName("Echo Arcane Armor elixir drinkAs buffs the boss body")
+		@DisplayName("Echo Arcane Armor elixir drink buffs the boss body")
 		void arcaneArmorElixirBuffsBody() {
 			Fight f = fight();
 			ElixirOfArcaneArmor elixir = new ElixirOfArcaneArmor();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(ArcaneArmor.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(ArcaneArmor.class)).isNull();
 			Assertions.assertThat(f.player.buff(ArcaneArmor.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Dragon's Blood elixir drinkAs applies FireImbue on the boss body")
+		@DisplayName("Echo Dragon's Blood elixir drink applies FireImbue on the boss body")
 		void dragonsBloodElixirBuffsBody() {
 			Fight f = fight();
 			ElixirOfDragonsBlood elixir = new ElixirOfDragonsBlood();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(FireImbue.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(FireImbue.class)).isNull();
 			Assertions.assertThat(f.player.buff(FireImbue.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Icy Touch elixir drinkAs applies FrostImbue on the boss body")
+		@DisplayName("Echo Icy Touch elixir drink applies FrostImbue on the boss body")
 		void icyTouchElixirBuffsBody() {
 			Fight f = fight();
 			ElixirOfIcyTouch elixir = new ElixirOfIcyTouch();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(FrostImbue.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(FrostImbue.class)).isNull();
 			Assertions.assertThat(f.player.buff(FrostImbue.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Toxic Essence elixir drinkAs applies ToxicImbue on the boss body")
+		@DisplayName("Echo Toxic Essence elixir drink applies ToxicImbue on the boss body")
 		void toxicEssenceElixirBuffsBody() {
 			Fight f = fight();
 			ElixirOfToxicEssence elixir = new ElixirOfToxicEssence();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(ToxicImbue.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(ToxicImbue.class)).isNull();
 			Assertions.assertThat(f.player.buff(ToxicImbue.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Honeyed Healing drinkAs heals the boss body not the player or kit")
+		@DisplayName("Echo Honeyed Healing drink heals the boss body not the player or kit")
 		void honeyedHealingElixirBuffsBossNotPlayer() {
 			Fight f = fight();
 			ElixirOfHoneyedHealing elixir = new ElixirOfHoneyedHealing();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(Healing.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(Healing.class)).isNull();
 			Assertions.assertThat(f.player.buff(Healing.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Aquatic Rejuvenation drinkAs buffs AquaHealing on the boss body")
+		@DisplayName("Echo Aquatic Rejuvenation drink buffs AquaHealing on the boss body")
 		void aquaticElixirBuffsBossBody() {
 			Fight f = fight();
 			ElixirOfAquaticRejuvenation elixir = new ElixirOfAquaticRejuvenation();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(ElixirOfAquaticRejuvenation.AquaHealing.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(ElixirOfAquaticRejuvenation.AquaHealing.class)).isNull();
 			Assertions.assertThat(f.player.buff(ElixirOfAquaticRejuvenation.AquaHealing.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo Feather Fall drinkAs buffs the boss body not the player")
+		@DisplayName("Echo Feather Fall drink buffs the boss body not the player")
 		void featherFallElixirBuffsBossBody() {
 			Fight f = fight();
 			ElixirOfFeatherFall elixir = new ElixirOfFeatherFall();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(ElixirOfFeatherFall.FeatherBuff.class)).isNotNull();
 			Assertions.assertThat(f.kit().buff(ElixirOfFeatherFall.FeatherBuff.class)).isNull();
 			Assertions.assertThat(f.player.buff(ElixirOfFeatherFall.FeatherBuff.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Hero Dragon's Blood drinkAs applies FireImbue on the hero not the echo")
-		void heroDragonsBloodElixirBuffsHeroNotEcho() {
-			Fight f = fight();
-			ElixirOfDragonsBlood elixir = new ElixirOfDragonsBlood();
-			elixir.collect(f.player.belongings.backpack);
-
-			Assertions.assertThat(elixir.drinkAs(UseContext.hero(f.player))).isTrue();
-			Assertions.assertThat(f.player.buff(FireImbue.class)).isNotNull();
-			Assertions.assertThat(f.boss.buff(FireImbue.class)).isNull();
-			Assertions.assertThat(f.kit().buff(FireImbue.class)).isNull();
-		}
-
-		@Test
-		@DisplayName("Hero Arcane Armor drinkAs applies ArcaneArmor on the hero not the echo")
-		void heroArcaneArmorElixirBuffsHeroNotEcho() {
-			Fight f = fight();
-			ElixirOfArcaneArmor elixir = new ElixirOfArcaneArmor();
-			elixir.collect(f.player.belongings.backpack);
-
-			Assertions.assertThat(elixir.drinkAs(UseContext.hero(f.player))).isTrue();
-			Assertions.assertThat(f.player.buff(ArcaneArmor.class)).isNotNull();
-			Assertions.assertThat(f.boss.buff(ArcaneArmor.class)).isNull();
-			Assertions.assertThat(f.kit().buff(ArcaneArmor.class)).isNull();
-		}
-
-		@Test
-		@DisplayName("Echo Arcane Armor drinkAs scales from echo kit level not dungeon depth")
+		@DisplayName("Echo Arcane Armor drink scales from echo kit level not dungeon depth")
 		void echoArcaneArmorScalesFromKitLevel() {
 			Fight f = fight();
 			f.kit().lvl = 20;
@@ -393,7 +364,7 @@ class EchoBossArsenalConsumableKindsTest {
 			ElixirOfArcaneArmor elixir = new ElixirOfArcaneArmor();
 			elixir.collect(f.kit().belongings.backpack);
 
-			Assertions.assertThat(elixir.drinkAs(f.echo())).isTrue();
+			Assertions.assertThat(EchoPotionAdapter.drink(f.boss, elixir)).isTrue();
 			Assertions.assertThat(f.boss.buff(ArcaneArmor.class).level()).isEqualTo(5 + 20 / 2);
 		}
 
@@ -420,7 +391,7 @@ class EchoBossArsenalConsumableKindsTest {
 	class StonesBombsDarts {
 
 		@Test
-		@DisplayName("Echo StoneOfBlink throwAs teleports the boss body to the land cell")
+		@DisplayName("Echo StoneOfBlink throw teleports the boss body to the land cell")
 		void blinkStoneTeleportsBossBody() {
 			Fight f = fight();
 			StoneOfBlink stone = new StoneOfBlink();
@@ -428,7 +399,7 @@ class EchoBossArsenalConsumableKindsTest {
 			int dest = emptyAdjacentAwayFromPlayer(f);
 			int start = f.boss.pos;
 
-			Assertions.assertThat(stone.throwAs(f.echo(), dest)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, dest)).isTrue();
 			Assertions.assertThat(f.boss.pos).isEqualTo(dest);
 			Assertions.assertThat(f.boss.pos).isNotEqualTo(start);
 			Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(f.boss)).isEqualTo(dest);
@@ -436,8 +407,8 @@ class EchoBossArsenalConsumableKindsTest {
 		}
 
 		@Test
-		@DisplayName("Echo throwAs stays busy until missile callback (master-style gating)")
-		void throwAsStaysBusyUntilMissileCallback() {
+		@DisplayName("Echo throw stays busy until missile callback (master-style gating)")
+		void throwStaysBusyUntilMissileCallback() {
 			Fight f = fight();
 			EchoTestSupport.DeferredProjectileGroup fx = EchoTestSupport.attachDeferredProjectileParent(f.boss);
 			StoneOfBlink stone = new StoneOfBlink();
@@ -445,7 +416,7 @@ class EchoBossArsenalConsumableKindsTest {
 			int dest = emptyAdjacentAwayFromPlayer(f);
 			float timeBefore = f.boss.cooldown();
 
-			Assertions.assertThat(stone.throwAs(f.echo(), dest)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, dest)).isTrue();
 			Assertions.assertThat(fx.hasPending()).isTrue();
 			Assertions.assertThat(f.boss.isBusy()).isTrue();
 			Assertions.assertThat(f.kit().belongings.getItem(StoneOfBlink.class)).isNotNull();
@@ -460,7 +431,7 @@ class EchoBossArsenalConsumableKindsTest {
 		}
 
 		@Test
-		@DisplayName("Echo StoneOfBlink throwAs onto occupied cell teleports short of the occupant")
+		@DisplayName("Echo StoneOfBlink throw onto occupied cell teleports short of the occupant")
 		void blinkStoneThrowOntoOccupiedCellDoesNotNpe() {
 			Fight f = fight();
 			StoneOfBlink stone = new StoneOfBlink();
@@ -468,14 +439,14 @@ class EchoBossArsenalConsumableKindsTest {
 			int start = f.boss.pos;
 			int occupied = f.player.pos;
 
-			Assertions.assertThat(stone.throwAs(f.echo(), occupied)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, occupied)).isTrue();
 			Assertions.assertThat(f.boss.pos).isNotEqualTo(start);
 			Assertions.assertThat(f.boss.pos).isNotEqualTo(occupied);
 			Assertions.assertThat(f.kit().belongings.getItem(StoneOfBlink.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo StoneOfFear throwAs applies Terror on the Hero")
+		@DisplayName("Echo StoneOfFear throw applies Terror on the Hero")
 		void fearStoneTerrifiesHero() {
 			Fight f = fight();
 			StoneOfFear stone = new StoneOfFear();
@@ -484,14 +455,14 @@ class EchoBossArsenalConsumableKindsTest {
 
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.kit().sprite).isNull();
-			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.buff(Terror.class)).isNotNull();
 			Assertions.assertThat(f.kit().belongings.getItem(StoneOfFear.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo StoneOfBlast throwAs damages the Hero on a live fight stage")
+		@DisplayName("Echo StoneOfBlast throw damages the Hero on a live fight stage")
 		void blastStoneDamagesHero() {
 			Fight f = fight();
 			StoneOfBlast stone = new StoneOfBlast();
@@ -502,14 +473,14 @@ class EchoBossArsenalConsumableKindsTest {
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
 			Assertions.assertThat(f.kit().sprite).isNull();
-			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
 			Assertions.assertThat(f.kit().belongings.getItem(StoneOfBlast.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo StoneOfShock throwAs paralyzes the Hero via lightning arcs")
+		@DisplayName("Echo StoneOfShock throw paralyzes the Hero via lightning arcs")
 		void shockStoneParalyzesHero() {
 			Fight f = fight();
 			StoneOfShock stone = new StoneOfShock();
@@ -519,14 +490,14 @@ class EchoBossArsenalConsumableKindsTest {
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
 			Assertions.assertThat(f.kit().sprite).isNull();
-			Assertions.assertThat(stone.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.buff(Paralysis.class)).isNotNull();
 			Assertions.assertThat(f.kit().belongings.getItem(StoneOfShock.class)).isNull();
 		}
 
 		@Test
-		@DisplayName("Echo PoisonDart throwAs damages and poisons the Hero on a live fight stage")
+		@DisplayName("Echo PoisonDart throw damages and poisons the Hero on a live fight stage")
 		void poisonDartDamagesHero() {
 			Fight f = fight();
 			PoisonDart dart = new PoisonDart();
@@ -548,7 +519,7 @@ class EchoBossArsenalConsumableKindsTest {
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
 			Assertions.assertThat(f.kit().sprite).isNull();
-			Assertions.assertThat(dart.throwAs(f.echo(), f.player.pos)).isTrue();
+			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, dart, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.kit().cooldown()).isEqualTo(kitBefore);
 			Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
@@ -569,7 +540,7 @@ class EchoBossArsenalConsumableKindsTest {
 	 * fixtures.
 	 */
 	@Test
-	@DisplayName("Echo Healing drinkAs still applies Healing on the boss body")
+	@DisplayName("Echo Healing drink still applies Healing on the boss body")
 	void healingDrinkStillWorks() {
 		Fight f = fight();
 		f.boss.HP = Math.max(1, f.boss.HT / 4);
@@ -577,20 +548,20 @@ class EchoBossArsenalConsumableKindsTest {
 		pot.identify();
 		pot.collect(f.kit().belongings.backpack);
 
-		Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 		Assertions.assertThat(f.boss.buff(
 				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Healing.class)).isNotNull();
 	}
 
 	@Test
-	@DisplayName("Echo Haste drinkAs still applies Haste on the boss body")
+	@DisplayName("Echo Haste drink still applies Haste on the boss body")
 	void hasteDrinkStillWorks() {
 		Fight f = fight();
 		PotionOfHaste pot = new PotionOfHaste();
 		pot.identify();
 		pot.collect(f.kit().belongings.backpack);
 
-		Assertions.assertThat(pot.drinkAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoPotionAdapter.drink(f.boss, pot)).isTrue();
 		Assertions.assertThat(f.boss.buff(
 				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste.class)).isNotNull();
 	}

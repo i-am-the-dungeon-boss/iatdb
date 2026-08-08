@@ -9,6 +9,13 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoL
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugStrategyKit;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.MageArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
@@ -24,10 +31,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.stream.Stream;
 
 @ExtendWith(GdxTestExtension.class)
 class DebugSettingsTest {
@@ -138,6 +149,36 @@ class DebugSettingsTest {
 		Assertions.assertThat(Dungeon.depth).isEqualTo(14);
 		Assertions.assertThat(hero.lvl).isEqualTo(DebugSettings.START_LEVEL);
 		Assertions.assertThat(hero.STR).isEqualTo(DebugSettings.START_STR);
+	}
+
+	@ParameterizedTest(name = "{0} gets {1}")
+	@MethodSource("classArmorByHeroClass")
+	@DisplayName("applyDebugStart equips +100 class armor with no ability for the hero class")
+	void applyDebugStartEquipsClassArmorForHeroClass(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		heroClass.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.applyDebugStart();
+
+		Assertions.assertThat(hero.belongings.armor).isInstanceOf(armorType);
+		ClassArmor armor = (ClassArmor) hero.belongings.armor;
+		Assertions.assertThat(armor.tier).isEqualTo(5);
+		Assertions.assertThat(armor.level()).isEqualTo(100);
+		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
+		Assertions.assertThat(hero.armorAbility).isNull();
+	}
+
+	static Stream<Arguments> classArmorByHeroClass() {
+		return Stream.of(
+				Arguments.of(HeroClass.WARRIOR, WarriorArmor.class),
+				Arguments.of(HeroClass.MAGE, MageArmor.class),
+				Arguments.of(HeroClass.ROGUE, RogueArmor.class),
+				Arguments.of(HeroClass.HUNTRESS, HuntressArmor.class),
+				Arguments.of(HeroClass.DUELIST, DuelistArmor.class),
+				Arguments.of(HeroClass.CLERIC, ClericArmor.class));
 	}
 
 	@Test

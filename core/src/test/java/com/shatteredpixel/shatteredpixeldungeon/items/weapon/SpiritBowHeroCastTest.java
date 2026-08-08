@@ -20,9 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Step 0 characterization: today's Hero {@code knockArrow().cast(hero, dst)}
- * path
- * before UseContext / throwAs migration.
+ * Characterization: Hero {@code knockArrow().cast(hero, dst)} master entry point.
  */
 @ExtendWith(GdxTestExtension.class)
 class SpiritBowHeroCastTest {

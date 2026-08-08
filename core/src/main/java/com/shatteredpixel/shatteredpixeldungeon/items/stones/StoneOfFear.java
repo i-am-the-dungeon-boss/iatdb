@@ -44,7 +44,7 @@ public class StoneOfFear extends Runestone {
 	protected void activate(int cell) {
 
 		Char ch = Actor.findChar(cell);
-		// Echo throwAs borrows kit onto body — hostility vs the live body Char.
+		// Echo throw borrows kit onto body — hostility vs the live body Char.
 		Char source = Actor.findChar(curUser.pos);
 		if (source == null) {
 			source = curUser;

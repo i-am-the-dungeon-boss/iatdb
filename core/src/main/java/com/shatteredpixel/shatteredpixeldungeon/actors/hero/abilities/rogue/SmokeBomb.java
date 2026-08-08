@@ -45,7 +45,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -64,7 +64,6 @@ public class SmokeBomb extends ArmorAbility {
 
 	{
 		baseChargeUse = 50;
-		// do nothing
 	}
 
 	@Override
@@ -88,50 +87,40 @@ public class SmokeBomb extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Hero kit = ctx.kit;
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 		if (target != null) {
 
-			if (target != body.pos && body.rooted) {
-				if (ctx.heroFX) {
-					PixelScene.shake(1, 1f);
-				}
-				refuse(ctx);
+			if (target != hero.pos && hero.rooted) {
+				PixelScene.shake(1, 1f);
 				return;
 			}
 
-			PathFinder.buildDistanceMap(body.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), 6);
+			PathFinder.buildDistanceMap(hero.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), 6);
 
 			if (PathFinder.distance[target] == Integer.MAX_VALUE ||
 					!Dungeon.level.heroFOV[target] ||
-					(target != body.pos && Actor.findChar(target) != null)) {
+					(target != hero.pos && Actor.findChar(target) != null)) {
 
-				if (ctx.heroFX) {
-					GLog.w(Messages.get(this, "fov"));
-				}
-				refuse(ctx);
+				GLog.w(Messages.get(this, "fov"));
 				return;
 			}
 
-			armor.charge -= chargeUse(kit);
-			armor.updateQuickslot();
+			armor.charge -= chargeUse(hero);
+			Item.updateQuickslot();
 
-			boolean shadowStepping = kit.invisible > 0 && kit.hasTalent(Talent.SHADOW_STEP);
+			boolean shadowStepping = hero.invisible > 0 && hero.hasTalent(Talent.SHADOW_STEP);
 
 			if (!shadowStepping) {
 				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-					if (Dungeon.level.adjacent(mob.pos, body.pos) && mob.alignment != Char.Alignment.ALLY) {
+					if (Dungeon.level.adjacent(mob.pos, hero.pos) && mob.alignment != Char.Alignment.ALLY) {
 						Buff.prolong(mob, Blindness.class, Blindness.DURATION / 2f);
 						if (mob.state == mob.HUNTING)
 							mob.state = mob.WANDERING;
-						if (UseContext.canWorldFx(mob)) {
-							mob.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);
-						}
+						mob.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);
 					}
 				}
 
-				if (kit.hasTalent(Talent.BODY_REPLACEMENT)) {
+				if (hero.hasTalent(Talent.BODY_REPLACEMENT)) {
 					for (Char ch : Actor.chars()) {
 						if (ch instanceof NinjaLog) {
 							ch.die(null);
@@ -139,37 +128,33 @@ public class SmokeBomb extends ArmorAbility {
 					}
 
 					NinjaLog n = new NinjaLog();
-					n.pos = body.pos;
+					n.pos = hero.pos;
 					GameScene.add(n);
 					Dungeon.level.occupyCell(n);
 				}
 
-				if (kit.hasTalent(Talent.HASTY_RETREAT)) {
+				if (hero.hasTalent(Talent.HASTY_RETREAT)) {
 					// effectively 1/2/3/4 turns
-					float duration = 0.67f + kit.pointsInTalent(Talent.HASTY_RETREAT);
-					Buff.affect(body, Haste.class, duration);
-					Buff.affect(body, Invisibility.class, duration);
+					float duration = 0.67f + hero.pointsInTalent(Talent.HASTY_RETREAT);
+					Buff.affect(hero, Haste.class, duration);
+					Buff.affect(hero, Invisibility.class, duration);
 				}
 			}
 
-			if (UseContext.canWorldFx(body)) {
-				CellEmitter.get(body.pos).burst(Speck.factory(Speck.WOOL), 10);
-				Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			if (CellEmitter.get(hero.pos) != null) {
+				CellEmitter.get(hero.pos).burst(Speck.factory(Speck.WOOL), 10);
 			}
-			ScrollOfTeleportation.appear(body, target);
-			Dungeon.level.occupyCell(body);
+			ScrollOfTeleportation.appear(hero, target);
+			Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			Dungeon.level.occupyCell(hero);
 			Dungeon.observe();
-			if (ctx.heroFX) {
-				GameScene.updateFog();
-			}
+			GameScene.updateFog();
 
-			if (shadowStepping && ctx.heroFX) {
-				kit.next();
+			if (!shadowStepping) {
+				hero.spendAndNext(Actor.TICK);
 			} else {
-				ctx.turns.spendAfterThrow(Actor.TICK);
+				hero.next();
 			}
-		} else {
-			refuse(ctx);
 		}
 	}
 

@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
@@ -417,8 +418,13 @@ public class EchoBoss extends Mob {
     }
 
     @Override
+    public boolean canSurpriseAttack() {
+        return echoHero.canSurpriseAttack();
+    }
+
+    @Override
     public int drRoll() {
-        return withEchoHeroPosInt(echoHero::drRoll);
+        return withEchoHeroPosInt(() -> echoHero.drRoll(this));
     }
 
     @Override
@@ -439,7 +445,14 @@ public class EchoBoss extends Mob {
 
     @Override
     public int defenseProc(Char enemy, int damage) {
-        return withEchoHeroPosInt(() -> echoHero.defenseProc(enemy, damage));
+        return withEchoHeroPosInt(() -> {
+            int dmg = echoHero.defenseProc(enemy, damage);
+            Earthroot.Armor bodyRoot = buff(Earthroot.Armor.class);
+            if (bodyRoot != null && echoHero.buff(Earthroot.Armor.class) == null) {
+                dmg = bodyRoot.absorb(dmg);
+            }
+            return dmg;
+        });
     }
 
     /** Local int supplier — RoboVM lacks {@code java.util.function.IntSupplier}. */
@@ -453,26 +466,32 @@ public class EchoBoss extends Mob {
     }
 
     /**
-     * Echo hero is never placed on the level; sync {@link Hero#pos} for combat
-     * queries only.
+     * Echo hero is never placed on the level; sync body combat fields
+     * ({@link #pos}, {@link #paralysed}) onto the kit for combat queries only.
      */
     private int withEchoHeroPosInt(IntAction action) {
         int savedPos = echoHero.pos;
+        int savedParalysed = echoHero.paralysed;
         echoHero.pos = pos;
+        echoHero.paralysed = paralysed;
         try {
             return action.getAsInt();
         } finally {
             echoHero.pos = savedPos;
+            echoHero.paralysed = savedParalysed;
         }
     }
 
     private <T> T withEchoHeroPos(ValueAction<T> action) {
         int savedPos = echoHero.pos;
+        int savedParalysed = echoHero.paralysed;
         echoHero.pos = pos;
+        echoHero.paralysed = paralysed;
         try {
             return action.get();
         } finally {
             echoHero.pos = savedPos;
+            echoHero.paralysed = savedParalysed;
         }
     }
 
@@ -595,7 +614,7 @@ public class EchoBoss extends Mob {
         }
     }
 
-    /** Marks this boss waiting on throw/zap VFX (UseContext.TurnOwner). */
+    /** Marks this boss waiting on throw/zap VFX (EchoActionContext busy gate). */
     public void busy() {
         busy = true;
         vfxOwnsTurn = true;
@@ -606,8 +625,8 @@ public class EchoBoss extends Mob {
     }
 
     /**
-     * Drops a pending VFX/turn gate without spending time — refused
-     * {@link com.shatteredpixel.shatteredpixeldungeon.items.UseContext} actions.
+     * Drops a pending VFX/turn gate without spending time — refused Echo adapter
+     * actions.
      */
     public void cancelBusy() {
         busy = false;
@@ -678,7 +697,7 @@ public class EchoBoss extends Mob {
 
     /**
      * Sense → match → resolve → execute (canvas §9).
-     * 
+     *
      * @return true if the turn was fully spent by policy
      */
     private boolean tryPolicyAct() {

@@ -37,7 +37,6 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -81,14 +80,15 @@ public class Bomb extends Item {
 
 	public Fuse fuse;
 
-	// FIXME using a static variable for this is kinda gross, should be a better way
-	private static boolean lightingFuse = false;
+	//FIXME using a static variable for this is kinda gross, should be a better way
+	static boolean lightingFuse = false;
 
 	/**
-	 * Per-instance light intent for {@link #throwAs}. Survives stack splits and
-	 * deferred missile VFX without relying on {@link #lightingFuse} lasting.
+	 * Per-instance light intent for Echo adapters / LIGHTTHROW. Survives stack
+	 * splits and deferred missile VFX without relying on {@link #lightingFuse}
+	 * lasting.
 	 */
-	private boolean igniteWhenThrown = false;
+	boolean igniteWhenThrown = false;
 
 	private static final String AC_LIGHTTHROW = "LIGHTTHROW";
 
@@ -122,42 +122,6 @@ public class Bomb extends Item {
 			lightingFuse = false;
 
 		super.execute(hero, action);
-	}
-
-	/**
-	 * Echo always light-throws (like {@link #AC_LIGHTTHROW}). Hero lights only when
-	 * {@link #execute} already set {@link #lightingFuse} for LIGHTTHROW — plain
-	 * THROW must land unlit.
-	 */
-	@Override
-	public boolean throwAs(UseContext ctx, int dst) {
-		if (!ctx.heroFX || lightingFuse) {
-			lightingFuse = true;
-			igniteWhenThrown = true;
-		}
-		return super.throwAs(ctx, dst);
-	}
-
-	/**
-	 * Missile VFX can delay {@link #onThrow}; re-assert light-fuse so a cleared
-	 * static {@link #lightingFuse} mid-flight still yields a live bomb when this
-	 * throw was meant to ignite.
-	 */
-	@Override
-	protected void beforeThrown(UseContext ctx, int cell) {
-		if (igniteWhenThrown) {
-			lightingFuse = true;
-		}
-	}
-
-	/**
-	 * Mark the detached (possibly split) bomb so ignite survives static clears.
-	 */
-	@Override
-	protected void prepareThrownItem(Item thrown, UseContext ctx, int cell) {
-		if (thrown instanceof Bomb && igniteWhenThrown) {
-			((Bomb) thrown).igniteWhenThrown = true;
-		}
 	}
 
 	protected Fuse createFuse() {

@@ -8,8 +8,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.En
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Echo {@link Endure} via {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * Echo {@link Endure} via {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityEndureTest {
@@ -39,81 +39,78 @@ class EchoArmorAbilityEndureTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs applies EndureTracker on the boss body")
+	@DisplayName("Echo Endure adapter activate applies EndureTracker on the boss body")
 	void endureTrackerOnBossBody() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.buff(Endure.EndureTracker.class)).isNotNull();
 		Assertions.assertThat(f.boss.getEchoHero().buff(Endure.EndureTracker.class)).isNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo Endure adapter activate spends ClassArmor charge from the kit")
 	void endureSpendsCharge() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 50f);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo Endure adapter activate clears busy so the boss turn can resume")
 	void endureClearsBusy() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs dispels Invisibility on the boss body")
+	@DisplayName("Echo Endure adapter activate dispels Invisibility on the boss body")
 	void endureDispelsInvisibility() {
 		Fight f = fight();
 		Buff.affect(f.boss, Invisibility.class, Invisibility.DURATION);
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.buff(Invisibility.class)).isNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo Endure adapter activate refuses when ClassArmor charge is too low")
 	void endureRefusesLowCharge() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 0;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(f.boss.buff(Endure.EndureTracker.class)).isNull();
@@ -121,18 +118,18 @@ class EchoArmorAbilityEndureTest {
 	}
 
 	@Test
-	@DisplayName("Echo Endure activateAs plays operate VFX on the boss body when parent is live")
+	@DisplayName("Echo Endure adapter activate plays operate VFX on the boss body when parent is live")
 	void endureOperateVfxOnBossBody() {
 		Fight f = fight();
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Endure().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(EchoTestSupport.stubSpriteOperateCalls(f.boss)).isGreaterThan(0);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 }

@@ -27,20 +27,10 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
-import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
-import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
-import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
-import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -51,11 +41,12 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
-import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
-import java.util.ArrayList;
-
+/**
+ * Dragon's Breath — Hero keeps master CellSelector drink flow. Echo uses
+ * {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter#breathe}.
+ */
 public class PotionOfDragonsBreath extends ExoticPotion {
 
 	{
@@ -64,162 +55,65 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 
 	protected static boolean identifiedByUse = false;
 
-	/**
-	 * Targeted cone — not a self-drink. Echo / shared callers use
-	 * {@link #breatheAs(UseContext, int)}.
-	 */
 	@Override
-	public boolean drinkAs(UseContext ctx) {
-		return false;
-	}
-
-	/**
-	 * Shared fire-cone execute for Hero and Echo. Mechanics apply from
-	 * {@code ctx.body}; inventory/talents on {@code ctx.kit}. Hero turn matches
-	 * master: {@code busy} before VFX, {@code spendAndNext} after the cone bolt.
-	 */
-	public boolean breatheAs(UseContext ctx, int cell) {
-		if (ctx == null || ctx.kit == null || ctx.body == null || cell < 0) {
-			return false;
-		}
-		if (Dungeon.level == null) {
-			return false;
-		}
-
-		if (ctx.kit.belongings.backpack.contains(this)) {
-			detach(ctx.kit.belongings.backpack);
-		}
-		setCurrent(ctx.kit);
-
-		final Char body = ctx.body;
-		final int targetCell = cell;
-
-		if (ctx.heroFX) {
-			ctx.turns.busy();
-			if (UseContext.canWorldFx(body)) {
-				Sample.INSTANCE.play(Assets.Sounds.DRINK);
-				body.sprite.operate(body.pos, new Callback() {
-					@Override
-					public void call() {
-						body.sprite.idle();
-						body.sprite.zap(targetCell);
-						Sample.INSTANCE.play(Assets.Sounds.BURNING);
-						playConeVfx(body, targetCell, new Callback() {
-							@Override
-							public void call() {
-								applyCone(body.pos, targetCell);
-								finishHeroBreath(ctx, body);
-							}
-						});
-					}
-				});
-			} else {
-				applyCone(body.pos, targetCell);
-				finishHeroBreath(ctx, body);
-			}
-		} else {
-			applyCone(body.pos, targetCell);
-			if (UseContext.canWorldFx(body)) {
-				Sample.INSTANCE.play(Assets.Sounds.DRINK);
-				Sample.INSTANCE.play(Assets.Sounds.BURNING);
-				body.sprite.operate(body.pos);
-				body.sprite.zap(targetCell);
-				playConeVfx(body, targetCell, null);
-			}
-		}
-		return true;
-	}
-
-	private void finishHeroBreath(UseContext ctx, Char body) {
-		ctx.kit.spendAndNext(1f);
-		if (!anonymous) {
-			Catalog.countUse(PotionOfDragonsBreath.class);
-			if (Random.Float() < talentChance) {
-				Talent.onPotionUsed(ctx.kit, body.pos, talentFactor);
-			}
-		}
-	}
-
-	/** Fire blobs, Burning, Cripple, doors — same for Hero and Echo. */
-	private static void applyCone(int sourcePos, int cell) {
-		Ballistica bolt = new Ballistica(sourcePos, cell, Ballistica.WONT_STOP);
-		ConeAOE cone = new ConeAOE(bolt, 6, 60,
-				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);
-
-		ArrayList<Integer> adjacentCells = new ArrayList<>();
-		for (int c : cone.cells) {
-			if (c == bolt.sourcePos) {
-				continue;
-			}
-
-			if (Dungeon.level.map[c] == Terrain.DOOR) {
-				Level.set(c, Terrain.OPEN_DOOR);
-				GameScene.updateMap(c);
-			}
-
-			if (Dungeon.level.adjacent(bolt.sourcePos, c) && !Dungeon.level.flamable[c]) {
-				adjacentCells.add(c);
-			} else {
-				GameScene.add(Blob.seed(c, 5, Fire.class));
-			}
-
-			Char ch = Actor.findChar(c);
-			if (ch != null) {
-				Buff.affect(ch, Burning.class).reignite(ch);
-				Buff.prolong(ch, Cripple.class, 5f);
-			}
-		}
-
-		for (int c : adjacentCells) {
-			for (int i : PathFinder.NEIGHBOURS4) {
-				if (Dungeon.level.trueDistance(c + i, bolt.sourcePos) > Dungeon.level.trueDistance(c, bolt.sourcePos)
-						&& Dungeon.level.flamable[c + i]
-						&& Fire.volumeAt(c + i, Fire.class) == 0) {
-					GameScene.add(Blob.seed(c + i, 5, Fire.class));
-				}
-			}
-		}
-	}
-
-	private static void playConeVfx(Char body, int cell, Callback onComplete) {
-		if (body.sprite == null || body.sprite.parent == null) {
-			if (onComplete != null) {
-				onComplete.call();
-			}
-			return;
-		}
-		Ballistica bolt = new Ballistica(body.pos, cell, Ballistica.WONT_STOP);
-		int dist = Math.min(bolt.dist, 6);
-		ConeAOE cone = new ConeAOE(bolt, 6, 60,
-				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);
-		for (Ballistica ray : cone.outerRays) {
-			((MagicMissile) body.sprite.parent.recycle(MagicMissile.class)).reset(
-					MagicMissile.FIRE_CONE,
-					body.sprite,
-					ray.path.get(ray.dist),
-					null);
-		}
-		MagicMissile.boltFromChar(
-				body.sprite.parent,
-				MagicMissile.FIRE_CONE,
-				body.sprite,
-				bolt.path.get(dist / 2),
-				onComplete);
-	}
-
-	@Override
-	// need to override drink so that time isn't spent right away
+	//need to override drink so that time isn't spent right away
 	protected void drink(final Hero hero) {
 
 		if (!isKnown()) {
 			identify();
-			curItem = detach(hero.belongings.backpack);
+			curItem = detach( hero.belongings.backpack );
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
 		}
 
 		GameScene.selectCell(targeter);
+	}
+
+	/**
+	 * Hero fire-cone at a chosen cell without CellSelector (headless tests).
+	 * Same resolve as the successful {@link #targeter} path; null sprite completes sync.
+	 */
+	void breathAt(final Hero hero, final int cell) {
+		if (hero == null || cell < 0 || Dungeon.level == null) {
+			return;
+		}
+		if (hero.belongings.backpack.contains(this)) {
+			detach(hero.belongings.backpack);
+		}
+		setCurrent(hero);
+		hero.busy();
+		Sample.INSTANCE.play(Assets.Sounds.DRINK);
+
+		Callback afterOperate = new Callback() {
+			@Override
+			public void call() {
+				if (hero.sprite != null) {
+					hero.sprite.idle();
+					hero.sprite.zap(cell);
+				}
+				Sample.INSTANCE.play(Assets.Sounds.BURNING);
+				DragonsBreathEchoBridge.playConeVfx(hero, cell, new Callback() {
+					@Override
+					public void call() {
+						DragonsBreathEchoBridge.applyCone(hero.pos, cell);
+						hero.spendAndNext(1f);
+						if (!anonymous) {
+							Catalog.countUse(PotionOfDragonsBreath.class);
+							if (Random.Float() < talentChance) {
+								Talent.onPotionUsed(hero, hero.pos, talentFactor);
+							}
+						}
+					}
+				});
+			}
+		};
+
+		if (hero.sprite != null) {
+			hero.sprite.operate(hero.pos, afterOperate);
+		} else {
+			afterOperate.call();
+		}
 	}
 
 	private CellSelector.Listener targeter = new CellSelector.Listener() {
@@ -230,26 +124,26 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 		@Override
 		public void onSelect(final Integer cell) {
 
-			if (showingWindow) {
+			if (showingWindow){
 				return;
 			}
-			if (potionAlreadyUsed) {
+			if (potionAlreadyUsed){
 				potionAlreadyUsed = false;
 				return;
 			}
 
-			if (cell == null && identifiedByUse) {
+			if (cell == null && identifiedByUse){
 				showingWindow = true;
 				ShatteredPixelDungeon.runOnRenderThread(new Callback() {
 					@Override
 					public void call() {
-						GameScene.show(new WndOptions(new ItemSprite(PotionOfDragonsBreath.this),
+						GameScene.show( new WndOptions(new ItemSprite(PotionOfDragonsBreath.this),
 								Messages.titleCase(name()),
 								Messages.get(ExoticPotion.class, "warning"),
 								Messages.get(ExoticPotion.class, "yes"),
-								Messages.get(ExoticPotion.class, "no")) {
+								Messages.get(ExoticPotion.class, "no") ) {
 							@Override
-							protected void onSelect(int index) {
+							protected void onSelect( int index ) {
 								showingWindow = false;
 								switch (index) {
 									case 0:
@@ -257,25 +151,71 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 										identifiedByUse = false;
 										break;
 									case 1:
-										GameScene.selectCell(targeter);
+										GameScene.selectCell( targeter );
 										break;
 								}
 							}
-
-							public void onBackPressed() {
-							}
-						});
+							public void onBackPressed() {}
+						} );
 					}
 				});
 			} else if (cell != null) {
-				PotionOfDragonsBreath potion = PotionOfDragonsBreath.this;
 				if (identifiedByUse) {
 					// already detached when identified-by-use
-					potion = (PotionOfDragonsBreath) curItem;
+				} else {
+					curItem.detach(curUser.belongings.backpack);
 				}
 				potionAlreadyUsed = true;
 				identifiedByUse = false;
-				potion.breatheAs(UseContext.hero(curUser), cell);
+				curUser.busy();
+				Sample.INSTANCE.play( Assets.Sounds.DRINK );
+				curUser.sprite.operate(curUser.pos, new Callback() {
+					@Override
+					public void call() {
+
+						curUser.sprite.idle();
+						curUser.sprite.zap(cell);
+						Sample.INSTANCE.play( Assets.Sounds.BURNING );
+
+						final Ballistica bolt = new Ballistica(curUser.pos, cell, Ballistica.WONT_STOP);
+
+						int maxDist = 6;
+						int dist = Math.min(bolt.dist, maxDist);
+
+						final ConeAOE cone = new ConeAOE(bolt, 6, 60, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);
+
+						//cast to cells at the tip, rather than all cells, better performance.
+						for (Ballistica ray : cone.outerRays){
+							((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(
+									MagicMissile.FIRE_CONE,
+									curUser.sprite,
+									ray.path.get(ray.dist),
+									null
+							);
+						}
+
+						MagicMissile.boltFromChar(curUser.sprite.parent,
+								MagicMissile.FIRE_CONE,
+								curUser.sprite,
+								bolt.path.get(dist / 2),
+								new Callback() {
+									@Override
+									public void call() {
+										DragonsBreathEchoBridge.applyCone(curUser.pos, cell);
+
+										curUser.spendAndNext(1f);
+
+										if (!anonymous) {
+											Catalog.countUse(PotionOfDragonsBreath.class);
+											if (Random.Float() < talentChance) {
+												Talent.onPotionUsed(curUser, curUser.pos, talentFactor);
+											}
+										}
+									}
+								});
+
+					}
+				});
 			}
 		}
 

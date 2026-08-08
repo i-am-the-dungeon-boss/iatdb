@@ -6,8 +6,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.Deat
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 /**
  * Echo {@link DeathMark} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityDeathMarkTest {
@@ -49,19 +49,16 @@ class EchoArmorAbilityDeathMarkTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo DeathMark activateAs applies DeathMarkTracker on the player")
+	@DisplayName("Echo DeathMark adapter activate applies DeathMarkTracker on the player")
 	void marksPlayer() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.buff(DeathMark.DeathMarkTracker.class)).isNotNull();
@@ -69,14 +66,14 @@ class EchoArmorAbilityDeathMarkTest {
 	}
 
 	@Test
-	@DisplayName("Echo DeathMark activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo DeathMark adapter activate spends ClassArmor charge from the kit")
 	void spendsCharge() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
@@ -84,13 +81,13 @@ class EchoArmorAbilityDeathMarkTest {
 	}
 
 	@Test
-	@DisplayName("Echo DeathMark activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo DeathMark adapter activate clears busy so the boss turn can resume")
 	void clearsBusy() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -106,7 +103,7 @@ class EchoArmorAbilityDeathMarkTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, empty);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), empty);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore);
@@ -121,7 +118,7 @@ class EchoArmorAbilityDeathMarkTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.boss.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.boss.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore);

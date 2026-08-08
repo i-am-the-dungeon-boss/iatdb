@@ -16,6 +16,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.shatteredpixel.shatteredpixeldungeon.items.ItemEchoBridge;
 
 @ExtendWith(GdxTestExtension.class)
 class ItemCastVisualTest {
@@ -36,7 +37,7 @@ class ItemCastVisualTest {
 		stage.add(hero.sprite);
 
 		boolean[] arrived = { false };
-		int cell = potion.castVisual(boss.sprite, boss.pos, hero.pos, () -> arrived[0] = true);
+		int cell = ItemEchoBridge.castVisual(potion, boss.sprite, boss.pos, hero.pos, () -> arrived[0] = true);
 
 		Assertions.assertThat(cell).isEqualTo(hero.pos);
 		Assertions.assertThat(stage.lastMissile).isNotNull();
@@ -61,7 +62,7 @@ class ItemCastVisualTest {
 
 		PotionOfParalyticGas potion = new PotionOfParalyticGas();
 		boolean[] arrived = { false };
-		potion.castVisual(boss.sprite, boss.pos, hero.pos, () -> arrived[0] = true);
+		ItemEchoBridge.castVisual(potion, boss.sprite, boss.pos, hero.pos, () -> arrived[0] = true);
 
 		Assertions.assertThat(arrived[0]).isTrue();
 	}

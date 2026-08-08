@@ -38,7 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
@@ -63,68 +63,63 @@ public class Shockwave extends ArmorAbility {
 
 	@Override
 	public int targetedPos(Char user, int dst) {
-		return new Ballistica(user.pos, dst, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET).collisionPos;
+		return new Ballistica( user.pos, dst, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET ).collisionPos;
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Hero kit = ctx.kit;
-		if (target == null) {
-			refuse(ctx);
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+		if (target == null){
 			return;
 		}
-		if (target == body.pos) {
-			if (ctx.heroFX) {
-				GLog.w(Messages.get(this, "self_target"));
-			}
-			refuse(ctx);
+		if (target == hero.pos){
+			GLog.w(Messages.get(this, "self_target"));
 			return;
 		}
+		hero.busy();
 
-		armor.charge -= chargeUse(kit);
-		armor.updateQuickslot();
+		armor.charge -= chargeUse(hero);
+		Item.updateQuickslot();
 
-		Ballistica aim = new Ballistica(body.pos, target, Ballistica.WONT_STOP);
+		Ballistica aim = new Ballistica(hero.pos, target, Ballistica.WONT_STOP);
 
-		int maxDist = 5 + kit.pointsInTalent(Talent.EXPANDING_WAVE);
+		int maxDist = 5 + hero.pointsInTalent(Talent.EXPANDING_WAVE);
 		int dist = Math.min(aim.dist, maxDist);
 
 		ConeAOE cone = new ConeAOE(aim,
 				dist,
-				60 + 15 * kit.pointsInTalent(Talent.EXPANDING_WAVE),
+				60 + 15*hero.pointsInTalent(Talent.EXPANDING_WAVE),
 				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
 
 		Callback applyEffect = new Callback() {
 			@Override
 			public void call() {
 
-				for (int cell : cone.cells) {
+				for (int cell : cone.cells){
 
 					Char ch = Actor.findChar(cell);
-					if (ch != null && ch.alignment != body.alignment) {
-						int scalingStr = kit.STR() - 10;
-						int damage = Hero.heroDamageIntRange(5 + scalingStr, 10 + 2 * scalingStr);
-						damage = Math.round(damage * (1f + 0.2f * kit.pointsInTalent(Talent.SHOCK_FORCE)));
+					if (ch != null && ch.alignment != hero.alignment){
+						int scalingStr = hero.STR()-10;
+						int damage = Hero.heroDamageIntRange(5 + scalingStr, 10 + 2*scalingStr);
+						damage = Math.round(damage * (1f + 0.2f*hero.pointsInTalent(Talent.SHOCK_FORCE)));
 						damage -= ch.drRoll();
 
-						if (kit.pointsInTalent(Talent.STRIKING_WAVE) == 4) {
-							Buff.affect(kit, Talent.StrikingWaveTracker.class, 0f);
+						if (hero.pointsInTalent(Talent.STRIKING_WAVE) == 4){
+							Buff.affect(hero, Talent.StrikingWaveTracker.class, 0f);
 						}
 
-						if (Random.Int(10) < 3 * kit.pointsInTalent(Talent.STRIKING_WAVE)) {
+						if (Random.Int(10) < 3*hero.pointsInTalent(Talent.STRIKING_WAVE)){
 							boolean wasEnemy = ch.alignment == Char.Alignment.ENEMY
 									|| (ch instanceof Mimic && ch.alignment == Char.Alignment.NEUTRAL);
-							damage = kit.attackProc(ch, damage);
-							ch.damage(damage, kit);
-							if (kit.subClass == HeroSubClass.GLADIATOR && wasEnemy) {
-								Buff.affect(kit, Combo.class).hit(ch);
+							damage = hero.attackProc(ch, damage);
+							ch.damage(damage, hero);
+							if (hero.subClass == HeroSubClass.GLADIATOR && wasEnemy){
+								Buff.affect( hero, Combo.class ).hit( ch );
 							}
 						} else {
-							ch.damage(damage, kit);
+							ch.damage(damage, hero);
 						}
-						if (ch.isAlive()) {
-							if (Random.Int(4) < kit.pointsInTalent(Talent.SHOCK_FORCE)) {
+						if (ch.isAlive()){
+							if (Random.Int(4) < hero.pointsInTalent(Talent.SHOCK_FORCE)){
 								Buff.affect(ch, Paralysis.class, 5f);
 							} else {
 								Buff.affect(ch, Cripple.class, 5f);
@@ -134,32 +129,34 @@ public class Shockwave extends ArmorAbility {
 					}
 				}
 
-				Invisibility.dispel(body);
-				ctx.turns.spendAfterThrow(Actor.TICK);
+				Invisibility.dispel();
+				hero.spendAndNext(Actor.TICK);
 
 			}
 		};
 
-		if (UseContext.canWorldFx(body)) {
-			// cast to cells at the tip, rather than all cells, better performance.
-			for (Ballistica ray : cone.outerRays) {
-				((MagicMissile) body.sprite.parent.recycle(MagicMissile.class)).reset(
+		if (hero.sprite != null && hero.sprite.parent != null) {
+			//cast to cells at the tip, rather than all cells, better performance.
+			for (Ballistica ray : cone.outerRays){
+				((MagicMissile)hero.sprite.parent.recycle( MagicMissile.class )).reset(
 						MagicMissile.FORCE_CONE,
-						body.sprite,
+						hero.sprite,
 						ray.path.get(ray.dist),
-						null);
+						null
+				);
 			}
 
-			body.sprite.zap(target);
+			hero.sprite.zap(target);
 			Sample.INSTANCE.play(Assets.Sounds.BLAST, 1f, 0.5f);
 			PixelScene.shake(2, 0.5f);
-			// final zap at 2/3 distance, for timing of the actual effect
-			MagicMissile.boltFromChar(body.sprite.parent,
+			//final zap at 2/3 distance, for timing of the actual effect
+			MagicMissile.boltFromChar(hero.sprite.parent,
 					MagicMissile.FORCE_CONE,
-					body.sprite,
+					hero.sprite,
 					cone.coreRay.path.get(dist * 2 / 3),
 					applyEffect);
 		} else {
+			Sample.INSTANCE.play(Assets.Sounds.BLAST, 1f, 0.5f);
 			applyEffect.call();
 		}
 	}
@@ -171,6 +168,6 @@ public class Shockwave extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[] { Talent.EXPANDING_WAVE, Talent.STRIKING_WAVE, Talent.SHOCK_FORCE, Talent.HEROIC_ENERGY };
+		return new Talent[]{Talent.EXPANDING_WAVE, Talent.STRIKING_WAVE, Talent.SHOCK_FORCE, Talent.HEROIC_ENERGY};
 	}
 }

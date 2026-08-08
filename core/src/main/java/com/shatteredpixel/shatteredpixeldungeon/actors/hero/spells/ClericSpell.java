@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -34,7 +31,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
@@ -44,19 +40,6 @@ import java.util.ArrayList;
 public abstract class ClericSpell {
 
 	public abstract void onCast(HolyTome tome, Hero hero);
-
-	/**
-	 * Shared spell execute (target cell already chosen when targeting). Self-effects
-	 * on {@code ctx.body}; charge/talents on {@code ctx.kit}; turn/VFX via
-	 * {@code ctx.turns} / {@code ctx.heroFX}.
-	 */
-	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
-		if (!ctx.heroFX) {
-			return false;
-		}
-		onCast(tome, ctx.kit);
-		return false;
-	}
 
 	public float chargeUse( Hero hero ){
 		return 1;
@@ -90,38 +73,31 @@ public abstract class ClericSpell {
 		return HeroIcon.NONE;
 	}
 
-	public void onSpellCast(HolyTome tome, Hero hero) {
-		onSpellCast(UseContext.hero(hero), tome);
-	}
-
-	public void onSpellCast(UseContext ctx, HolyTome tome) {
-		Hero kit = ctx.kit;
-		Invisibility.dispel(ctx.body);
-		if (kit.hasTalent(Talent.SATIATED_SPELLS) && kit.buff(Talent.SatiatedSpellsTracker.class) != null){
-			int amount = 1 + 2*kit.pointsInTalent(Talent.SATIATED_SPELLS);
-			Buff.affect(ctx.body, Barrier.class).setShield(amount);
+	public void onSpellCast(HolyTome tome, Hero hero){
+		Invisibility.dispel();
+		if (hero.hasTalent(Talent.SATIATED_SPELLS) && hero.buff(Talent.SatiatedSpellsTracker.class) != null){
+			int amount = 1 + 2*hero.pointsInTalent(Talent.SATIATED_SPELLS);
+			Buff.affect(hero, Barrier.class).setShield(amount);
 			Char ally = PowerOfMany.getPoweredAlly();
 			if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
 				Buff.affect(ally, Barrier.class).setShield(amount);
 			}
-			kit.buff(Talent.SatiatedSpellsTracker.class).detach();
+			hero.buff(Talent.SatiatedSpellsTracker.class).detach();
 		}
-		tome.spendCharge(chargeUse(kit));
-		if (ctx.heroFX) {
-			Talent.onArtifactUsed(kit);
-		}
-		if (kit.subClass == HeroSubClass.PALADIN){
-			if (this != HolyWeapon.INSTANCE && kit.buff(HolyWeapon.HolyWepBuff.class) != null){
-				kit.buff(HolyWeapon.HolyWepBuff.class).extend(10*chargeUse(kit));
+		tome.spendCharge(chargeUse(hero));
+		Talent.onArtifactUsed(hero);
+		if (hero.subClass == HeroSubClass.PALADIN){
+			if (this != HolyWeapon.INSTANCE && hero.buff(HolyWeapon.HolyWepBuff.class) != null){
+				hero.buff(HolyWeapon.HolyWepBuff.class).extend(10*chargeUse(hero));
 			}
-			if (this != HolyWard.INSTANCE && kit.buff(HolyWard.HolyArmBuff.class) != null){
-				kit.buff(HolyWard.HolyArmBuff.class).extend(10*chargeUse(kit));
+			if (this != HolyWard.INSTANCE && hero.buff(HolyWard.HolyArmBuff.class) != null){
+				hero.buff(HolyWard.HolyArmBuff.class).extend(10*chargeUse(hero));
 			}
 		}
 
-		if (kit.buff(AscendedForm.AscendBuff.class) != null){
-			kit.buff(AscendedForm.AscendBuff.class).spellCasts++;
-			kit.buff(AscendedForm.AscendBuff.class).incShield((int)(10*chargeUse(kit)));
+		if (hero.buff(AscendedForm.AscendBuff.class) != null){
+			hero.buff(AscendedForm.AscendBuff.class).spellCasts++;
+			hero.buff(AscendedForm.AscendBuff.class).incShield((int)(10*chargeUse(hero)));
 		}
 	}
 

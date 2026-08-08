@@ -41,7 +41,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.ItemStatusHandler;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.AquaBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfHoneyedHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
@@ -303,37 +302,26 @@ public class Potion extends Item {
 	}
 
 	protected void drink(Hero hero) {
-		drinkAs(UseContext.hero(hero));
-	}
 
-	/**
-	 * Shared self-drink for Hero and Echo. Effects apply to {@code ctx.body}
-	 * via {@link #apply(Char)}; inventory comes from {@code ctx.kit}.
-	 */
-	public boolean drinkAs(UseContext ctx) {
-		detach(ctx.kit.belongings.backpack);
-		setCurrent(ctx.kit);
+		detach(hero.belongings.backpack);
 
-		if (ctx.heroFX) {
-			ctx.kit.spend(TIME_TO_DRINK);
-			ctx.turns.busy();
+		hero.spend(TIME_TO_DRINK);
+		hero.busy();
+		setCurrent(hero);
+		apply(hero);
+
+		Sample.INSTANCE.play(Assets.Sounds.DRINK);
+
+		if (hero.sprite != null) {
+			hero.sprite.operate(hero.pos);
 		}
 
-		apply(ctx.body);
-
-		if (UseContext.canWorldFx(ctx.body)) {
-			Sample.INSTANCE.play(Assets.Sounds.DRINK);
-			ctx.body.sprite.operate(ctx.body.pos);
-		}
-		if (ctx.heroFX) {
-			if (!anonymous) {
-				Catalog.countUse(getClass());
-				if (Random.Float() < talentChance) {
-					Talent.onPotionUsed(ctx.kit, ctx.kit.pos, talentFactor);
-				}
+		if (!anonymous) {
+			Catalog.countUse(getClass());
+			if (Random.Float() < talentChance) {
+				Talent.onPotionUsed(curUser, curUser.pos, talentFactor);
 			}
 		}
-		return true;
 	}
 
 	@Override

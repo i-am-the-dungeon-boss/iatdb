@@ -32,7 +32,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
@@ -60,9 +59,10 @@ import java.util.stream.Stream;
 
 /**
  * Happy-path: every {@link ArmorAbility} is usable by the Hero via
- * {@link ArmorAbility#activateAs(UseContext, ClassArmor, Integer)}.
+ * {@link ArmorAbilityTestSupport#activateHero}.
  *
- * <p>Enemy-targeting abilities are checked against both a normal mob and
+ * <p>
+ * Enemy-targeting abilities are checked against both a normal mob and
  * {@link EchoBoss}. Self / summon / UI abilities keep a single fixture.
  */
 @ExtendWith(GdxTestExtension.class)
@@ -79,22 +79,46 @@ class HeroArmorAbilityUsableTest {
 				Arguments.of("normal mob", EnemyKind.NORMAL_MOB));
 	}
 
+	@Test
+	@DisplayName("Hero armor ability uses the master activate signature")
+	void heroArmorAbilityUsesMasterActivateSignature() {
+		Fight f = fight(HeroClass.WARRIOR);
+		WarriorArmor armor = charged(new WarriorArmor());
+		float before = f.hero.cooldown();
+
+		new Endure().use(armor, f.hero);
+
+		Assertions.assertThat(f.hero.buff(Endure.EndureTracker.class)).isNotNull();
+		Assertions.assertThat(armor.charge).isEqualTo(50f);
+		Assertions.assertThat(f.hero.cooldown()).isGreaterThanOrEqualTo(before);
+	}
+
+	@Test
+	@DisplayName("Hero targeted armor ability keeps CellSelector ownership")
+	void heroTargetedArmorAbilityKeepsCellSelectorOwnership() {
+		Shockwave shockwave = new Shockwave();
+		Assertions.assertThat(shockwave.targetingPrompt())
+				.as("targeted abilities must keep GameScene.selectCell in use()")
+				.isNotNull();
+		Assertions.assertThat(shockwave.useTargeting()).isTrue();
+	}
+
 	// --- Warrior ---
 
 	@Test
-	@DisplayName("Hero Endure activateAs applies EndureTracker and spends charge")
+	@DisplayName("Hero Endure activateHero hub applies EndureTracker and spends charge")
 	void heroEndure() {
 		Fight f = fight(HeroClass.WARRIOR);
 		WarriorArmor armor = charged(new WarriorArmor());
 
-		boolean ok = new Endure().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Endure(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.buff(Endure.EndureTracker.class)).isNotNull();
 		Assertions.assertThat(armor.charge).isEqualTo(50f);
 	}
 
-	@ParameterizedTest(name = "Hero Shockwave activateAs damages {0} and spends charge")
+	@ParameterizedTest(name = "Hero Shockwave activateHero hub damages {0} and spends charge")
 	@MethodSource("enemyTargets")
 	void heroShockwave(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.WARRIOR, 2, kind);
@@ -102,7 +126,7 @@ class HeroArmorAbilityUsableTest {
 		int hpBefore = f.enemy.HP;
 		f.enemy.invisible = 1;
 
-		boolean ok = new Shockwave().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Shockwave(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.HP).isLessThan(hpBefore);
@@ -113,7 +137,7 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero HeroicLeap activateAs moves the hero and spends charge")
+	@DisplayName("Hero HeroicLeap activateHero hub moves the hero and spends charge")
 	void heroHeroicLeap() {
 		Fight f = fight(HeroClass.WARRIOR);
 		EchoTestSupport.attachInstantProjectileParent(f.hero);
@@ -121,7 +145,7 @@ class HeroArmorAbilityUsableTest {
 		Assertions.assertThat(dest).isGreaterThanOrEqualTo(0);
 		WarriorArmor armor = charged(new WarriorArmor());
 
-		boolean ok = new HeroicLeap().activateAs(f.heroCtx(), armor, dest);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new HeroicLeap(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.pos).isEqualTo(dest);
@@ -130,7 +154,7 @@ class HeroArmorAbilityUsableTest {
 
 	// --- Mage ---
 
-	@ParameterizedTest(name = "Hero ElementalBlast activateAs damages {0} with imbued staff")
+	@ParameterizedTest(name = "Hero ElementalBlast activateHero hub damages {0} with imbued staff")
 	@MethodSource("enemyTargets")
 	void heroElementalBlast(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.MAGE, 1, kind);
@@ -139,14 +163,14 @@ class HeroArmorAbilityUsableTest {
 		EchoTestSupport.attachInstantProjectileParent(f.hero);
 		int hpBefore = f.enemy.HP;
 
-		boolean ok = new ElementalBlast().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new ElementalBlast(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.HP).isLessThan(hpBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(65f);
 	}
 
-	@ParameterizedTest(name = "Hero WildMagic activateAs damages {0} from backpack wands")
+	@ParameterizedTest(name = "Hero WildMagic activateHero hub damages {0} from backpack wands")
 	@MethodSource("enemyTargets")
 	void heroWildMagic(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.MAGE, 2, kind);
@@ -159,7 +183,7 @@ class HeroArmorAbilityUsableTest {
 		EchoTestSupport.attachInstantProjectileParent(f.hero);
 		int hpBefore = f.enemy.HP;
 
-		boolean ok = new WildMagic().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new WildMagic(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.HP).isLessThan(hpBefore);
@@ -167,7 +191,7 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero WarpBeacon activateAs places WarpBeaconTracker on the hero")
+	@DisplayName("Hero WarpBeacon activateHero hub places WarpBeaconTracker on the hero")
 	void heroWarpBeacon() {
 		Fight f = fight(HeroClass.MAGE, 2);
 		int beacon = f.hero.pos;
@@ -175,7 +199,7 @@ class HeroArmorAbilityUsableTest {
 		Dungeon.level.mapped[beacon] = true;
 		MageArmor armor = charged(new MageArmor());
 
-		boolean ok = new WarpBeacon().activateAs(f.heroCtx(), armor, beacon);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new WarpBeacon(), beacon);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.buff(WarpBeacon.WarpBeaconTracker.class)).isNotNull();
@@ -184,28 +208,28 @@ class HeroArmorAbilityUsableTest {
 	// --- Rogue ---
 
 	@Test
-	@DisplayName("Hero SmokeBomb activateAs teleports the hero and spends charge")
+	@DisplayName("Hero SmokeBomb activateHero hub teleports the hero and spends charge")
 	void heroSmokeBomb() {
 		Fight f = fight(HeroClass.ROGUE);
 		int dest = emptyAdjacent(f.hero.pos);
 		Assertions.assertThat(dest).isGreaterThanOrEqualTo(0);
 		RogueArmor armor = charged(new RogueArmor());
 
-		boolean ok = new SmokeBomb().activateAs(f.heroCtx(), armor, dest);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new SmokeBomb(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.pos).isEqualTo(dest);
 		Assertions.assertThat(armor.charge).isEqualTo(50f);
 	}
 
-	@ParameterizedTest(name = "Hero DeathMark activateAs marks {0} and spends charge")
+	@ParameterizedTest(name = "Hero DeathMark activateHero hub marks {0} and spends charge")
 	@MethodSource("enemyTargets")
 	void heroDeathMark(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.ROGUE, 2, kind);
 		fillHeroFov();
 		RogueArmor armor = charged(new RogueArmor());
 
-		boolean ok = new DeathMark().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new DeathMark(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.buff(DeathMark.DeathMarkTracker.class)).isNotNull();
@@ -213,12 +237,12 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero ShadowClone activateAs spawns a ShadowAlly beside the hero")
+	@DisplayName("Hero ShadowClone activateHero hub spawns a ShadowAlly beside the hero")
 	void heroShadowClone() {
 		Fight f = fight(HeroClass.ROGUE);
 		RogueArmor armor = charged(new RogueArmor());
 
-		boolean ok = new ShadowClone().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		ShadowClone.ShadowAlly ally = findMob(ShadowClone.ShadowAlly.class);
@@ -229,7 +253,7 @@ class HeroArmorAbilityUsableTest {
 
 	// --- Huntress ---
 
-	@ParameterizedTest(name = "Hero SpectralBlades activateAs damages {0} and spends charge")
+	@ParameterizedTest(name = "Hero SpectralBlades activateHero hub damages {0} and spends charge")
 	@MethodSource("enemyTargets")
 	void heroSpectralBlades(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.HUNTRESS, 2, kind);
@@ -242,7 +266,7 @@ class HeroArmorAbilityUsableTest {
 		f.hero.invisible = 1;
 		int hpBefore = f.enemy.HP;
 
-		boolean ok = new SpectralBlades().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new SpectralBlades(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.HP).isLessThan(hpBefore);
@@ -250,12 +274,12 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero NaturesPower activateAs applies tracker and spends charge")
+	@DisplayName("Hero NaturesPower activateHero hub applies tracker and spends charge")
 	void heroNaturesPower() {
 		Fight f = fight(HeroClass.HUNTRESS);
 		HuntressArmor armor = charged(new HuntressArmor());
 
-		boolean ok = new NaturesPower().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new NaturesPower(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.buff(NaturesPower.naturesPowerTracker.class)).isNotNull();
@@ -263,12 +287,12 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero SpiritHawk activateAs spawns a HawkAlly beside the hero")
+	@DisplayName("Hero SpiritHawk activateHero hub spawns a HawkAlly beside the hero")
 	void heroSpiritHawk() {
 		Fight f = fight(HeroClass.HUNTRESS);
 		HuntressArmor armor = charged(new HuntressArmor());
 
-		boolean ok = new SpiritHawk().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		SpiritHawk.HawkAlly hawk = findMob(SpiritHawk.HawkAlly.class);
@@ -279,14 +303,14 @@ class HeroArmorAbilityUsableTest {
 
 	// --- Duelist ---
 
-	@ParameterizedTest(name = "Hero Challenge activateAs applies DuelParticipant on hero and {0}")
+	@ParameterizedTest(name = "Hero Challenge activateHero hub applies DuelParticipant on hero and {0}")
 	@MethodSource("enemyTargets")
 	void heroChallenge(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.DUELIST, 2, kind);
 		fillHeroFov();
 		DuelistArmor armor = charged(new DuelistArmor());
 
-		boolean ok = new Challenge().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Challenge(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.buff(Challenge.DuelParticipant.class)).isNotNull();
@@ -294,7 +318,7 @@ class HeroArmorAbilityUsableTest {
 		Assertions.assertThat(armor.charge).isEqualTo(65f);
 	}
 
-	@ParameterizedTest(name = "Hero ElementalStrike activateAs damages {0} and spends charge")
+	@ParameterizedTest(name = "Hero ElementalStrike activateHero hub damages {0} and spends charge")
 	@MethodSource("enemyTargets")
 	void heroElementalStrike(String label, EnemyKind kind) {
 		Fight f = fight(HeroClass.DUELIST, 2, kind);
@@ -304,7 +328,7 @@ class HeroArmorAbilityUsableTest {
 		f.enemy.invisible = 1;
 		int hpBefore = f.enemy.HP;
 
-		boolean ok = new ElementalStrike().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new ElementalStrike(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.enemy.HP).isLessThan(hpBefore);
@@ -312,7 +336,7 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero Feint activateAs moves the hero and leaves AfterImage")
+	@DisplayName("Hero Feint activateHero hub moves the hero and leaves AfterImage")
 	void heroFeint() {
 		Fight f = fight(HeroClass.DUELIST, 2);
 		int dest = emptyAdjacent(f.hero.pos);
@@ -320,7 +344,7 @@ class HeroArmorAbilityUsableTest {
 		int start = f.hero.pos;
 		DuelistArmor armor = charged(new DuelistArmor());
 
-		boolean ok = new Feint().activateAs(f.heroCtx(), armor, dest);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Feint(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.pos).isEqualTo(dest);
@@ -333,12 +357,12 @@ class HeroArmorAbilityUsableTest {
 	// --- Cleric ---
 
 	@Test
-	@DisplayName("Hero AscendedForm activateAs applies AscendBuff and spends charge")
+	@DisplayName("Hero AscendedForm activateHero hub applies AscendBuff and spends charge")
 	void heroAscendedForm() {
 		Fight f = fight(HeroClass.CLERIC);
 		ClericArmor armor = charged(new ClericArmor());
 
-		boolean ok = new AscendedForm().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new AscendedForm(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.hero.buff(AscendedForm.AscendBuff.class)).isNotNull();
@@ -346,12 +370,12 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero Trinity activateAs without imbue returns true (warns; UI needs imbue)")
+	@DisplayName("Hero Trinity activateHero hub without imbue returns true (warns; UI needs imbue)")
 	void heroTrinityWithoutImbue() {
 		Fight f = fight(HeroClass.CLERIC);
 		ClericArmor armor = charged(new ClericArmor());
 
-		boolean ok = new Trinity().activateAs(f.heroCtx(), armor, null);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Trinity(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(100f);
@@ -368,7 +392,7 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero PowerOfMany activateAs summons LightAlly on empty FOV cell")
+	@DisplayName("Hero PowerOfMany activateHero hub summons LightAlly on empty FOV cell")
 	void heroPowerOfMany() {
 		Fight f = fight(HeroClass.CLERIC);
 		int dest = emptyAdjacent(f.hero.pos);
@@ -376,7 +400,7 @@ class HeroArmorAbilityUsableTest {
 		Assertions.assertThat(Dungeon.level.heroFOV[dest]).isTrue();
 		ClericArmor armor = charged(new ClericArmor());
 
-		boolean ok = new PowerOfMany().activateAs(f.heroCtx(), armor, dest);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new PowerOfMany(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		PowerOfMany.LightAlly ally = findMob(PowerOfMany.LightAlly.class);
@@ -390,7 +414,7 @@ class HeroArmorAbilityUsableTest {
 	// --- Shared / Ratmogrify ---
 
 	@Test
-	@DisplayName("Hero Ratmogrify activateAs transforms a normal mob and spends charge")
+	@DisplayName("Hero Ratmogrify activateHero hub transforms a normal mob and spends charge")
 	void heroRatmogrifyTransformsNormalMob() {
 		Fight f = fight(HeroClass.ROGUE);
 		int cell = emptyAdjacent(f.hero.pos);
@@ -399,7 +423,7 @@ class HeroArmorAbilityUsableTest {
 		fillHeroFov();
 		RogueArmor armor = charged(new RogueArmor());
 
-		boolean ok = new Ratmogrify().activateAs(f.heroCtx(), armor, cell);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Ratmogrify(), cell);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(findMob(Snake.class)).isNull();
@@ -412,14 +436,14 @@ class HeroArmorAbilityUsableTest {
 	}
 
 	@Test
-	@DisplayName("Hero Ratmogrify activateAs refuses EchoBoss without spending charge")
+	@DisplayName("Hero Ratmogrify activateHero hub refuses EchoBoss without spending charge")
 	void heroRatmogrifyRefusesEchoBoss() {
 		Fight f = fight(HeroClass.ROGUE, 2, EnemyKind.ECHO_BOSS);
 		fillHeroFov();
 		RogueArmor armor = charged(new RogueArmor());
 		int hpBefore = f.enemy.HP;
 
-		boolean ok = new Ratmogrify().activateAs(f.heroCtx(), armor, f.enemy.pos);
+		boolean ok = ArmorAbilityTestSupport.activateHero(f.hero, armor, new Ratmogrify(), f.enemy.pos);
 
 		Assertions.assertThat(ok).isTrue(); // charge gate passed; activate refuses transform
 		Assertions.assertThat(armor.charge).isEqualTo(100f);
@@ -466,6 +490,8 @@ class HeroArmorAbilityUsableTest {
 		Hero hero = heroOf(heroClass);
 		Mob enemy = createEnemy(hero, kind);
 		EchoTestSupport.installEchoBossLevel(hero, enemy, enemyOffset);
+		// Master ability VFX uses sprite.parent.recycle / Flare.show — need a scene parent.
+		EchoTestSupport.attachInstantProjectileParent(hero);
 		return new Fight(hero, enemy);
 	}
 
@@ -551,8 +577,5 @@ class HeroArmorAbilityUsableTest {
 			this.enemy = enemy;
 		}
 
-		UseContext heroCtx() {
-			return UseContext.hero(hero);
-		}
 	}
 }

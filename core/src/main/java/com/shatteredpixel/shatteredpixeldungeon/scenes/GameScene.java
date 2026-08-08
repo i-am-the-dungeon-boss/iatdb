@@ -1680,6 +1680,9 @@ public class GameScene extends PixelScene {
 	}
 
 	public static boolean cancelCellSelector() {
+		if (cellSelector == null) {
+			return false;
+		}
 		if (cellSelector.listener != null && cellSelector.listener != defaultCellListener) {
 			cellSelector.resetKeyHold();
 			cellSelector.cancel();
@@ -1748,7 +1751,9 @@ public class GameScene extends PixelScene {
 	}
 
 	public static boolean cancel() {
-		cellSelector.resetKeyHold();
+		if (cellSelector != null) {
+			cellSelector.resetKeyHold();
+		}
 		if (Dungeon.hero != null && (Dungeon.hero.curAction != null || Dungeon.hero.resting)) {
 
 			Dungeon.hero.curAction = null;

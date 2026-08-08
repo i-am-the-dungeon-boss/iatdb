@@ -8,8 +8,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link ShadowClone} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityShadowCloneTest {
@@ -45,60 +45,57 @@ class EchoArmorAbilityShadowCloneTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs spawns a ShadowAlly beside the boss body")
+	@DisplayName("Echo ShadowClone adapter activate spawns a ShadowAlly beside the boss body")
 	void shadowCloneSpawnsAllyBesideBoss() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		ShadowClone.ShadowAlly ally = findShadowAlly();
 		Assertions.assertThat(ally).isNotNull();
 		Assertions.assertThat(Dungeon.level.distance(f.boss.pos, ally.pos)).isEqualTo(1);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo ShadowClone adapter activate spends ClassArmor charge from the kit")
 	void shadowCloneSpendsCharge() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 35f);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo ShadowClone adapter activate clears busy so the boss turn can resume")
 	void shadowCloneClearsBusy() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs appear does not NPE when kit is headless")
+	@DisplayName("Echo ShadowClone adapter activate appear does not NPE when kit is headless")
 	void shadowCloneAppearDoesNotNpeWhenHeadless() {
 		Fight f = fight(2);
 
@@ -107,25 +104,25 @@ class EchoArmorAbilityShadowCloneTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		Assertions.assertThatCode(() -> new ShadowClone().activateAs(f.echo(), armor, null))
+		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null))
 				.doesNotThrowAnyException();
 
 		ShadowClone.ShadowAlly ally = findShadowAlly();
 		Assertions.assertThat(ally).isNotNull();
 		Assertions.assertThat(ally.sprite).isNull();
 		Assertions.assertThat(Dungeon.level.distance(f.boss.pos, ally.pos)).isEqualTo(1);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs registers ShadowAlly in Actor when headless")
+	@DisplayName("Echo ShadowClone adapter activate registers ShadowAlly in Actor when headless")
 	void shadowCloneRegistersAllyInActorWhenHeadless() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		ShadowClone.ShadowAlly ally = findShadowAlly();
@@ -140,18 +137,18 @@ class EchoArmorAbilityShadowCloneTest {
 			}
 		}
 		Assertions.assertThat(inActor).isTrue();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo ShadowClone adapter activate refuses when ClassArmor charge is too low")
 	void shadowCloneRefusesLowCharge() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 0;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(findShadowAlly()).isNull();

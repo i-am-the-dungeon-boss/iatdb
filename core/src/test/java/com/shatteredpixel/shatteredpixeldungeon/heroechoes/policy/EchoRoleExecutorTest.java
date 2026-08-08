@@ -658,7 +658,7 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
-	@DisplayName("PAYOFF_AOE Bomb throwAs lights fuse via executor")
+	@DisplayName("PAYOFF_AOE Bomb throw lights fuse via executor")
 	void payoffAoeBombLightsFuseViaExecutor() {
 		Hero hero = EchoTestSupport.warriorHero();
 		Bomb bomb = new Bomb();
@@ -693,7 +693,7 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
-	@DisplayName("PAYOFF_AOE StoneOfBlast throwAs damages hero via executor")
+	@DisplayName("PAYOFF_AOE StoneOfBlast throw damages hero via executor")
 	void payoffAoeStoneOfBlastDamagesHeroViaExecutor() {
 		Hero hero = EchoTestSupport.warriorHero();
 		StoneOfBlast stone = new StoneOfBlast();
@@ -825,7 +825,7 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
-	@DisplayName("STEALTH CloakOfShadows useAs buffs the boss body via executor")
+	@DisplayName("STEALTH CloakOfShadows adapter buffs the boss body via executor")
 	void stealthCloakBuffsBossViaExecutor() {
 		Hero hero = rogueHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, stealthCloakPolicy(), 5);

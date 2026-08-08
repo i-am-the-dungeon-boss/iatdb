@@ -30,9 +30,12 @@ Before changing behavior, check for coverage of the logic you will touch.
 5. **REFACTOR** — Clean up only after green; no new behavior.
 
 ```bash
-./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
-./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
+# Always quiet + skip Error Prone flood (see java-quality-checks). Windows: gradlew.bat
+./gradlew :core:test -q -PerrorProneOff --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
+./gradlew :core:test -q -PerrorProneOff --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
 ```
+
+**Agent test runs:** always pass `-q -PerrorProneOff`. Do not dump EP / lifecycle noise into the session. Drop those flags only when the user asks for Error Prone output or a PR quality gate.
 
 ## Test quality
 
@@ -64,7 +67,7 @@ void testSnapshot() {
 
 - [ ] Untested current logic was characterized with passing tests before changes
 - [ ] New/changed behavior had a failing test before implementation
-- [ ] Minimal green; `./gradlew :core:test` clean
+- [ ] Minimal green; `./gradlew :core:test -q -PerrorProneOff` clean
 - [ ] Feature work: report **tests created**, **gaps**, **redundant** (`@DisplayName` titles); ask before filling/removing
 
 ## Exceptions (ask if unsure)

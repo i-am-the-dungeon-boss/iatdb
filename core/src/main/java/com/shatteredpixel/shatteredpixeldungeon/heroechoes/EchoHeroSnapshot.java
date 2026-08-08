@@ -128,8 +128,9 @@ public final class EchoHeroSnapshot {
 			}
 			if (item instanceof MagesStaff) {
 				MagesStaff staff = (MagesStaff) item;
-				if (staff.wand() != null) {
-					staff.setWandCharges(staff.wand().maxCharges);
+				Wand imbued = staff.wand();
+				if (imbued != null) {
+					staff.setWandCharges(imbued.maxCharges);
 				}
 			}
 			if (item instanceof Artifact) {

@@ -2,27 +2,24 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug;
 
 import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
-import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfMagicalSight;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.InventoryStone;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,10 +30,11 @@ import java.util.List;
 /**
  * Debug helper: fill an echo kit with potions, scrolls, wands, and throwables,
  * then install a policy that spends them one per turn via FIRST_LEGAL.
- * Lit bombs use {@link #ROLE_BOMB} first (LIGHTTHROW via {@link Bomb#throwAs});
+ * Lit bombs use {@link #ROLE_BOMB} first (LIGHTTHROW via
+ * {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter});
  * other throwables use THROW; potions split drink vs throw.
- * Class armor abilities are a separate button via
- * {@link #grantArmorAbilityAll()}.
+ * Class armor: {@link #grantArmorAbilityAll()} equips +100 class armor
+ * for each kit's hero class with no armor ability chosen.
  */
 public final class DebugEchoArsenal {
 
@@ -45,12 +43,12 @@ public final class DebugEchoArsenal {
 	public static final String ROLE_DRINK = "DRINK";
 	public static final String ROLE_THROW = "THROW";
 	/**
-	 * Lit bomb throws ({@link Bomb#throwAs} / LIGHTTHROW) — prioritized over plain
+	 * Lit bomb throws
+	 * ({@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter}
+	 * / LIGHTTHROW) — prioritized over plain
 	 * THROW.
 	 */
 	public static final String ROLE_BOMB = "BOMB";
-	/** Class armor ability only — installed by {@link #grantArmorAbility}. */
-	public static final String ROLE_ARMOR = "ARMOR";
 
 	private DebugEchoArsenal() {
 	}
@@ -93,29 +91,27 @@ public final class DebugEchoArsenal {
 	}
 
 	/**
-	 * Equips charged class armor, rotates the kit armor ability, and installs a
-	 * policy that only uses that ClassArmor. Debug builds only via
-	 * {@link #grantArmorAbilityAll()}.
+	 * Equips +100 class armor for the kit's hero class with no armor ability
+	 * chosen. Debug builds only via {@link #grantArmorAbilityAll()}.
 	 *
-	 * @return display name of the ability now assigned
+	 * @return empty string (no ability assigned)
 	 */
 	public static String grantArmorAbility(EchoBoss boss) {
 		if (boss == null || boss.getEchoHero() == null) {
 			throw new IllegalArgumentException("echo boss requires a kit hero");
 		}
 		Hero kit = boss.getEchoHero();
-		ClassArmor armor = ensureClassArmor(kit);
-		cycleArmorAbility(kit);
-		boss.replacePolicy(armorAbilityPolicy(armor));
+		equipClassArmor(kit);
 		boss.state = boss.HUNTING;
 		if (Dungeon.hero != null) {
 			boss.aggro(Dungeon.hero);
 		}
-		return kit.armorAbility != null ? kit.armorAbility.name() : "";
+		return "";
 	}
 
 	/**
-	 * Grants armor ability to every living echo boss. Debug builds only.
+	 * Arms the living hero and every living echo boss with +100 class armor
+	 * (no ability chosen). Debug builds only.
 	 *
 	 * @return number of echo bosses updated
 	 */
@@ -123,6 +119,7 @@ public final class DebugEchoArsenal {
 		if (!DebugSettings.isDebugBuild() || Dungeon.level == null) {
 			return 0;
 		}
+		grantHeroClassArmor();
 		int updated = 0;
 		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (mob instanceof EchoBoss && mob.isAlive()) {
@@ -133,75 +130,46 @@ public final class DebugEchoArsenal {
 		return updated;
 	}
 
-	/** Policy that only light-uses the equipped class armor ability. */
-	static EchoPolicy armorAbilityPolicy(ClassArmor armor) {
-		if (armor == null) {
-			throw new IllegalArgumentException("class armor required");
+	/**
+	 * Equips identified +100 class armor for the living hero's class with no
+	 * armor ability. Debug builds only.
+	 *
+	 * @return true when the hero was armed
+	 */
+	public static boolean grantHeroClassArmor() {
+		if (!DebugSettings.isDebugBuild() || Dungeon.hero == null || !Dungeon.hero.isAlive()) {
+			return false;
 		}
-		JSONArray items = new JSONArray().put(armor.getClass().getSimpleName());
-		JSONObject caps = new JSONObject()
-				.put(ROLE_ARMOR, new JSONObject()
-						.put("pick", "FIRST_LEGAL")
-						.put("items", items));
-		JSONObject root = new JSONObject();
-		root.put("policy_schema_version", EchoPolicy.supportedSchemaVersion());
-		root.put("capabilities", caps);
-		root.put("reactions", new JSONArray());
-		root.put("recipes", new JSONArray());
-		root.put("positioning", new JSONObject());
-		root.put("matchups", new JSONObject());
-		root.put("selection", new JSONObject()
-				.put("order", new JSONArray().put("default"))
-				.put("default_roles", new JSONArray().put(ROLE_ARMOR).put("WAIT")));
-		root.put("tuning", new JSONObject());
-		return new EchoPolicy(root);
+		equipClassArmor(Dungeon.hero);
+		return true;
 	}
 
 	/**
-	 * Equips charged class armor for the kit's hero class (creates one if needed).
+	 * Identified +100 charged {@link ClassArmor} for {@code hero}'s class;
+	 * clears {@link Hero#armorAbility}.
 	 */
-	static ClassArmor ensureClassArmor(Hero kit) {
-		if (kit == null) {
-			throw new IllegalArgumentException("echo kit hero required");
+	static ClassArmor equipClassArmor(Hero hero) {
+		if (hero == null || hero.heroClass == null) {
+			throw new IllegalArgumentException("hero with class required");
 		}
-		ClassArmor armor;
-		if (kit.belongings.armor instanceof ClassArmor) {
-			armor = (ClassArmor) kit.belongings.armor;
-		} else {
-			Armor base = kit.belongings.armor instanceof Armor
-					? (Armor) kit.belongings.armor
-					: new ClothArmor();
-			armor = ClassArmor.upgrade(kit, base);
-			kit.belongings.armor = armor;
-			armor.activate(kit);
+		for (Buff b : hero.buffs(ClassArmor.Charger.class).toArray(new Buff[0])) {
+			b.detach();
 		}
+		Armor base = new PlateArmor();
+		base.level(100);
+		base.identify();
+		ClassArmor armor = ClassArmor.upgrade(hero, base);
+		armor.level(100);
 		armor.charge = 100f;
 		armor.identify();
+		hero.belongings.armor = armor;
+		armor.activate(hero);
+		hero.armorAbility = null;
+		if (hero.sprite instanceof HeroSprite) {
+			((HeroSprite) hero.sprite).updateArmor();
+		}
+		Item.updateQuickslot();
 		return armor;
-	}
-
-	/**
-	 * Advances {@link Hero#armorAbility} through the class's armor abilities so
-	 * repeated arsenal grants exercise each skill.
-	 */
-	static void cycleArmorAbility(Hero kit) {
-		if (kit == null || kit.heroClass == null) {
-			return;
-		}
-		ArmorAbility[] options = kit.heroClass.armorAbilities();
-		if (options == null || options.length == 0) {
-			return;
-		}
-		int next = 0;
-		if (kit.armorAbility != null) {
-			for (int i = 0; i < options.length; i++) {
-				if (options[i].getClass() == kit.armorAbility.getClass()) {
-					next = (i + 1) % options.length;
-					break;
-				}
-			}
-		}
-		kit.armorAbility = options[next];
 	}
 
 	/** Drop prior arsenal copies so re-grant stays at 1 use each. */
@@ -410,18 +378,10 @@ public final class DebugEchoArsenal {
 
 	/** Buff / heal potions — drunk on the echo body (includes dual-mode choose). */
 	public static boolean isDrinkPotion(Potion potion) {
-		if (potion == null || isHeroOnlyDrink(potion)) {
+		if (potion == null || EchoPotionAdapter.isHeroOnlyDrink(potion)) {
 			return false;
 		}
 		return !isThrowPotion(potion);
-	}
-
-	private static boolean isHeroOnlyDrink(Potion potion) {
-		return potion instanceof PotionOfStrength
-				|| potion instanceof PotionOfExperience
-				|| potion instanceof ElixirOfMight
-				|| potion instanceof PotionOfMindVision
-				|| potion instanceof PotionOfMagicalSight;
 	}
 
 	private static void prepare(Item item) {

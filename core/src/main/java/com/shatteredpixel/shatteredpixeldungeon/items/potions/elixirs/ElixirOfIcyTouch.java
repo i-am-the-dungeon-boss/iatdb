@@ -28,7 +28,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FrostImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfSnapFreeze;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -41,7 +40,7 @@ public class ElixirOfIcyTouch extends Elixir {
 	@Override
 	public void apply(Char ch) {
 		Buff.prolong(ch, FrostImbue.class, FrostImbue.DURATION);
-		if (UseContext.canWorldFx(ch)) {
+		if (Char.canWorldFx(ch)) {
 			ch.sprite.emitter().burst(SnowParticle.FACTORY, 5);
 		}
 	}

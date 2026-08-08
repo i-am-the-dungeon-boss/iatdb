@@ -38,7 +38,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.S
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -88,9 +87,7 @@ public class ShadowClone extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Hero kit = ctx.kit;
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 		ShadowAlly ally = getShadowAlly();
 
 		if (ally != null) {
@@ -102,30 +99,26 @@ public class ShadowClone extends ArmorAbility {
 		} else {
 			ArrayList<Integer> spawnPoints = new ArrayList<>();
 			for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
-				int p = body.pos + PathFinder.NEIGHBOURS8[i];
+				int p = hero.pos + PathFinder.NEIGHBOURS8[i];
 				if (Actor.findChar(p) == null && Dungeon.level.passable[p]) {
 					spawnPoints.add(p);
 				}
 			}
 
 			if (!spawnPoints.isEmpty()) {
-				armor.charge -= chargeUse(kit);
+				armor.charge -= chargeUse(hero);
 				armor.updateQuickslot();
 
-				ally = new ShadowAlly(kit.lvl);
+				ally = new ShadowAlly(hero.lvl);
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
-				// Headless tests have no GameScene — still register the actor
-				if (ally.sprite == null) {
-					Actor.add(ally);
-				}
 
 				ShadowAlly.appear(ally, ally.pos);
 
-				Invisibility.dispel(body);
-				ctx.turns.spendAfterThrow(Actor.TICK);
+				Invisibility.dispel();
+				hero.spendAndNext(Actor.TICK);
 
-			} else if (ctx.heroFX) {
+			} else {
 				GLog.w(Messages.get(SpiritHawk.class, "no_space"));
 			}
 		}
@@ -142,7 +135,7 @@ public class ShadowClone extends ArmorAbility {
 		return new Talent[] { Talent.SHADOW_BLADE, Talent.CLONED_ARMOR, Talent.PERFECT_COPY, Talent.HEROIC_ENERGY };
 	}
 
-	private static ShadowAlly getShadowAlly() {
+	public static ShadowAlly getShadowAlly() {
 		for (Char ch : Actor.chars()) {
 			if (ch instanceof ShadowAlly) {
 				return (ShadowAlly) ch;
@@ -321,7 +314,7 @@ public class ShadowClone extends ArmorAbility {
 			return true;
 		}
 
-		private static void appear(Char ch, int pos) {
+		public static void appear(Char ch, int pos) {
 
 			if (ch.sprite != null) {
 				ch.sprite.interruptMotion();
@@ -332,9 +325,8 @@ public class ShadowClone extends ArmorAbility {
 			}
 
 			ch.move(pos);
-			if (ch.pos == pos && ch.sprite != null) {
+			if (ch.pos == pos && ch.sprite != null)
 				ch.sprite.place(pos);
-			}
 
 			if ((Dungeon.level.heroFOV[pos] || ch == Dungeon.hero) && ch.sprite != null) {
 				ch.sprite.emitter().burst(SmokeParticle.FACTORY, 10);

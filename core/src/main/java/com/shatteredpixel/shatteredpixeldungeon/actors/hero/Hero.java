@@ -656,7 +656,20 @@ public class Hero extends Char {
 
 	@Override
 	public int drRoll() {
-		int dr = super.drRoll();
+		return drRoll(null);
+	}
+
+	/**
+	 * Like {@link #combatSpeed(Char)}: Barkskin on {@code alsoBarkskin} also
+	 * counts (max level). Used when EchoBoss body barkskin must apply while gear
+	 * DR stays on the kit.
+	 */
+	public int drRoll(Char alsoBarkskin) {
+		int bark = Barkskin.currentLevel(this);
+		if (alsoBarkskin != null) {
+			bark = Math.max(bark, Barkskin.currentLevel(alsoBarkskin));
+		}
+		int dr = Random.NormalIntRange(0, bark);
 
 		if (belongings.armor() != null) {
 			int armDr = Random.NormalIntRange(belongings.armor().DRMin(), belongings.armor().DRMax());

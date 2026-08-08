@@ -35,7 +35,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -163,7 +162,7 @@ public class WandOfDisintegration extends DamageWand {
 		int cell = beam.path.get(Math.min(beam.dist, distance()));
 		// Echo kit is headless unless the caller borrowed body.sprite; skip DeathRay
 		// but still apply the zap (ANDROID-1C).
-		if (UseContext.canWorldFx(curUser)) {
+		if (Char.canWorldFx(curUser)) {
 			curUser.sprite.parent
 					.add(new Beam.DeathRay(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(cell)));
 			Sample.INSTANCE.play(Assets.Sounds.RAY);

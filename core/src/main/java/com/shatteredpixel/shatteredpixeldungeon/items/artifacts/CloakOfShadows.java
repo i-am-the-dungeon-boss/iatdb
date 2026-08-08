@@ -35,7 +35,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -87,71 +86,37 @@ public class CloakOfShadows extends Artifact {
 
 		super.execute(hero, action);
 
+		if (hero.buff(MagicImmune.class) != null)
+			return;
+
 		if (action.equals(AC_STEALTH)) {
-			useAs(UseContext.hero(hero));
-		}
-	}
 
-	/**
-	 * Shared stealth activate/toggle for Hero and Echo. Buffs attach to
-	 * {@code ctx.body}; charges and equip checks use {@code ctx.kit}.
-	 */
-	public boolean useAs(UseContext ctx) {
-		Hero kit = ctx.kit;
-		Char body = ctx.body;
-
-		if (body.buff(MagicImmune.class) != null) {
-			return false;
-		}
-
-		// Echo kits restore mid-stealth cloaks onto the phantom hero; that is not
-		// fight invisibility. Clear it so we can activate on ctx.body.
-		clearStealthIfNotOn(body);
-
-		if (activeBuff == null) {
-			if (!isEquipped(kit) && !kit.hasTalent(Talent.LIGHT_CLOAK)) {
-				if (ctx.heroFX) {
+			if (activeBuff == null) {
+				if (!isEquipped(hero) && !hero.hasTalent(Talent.LIGHT_CLOAK))
 					GLog.i(Messages.get(Artifact.class, "need_to_equip"));
-				}
-				return false;
-			}
-			if (cursed) {
-				if (ctx.heroFX) {
+				else if (cursed)
 					GLog.i(Messages.get(this, "cursed"));
-				}
-				return false;
-			}
-			if (charge <= 0) {
-				if (ctx.heroFX) {
+				else if (charge <= 0)
 					GLog.i(Messages.get(this, "no_charge"));
+				else {
+					hero.spend(1f);
+					hero.busy();
+					Sample.INSTANCE.play(Assets.Sounds.MELD);
+					activeBuff = activeBuff();
+					activeBuff.attachTo(hero);
+					Talent.onArtifactUsed(Dungeon.hero);
+					hero.sprite.operate(hero.pos);
 				}
-				return false;
+			} else {
+				activeBuff.detach();
+				activeBuff = null;
+				if (hero.invisible <= 0 && hero.buff(Preparation.class) != null) {
+					hero.buff(Preparation.class).detach();
+				}
+				hero.sprite.operate(hero.pos);
 			}
 
-			if (ctx.heroFX) {
-				ctx.kit.spend(1f);
-				ctx.turns.busy();
-				Talent.onArtifactUsed(Dungeon.hero);
-			}
-			if (UseContext.canWorldFx(body)) {
-				Sample.INSTANCE.play(Assets.Sounds.MELD);
-				body.sprite.operate(body.pos);
-			}
-
-			activeBuff = activeBuff();
-			activeBuff.attachTo(body);
-			return true;
 		}
-
-		activeBuff.detach();
-		activeBuff = null;
-		if (body.invisible <= 0 && body.buff(Preparation.class) != null) {
-			body.buff(Preparation.class).detach();
-		}
-		if (UseContext.canWorldFx(body)) {
-			body.sprite.operate(body.pos);
-		}
-		return true;
 	}
 
 	@Override
@@ -244,8 +209,8 @@ public class CloakOfShadows extends Artifact {
 	/**
 	 * True when STEALTH can turn fight invisibility on. Charge required; already
 	 * stealthed on the player or an EchoBoss blocks. A buff stuck on a phantom
-	 * echo kit (restore + {@link #activate}) does not block — {@link #useAs}
-	 * clears that and attaches to the body.
+	 * echo kit (restore + {@link #activate}) does not block — Echo adapters clear
+	 * that and attach to the body.
 	 */
 	public boolean canActivateStealth() {
 		if (charge <= 0) {
@@ -259,18 +224,6 @@ public class CloakOfShadows extends Artifact {
 			return true;
 		}
 		return false;
-	}
-
-	/** Detach/drop active stealth unless it is already on {@code body}. */
-	private void clearStealthIfNotOn(Char body) {
-		if (activeBuff == null || activeBuff.target == body) {
-			return;
-		}
-		if (activeBuff.target != null) {
-			activeBuff.detach();
-		} else {
-			activeBuff = null;
-		}
 	}
 
 	@Override

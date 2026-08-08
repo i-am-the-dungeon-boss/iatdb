@@ -9,8 +9,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -35,65 +35,62 @@ class EchoArmorAbilitySpiritHawkTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo SpiritHawk activateAs spawns a HawkAlly beside the boss body")
+	@DisplayName("Echo SpiritHawk adapter activate spawns a HawkAlly beside the boss body")
 	void spawnsHawkAllyBesideBoss() {
 		Fight f = fight();
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
 
-		boolean ok = new SpiritHawk().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		SpiritHawk.HawkAlly hawk = findMob(SpiritHawk.HawkAlly.class);
 		Assertions.assertThat(hawk).isNotNull();
 		Assertions.assertThat(Dungeon.level.distance(f.boss.pos, hawk.pos)).isEqualTo(1);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SpiritHawk activateAs spends armor charge")
+	@DisplayName("Echo SpiritHawk adapter activate spends armor charge")
 	void spendsCharge() {
 		Fight f = fight();
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new SpiritHawk().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SpiritHawk activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo SpiritHawk adapter activate clears busy so the boss turn can resume")
 	void clearsBusy() {
 		Fight f = fight();
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
 
-		boolean ok = new SpiritHawk().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SpiritHawk activateAs registers HawkAlly in Actor when headless")
+	@DisplayName("Echo SpiritHawk adapter activate registers HawkAlly in Actor when headless")
 	void registersHawkInActorWhenHeadless() {
 		Fight f = fight();
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
 
-		boolean ok = new SpiritHawk().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		SpiritHawk.HawkAlly hawk = findMob(SpiritHawk.HawkAlly.class);
@@ -101,7 +98,7 @@ class EchoArmorAbilitySpiritHawkTest {
 		Assertions.assertThat(hawk.sprite).isNull();
 		Assertions.assertThat(Actor.findChar(hawk.pos)).isSameAs(hawk);
 		Assertions.assertThat(Actor.chars()).contains(hawk);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 

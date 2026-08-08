@@ -7,8 +7,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.S
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 /**
  * Echo {@link SpectralBlades} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilitySpectralBladesTest {
@@ -53,13 +53,10 @@ class EchoArmorAbilitySpectralBladesTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo SpectralBlades activateAs damages the player from the boss body")
+	@DisplayName("Echo SpectralBlades adapter activate damages the player from the boss body")
 	void damagesPlayer() {
 		Fight f = fight();
 		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
@@ -70,7 +67,7 @@ class EchoArmorAbilitySpectralBladesTest {
 		f.boss.getEchoHero().invisible = 1;
 		f.boss.getEchoHero().STR = 20;
 
-		boolean ok = new SpectralBlades().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
@@ -79,7 +76,7 @@ class EchoArmorAbilitySpectralBladesTest {
 	}
 
 	@Test
-	@DisplayName("Echo SpectralBlades activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo SpectralBlades adapter activate spends ClassArmor charge from the kit")
 	void spendsCharge() {
 		Fight f = fight();
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
@@ -89,7 +86,7 @@ class EchoArmorAbilitySpectralBladesTest {
 		f.boss.getEchoHero().invisible = 1;
 		f.boss.getEchoHero().STR = 20;
 
-		boolean ok = new SpectralBlades().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
@@ -97,7 +94,7 @@ class EchoArmorAbilitySpectralBladesTest {
 	}
 
 	@Test
-	@DisplayName("Echo SpectralBlades activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo SpectralBlades adapter activate clears busy so the boss turn can resume")
 	void clearsBusy() {
 		Fight f = fight();
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
@@ -107,7 +104,7 @@ class EchoArmorAbilitySpectralBladesTest {
 		f.boss.getEchoHero().invisible = 1;
 		f.boss.getEchoHero().STR = 20;
 
-		boolean ok = new SpectralBlades().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -121,7 +118,7 @@ class EchoArmorAbilitySpectralBladesTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new SpectralBlades().activateAs(f.echo(), armor, f.boss.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.boss.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore);
@@ -129,7 +126,7 @@ class EchoArmorAbilitySpectralBladesTest {
 	}
 
 	@Test
-	@DisplayName("Echo SpectralBlades leaves phantom kit sprite null after activateAs")
+	@DisplayName("Echo SpectralBlades leaves phantom kit sprite null after adapter activate")
 	void leavesKitSpriteNull() {
 		Fight f = fight();
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
@@ -140,7 +137,7 @@ class EchoArmorAbilitySpectralBladesTest {
 		f.boss.getEchoHero().STR = 20;
 		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
 
-		boolean ok = new SpectralBlades().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();

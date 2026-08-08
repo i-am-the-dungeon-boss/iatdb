@@ -28,9 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -58,57 +56,7 @@ public abstract class InventoryStone extends Runestone {
 	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 		if (action.equals(AC_USE) && hero.buff(MagicImmune.class) == null) {
-			useAs(UseContext.hero(hero));
-		}
-	}
-
-	/**
-	 * Self-activate. Hero opens bag UI; Echo auto-picks the first usable kit item.
-	 */
-	public boolean useAs(UseContext ctx) {
-		if (ctx == null || ctx.body == null || ctx.kit == null) {
-			return false;
-		}
-		if (ctx.kit.buff(MagicImmune.class) != null) {
-			return false;
-		}
-		if (ctx.heroFX) {
-			AiItemActions.withUser(ctx.kit, this, () -> activate(ctx.body.pos));
-			return true;
-		}
-		Item pick = firstUsableItem(ctx.kit);
-		if (pick == null) {
-			return false;
-		}
-		return onItemSelectedAs(ctx, pick);
-	}
-
-	/** First backpack/equip item this stone can affect. */
-	protected Item firstUsableItem(Hero kit) {
-		for (Item item : kit.belongings) {
-			if (item != this && usableOnItem(item)) {
-				return item;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Apply stone to a chosen item. Default bridges to
-	 * {@link #onItemSelected(Item)}
-	 * with {@code curUser}/{@code curItem} set for legacy callers.
-	 */
-	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
-		Hero prevUser = curUser;
-		Item prevItem = curItem;
-		curUser = ctx.kit;
-		curItem = this;
-		try {
-			onItemSelected(item);
-			return true;
-		} finally {
-			curUser = prevUser;
-			curItem = prevItem;
+			activate(curUser.pos);
 		}
 	}
 
@@ -124,9 +72,7 @@ public abstract class InventoryStone extends Runestone {
 	protected void useAnimation() {
 		curUser.spend(1f);
 		curUser.busy();
-		if (curUser.sprite != null) {
-			curUser.sprite.operate(curUser.pos);
-		}
+		curUser.sprite.operate(curUser.pos);
 
 		Sample.INSTANCE.play(Assets.Sounds.READ);
 		Invisibility.dispel();

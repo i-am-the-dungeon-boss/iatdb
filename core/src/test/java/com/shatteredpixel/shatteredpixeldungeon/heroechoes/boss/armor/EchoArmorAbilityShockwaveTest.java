@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.armor;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
@@ -10,8 +12,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Sh
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link Shockwave} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityShockwaveTest {
@@ -49,13 +51,10 @@ class EchoArmorAbilityShockwaveTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs damages the player in the cone")
+	@DisplayName("Echo Shockwave adapter activate damages the player in the cone")
 	void shockwaveDamagesPlayerInCone() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
@@ -63,80 +62,80 @@ class EchoArmorAbilityShockwaveTest {
 		int hpBefore = f.player.HP;
 		f.player.invisible = 1;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs applies Paralysis or Cripple on cone targets")
+	@DisplayName("Echo Shockwave adapter activate applies Paralysis or Cripple on cone targets")
 	void shockwaveAppliesDebuffOnConeTargets() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		f.player.invisible = 1;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(
 				f.player.buff(Paralysis.class) != null || f.player.buff(Cripple.class) != null)
 				.isTrue();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo Shockwave adapter activate spends ClassArmor charge from the kit")
 	void shockwaveSpendsCharge() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 35f);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo Shockwave adapter activate clears busy so the boss turn can resume")
 	void shockwaveClearsBusy() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs dispels Invisibility on the boss body")
+	@DisplayName("Echo Shockwave adapter activate dispels Invisibility on the boss body")
 	void shockwaveDispelsInvisibility() {
 		Fight f = fight();
 		Buff.affect(f.boss, Invisibility.class, Invisibility.DURATION);
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.buff(Invisibility.class)).isNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs fires cone MagicMissile when the body sprite has a parent")
+	@DisplayName("Echo Shockwave adapter activate fires cone MagicMissile when the body sprite has a parent")
 	void shockwaveFiresMagicMissileWhenParentLive() {
 		Fight f = fight();
 		EchoTestSupport.InstantProjectileGroup fx =
@@ -145,25 +144,25 @@ class EchoArmorAbilityShockwaveTest {
 		armor.charge = 100;
 		f.player.invisible = 1;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs applies cone damage synchronously without a sprite parent")
+	@DisplayName("Echo Shockwave adapter activate applies cone damage synchronously without a sprite parent")
 	void shockwaveHeadlessStillDamagesPlayer() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
 		f.player.invisible = 1;
-		Assertions.assertThat(UseContext.canWorldFx(f.boss)).isFalse();
+		Assertions.assertThat(Char.canWorldFx(f.boss)).isFalse();
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
@@ -171,14 +170,14 @@ class EchoArmorAbilityShockwaveTest {
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo Shockwave adapter activate refuses when ClassArmor charge is too low")
 	void shockwaveRefusesLowCharge() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 0;
 		int hpBefore = f.player.HP;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(f.player.HP).isEqualTo(hpBefore);
@@ -186,19 +185,19 @@ class EchoArmorAbilityShockwaveTest {
 	}
 
 	@Test
-	@DisplayName("Echo Shockwave activateAs skips effect when aimed at the boss body")
+	@DisplayName("Echo Shockwave adapter activate skips effect when aimed at the boss body")
 	void shockwaveSkipsSelfTarget() {
 		Fight f = fight();
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.boss.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.boss.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(100f);
 		Assertions.assertThat(f.player.HP).isEqualTo(hpBefore);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 }

@@ -28,11 +28,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
-import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -52,10 +50,15 @@ public class StoneOfDetectMagic extends InventoryStone {
 	}
 
 	@Override
-	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
-		item.cursedKnown = true;
+	protected void onItemSelected(Item item) {
 
-		boolean negativeMagic = item.cursed;
+		item.cursedKnown = true;
+		useAnimation();
+
+		boolean negativeMagic = false;
+		boolean positiveMagic = false;
+
+		negativeMagic = item.cursed;
 		if (!negativeMagic) {
 			if (item instanceof Weapon && ((Weapon) item).hasCurseEnchant()) {
 				negativeMagic = true;
@@ -64,7 +67,7 @@ public class StoneOfDetectMagic extends InventoryStone {
 			}
 		}
 
-		boolean positiveMagic = item.trueLevel() > 0;
+		positiveMagic = item.trueLevel() > 0;
 		if (!positiveMagic) {
 			if (item instanceof Weapon && ((Weapon) item).hasGoodEnchant()) {
 				positiveMagic = true;
@@ -73,31 +76,22 @@ public class StoneOfDetectMagic extends InventoryStone {
 			}
 		}
 
-		if (ctx.heroFX) {
-			if (!positiveMagic && !negativeMagic) {
-				GLog.i(Messages.get(this, "detected_none"));
-			} else if (positiveMagic && negativeMagic) {
-				GLog.h(Messages.get(this, "detected_both"));
-			} else if (positiveMagic) {
-				GLog.p(Messages.get(this, "detected_good"));
-			} else {
-				GLog.w(Messages.get(this, "detected_bad"));
-			}
-			curUser = ctx.kit;
-			useAnimation();
+		if (!positiveMagic && !negativeMagic) {
+			GLog.i(Messages.get(this, "detected_none"));
+		} else if (positiveMagic && negativeMagic) {
+			GLog.h(Messages.get(this, "detected_both"));
+		} else if (positiveMagic) {
+			GLog.p(Messages.get(this, "detected_good"));
+		} else if (negativeMagic) {
+			GLog.w(Messages.get(this, "detected_bad"));
 		}
 
 		if (!anonymous) {
-			detach(ctx.kit.belongings.backpack);
+			curItem.detach(curUser.belongings.backpack);
 			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
+			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
 		}
-		return true;
-	}
 
-	@Override
-	protected void onItemSelected(Item item) {
-		onItemSelectedAs(UseContext.hero(curUser), item);
 	}
 
 }

@@ -38,7 +38,7 @@ public class StoneOfBlink extends Runestone {
 
 	private static Ballistica throwPath;
 
-	// throwAs / castVisual aim via throwPos(int,int); Hero overload alone never
+	// Echo throw aim via throwPos(int,int); Hero overload alone never
 	// ran.
 	@Override
 	public int throwPos(int from, int dst) {
@@ -57,7 +57,7 @@ public class StoneOfBlink extends Runestone {
 
 	@Override
 	protected void activate(int cell) {
-		// Echo throwAs borrows kit onto body — teleport the live body Char when
+		// Echo throw borrows kit onto body — teleport the live body Char when
 		// present.
 		Char ch = Actor.findChar(curUser.pos);
 		if (ch == null) {

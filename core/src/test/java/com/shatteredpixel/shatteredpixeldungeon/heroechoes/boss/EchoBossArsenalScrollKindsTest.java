@@ -12,7 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Drowsy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoScrollAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
@@ -64,10 +64,6 @@ class EchoBossArsenalScrollKindsTest {
 		Hero kit() {
 			return boss.getEchoHero();
 		}
-
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
@@ -78,7 +74,7 @@ class EchoBossArsenalScrollKindsTest {
 		scroll.identify();
 		scroll.collect(f.kit().belongings.backpack);
 
-		Assertions.assertThat(scroll.readAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(f.boss, scroll)).isTrue();
 		Assertions.assertThat(f.player.buff(Drowsy.class)).isNotNull();
 		Assertions.assertThat(f.boss.buff(Drowsy.class)).isNotNull();
 		Assertions.assertThat(f.kit().belongings.getItem(ScrollOfLullaby.class)).isNull();
@@ -95,7 +91,7 @@ class EchoBossArsenalScrollKindsTest {
 		f.player.invisible = 1;
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThat(scroll.readAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(f.boss, scroll)).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(f.player.buff(Blindness.class)).isNotNull();
 		Assertions.assertThat(f.boss.buff(Weakness.class)).isNotNull();
@@ -110,7 +106,7 @@ class EchoBossArsenalScrollKindsTest {
 		scroll.identify();
 		scroll.collect(f.kit().belongings.backpack);
 
-		Assertions.assertThat(scroll.readAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(f.boss, scroll)).isTrue();
 		Assertions.assertThat(f.kit().belongings.getItem(ScrollOfMagicMapping.class)).isNull();
 	}
 
@@ -124,7 +120,7 @@ class EchoBossArsenalScrollKindsTest {
 		f.player.invisible = 1;
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThat(scroll.readAs(f.echo())).isTrue();
+		Assertions.assertThat(EchoScrollAdapter.read(f.boss, scroll)).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(f.player.buff(Blindness.class)).isNotNull();
 		Assertions.assertThat(f.boss.buff(Weakness.class)).isNotNull();
