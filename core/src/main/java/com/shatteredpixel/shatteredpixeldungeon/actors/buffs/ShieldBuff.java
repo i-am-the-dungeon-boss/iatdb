@@ -64,6 +64,12 @@ public abstract class ShieldBuff extends Buff {
 	public int shielding(){
 		return shielding;
 	}
+
+	//false for shields that persist and recharge (e.g. the warrior's seal)
+	//rather than going away once spent
+	public boolean detachesAtZero(){
+		return detachesAtZero;
+	}
 	
 	public void setShield( int shield ) {
 		if (this.shielding <= shield) this.shielding = shield;

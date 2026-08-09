@@ -4,48 +4,54 @@ overview: Tighten Echo offline fight policy around low-HP survival, AoE/plant/ga
 todos:
   - id: test-debt-payoff
     content: Pay down TDD debt on already-landed WIP (EchoAoeDots gas/plant mask, EchoBoss focus + fallthrough suppression) before new production code
-    status: pending
+    status: completed
   - id: branch-hygiene
-    content: Decide branch/slice split — echo-policy work is currently uncommitted on upstream-first-echo-adapters, mixed with 20 unrelated files
-    status: pending
+    content: Decide branch/slice split — echo-policy work was uncommitted on upstream-first-echo-adapters, mixed with 20 unrelated files
+    status: completed
   - id: hazard-id-constants
     content: Move new status/flag id strings into EchoPolicyHazards instead of scattered literals
-    status: pending
+    status: completed
   - id: survival-ladder
-    content: Wire retreat_hp into survival reaction thresholds at generate time (replaces hardcoded 0.35 bands)
-    status: pending
+    content: Wire retreat_hp into survival reaction thresholds at merge time (replaces hardcoded 0.35 bands)
+    status: completed
   - id: invuln-shield-hard-gate
     content: Hard-unready damage roles under invulnerable/timed_shield; fix Barrier shielding check; add run reactions
-    status: pending
+    status: completed
   - id: melee-close-in
     content: Melee-class close-in package — HASTE, BLIND, SETUP_CC while closing; not for kite classes
-    status: pending
+    status: completed
   - id: aoe-fight-when-trapped
     content: Add fight-when-trapped reactions (role_not_ready leaf already exists)
-    status: pending
-  - id: plant-blocked-sense
-    content: Sense plant_blocked + blocker cell (path mask itself already landed)
-    status: pending
+    status: completed
+  - id: purity-hard-gate
+    content: Hard-unready SETUP_CC/PAYOFF for purity only; skip ParalyticGas under 3-turn para lockout
+    status: completed
+  - id: priority-uniqueness
+    content: Resolve reaction priority collisions and add a merged-policy uniqueness test
+    status: completed
   - id: clear-plant-map
-    content: CLEAR_PLANT role + reactions to burn/wither blocking harmful plants
-    status: pending
-  - id: attack-readiness
-    content: Gate RANGED/MELEE role_ready + item pick on LOS + canAttack/range
+    content: CLEAR_PLANT capability and reaction shipped; Java plant_blocked sense still to do
+    status: in_progress
+  - id: clear-los-map
+    content: CLEAR_LOS capability and reaction shipped; Java los_blocked sense still to do
+    status: in_progress
+  - id: path-through-map
+    content: PATH_THROUGH capability and reactions shipped; Java path_blocked sense still to do
+    status: in_progress
+  - id: plant-blocked-sense
+    content: Sense plant_blocked + blocker cell (path mask and EchoBoss blocker-cell accessors already landed)
     status: pending
   - id: los-blocked-sense
     content: los_blocked sense on the ray to policyFocusCell (lastAttackerPos already landed)
     status: pending
-  - id: clear-los-map
-    content: Map bush-clearing items into CLEAR_LOS capability + reactions
+  - id: path-blocked-sense
+    content: Sense path_blocked via findPath with and without chars; identify the sheep cell
     status: pending
-  - id: path-through-map
-    content: Map pierce/bypass items into PATH_THROUGH; sense path_blocked
+  - id: attack-readiness
+    content: Gate RANGED/MELEE role_ready + item pick on LOS + canAttack/range (design in §4)
     status: pending
-  - id: purity-hard-gate
-    content: Hard-unready SETUP_CC/PAYOFF for purity only; skip ParalyticGas under 3-turn para lockout (aliases already landed)
-    status: pending
-  - id: priority-uniqueness
-    content: Resolve reaction priority collisions and add a merged-policy uniqueness test
+  - id: debug-kit-mirror
+    content: Mirror the new reactions and capabilities in DebugStrategyKit
     status: pending
 isProject: true
 ---

@@ -26,7 +26,9 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossRegional
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -65,6 +67,8 @@ public class EchoBoss extends Mob {
     }
 
     private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
+    /** Retreat-step scoring weight; see {@link #bestRetreatCell}. */
+    private static final int PLANT_COVER_WEIGHT = 1000;
     /** Blind last-seen shots allowed after the hero cloaks. */
     private static final int BLIND_DEFENSE_SHOTS = 2;
 
@@ -87,6 +91,15 @@ public class EchoBoss extends Mob {
     private int plantBlockerCell = -1;
     private int pathBlockerCell = -1;
     private int losBlockerCell = -1;
+    /**
+     * While true, pathing also refuses cells gas will spread onto next tick.
+     * Off for ordinary CLOSE_IN / KEEP_DISTANCE steps: the growth ring around a
+     * dense cloud usually spans the whole corridor, and blocking it there only
+     * makes the echo shuffle sideways instead of closing. Leave-AoE exits and
+     * blink landings opt in, since both pick from a scored candidate list and
+     * can fall back when every growth-safe option is gone.
+     */
+    private boolean avoidPredictedGas = false;
     /**
      * Master-style throw/zap gate: set by {@link #busy()}, cleared when
      * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
@@ -395,12 +408,80 @@ public class EchoBoss extends Mob {
      * hunting AI.
      */
     public boolean policyStepFurther(int cell) {
+        return policyStepFurther(cell, false);
+    }
+
+    /**
+     * As {@link #policyStepFurther(int)}, but while {@code preferPlantCover}
+     * a candidate step that puts a harmful plant on the line back to
+     * {@code enemyPos} is favored over one that merely maximizes distance.
+     * <p>
+     * The plant is real cover: {@code Level.pressCell} triggers it for the
+     * hero too, so kiting behind one is a genuine deterrent, not just a
+     * pathing quirk. Falls back to {@link #getFurther} when no candidate step
+     * scores — e.g. every farther cell is a wall — so retreating never fails
+     * just because cover happens to be unavailable.
+     */
+    public boolean policyStepFurther(int enemyPos, boolean preferPlantCover) {
+        int retreat = bestRetreatCell(enemyPos, preferPlantCover);
+        if (retreat >= 0 && policyStepTo(retreat)) {
+            return true;
+        }
         int oldPos = pos;
-        if (!getFurther(cell)) {
+        if (!getFurther(enemyPos)) {
             return false;
         }
         moveSprite(oldPos, pos);
         return true;
+    }
+
+    /**
+     * Best adjacent retreat cell away from {@code enemyPos}, or {@code -1} if
+     * none scores. Lexicographic, widest term first: hazard-free and strictly
+     * farther from the hero (a candidate cell must pass both to be considered
+     * at all — see the loop below); then, only while kiting, whether a
+     * harmful plant sits on the line from the candidate back to the hero;
+     * then gas/hazard clearance, mirroring {@link EchoAoeDots#bestExit}'s
+     * tiebreak.
+     */
+    private int bestRetreatCell(int enemyPos, boolean preferPlantCover) {
+        if (Dungeon.level == null || enemyPos < 0 || !Dungeon.level.insideMap(enemyPos)) {
+            return -1;
+        }
+        Level level = Dungeon.level;
+        int current = level.distance(pos, enemyPos);
+        int best = -1;
+        int bestScore = Integer.MIN_VALUE;
+        for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+            int cell = pos + PathFinder.NEIGHBOURS8[i];
+            if (!level.insideMap(cell) || !policyCellPathable(cell)) {
+                continue;
+            }
+            if (level.distance(cell, enemyPos) <= current) {
+                continue;
+            }
+            int score = 0;
+            if (preferPlantCover && plantCoversLine(cell, enemyPos)) {
+                score += PLANT_COVER_WEIGHT;
+            }
+            score += EchoAoeDots.gasClearance(this, cell, level);
+            if (best < 0 || score > bestScore || (score == bestScore && cell < best)) {
+                best = cell;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    /** True when a harmful plant occupies any cell on the line from {@code from} to {@code to}. */
+    private static boolean plantCoversLine(int from, int to) {
+        Ballistica line = new Ballistica(from, to, Ballistica.PROJECTILE);
+        for (int cell : line.path) {
+            if (EchoAoeDots.isHarmfulPlantAt(cell)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -414,7 +495,8 @@ public class EchoBoss extends Mob {
             return passable;
         }
         for (int i = 0; i < passable.length; i++) {
-            if (passable[i] && i != pos && EchoAoeDots.isAoeHazardForPath(this, i)) {
+            if (passable[i] && i != pos
+                    && EchoAoeDots.isAoeHazardForPath(this, i, avoidPredictedGas)) {
                 passable[i] = false;
             }
         }
@@ -424,12 +506,24 @@ public class EchoBoss extends Mob {
     /** Adjacent steps refuse current/predicted AoE and harmful plants. */
     @Override
     protected boolean cellIsPathable(int cell) {
-        return super.cellIsPathable(cell) && !EchoAoeDots.isAoeHazardForPath(this, cell);
+        return super.cellIsPathable(cell)
+                && !EchoAoeDots.isAoeHazardForPath(this, cell, avoidPredictedGas);
     }
 
     /** Exposes {@link Mob#cellIsPathable} for leave-AoE neighbour checks. */
     public boolean policyCellPathable(int cell) {
-        return cellIsPathable(cell);
+        return policyCellPathable(cell, avoidPredictedGas);
+    }
+
+    /** As {@link #policyCellPathable(int)} with an explicit growth-ring strictness. */
+    public boolean policyCellPathable(int cell, boolean avoidGrowthRing) {
+        boolean saved = avoidPredictedGas;
+        avoidPredictedGas = avoidGrowthRing;
+        try {
+            return cellIsPathable(cell);
+        } finally {
+            avoidPredictedGas = saved;
+        }
     }
 
     /**
@@ -765,9 +859,9 @@ public class EchoBoss extends Mob {
         if (tryPolicyAct()) {
             return true;
         }
-        // Do not punch through ankh / Barrier — wait instead of hunting melee.
-        if (enemyInvulnerableOrShielded()) {
-            debugAct("policy fallthrough suppressed → WAIT (invuln/timed_shield)");
+        // Do not punch an ankh glow or a shield that is about to expire.
+        if (enemyTemporarilyUndamageable()) {
+            debugAct("policy fallthrough suppressed → WAIT (temporarily undamageable)");
             spend(TICK);
             return true;
         }
@@ -776,18 +870,12 @@ public class EchoBoss extends Mob {
         return super.act();
     }
 
-    private boolean enemyInvulnerableOrShielded() {
+    private boolean enemyTemporarilyUndamageable() {
         Hero hero = Dungeon.hero;
         if (hero == null || !hero.isAlive()) {
             return false;
         }
-        if (hero.isInvulnerable(getClass())
-                || hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability.class) != null) {
-            return true;
-        }
-        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier barrier = hero
-                .buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier.class);
-        return barrier != null && barrier.shielding() > 0;
+        return EchoPolicyStatusBuilder.isTemporarilyUndamageable(hero, getClass());
     }
 
     /**

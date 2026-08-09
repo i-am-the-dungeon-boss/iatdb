@@ -52,13 +52,30 @@ public final class EchoRoleExecutor {
 	private EchoRoleExecutor() {
 	}
 
+	/**
+	 * Narrows a capability to the items that can still affect this hero. Under
+	 * the 3-turn {@code Paralysis.Immunity} lockout the rest of {@code SETUP_CC}
+	 * is fine, but Paralytic Gas would be thrown away — so it is dropped from the
+	 * pick list rather than the whole role being disabled.
+	 */
+	static JSONObject capForEnemy(String role, JSONObject cap, EchoPolicyStatus status) {
+		if (cap == null || status == null) {
+			return cap;
+		}
+		if (EchoPolicyHazards.SETUP_CC.equals(role)
+				&& status.enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)) {
+			return EchoPolicyHazards.withoutParalyticGas(cap);
+		}
+		return cap;
+	}
+
 	public static boolean execute(
 			EchoBoss boss,
 			EchoPolicy policy,
 			EchoPolicyStatus status,
 			EchoPolicyChoice choice) {
 		JSONObject caps = policy.root().optJSONObject("capabilities");
-		JSONObject cap = caps != null ? caps.optJSONObject(choice.useRole) : null;
+		JSONObject cap = capForEnemy(choice.useRole, caps != null ? caps.optJSONObject(choice.useRole) : null, status);
 		java.util.Set<String> available = EchoInventory.availableIds(boss.getEchoHero());
 		String itemId = choice.itemId != null
 				? choice.itemId
@@ -294,7 +311,10 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 		if ("*move_further".equals(tag)) {
-			return enemy != null && boss.policyStepFurther(enemy.pos);
+			// A kiting echo wants a harmful plant between itself and the hero —
+			// Level.pressCell triggers it for the hero too, so it is real cover.
+			boolean kite = EchoPolicyMatcher.wantsKeepDistance(policy, status);
+			return enemy != null && boss.policyStepFurther(enemy.pos, kite);
 		}
 		if ("*move_closer".equals(tag)) {
 			return enemy != null && boss.policyStepCloser(enemy.pos);

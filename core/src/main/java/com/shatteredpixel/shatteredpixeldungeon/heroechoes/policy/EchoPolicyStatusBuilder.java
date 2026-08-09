@@ -9,12 +9,14 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.watabou.utils.PathFinder;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -82,6 +84,9 @@ public final class EchoPolicyStatusBuilder {
 		if (EchoAoeDots.isAoeDotAt(boss, boss.pos)) {
 			selfStatuses.add(EchoAoeDots.STATUS);
 		}
+		sensePlantBlocked(boss, level, selfStatuses);
+		// Enemy statuses drive hard gates below, so they must be sensed first.
+		Set<String> enemyStatuses = enemy != null ? statusNames(enemy) : new HashSet<String>();
 
 		JSONObject caps = policy.root().optJSONObject("capabilities");
 		if (caps != null) {
@@ -96,6 +101,8 @@ public final class EchoPolicyStatusBuilder {
 				if (!virtualRoleFeasible(role, boss, enemy, level))
 					continue;
 				if (!respectsPotionReserve(role, cap, tuning, echoHero))
+					continue;
+				if (!allowedAgainstEnemy(role, cap, available, enemyStatuses))
 					continue;
 				rolesReady.add(role);
 
@@ -127,7 +134,7 @@ public final class EchoPolicyStatusBuilder {
 				.enemyClass(enemy != null && enemy.heroClass != null ? enemy.heroClass.name() : "")
 				.onTerrain(onTerrainName(level, boss.pos))
 				.selfStatuses(selfStatuses)
-				.enemyStatuses(enemy != null ? statusNames(enemy) : new HashSet<>())
+				.enemyStatuses(enemyStatuses)
 				.terrainNearTiles(nearTiles)
 				.rolesReady(rolesReady)
 				.safeHazards(safe)
@@ -156,6 +163,74 @@ public final class EchoPolicyStatusBuilder {
 		return EchoInventory.countMatching(echoHero, cap.optJSONArray("items")) > keep;
 	}
 
+	/**
+	 * Fail-closed legality against the current hero, independent of what the
+	 * generated policy asks for. A custom or stale playbook must not be able to
+	 * waste kit on a target that cannot be affected by it.
+	 */
+	private static boolean allowedAgainstEnemy(
+			String role, JSONObject cap, Set<String> available, Set<String> enemyStatuses) {
+		// Potion of Purity: every blob-based setup / payoff is wasted.
+		if (enemyStatuses.contains(EchoPolicyHazards.PURITY)
+				&& EchoPolicyHazards.isBlobRole(role)) {
+			return false;
+		}
+		// 3-turn paralysis lockout only invalidates ParalyticGas, not the role.
+		if (enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)
+				&& EchoPolicyHazards.SETUP_CC.equals(role)
+				&& !EchoRoleResolver.roleHasReadyItem(
+						EchoPolicyHazards.withoutParalyticGas(cap), available)) {
+			return false;
+		}
+		// Ankh glow / decaying Barrier: do not spend damage kit on an immune hero.
+		return !enemyStatuses.contains(EchoPolicyHazards.DAMAGE_IMMUNE)
+				|| !EchoPolicyHazards.isDamageRole(role);
+	}
+
+	/**
+	 * True while attacking the hero is pointless <em>for now</em>: invulnerable,
+	 * or holding a shield that will run out on its own. Shared with
+	 * {@link EchoBoss} so the hunting-melee fallthrough and the role gate above
+	 * can never disagree.
+	 * <p>
+	 * A permanent shield deliberately does not count — see
+	 * {@link #hasTemporaryShield}.
+	 */
+	public static boolean isTemporarilyUndamageable(Char ch, Class<?> src) {
+		if (ch == null || !ch.isAlive()) {
+			return false;
+		}
+		if (ch.isInvulnerable(src) || ch.buff(Invulnerability.class) != null) {
+			return true;
+		}
+		return hasTemporaryShield(ch);
+	}
+
+	/**
+	 * Any active shield that goes away once spent, whether it decays on a timer
+	 * ({@link Barrier}), counts down ({@code Blocking.BlockBuff}) or is tied to
+	 * an ability window.
+	 * <p>
+	 * Shields that recharge instead of detaching — the warrior's Broken Seal —
+	 * are excluded on purpose: there is no window to wait out, so backing off
+	 * would mean backing off forever. Those are fought through as usual.
+	 * <p>
+	 * Note this reads each buff's own {@code shielding()}; {@link Char#shielding()}
+	 * sums every {@code ShieldBuff} and cannot tell the two kinds apart.
+	 */
+	private static boolean hasTemporaryShield(Char ch) {
+		for (Buff buff : ch.buffs()) {
+			if (!(buff instanceof ShieldBuff)) {
+				continue;
+			}
+			ShieldBuff shield = (ShieldBuff) buff;
+			if (shield.shielding() > 0 && shield.detachesAtZero()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static boolean virtualRoleFeasible(String role, EchoBoss boss, Hero enemy, Level level) {
 		switch (role) {
 			case "MOVE_TO_WATER":
@@ -169,9 +244,105 @@ public final class EchoPolicyStatusBuilder {
 				return EchoAoeDots.canLeave(boss);
 			case "BLINK":
 				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
+			case "KEEP_DISTANCE":
+				return hasStepAwayFrom(boss, enemy, level);
+			case "CLEAR_PLANT":
+				return isPlantBlockerAimable(boss);
 			default:
 				return true;
 		}
+	}
+
+	/**
+	 * True when {@code plant_blocked} identified a cell and a straight throw/zap
+	 * from the echo actually reaches it (no wall or another plant short of it).
+	 */
+	private static boolean isPlantBlockerAimable(EchoBoss boss) {
+		int cell = boss.plantBlockerCell();
+		if (cell < 0) {
+			return false;
+		}
+		Ballistica path = new Ballistica(boss.pos, cell, Ballistica.PROJECTILE);
+		return path.collisionPos == cell;
+	}
+
+	/**
+	 * A harmful plant sits on the only reasonably short route to
+	 * {@link EchoBoss#policyFocusCell()}: the path that must avoid it is null or
+	 * much longer than one that may cross it. Marks self status
+	 * {@link EchoPolicyHazards#PLANT_BLOCKED} and remembers the first harmful
+	 * plant on the short route via {@link EchoBoss#setPlantBlockerCell}.
+	 * <p>
+	 * Both searches share {@link EchoAoeDots#isAoeDotAt} for current fire/gas —
+	 * the only difference between them is the plant exclusion, so any gap in
+	 * path length can only be attributed to a plant. Neither uses the
+	 * predicted-growth ring: that only matters for movement about to happen,
+	 * not for judging whether the general route is open.
+	 */
+	private static void sensePlantBlocked(EchoBoss boss, Level level, Set<String> selfStatuses) {
+		boss.setPlantBlockerCell(-1);
+		if (level == null) {
+			return;
+		}
+		int focus = boss.policyFocusCell();
+		if (focus < 0 || focus >= level.length() || focus == boss.pos) {
+			return;
+		}
+
+		boolean[] avoidingPlants = level.passable.clone();
+		boss.modifyPassable(avoidingPlants);
+		PathFinder.Path directPath = PathFinder.find(boss.pos, focus, avoidingPlants);
+
+		boolean[] crossingPlants = level.passable.clone();
+		for (int i = 0; i < crossingPlants.length; i++) {
+			if (crossingPlants[i] && i != boss.pos && EchoAoeDots.isAoeDotAt(boss, i)) {
+				crossingPlants[i] = false;
+			}
+		}
+		PathFinder.Path shortPath = PathFinder.find(boss.pos, focus, crossingPlants);
+		if (shortPath == null) {
+			return;
+		}
+
+		boolean detour = directPath == null || directPath.size() > 2 * shortPath.size();
+		if (!detour) {
+			return;
+		}
+
+		for (int cell : shortPath) {
+			if (EchoAoeDots.isHarmfulPlantAt(cell)) {
+				boss.setPlantBlockerCell(cell);
+				selfStatuses.add(EchoPolicyHazards.PLANT_BLOCKED);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * True when some adjacent cell is legal to stand on and strictly farther from
+	 * the hero.
+	 * <p>
+	 * Without this, {@code KEEP_DISTANCE} is ready even with the echo backed into
+	 * a corner: the matcher picks it, the step fails, and the turn is thrown away.
+	 * Reactions that back off also need to know the difference, so that being
+	 * cornered can fall through to something useful instead.
+	 */
+	private static boolean hasStepAwayFrom(EchoBoss boss, Hero enemy, Level level) {
+		if (enemy == null || level == null || !level.insideMap(enemy.pos)) {
+			// Nothing to back away from; leave the role usable.
+			return true;
+		}
+		int current = level.distance(boss.pos, enemy.pos);
+		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+			int cell = boss.pos + PathFinder.NEIGHBOURS8[i];
+			if (!level.insideMap(cell) || !boss.policyCellPathable(cell)) {
+				continue;
+			}
+			if (level.distance(cell, enemy.pos) > current) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void recordTerrain(
@@ -229,15 +400,23 @@ public final class EchoPolicyStatusBuilder {
 			names.add("paralysed");
 		if (ch.buff(Frost.class) != null)
 			names.add("frozen");
-		// Explicit aliases for specific buffs (backward-compatible with auto-lowercase)
+		// Explicit aliases for specific buffs (backward-compatible with auto-lowercase).
+		// Paralysis.Immunity lowercases to a bare "immunity" that reads as purity —
+		// policy must key on these aliases, never on the simpleName.
 		if (ch.buff(BlobImmunity.class) != null)
-			names.add("purity");
+			names.add(EchoPolicyHazards.PURITY);
 		if (ch.buff(Paralysis.Immunity.class) != null)
-			names.add("paralysis_immunity");
-		if (ch.buff(Invulnerability.class) != null)
-			names.add("invulnerable");
-		if (ch.buff(Barrier.class) != null && ch.shielding() > 0)
-			names.add("timed_shield");
+			names.add(EchoPolicyHazards.PARALYSIS_IMMUNITY);
+		boolean invulnerable = ch.buff(Invulnerability.class) != null;
+		if (invulnerable)
+			names.add(EchoPolicyHazards.INVULNERABLE);
+		boolean tempShield = hasTemporaryShield(ch);
+		if (tempShield)
+			names.add(EchoPolicyHazards.TEMP_SHIELD);
+		// One status for "attacking this is pointless, but only for now", so the
+		// playbook does not need a new clause every time a source is added.
+		if (invulnerable || tempShield)
+			names.add(EchoPolicyHazards.DAMAGE_IMMUNE);
 		for (Buff buff : ch.buffs()) {
 			names.add(buff.getClass().getSimpleName().toLowerCase(Locale.ROOT));
 		}
