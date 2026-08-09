@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuffTransfer;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
@@ -41,6 +42,7 @@ import com.watabou.utils.PathFinder;
 import com.watabou.utils.Strings;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class EchoBoss extends Mob {
@@ -79,6 +81,12 @@ public class EchoBoss extends Mob {
     private boolean doorStallPrevInitialized = false;
     /** Remaining last-seen aims while the hero is invisible. */
     private int blindDefenseShotsLeft = BLIND_DEFENSE_SHOTS;
+    /** Last cell the living hero attacked from (FOV / clear-bush focus). */
+    private int lastAttackerPos = -1;
+    /** Harmful plant / sheep / grass blocker cells sensed this turn (−1 none). */
+    private int plantBlockerCell = -1;
+    private int pathBlockerCell = -1;
+    private int losBlockerCell = -1;
     /**
      * Master-style throw/zap gate: set by {@link #busy()}, cleared when
      * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
@@ -247,6 +255,51 @@ public class EchoBoss extends Mob {
         blindDefenseShotsLeft = shots;
     }
 
+    public int lastAttackerPos() {
+        return lastAttackerPos;
+    }
+
+    public void noteAttackerAt(int cell) {
+        if (cell >= 0) {
+            lastAttackerPos = cell;
+        }
+    }
+
+    /**
+     * Focus for CLOSE_IN / CLEAR_LOS when hero is occluded: last attacker, else
+     * last seen.
+     */
+    public int policyFocusCell() {
+        if (lastAttackerPos >= 0) {
+            return lastAttackerPos;
+        }
+        return lastSeenEnemyPos();
+    }
+
+    public int plantBlockerCell() {
+        return plantBlockerCell;
+    }
+
+    public int pathBlockerCell() {
+        return pathBlockerCell;
+    }
+
+    public int losBlockerCell() {
+        return losBlockerCell;
+    }
+
+    public void setPlantBlockerCell(int cell) {
+        plantBlockerCell = cell;
+    }
+
+    public void setPathBlockerCell(int cell) {
+        pathBlockerCell = cell;
+    }
+
+    public void setLosBlockerCell(int cell) {
+        losBlockerCell = cell;
+    }
+
     public int doorStallCell() {
         return doorStallCell;
     }
@@ -361,17 +414,17 @@ public class EchoBoss extends Mob {
             return passable;
         }
         for (int i = 0; i < passable.length; i++) {
-            if (passable[i] && i != pos && EchoAoeDots.isAoeDotAt(this, i)) {
+            if (passable[i] && i != pos && EchoAoeDots.isAoeHazardForPath(this, i)) {
                 passable[i] = false;
             }
         }
         return passable;
     }
 
-    /** Adjacent steps also refuse to enter AoE DoT. */
+    /** Adjacent steps refuse current/predicted AoE and harmful plants. */
     @Override
     protected boolean cellIsPathable(int cell) {
-        return super.cellIsPathable(cell) && !EchoAoeDots.isAoeDotAt(this, cell);
+        return super.cellIsPathable(cell) && !EchoAoeDots.isAoeHazardForPath(this, cell);
     }
 
     /** Exposes {@link Mob#cellIsPathable} for leave-AoE neighbour checks. */
@@ -466,32 +519,51 @@ public class EchoBoss extends Mob {
     }
 
     /**
-     * Echo hero is never placed on the level; sync body combat fields
-     * ({@link #pos}, {@link #paralysed}) onto the kit for combat queries only.
+     * Echo hero is never placed on the level; sync body combat fields onto the
+     * kit for combat queries only. Borrows {@link #sprite} so Hero-shaped
+     * enchant/glyph VFX do not NPE on a headless kit (Family A / ANDROID-1T).
+     * Mirrors kit HP changes back onto the body (Vampiric / Metabolism).
      */
     private int withEchoHeroPosInt(IntAction action) {
-        int savedPos = echoHero.pos;
-        int savedParalysed = echoHero.paralysed;
-        echoHero.pos = pos;
-        echoHero.paralysed = paralysed;
-        try {
-            return action.getAsInt();
-        } finally {
-            echoHero.pos = savedPos;
-            echoHero.paralysed = savedParalysed;
-        }
+        return withEchoHeroCombat(new ValueAction<Integer>() {
+            @Override
+            public Integer get() {
+                return action.getAsInt();
+            }
+        });
     }
 
     private <T> T withEchoHeroPos(ValueAction<T> action) {
+        return withEchoHeroCombat(action);
+    }
+
+    private <T> T withEchoHeroCombat(ValueAction<T> action) {
         int savedPos = echoHero.pos;
         int savedParalysed = echoHero.paralysed;
+        CharSprite savedSprite = echoHero.sprite;
+        Alignment savedAlignment = echoHero.alignment;
+        int savedHp = echoHero.HP;
+        int savedHt = echoHero.HT;
+
         echoHero.pos = pos;
         echoHero.paralysed = paralysed;
+        echoHero.sprite = sprite;
+        echoHero.alignment = alignment;
+        echoHero.HP = HP;
+        echoHero.HT = HT;
+        HashSet<Buff> buffsBefore = EchoCombatBuffTransfer.snapshot(echoHero);
         try {
             return action.get();
         } finally {
+            // Kit heals/damage during procs must land on the on-stage body.
+            HP = Math.max(0, Math.min(HT, echoHero.HP));
+            EchoCombatBuffTransfer.moveNewCombatBuffs(echoHero, this, buffsBefore);
             echoHero.pos = savedPos;
             echoHero.paralysed = savedParalysed;
+            echoHero.sprite = savedSprite;
+            echoHero.alignment = savedAlignment;
+            echoHero.HP = savedHp;
+            echoHero.HT = savedHt;
         }
     }
 
@@ -505,6 +577,9 @@ public class EchoBoss extends Mob {
         }
         if (dmg > 0 && src == Dungeon.hero) {
             fightRecorder.trackDamageTaken(dmg);
+            if (Dungeon.hero.pos >= 0) {
+                noteAttackerAt(Dungeon.hero.pos);
+            }
         }
         int preHP = HP;
         super.damage(dmg, src);
@@ -690,9 +765,29 @@ public class EchoBoss extends Mob {
         if (tryPolicyAct()) {
             return true;
         }
+        // Do not punch through ankh / Barrier — wait instead of hunting melee.
+        if (enemyInvulnerableOrShielded()) {
+            debugAct("policy fallthrough suppressed → WAIT (invuln/timed_shield)");
+            spend(TICK);
+            return true;
+        }
         // Melee / unresolved roles fall through to standard mob hunting AI.
         debugAct("policy did not spend turn → fall through to mob hunting AI");
         return super.act();
+    }
+
+    private boolean enemyInvulnerableOrShielded() {
+        Hero hero = Dungeon.hero;
+        if (hero == null || !hero.isAlive()) {
+            return false;
+        }
+        if (hero.isInvulnerable(getClass())
+                || hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability.class) != null) {
+            return true;
+        }
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier barrier = hero
+                .buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier.class);
+        return barrier != null && barrier.shielding() > 0;
     }
 
     /**

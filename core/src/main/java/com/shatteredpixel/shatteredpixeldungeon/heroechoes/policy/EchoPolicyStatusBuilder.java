@@ -2,14 +2,19 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -224,6 +229,15 @@ public final class EchoPolicyStatusBuilder {
 			names.add("paralysed");
 		if (ch.buff(Frost.class) != null)
 			names.add("frozen");
+		// Explicit aliases for specific buffs (backward-compatible with auto-lowercase)
+		if (ch.buff(BlobImmunity.class) != null)
+			names.add("purity");
+		if (ch.buff(Paralysis.Immunity.class) != null)
+			names.add("paralysis_immunity");
+		if (ch.buff(Invulnerability.class) != null)
+			names.add("invulnerable");
+		if (ch.buff(Barrier.class) != null && ch.shielding() > 0)
+			names.add("timed_shield");
 		for (Buff buff : ch.buffs()) {
 			names.add(buff.getClass().getSimpleName().toLowerCase(Locale.ROOT));
 		}
