@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfSna
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
 import org.assertj.core.api.Assertions;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -182,6 +183,49 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
+	@DisplayName("PATH_THROUGH is a damage role: unready under invulnerability")
+	void pathThroughHardGatedByInvulnerability() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("PATH_THROUGH", EchoTestSupport.capability("WandOfDisintegration"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		giveEchoItem(
+				boss, new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration());
+		Buff.affect(hero, Invulnerability.class, 3f);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(status.isRoleReady("PATH_THROUGH")).isFalse();
+	}
+
+	@Test
+	@DisplayName("KEEP_DISTANCE is ready in an open room")
+	void keepDistanceReadyInOpenRoom() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = blobPolicy();
+		EchoBoss boss = bossWithBlobKit(hero, policy);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
+	}
+
+	@Test
+	@DisplayName("KEEP_DISTANCE is not ready when every farther cell is walled off")
+	void keepDistanceNotReadyWhenCornered() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = blobPolicy();
+		EchoBoss boss = bossWithBlobKit(hero, policy);
+		wallOffEverySideExceptTowardHero(hero, boss);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
+	}
+
+	@Test
 	@DisplayName("damage roles are ready again once invulnerability expires")
 	void damageRolesReadyWithoutInvuln() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -233,6 +277,173 @@ class EchoPolicyGatesTest {
 				.isEqualTo("PotionOfParalyticGas");
 	}
 
+	/**
+	 * Walls every neighbour of {@code boss} that is not strictly closer to
+	 * {@code hero}, so no adjacent step increases distance from the hero.
+	 */
+	private static void wallOffEverySideExceptTowardHero(Hero hero, EchoBoss boss) {
+		com.shatteredpixel.shatteredpixeldungeon.levels.Level level =
+				com.shatteredpixel.shatteredpixeldungeon.Dungeon.level;
+		int current = level.distance(boss.pos, hero.pos);
+		for (int i = 0; i < com.watabou.utils.PathFinder.NEIGHBOURS8.length; i++) {
+			int cell = boss.pos + com.watabou.utils.PathFinder.NEIGHBOURS8[i];
+			if (!level.insideMap(cell)) {
+				continue;
+			}
+			if (level.distance(cell, hero.pos) > current) {
+				level.map[cell] = com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.WALL;
+			}
+		}
+		level.buildFlagMaps();
+	}
+
+	@Test
+	@DisplayName("invulnerable hero with an open room: matcher chooses the disengage ladder")
+	void untouchableInOpenRoomDisengages() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = untouchableLadderPolicy();
+		EchoBoss boss = untouchableLadderBoss(hero, policy, false);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink());
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste());
+		Buff.affect(hero, Invulnerability.class, 3f);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+		EchoPolicyChoice choice =
+				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+
+		Assertions.assertThat(status.isRoleReady("BLINK")).isTrue();
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("BLINK");
+	}
+
+	@Test
+	@DisplayName("invulnerable hero, echo cornered with no escape kit: falls through to prep, not WAIT")
+	void untouchableWhileCorneredPrepsInstead() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = untouchableLadderPolicy();
+		// Cornered, and deliberately no BLINK / HASTE item — only the fire tool.
+		EchoBoss boss = untouchableLadderBoss(hero, policy, true);
+		giveEchoItem(boss, new PotionOfLiquidFlame());
+		Buff.affect(hero, Invulnerability.class, 3f);
+		// No FOV filled: enemy_in_los reads false, same as an occluded hero.
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+		EchoPolicyChoice choice =
+				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
+		Assertions.assertThat(status.isRoleReady("BLINK")).isFalse();
+		Assertions.assertThat(status.isRoleReady("HASTE")).isFalse();
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("CLEAR_LOS");
+	}
+
+	@Test
+	@DisplayName("invulnerable hero: the matcher never returns a damage role, cornered or open")
+	void untouchableNeverChoosesADamageRole() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = untouchableLadderPolicy();
+		java.util.Set<String> damageRoles =
+				java.util.Set.of("MELEE", "RANGED", "FINISHER", "PAYOFF_AOE");
+
+		for (boolean cornered : new boolean[] { false, true }) {
+			EchoBoss boss = untouchableLadderBoss(hero, policy, cornered);
+			giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink());
+			giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste());
+			giveEchoItem(boss, new PotionOfLiquidFlame());
+			Buff.affect(hero, Invulnerability.class, 3f);
+
+			EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+			EchoPolicyChoice choice =
+					EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+
+			Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
+			Assertions.assertThat(status.isRoleReady("RANGED")).isFalse();
+			Assertions.assertThat(status.isRoleReady("FINISHER")).isFalse();
+			Assertions.assertThat(status.isRoleReady("PAYOFF_AOE")).isFalse();
+			Assertions.assertThat(choice).isNotNull();
+			Assertions.assertThat(damageRoles).doesNotContain(choice.useRole);
+		}
+	}
+
+	/**
+	 * Minimal reaction ladder shaped like the real playbook: self-preservation,
+	 * then the untouchable block, then normal combat. No attack reaction carries
+	 * an {@code enemy_status_none: damage_immune} clause — Java's
+	 * {@code allowedAgainstEnemy} hard gate is the only thing standing between
+	 * them and firing, which is exactly the guarantee these tests exercise.
+	 */
+	private static EchoPolicy untouchableLadderPolicy() {
+		JSONObject damageImmune = new JSONObject().put("enemy_status", "damage_immune");
+		return EchoPolicy.fromJson(new JSONObject()
+				.put("policy_schema_version", EchoTestSupport.TEST_GAME_VERSION)
+				.put("capabilities", new JSONObject()
+						.put("BLINK", EchoTestSupport.capability("StoneOfBlink"))
+						.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
+						.put("HASTE", EchoTestSupport.capability("PotionOfHaste"))
+						.put("CLEAR_LOS", EchoTestSupport.capability("PotionOfLiquidFlame"))
+						.put("MELEE", EchoTestSupport.capability("*melee"))
+						.put("RANGED", EchoTestSupport.capability("SpiritBow"))
+						.put("FINISHER", EchoTestSupport.capability("*melee"))
+						.put("PAYOFF_AOE", EchoTestSupport.capability("PotionOfToxicGas"))
+						.put("WAIT", EchoTestSupport.capability("*wait")))
+				.put("reactions", new JSONArray()
+						.put(reaction("untouchable_blink", 99, damageImmune, "BLINK", null))
+						.put(reaction("untouchable_step", 98, damageImmune, "KEEP_DISTANCE", null))
+						.put(reaction("untouchable_haste", 97, damageImmune, "HASTE", null))
+						// Stand-in for clear_bush_for_los: real los_blocked sensing is
+						// separate future work, so this keys on enemy_in_los alone.
+						.put(reaction(
+								"clear_bush_for_los", 90,
+								new JSONObject().put("enemy_in_los", false),
+								"CLEAR_LOS", "bush_cell"))
+						.put(reaction("finish_him", 110, new JSONObject(), "FINISHER", null))
+						.put(reaction("ranged_poke", 74, new JSONObject(), "RANGED", "enemy_cell"))
+						.put(reaction("melee_adjacent", 72, new JSONObject(), "MELEE", null))
+						.put(reaction("payoff", 76, new JSONObject(), "PAYOFF_AOE", "enemy_cell")))
+				.put("recipes", new JSONArray())
+				.put("positioning", new JSONObject())
+				.put("matchups", new JSONObject())
+				.put("selection", new JSONObject()
+						.put("order", new JSONArray()
+								.put("reactions").put("recipes").put("positioning")
+								.put("matchups").put("default"))
+						.put("default_roles", new JSONArray().put("WAIT")))
+				.put("tuning", new JSONObject()));
+	}
+
+	/**
+	 * Boss with items for the damage roles the gate is supposed to unready
+	 * (SpiritBow, a toxic potion), so the test proves the gate does something
+	 * rather than the roles simply having no item. Escape kit (BLINK / HASTE)
+	 * and prep kit (fire) are left to each call site, since which of those is
+	 * present is what each scenario is testing. Walled off on every farther
+	 * side if {@code cornered}.
+	 */
+	private static EchoBoss untouchableLadderBoss(Hero hero, EchoPolicy policy, boolean cornered) {
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow());
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfToxicGas());
+		if (cornered) {
+			wallOffEverySideExceptTowardHero(hero, boss);
+		}
+		return boss;
+	}
+
+	private static JSONObject reaction(
+			String id, int priority, JSONObject when, String useRole, String target) {
+		JSONObject dof = new JSONObject().put("use_role", useRole);
+		if (target != null) {
+			dof.put("target", target);
+		}
+		return new JSONObject()
+				.put("id", id)
+				.put("priority", priority)
+				.put("when", when)
+				.put("do", dof);
+	}
+
 	private static EchoPolicy blobPolicy() {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("SETUP_CC", EchoTestSupport.capability("PotionOfSnapFreeze"))
@@ -244,7 +455,10 @@ class EchoPolicyGatesTest {
 
 	private static EchoBoss bossWithBlobKit(Hero hero, EchoPolicy policy) {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
-		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		// Offset 1, not 2: Level.insideMap excludes the outer ring on the 7x7
+		// test level, so a boss placed 2 cells out sits on that boundary and has
+		// no interior cell left to retreat into — a false "cornered" reading.
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
 		giveEchoItem(boss, new PotionOfSnapFreeze());
 		giveEchoItem(boss, new PotionOfLiquidFlame());
 		return boss;

@@ -16,6 +16,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.watabou.utils.PathFinder;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -242,9 +243,38 @@ public final class EchoPolicyStatusBuilder {
 				return EchoAoeDots.canLeave(boss);
 			case "BLINK":
 				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
+			case "KEEP_DISTANCE":
+				return hasStepAwayFrom(boss, enemy, level);
 			default:
 				return true;
 		}
+	}
+
+	/**
+	 * True when some adjacent cell is legal to stand on and strictly farther from
+	 * the hero.
+	 * <p>
+	 * Without this, {@code KEEP_DISTANCE} is ready even with the echo backed into
+	 * a corner: the matcher picks it, the step fails, and the turn is thrown away.
+	 * Reactions that back off also need to know the difference, so that being
+	 * cornered can fall through to something useful instead.
+	 */
+	private static boolean hasStepAwayFrom(EchoBoss boss, Hero enemy, Level level) {
+		if (enemy == null || level == null || !level.insideMap(enemy.pos)) {
+			// Nothing to back away from; leave the role usable.
+			return true;
+		}
+		int current = level.distance(boss.pos, enemy.pos);
+		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+			int cell = boss.pos + PathFinder.NEIGHBOURS8[i];
+			if (!level.insideMap(cell) || !boss.policyCellPathable(cell)) {
+				continue;
+			}
+			if (level.distance(cell, enemy.pos) > current) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void recordTerrain(

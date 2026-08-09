@@ -51,14 +51,20 @@ public final class EchoPolicyHazards {
 		return SETUP_CC.equals(role) || PAYOFF_AOE.equals(role);
 	}
 
-	/** Roles that spend the turn trying to damage the hero. */
+	/**
+	 * Roles that spend the turn trying to damage the hero. Includes
+	 * {@code PATH_THROUGH}: its items (Disintegration, Fireblast, Dragon's
+	 * Breath) are aimed at {@code enemy_cell} specifically to pierce a soft
+	 * blocker and still hit the hero, so it is an attack, not just a bypass.
+	 */
 	public static boolean isDamageRole(String role) {
 		return MELEE.equals(role)
 				|| RANGED.equals(role)
 				|| FINISHER.equals(role)
 				|| WEAPON_ABILITY.equals(role)
 				|| ARMOR_ABILITY.equals(role)
-				|| PAYOFF_AOE.equals(role);
+				|| PAYOFF_AOE.equals(role)
+				|| PATH_THROUGH.equals(role);
 	}
 
 	/**
