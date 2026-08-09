@@ -84,6 +84,7 @@ public final class EchoPolicyStatusBuilder {
 		if (EchoAoeDots.isAoeDotAt(boss, boss.pos)) {
 			selfStatuses.add(EchoAoeDots.STATUS);
 		}
+		sensePlantBlocked(boss, level, selfStatuses);
 		// Enemy statuses drive hard gates below, so they must be sensed first.
 		Set<String> enemyStatuses = enemy != null ? statusNames(enemy) : new HashSet<String>();
 
@@ -245,8 +246,75 @@ public final class EchoPolicyStatusBuilder {
 				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
 			case "KEEP_DISTANCE":
 				return hasStepAwayFrom(boss, enemy, level);
+			case "CLEAR_PLANT":
+				return isPlantBlockerAimable(boss);
 			default:
 				return true;
+		}
+	}
+
+	/**
+	 * True when {@code plant_blocked} identified a cell and a straight throw/zap
+	 * from the echo actually reaches it (no wall or another plant short of it).
+	 */
+	private static boolean isPlantBlockerAimable(EchoBoss boss) {
+		int cell = boss.plantBlockerCell();
+		if (cell < 0) {
+			return false;
+		}
+		Ballistica path = new Ballistica(boss.pos, cell, Ballistica.PROJECTILE);
+		return path.collisionPos == cell;
+	}
+
+	/**
+	 * A harmful plant sits on the only reasonably short route to
+	 * {@link EchoBoss#policyFocusCell()}: the path that must avoid it is null or
+	 * much longer than one that may cross it. Marks self status
+	 * {@link EchoPolicyHazards#PLANT_BLOCKED} and remembers the first harmful
+	 * plant on the short route via {@link EchoBoss#setPlantBlockerCell}.
+	 * <p>
+	 * Both searches share {@link EchoAoeDots#isAoeDotAt} for current fire/gas —
+	 * the only difference between them is the plant exclusion, so any gap in
+	 * path length can only be attributed to a plant. Neither uses the
+	 * predicted-growth ring: that only matters for movement about to happen,
+	 * not for judging whether the general route is open.
+	 */
+	private static void sensePlantBlocked(EchoBoss boss, Level level, Set<String> selfStatuses) {
+		boss.setPlantBlockerCell(-1);
+		if (level == null) {
+			return;
+		}
+		int focus = boss.policyFocusCell();
+		if (focus < 0 || focus >= level.length() || focus == boss.pos) {
+			return;
+		}
+
+		boolean[] avoidingPlants = level.passable.clone();
+		boss.modifyPassable(avoidingPlants);
+		PathFinder.Path directPath = PathFinder.find(boss.pos, focus, avoidingPlants);
+
+		boolean[] crossingPlants = level.passable.clone();
+		for (int i = 0; i < crossingPlants.length; i++) {
+			if (crossingPlants[i] && i != boss.pos && EchoAoeDots.isAoeDotAt(boss, i)) {
+				crossingPlants[i] = false;
+			}
+		}
+		PathFinder.Path shortPath = PathFinder.find(boss.pos, focus, crossingPlants);
+		if (shortPath == null) {
+			return;
+		}
+
+		boolean detour = directPath == null || directPath.size() > 2 * shortPath.size();
+		if (!detour) {
+			return;
+		}
+
+		for (int cell : shortPath) {
+			if (EchoAoeDots.isHarmfulPlantAt(cell)) {
+				boss.setPlantBlockerCell(cell);
+				selfStatuses.add(EchoPolicyHazards.PLANT_BLOCKED);
+				return;
+			}
 		}
 	}
 
