@@ -766,9 +766,9 @@ public class EchoBoss extends Mob {
         if (tryPolicyAct()) {
             return true;
         }
-        // Do not punch through ankh / Barrier — wait instead of hunting melee.
-        if (enemyInvulnerableOrShielded()) {
-            debugAct("policy fallthrough suppressed → WAIT (invuln/timed_shield)");
+        // Do not punch an ankh glow or a shield that is about to expire.
+        if (enemyTemporarilyUndamageable()) {
+            debugAct("policy fallthrough suppressed → WAIT (temporarily undamageable)");
             spend(TICK);
             return true;
         }
@@ -777,12 +777,12 @@ public class EchoBoss extends Mob {
         return super.act();
     }
 
-    private boolean enemyInvulnerableOrShielded() {
+    private boolean enemyTemporarilyUndamageable() {
         Hero hero = Dungeon.hero;
         if (hero == null || !hero.isAlive()) {
             return false;
         }
-        return EchoPolicyStatusBuilder.isInvulnerableOrTimedShielded(hero, getClass());
+        return EchoPolicyStatusBuilder.isTemporarilyUndamageable(hero, getClass());
     }
 
     /**

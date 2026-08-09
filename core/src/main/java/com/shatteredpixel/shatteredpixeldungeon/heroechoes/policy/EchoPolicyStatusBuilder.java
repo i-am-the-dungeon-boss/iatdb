@@ -9,6 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -180,25 +181,52 @@ public final class EchoPolicyStatusBuilder {
 			return false;
 		}
 		// Ankh glow / decaying Barrier: do not spend damage kit on an immune hero.
-		boolean shielded = enemyStatuses.contains(EchoPolicyHazards.INVULNERABLE)
-				|| enemyStatuses.contains(EchoPolicyHazards.TIMED_SHIELD);
-		return !shielded || !EchoPolicyHazards.isDamageRole(role);
+		return !enemyStatuses.contains(EchoPolicyHazards.DAMAGE_IMMUNE)
+				|| !EchoPolicyHazards.isDamageRole(role);
 	}
 
 	/**
-	 * True while the hero cannot meaningfully take damage from the echo. Shared
-	 * with {@link EchoBoss} so the hunting-melee fallthrough and the role gate
-	 * above can never disagree.
+	 * True while attacking the hero is pointless <em>for now</em>: invulnerable,
+	 * or holding a shield that will run out on its own. Shared with
+	 * {@link EchoBoss} so the hunting-melee fallthrough and the role gate above
+	 * can never disagree.
+	 * <p>
+	 * A permanent shield deliberately does not count — see
+	 * {@link #hasTemporaryShield}.
 	 */
-	public static boolean isInvulnerableOrTimedShielded(Char ch, Class<?> src) {
+	public static boolean isTemporarilyUndamageable(Char ch, Class<?> src) {
 		if (ch == null || !ch.isAlive()) {
 			return false;
 		}
 		if (ch.isInvulnerable(src) || ch.buff(Invulnerability.class) != null) {
 			return true;
 		}
-		Barrier barrier = ch.buff(Barrier.class);
-		return barrier != null && barrier.shielding() > 0;
+		return hasTemporaryShield(ch);
+	}
+
+	/**
+	 * Any active shield that goes away once spent, whether it decays on a timer
+	 * ({@link Barrier}), counts down ({@code Blocking.BlockBuff}) or is tied to
+	 * an ability window.
+	 * <p>
+	 * Shields that recharge instead of detaching — the warrior's Broken Seal —
+	 * are excluded on purpose: there is no window to wait out, so backing off
+	 * would mean backing off forever. Those are fought through as usual.
+	 * <p>
+	 * Note this reads each buff's own {@code shielding()}; {@link Char#shielding()}
+	 * sums every {@code ShieldBuff} and cannot tell the two kinds apart.
+	 */
+	private static boolean hasTemporaryShield(Char ch) {
+		for (Buff buff : ch.buffs()) {
+			if (!(buff instanceof ShieldBuff)) {
+				continue;
+			}
+			ShieldBuff shield = (ShieldBuff) buff;
+			if (shield.shielding() > 0 && shield.detachesAtZero()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static boolean virtualRoleFeasible(String role, EchoBoss boss, Hero enemy, Level level) {
@@ -281,12 +309,16 @@ public final class EchoPolicyStatusBuilder {
 			names.add(EchoPolicyHazards.PURITY);
 		if (ch.buff(Paralysis.Immunity.class) != null)
 			names.add(EchoPolicyHazards.PARALYSIS_IMMUNITY);
-		if (ch.buff(Invulnerability.class) != null)
+		boolean invulnerable = ch.buff(Invulnerability.class) != null;
+		if (invulnerable)
 			names.add(EchoPolicyHazards.INVULNERABLE);
-		Barrier barrier = ch.buff(Barrier.class);
-		// Barrier's own shielding, not ch.shielding(), which sums every ShieldBuff.
-		if (barrier != null && barrier.shielding() > 0)
-			names.add(EchoPolicyHazards.TIMED_SHIELD);
+		boolean tempShield = hasTemporaryShield(ch);
+		if (tempShield)
+			names.add(EchoPolicyHazards.TEMP_SHIELD);
+		// One status for "attacking this is pointless, but only for now", so the
+		// playbook does not need a new clause every time a source is added.
+		if (invulnerable || tempShield)
+			names.add(EchoPolicyHazards.DAMAGE_IMMUNE);
 		for (Buff buff : ch.buffs()) {
 			names.add(buff.getClass().getSimpleName().toLowerCase(Locale.ROOT));
 		}

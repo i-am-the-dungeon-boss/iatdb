@@ -1,9 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Berserk;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blocking;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -116,7 +117,7 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
-	@DisplayName("hero Barrier with shielding unreadies damage roles but leaves escape roles ready")
+	@DisplayName("a decaying Barrier unreadies damage roles but leaves escape roles ready")
 	void timedShieldHardGatesDamageRoles() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = blobPolicy();
@@ -125,26 +126,58 @@ class EchoPolicyGatesTest {
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
 
-		Assertions.assertThat(status.enemyStatuses).contains("timed_shield");
+		Assertions.assertThat(status.enemyStatuses).contains("temp_shield", "damage_immune");
 		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
 		Assertions.assertThat(status.isRoleReady("WAIT")).isTrue();
 	}
 
 	@Test
-	@DisplayName("timed_shield reads Barrier's own shielding, not the char's total shielding")
-	void timedShieldIgnoresOtherShieldSources() {
+	@DisplayName("a fixed-duration Blocking shield also counts as temporary")
+	void blockingShieldIsTemporary() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = blobPolicy();
 		EchoBoss boss = bossWithBlobKit(hero, policy);
-		// Barrier present but empty; a different ShieldBuff supplies the shielding.
-		Buff.affect(hero, Barrier.class).setShield(0);
-		Buff.affect(hero, Berserk.class).setShield(8);
+		Buff.affect(hero, Blocking.BlockBuff.class).setShield(5);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(status.enemyStatuses).contains("temp_shield", "damage_immune");
+		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
+	}
+
+	@Test
+	@DisplayName("a permanent recharging shield is fought through as usual")
+	void permanentShieldDoesNotDisengage() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = blobPolicy();
+		EchoBoss boss = bossWithBlobKit(hero, policy);
+		// The warrior's Broken Seal shield recharges instead of going away, so
+		// waiting it out would mean waiting forever.
+		BrokenSeal.WarriorShield seal = Buff.affect(hero, BrokenSeal.WarriorShield.class);
+		seal.setShield(8);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
 
 		Assertions.assertThat(hero.shielding()).isGreaterThan(0);
-		Assertions.assertThat(status.enemyStatuses).doesNotContain("timed_shield");
+		Assertions.assertThat(seal.detachesAtZero()).isFalse();
+		Assertions.assertThat(status.enemyStatuses).doesNotContain("damage_immune", "temp_shield");
+		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
+	}
+
+	@Test
+	@DisplayName("an empty Barrier alongside a permanent shield is not a temporary shield")
+	void emptyBarrierIsNotATemporaryShield() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = blobPolicy();
+		EchoBoss boss = bossWithBlobKit(hero, policy);
+		Buff.affect(hero, Barrier.class).setShield(0);
+		Buff.affect(hero, BrokenSeal.WarriorShield.class).setShield(8);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(hero.shielding()).isGreaterThan(0);
+		Assertions.assertThat(status.enemyStatuses).doesNotContain("damage_immune");
 		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
 	}
 

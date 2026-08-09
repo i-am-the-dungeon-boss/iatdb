@@ -18,7 +18,10 @@ public final class EchoPolicyHazards {
 	/** 3-turn {@code Paralysis.Immunity} — blocks Paralysis + ParalyticGas only. */
 	public static final String PARALYSIS_IMMUNITY = "paralysis_immunity";
 	public static final String INVULNERABLE = "invulnerable";
-	public static final String TIMED_SHIELD = "timed_shield";
+	/** A shield that will run out on its own; excludes permanent recharging ones. */
+	public static final String TEMP_SHIELD = "temp_shield";
+	/** Aggregate: attacking is pointless right now, but the window will pass. */
+	public static final String DAMAGE_IMMUNE = "damage_immune";
 
 	// Self flags for blocked routes / sightlines.
 	public static final String PLANT_BLOCKED = "plant_blocked";
