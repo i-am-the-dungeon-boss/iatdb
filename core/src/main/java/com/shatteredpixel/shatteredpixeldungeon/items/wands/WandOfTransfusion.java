@@ -169,10 +169,12 @@ public class WandOfTransfusion extends DamageWand {
 			freeCharge = true;
 			int shieldToGive = Math.round((2 * (5 + buffedLvl())) * procChanceMultiplier(attacker));
 			Buff.affect(attacker, Barrier.class).setShield(shieldToGive);
-			attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
-					FloatingText.SHIELDING);
+			if (Char.canWorldFx(attacker)) {
+				attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
+						FloatingText.SHIELDING);
+				attacker.sprite.emitter().burst(BloodParticle.BURST, 20);
+			}
 			GLog.pIfHero(attacker, Messages.get(this, "charged"));
-			attacker.sprite.emitter().burst(BloodParticle.BURST, 20);
 		}
 	}
 

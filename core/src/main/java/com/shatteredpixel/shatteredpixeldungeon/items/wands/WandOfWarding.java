@@ -224,7 +224,9 @@ public class WandOfWarding extends Wand {
 			for (Char ch : Actor.chars()) {
 				if (ch instanceof Ward) {
 					((Ward) ch).wandHeal(staff.buffedLvl(), powerMulti);
-					ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);
+					if (Char.canWorldFx(ch)) {
+						ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);
+					}
 				}
 			}
 		}

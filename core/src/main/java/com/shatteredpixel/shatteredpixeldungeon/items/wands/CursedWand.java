@@ -54,6 +54,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SuperNovaTracker;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TimeStasis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GoldenMimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -130,6 +131,55 @@ public class CursedWand {
 		forcedEffect = effect;
 	}
 
+	/**
+	 * On-stage char that should receive self-targeted cursed effects. Echo zaps
+	 * pass the phantom kit as {@code user}; self ops must hit the {@link EchoBoss}
+	 * body instead.
+	 */
+	public static Char resolveCaster(Char user) {
+		if (user == null) {
+			return null;
+		}
+		EchoBoss boss = echoBossForKit(user);
+		return boss != null ? boss : user;
+	}
+
+	public static boolean isEchoCaster(Char user) {
+		if (user instanceof EchoBoss) {
+			return true;
+		}
+		return echoBossForKit(user) != null;
+	}
+
+	private static EchoBoss echoBossForKit(Char user) {
+		if (!(user instanceof Hero)) {
+			return null;
+		}
+		if (Dungeon.level != null && Dungeon.level.mobs != null) {
+			for (Mob mob : Dungeon.level.mobs) {
+				if (mob instanceof EchoBoss && ((EchoBoss) mob).getEchoHero() == user) {
+					return (EchoBoss) mob;
+				}
+			}
+		}
+		for (Char ch : Actor.chars()) {
+			if (ch instanceof EchoBoss && ((EchoBoss) ch).getEchoHero() == user) {
+				return (EchoBoss) ch;
+			}
+		}
+		return null;
+	}
+
+	private static boolean deniedForEcho(Char user, CursedEffect effect) {
+		if (!isEchoCaster(user) || effect == null) {
+			return false;
+		}
+		return effect instanceof InterFloorTeleport
+				|| effect instanceof AbortRetryFail
+				|| effect instanceof Petrify
+				|| effect instanceof HeroShapeShift;
+	}
+
 	public static void cursedZap(final Item origin, final Char user, final Ballistica bolt, final Callback afterZap) {
 
 		boolean positiveOnly = user == Dungeon.hero && Random.Float() < WondrousResin.positiveCurseEffectChance();
@@ -155,7 +205,7 @@ public class CursedWand {
 	public static abstract class CursedEffect {
 
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			return true;
+			return !deniedForEcho(user, this);
 		}
 
 		public void FX(final Item origin, final Char user, final Ballistica bolt, final Callback callback) {
@@ -236,16 +286,17 @@ public class CursedWand {
 	public static class BurnAndFreeze extends CursedEffect {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			Char target = Actor.findChar(bolt.collisionPos);
 			// doesn't affect caster if positive only
 			if (Random.Int(2) == 0) {
 				if (target != null)
 					Buff.affect(target, Burning.class).reignite(target);
 				if (!positiveOnly)
-					Buff.affect(user, Frost.class, Frost.DURATION);
+					Buff.affect(caster, Frost.class, Frost.DURATION);
 			} else {
 				if (!positiveOnly)
-					Buff.affect(user, Burning.class).reignite(user);
+					Buff.affect(caster, Burning.class).reignite(caster);
 				if (target != null)
 					Buff.affect(target, Frost.class, Frost.DURATION);
 			}
@@ -269,6 +320,9 @@ public class CursedWand {
 	public static class RandomTeleport extends CursedEffect {
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			Char target = Actor.findChar(bolt.collisionPos);
 			if (positiveOnly && (target == null || Char.hasProp(target, Char.Property.IMMOVABLE))) {
 				return false;
@@ -280,6 +334,7 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			Char target = Actor.findChar(bolt.collisionPos);
 			// can only teleport target if positive only
 			if (target != null && !Char.hasProp(target, Char.Property.IMMOVABLE)
@@ -288,10 +343,10 @@ public class CursedWand {
 				tryForWandProc(target, origin);
 				return true;
 			} else {
-				if (positiveOnly || user == null || Char.hasProp(user, Char.Property.IMMOVABLE)) {
+				if (positiveOnly || caster == null || Char.hasProp(caster, Char.Property.IMMOVABLE)) {
 					return false;
 				} else {
-					ScrollOfTeleportation.teleportChar(user);
+					ScrollOfTeleportation.teleportChar(caster);
 					return true;
 				}
 			}
@@ -416,7 +471,8 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			PathFinder.buildDistanceMap(user.pos, BArray.not(Dungeon.level.solid, null), 2);
+			Char caster = resolveCaster(user);
+			PathFinder.buildDistanceMap(caster.pos, BArray.not(Dungeon.level.solid, null), 2);
 			for (int i = 0; i < PathFinder.distance.length; i++) {
 				if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 					Splash.at(i, 0x000000, 5);
@@ -465,6 +521,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			int pos = bolt.collisionPos;
 
 			if (Dungeon.level.map[pos] != Terrain.ALCHEMY
@@ -494,6 +553,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			return Actor.findChar(bolt.collisionPos) != null;
 		}
 
@@ -501,24 +563,30 @@ public class CursedWand {
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
 			final Char target = Actor.findChar(bolt.collisionPos);
 			if (target != null) {
+				Char caster = resolveCaster(user);
 				int damage = Dungeon.scalingDepth() * 2;
 				Char toHeal, toDamage;
 
 				// can only harm target if positive only
 				if (positiveOnly || Random.Int(2) == 0) {
-					toHeal = user;
+					toHeal = caster;
 					toDamage = target;
 				} else {
 					toHeal = target;
-					toDamage = user;
+					toDamage = caster;
 				}
 				toHeal.HP = Math.min(toHeal.HT, toHeal.HP + damage / 2);
-				toHeal.sprite.emitter().burst(Speck.factory(Speck.HEALING), 3);
-				toHeal.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(damage / 2),
-						FloatingText.HEALING);
+				// Echo kit / headless targets (ANDROID-1D).
+				if (Char.canWorldFx(toHeal)) {
+					toHeal.sprite.emitter().burst(Speck.factory(Speck.HEALING), 3);
+					toHeal.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(damage / 2),
+							FloatingText.HEALING);
+				}
 
 				toDamage.damage(damage, new CursedWand());
-				toDamage.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
+				if (Char.canWorldFx(toDamage)) {
+					toDamage.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
+				}
 
 				if (toDamage == Dungeon.hero) {
 					Sample.INSTANCE.play(Assets.Sounds.CURSED);
@@ -570,28 +638,36 @@ public class CursedWand {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
 
+			Char caster = resolveCaster(user);
 			ArrayList<Char> affected = new ArrayList<>();
 
-			user.sprite.parent.add(new Lightning(user.pos - 1, user.pos + 1, null));
-			user.sprite.parent
-					.add(new Lightning(user.pos - Dungeon.level.width(), user.pos + Dungeon.level.width(), null));
-			user.sprite.parent.add(
-					new Lightning(user.pos - 1 - Dungeon.level.width(), user.pos + 1 + Dungeon.level.width(), null));
-			user.sprite.parent.add(
-					new Lightning(user.pos - 1 + Dungeon.level.width(), user.pos + 1 - Dungeon.level.width(), null));
+			if (Char.canWorldFx(caster)) {
+				caster.sprite.parent.add(new Lightning(caster.pos - 1, caster.pos + 1, null));
+				caster.sprite.parent
+						.add(new Lightning(caster.pos - Dungeon.level.width(), caster.pos + Dungeon.level.width(),
+								null));
+				caster.sprite.parent.add(
+						new Lightning(caster.pos - 1 - Dungeon.level.width(), caster.pos + 1 + Dungeon.level.width(),
+								null));
+				caster.sprite.parent.add(
+						new Lightning(caster.pos - 1 + Dungeon.level.width(), caster.pos + 1 - Dungeon.level.width(),
+								null));
+			}
 			for (int i : PathFinder.NEIGHBOURS9) {
-				if (Actor.findChar(user.pos + i) != null) {
-					affected.add(Actor.findChar(user.pos + i));
+				if (Actor.findChar(caster.pos + i) != null) {
+					affected.add(Actor.findChar(caster.pos + i));
 				}
 			}
 
 			int pos = bolt.collisionPos;
-			user.sprite.parent.add(new Lightning(pos - 1, user.pos + 1, null));
-			user.sprite.parent.add(new Lightning(pos - Dungeon.level.width(), pos + Dungeon.level.width(), null));
-			user.sprite.parent
-					.add(new Lightning(pos - 1 - Dungeon.level.width(), pos + 1 + Dungeon.level.width(), null));
-			user.sprite.parent
-					.add(new Lightning(pos - 1 + Dungeon.level.width(), pos + 1 - Dungeon.level.width(), null));
+			if (Char.canWorldFx(caster)) {
+				caster.sprite.parent.add(new Lightning(pos - 1, caster.pos + 1, null));
+				caster.sprite.parent.add(new Lightning(pos - Dungeon.level.width(), pos + Dungeon.level.width(), null));
+				caster.sprite.parent
+						.add(new Lightning(pos - 1 - Dungeon.level.width(), pos + 1 + Dungeon.level.width(), null));
+				caster.sprite.parent
+						.add(new Lightning(pos - 1 + Dungeon.level.width(), pos + 1 - Dungeon.level.width(), null));
+			}
 			for (int i : PathFinder.NEIGHBOURS9) {
 				if (Actor.findChar(pos + i) != null && !affected.contains(Actor.findChar(pos + i))) {
 					affected.add(Actor.findChar(pos + i));
@@ -620,7 +696,7 @@ public class CursedWand {
 							GLog.n(Messages.get(CursedWand.class, "ondeath", origin.name()));
 						} else {
 							Badges.validateDeathFromEnemyMagic();
-							Dungeon.fail(user);
+							Dungeon.fail(resolveCaster(user));
 						}
 					}
 				}
@@ -655,17 +731,21 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			return positiveOnly || Actor.findChar(bolt.collisionPos) != null;
 		}
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			Char ch = Actor.findChar(bolt.collisionPos);
 			if ((!positiveOnly || (ch instanceof Piranha)) && ch != null && !ch.flying
 					&& !Char.hasProp(ch, Char.Property.IMMOVABLE)) {
 				Buff.affect(ch, Levitation.class, Levitation.DURATION);
 			} else {
-				Buff.affect(user, Levitation.class, Levitation.DURATION);
+				Buff.affect(caster, Levitation.class, Levitation.DURATION);
 			}
 			return true;
 		}
@@ -680,12 +760,15 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			for (Mob mob : Dungeon.level.mobs) {
-				mob.beckon(user.pos);
+				mob.beckon(caster.pos);
 			}
-			user.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+			if (Char.canWorldFx(caster)) {
+				caster.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+			}
 			if (positiveOnly) {
-				Buff.affect(user, ScrollOfChallenge.ChallengeArena.class).setup(user.pos);
+				Buff.affect(caster, ScrollOfChallenge.ChallengeArena.class).setup(caster.pos);
 				Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
 			} else {
 				Sample.INSTANCE.play(Assets.Sounds.ALERT);
@@ -726,6 +809,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			Char ch = Actor.findChar(bolt.collisionPos);
 			if (ch != null && !(ch instanceof Hero)
 			// ignores bosses, questgivers, rat king, etc.
@@ -765,8 +851,9 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			// hexes target if positive only or user isn't hero
-			if (positiveOnly || !(user instanceof Hero)) {
+			// hexes target if positive only, non-hero, or Echo phantom kit (not living
+			// hero)
+			if (positiveOnly || !(user instanceof Hero) || isEchoCaster(user)) {
 				Char ch = Actor.findChar(bolt.collisionPos);
 				if (ch != null) {
 					Buff.affect(ch, Hex.class, Hex.DURATION);
@@ -788,6 +875,7 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			if (!positiveOnly && Dungeon.depth > 1 && Dungeon.interfloorTeleportAllowed() && user == Dungeon.hero) {
 
 				// starting from 10 floors up (or floor 1), each floor has 1 more weight
@@ -807,7 +895,7 @@ public class CursedWand {
 
 				// scroll of teleportation if positive only, or inter-floor teleport disallowed
 			} else {
-				ScrollOfTeleportation.teleportChar(user);
+				ScrollOfTeleportation.teleportChar(caster);
 
 			}
 			return true;
@@ -994,12 +1082,15 @@ public class CursedWand {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
 
+			Char caster = resolveCaster(user);
 			for (Char ch : Actor.chars()) {
 				Buff.affect(ch, Invulnerability.class, 10f);
 				Buff.affect(ch, Bless.class, Bless.DURATION);
 			}
 
-			new Flare(5, 48).color(0xFFFF00, true).show(user.sprite, 3f);
+			if (Char.canWorldFx(caster)) {
+				new Flare(5, 48).color(0xFFFF00, true).show(caster.sprite, 3f);
+			}
 			GameScene.flash(0x80FFFF40);
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 			GLog.pIfHero(user, Messages.get(CursedWand.class, "mass_invuln"));
@@ -1013,6 +1104,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			return user == Dungeon.hero;
 		}
 
@@ -1024,10 +1118,13 @@ public class CursedWand {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
 
-			Buff.affect(user, TimeStasis.class, 100f);
+			Char caster = resolveCaster(user);
+			Buff.affect(caster, TimeStasis.class, 100f);
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
-			user.sprite.emitter().burst(Speck.factory(Speck.STEAM), 10);
+			if (Char.canWorldFx(caster)) {
+				caster.sprite.emitter().burst(Speck.factory(Speck.STEAM), 10);
+			}
 			GLog.wIfHero(user, Messages.get(CursedWand.class, "petrify"));
 
 			return true;
@@ -1066,11 +1163,14 @@ public class CursedWand {
 	public static class ForestFire extends CursedEffect {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			for (int i = 0; i < Dungeon.level.length(); i++) {
 				GameScene.add(Blob.seed(i, 15, Regrowth.class));
 			}
 
-			new Flare(8, 32).color(0xFFFF66, true).show(user.sprite, 2f);
+			if (Char.canWorldFx(caster)) {
+				new Flare(8, 32).color(0xFFFF66, true).show(caster.sprite, 2f);
+			}
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 			GLog.pIfHero(user, Messages.get(CursedWand.class, "grass"));
 			// only grass, no fire, if positive only
@@ -1183,6 +1283,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			if (positiveOnly) {
 				return true;
 			} else if (origin == null || user != Dungeon.hero || !Dungeon.hero.belongings.contains(origin)) {
@@ -1227,12 +1330,15 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			return user instanceof Hero || Actor.findChar(bolt.collisionPos) instanceof Hero;
 		}
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			if (user instanceof Hero) {
+			if (user instanceof Hero && !isEchoCaster(user)) {
 				Buff.affect(user, HeroDisguise.class, HeroDisguise.DURATION);
 				GLog.wIfHero(user, Messages.get(CursedWand.class, "disguise"));
 				return true;
@@ -1249,7 +1355,9 @@ public class CursedWand {
 	public static class SuperNova extends CursedEffect {
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			SuperNovaTracker nova = Buff.append(Dungeon.hero, SuperNovaTracker.class);
+			Char caster = resolveCaster(user);
+			Char novaHost = Dungeon.hero != null ? Dungeon.hero : caster;
+			SuperNovaTracker nova = Buff.append(novaHost, SuperNovaTracker.class);
 			nova.pos = bolt.collisionPos;
 			nova.harmsAllies = !positiveOnly;
 			if (positiveOnly) {
@@ -1266,6 +1374,9 @@ public class CursedWand {
 
 		@Override
 		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			if (!super.valid(origin, user, bolt, positiveOnly)) {
+				return false;
+			}
 			// can't happen on floors where chasms aren't allowed
 			if (Dungeon.bossLevel() || Dungeon.depth > 25 || Dungeon.branch != 0) {
 				return false;
@@ -1280,9 +1391,10 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			Char caster = resolveCaster(user);
 			boolean[] passable = BArray.not(Dungeon.level.solid, null);
 			BArray.or(passable, Dungeon.level.passable, passable);
-			PathFinder.buildDistanceMap(user.pos, passable, 5);
+			PathFinder.buildDistanceMap(caster.pos, passable, 5);
 			ArrayList<Integer> positions = new ArrayList<>();
 			for (int i = 0; i < PathFinder.distance.length; i++) {
 				if (PathFinder.distance[i] < Integer.MAX_VALUE) {
@@ -1292,7 +1404,8 @@ public class CursedWand {
 					}
 				}
 			}
-			PitfallTrap.DelayedPit p = Buff.append(Dungeon.hero, PitfallTrap.DelayedPit.class, 1);
+			Char pitHost = Dungeon.hero != null ? Dungeon.hero : caster;
+			PitfallTrap.DelayedPit p = Buff.append(pitHost, PitfallTrap.DelayedPit.class, 1);
 			p.depth = Dungeon.depth;
 			p.branch = Dungeon.branch;
 			p.setPositions(positions);
@@ -1317,7 +1430,8 @@ public class CursedWand {
 
 		@Override
 		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
-			Buff.append(user, GravityChaosTracker.class).positiveOnly = positiveOnly;
+			Char caster = resolveCaster(user);
+			Buff.append(caster, GravityChaosTracker.class).positiveOnly = positiveOnly;
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 			if (positiveOnly) {
 				GLog.pIfHero(user, Messages.get(CursedWand.class, "gravity_positive"));

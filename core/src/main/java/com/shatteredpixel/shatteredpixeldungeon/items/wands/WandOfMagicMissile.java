@@ -47,31 +47,37 @@ public class WandOfMagicMissile extends DamageWand {
 		image = ItemSpriteSheet.WAND_MAGIC_MISSILE;
 	}
 
-	public int min(int lvl){
-		return 2+lvl;
+	public int min(int lvl) {
+		return 2 + lvl;
 	}
 
-	public int max(int lvl){
-		return 8+2*lvl;
+	public int max(int lvl) {
+		return 8 + 2 * lvl;
 	}
-	
+
 	@Override
 	public void onZap(Ballistica bolt) {
-				
-		Char ch = Actor.findChar( bolt.collisionPos );
+
+		Char ch = Actor.findChar(bolt.collisionPos);
 		if (ch != null) {
 
 			wandProc(ch, chargesPerCast());
 			ch.damage(damageRoll(), this);
-			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f) );
+			Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f));
 
-			ch.sprite.burst(0xFFFFFFFF, buffedLvl() / 2 + 2);
+			if (ch.sprite != null) {
+				ch.sprite.burst(0xFFFFFFFF, buffedLvl() / 2 + 2);
+			}
 
-			//apply the magic charge buff if we have another wand in inventory of a lower level, or already have the buff
-			for (Wand.Charger wandCharger : curUser.buffs(Wand.Charger.class)){
-				if (wandCharger.wand().buffedLvl() < buffedLvl() || curUser.buff(MagicCharge.class) != null){
-					Buff.prolong(curUser, MagicCharge.class, MagicCharge.DURATION).setup(this);
-					break;
+			// apply the magic charge buff if we have another wand in inventory of a lower
+			// level, or already have the buff
+			// Echo zap keeps curUser via AiItemActions.withUser (ANDROID-1K).
+			if (curUser != null) {
+				for (Wand.Charger wandCharger : curUser.buffs(Wand.Charger.class)) {
+					if (wandCharger.wand().buffedLvl() < buffedLvl() || curUser.buff(MagicCharge.class) != null) {
+						Buff.prolong(curUser, MagicCharge.class, MagicCharge.DURATION).setup(this);
+						break;
+					}
 				}
 			}
 
@@ -83,8 +89,8 @@ public class WandOfMagicMissile extends DamageWand {
 	@Override
 	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
 		SpellSprite.show(attacker, SpellSprite.CHARGE);
-		for (Wand.Charger c : attacker.buffs(Wand.Charger.class)){
-			if (c.wand() != this){
+		for (Wand.Charger c : attacker.buffs(Wand.Charger.class)) {
+			if (c.wand() != this) {
 				c.gainCharge(0.5f * procChanceMultiplier(attacker));
 			}
 		}
@@ -105,10 +111,10 @@ public class WandOfMagicMissile extends DamageWand {
 		public static float DURATION = 4f;
 
 		private int level = 0;
-		private Wand wandJustApplied; //we don't bundle this as it's only used right as the buff is applied
+		private Wand wandJustApplied; // we don't bundle this as it's only used right as the buff is applied
 
-		public void setup(Wand wand){
-			if (level < wand.buffedLvl()){
+		public void setup(Wand wand) {
+			if (level < wand.buffedLvl()) {
 				this.level = wand.buffedLvl();
 				this.wandJustApplied = wand;
 			}
@@ -120,12 +126,13 @@ public class WandOfMagicMissile extends DamageWand {
 			updateQuickslot();
 		}
 
-		public int level(){
+		public int level() {
 			return this.level;
 		}
 
-		//this is used briefly so that a wand of magic missile can't clear the buff it just applied
-		public Wand wandJustApplied(){
+		// this is used briefly so that a wand of magic missile can't clear the buff it
+		// just applied
+		public Wand wandJustApplied() {
 			Wand result = this.wandJustApplied;
 			this.wandJustApplied = null;
 			return result;

@@ -101,7 +101,7 @@ public final class EchoTargetPicker {
 			if (Actor.findChar(cell) != null) {
 				continue;
 			}
-			if (EchoAoeDots.isAoeDotAt(boss, cell)) {
+			if (EchoAoeDots.isAoeHazardForPath(boss, cell)) {
 				continue;
 			}
 			int enemyDist = level.distance(cell, enemy.pos);

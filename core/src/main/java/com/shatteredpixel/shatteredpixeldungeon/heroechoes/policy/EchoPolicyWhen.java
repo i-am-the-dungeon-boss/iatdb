@@ -84,6 +84,8 @@ public final class EchoPolicyWhen {
 				return status.enemyClass.equalsIgnoreCase(String.valueOf(raw));
 			case "role_ready":
 				return status.isRoleReady(String.valueOf(raw));
+			case "role_not_ready":
+				return !status.isRoleReady(String.valueOf(raw));
 			case "wants_role":
 				// Soft preference: true when role is ready (same as role_ready for now).
 				return status.isRoleReady(String.valueOf(raw));

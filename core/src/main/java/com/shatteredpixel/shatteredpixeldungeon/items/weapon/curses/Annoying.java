@@ -39,20 +39,22 @@ import com.watabou.utils.Random;
 
 public class Annoying extends Weapon.Enchantment {
 
-	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );
+	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing(0x000000);
 
 	@Override
-	public int proc( Weapon weapon, Char attacker, Char defender, int damage ) {
+	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
 
-		float procChance = 1/20f * procChanceMultiplier(attacker);
+		float procChance = 1 / 20f * procChanceMultiplier(attacker);
 		if (Random.Float() < procChance) {
 			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 				mob.beckon(attacker.pos);
 			}
-			attacker.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+			if (Char.canWorldFx(attacker)) {
+				attacker.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+			}
 			Sample.INSTANCE.play(Assets.Sounds.MIMIC);
 			Invisibility.dispel();
-			//~1/100 for each rare line, ~1/10 for each common line
+			// ~1/100 for each rare line, ~1/10 for each common line
 			if (Random.Int(33) != 0) {
 				GLog.n(Messages.get(this, "msg_" + Random.IntRange(1, 10)));
 			} else {
