@@ -311,7 +311,10 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 		if ("*move_further".equals(tag)) {
-			return enemy != null && boss.policyStepFurther(enemy.pos);
+			// A kiting echo wants a harmful plant between itself and the hero —
+			// Level.pressCell triggers it for the hero too, so it is real cover.
+			boolean kite = EchoPolicyMatcher.wantsKeepDistance(policy, status);
+			return enemy != null && boss.policyStepFurther(enemy.pos, kite);
 		}
 		if ("*move_closer".equals(tag)) {
 			return enemy != null && boss.policyStepCloser(enemy.pos);

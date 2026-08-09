@@ -25,7 +25,9 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossRegional
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -63,6 +65,8 @@ public class EchoBoss extends Mob {
     }
 
     private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
+    /** Retreat-step scoring weight; see {@link #bestRetreatCell}. */
+    private static final int PLANT_COVER_WEIGHT = 1000;
     /** Blind last-seen shots allowed after the hero cloaks. */
     private static final int BLIND_DEFENSE_SHOTS = 2;
 
@@ -402,12 +406,80 @@ public class EchoBoss extends Mob {
      * hunting AI.
      */
     public boolean policyStepFurther(int cell) {
+        return policyStepFurther(cell, false);
+    }
+
+    /**
+     * As {@link #policyStepFurther(int)}, but while {@code preferPlantCover}
+     * a candidate step that puts a harmful plant on the line back to
+     * {@code enemyPos} is favored over one that merely maximizes distance.
+     * <p>
+     * The plant is real cover: {@code Level.pressCell} triggers it for the
+     * hero too, so kiting behind one is a genuine deterrent, not just a
+     * pathing quirk. Falls back to {@link #getFurther} when no candidate step
+     * scores — e.g. every farther cell is a wall — so retreating never fails
+     * just because cover happens to be unavailable.
+     */
+    public boolean policyStepFurther(int enemyPos, boolean preferPlantCover) {
+        int retreat = bestRetreatCell(enemyPos, preferPlantCover);
+        if (retreat >= 0 && policyStepTo(retreat)) {
+            return true;
+        }
         int oldPos = pos;
-        if (!getFurther(cell)) {
+        if (!getFurther(enemyPos)) {
             return false;
         }
         moveSprite(oldPos, pos);
         return true;
+    }
+
+    /**
+     * Best adjacent retreat cell away from {@code enemyPos}, or {@code -1} if
+     * none scores. Lexicographic, widest term first: hazard-free and strictly
+     * farther from the hero (a candidate cell must pass both to be considered
+     * at all — see the loop below); then, only while kiting, whether a
+     * harmful plant sits on the line from the candidate back to the hero;
+     * then gas/hazard clearance, mirroring {@link EchoAoeDots#bestExit}'s
+     * tiebreak.
+     */
+    private int bestRetreatCell(int enemyPos, boolean preferPlantCover) {
+        if (Dungeon.level == null || enemyPos < 0 || !Dungeon.level.insideMap(enemyPos)) {
+            return -1;
+        }
+        Level level = Dungeon.level;
+        int current = level.distance(pos, enemyPos);
+        int best = -1;
+        int bestScore = Integer.MIN_VALUE;
+        for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+            int cell = pos + PathFinder.NEIGHBOURS8[i];
+            if (!level.insideMap(cell) || !policyCellPathable(cell)) {
+                continue;
+            }
+            if (level.distance(cell, enemyPos) <= current) {
+                continue;
+            }
+            int score = 0;
+            if (preferPlantCover && plantCoversLine(cell, enemyPos)) {
+                score += PLANT_COVER_WEIGHT;
+            }
+            score += EchoAoeDots.gasClearance(this, cell, level);
+            if (best < 0 || score > bestScore || (score == bestScore && cell < best)) {
+                best = cell;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    /** True when a harmful plant occupies any cell on the line from {@code from} to {@code to}. */
+    private static boolean plantCoversLine(int from, int to) {
+        Ballistica line = new Ballistica(from, to, Ballistica.PROJECTILE);
+        for (int cell : line.path) {
+            if (EchoAoeDots.isHarmfulPlantAt(cell)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

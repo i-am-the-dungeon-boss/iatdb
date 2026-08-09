@@ -296,7 +296,12 @@ public final class EchoAoeDots {
 		return false;
 	}
 
-	private static int gasClearance(EchoBoss boss, int cell, Level level) {
+	/**
+	 * Count of {@code cell}'s neighbours clear of current or predicted gas.
+	 * Public so other movement scoring — e.g. {@link EchoBoss}'s retreat-step
+	 * choice — can use the same tiebreak this class uses for exit scoring.
+	 */
+	public static int gasClearance(EchoBoss boss, int cell, Level level) {
 		int best = 0;
 		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 			int n = cell + PathFinder.NEIGHBOURS8[i];
