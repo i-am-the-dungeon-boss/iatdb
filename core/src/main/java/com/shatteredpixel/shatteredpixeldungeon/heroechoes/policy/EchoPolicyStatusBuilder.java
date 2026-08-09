@@ -82,6 +82,8 @@ public final class EchoPolicyStatusBuilder {
 		if (EchoAoeDots.isAoeDotAt(boss, boss.pos)) {
 			selfStatuses.add(EchoAoeDots.STATUS);
 		}
+		// Enemy statuses drive hard gates below, so they must be sensed first.
+		Set<String> enemyStatuses = enemy != null ? statusNames(enemy) : new HashSet<String>();
 
 		JSONObject caps = policy.root().optJSONObject("capabilities");
 		if (caps != null) {
@@ -96,6 +98,8 @@ public final class EchoPolicyStatusBuilder {
 				if (!virtualRoleFeasible(role, boss, enemy, level))
 					continue;
 				if (!respectsPotionReserve(role, cap, tuning, echoHero))
+					continue;
+				if (!allowedAgainstEnemy(role, cap, available, enemyStatuses))
 					continue;
 				rolesReady.add(role);
 
@@ -127,7 +131,7 @@ public final class EchoPolicyStatusBuilder {
 				.enemyClass(enemy != null && enemy.heroClass != null ? enemy.heroClass.name() : "")
 				.onTerrain(onTerrainName(level, boss.pos))
 				.selfStatuses(selfStatuses)
-				.enemyStatuses(enemy != null ? statusNames(enemy) : new HashSet<>())
+				.enemyStatuses(enemyStatuses)
 				.terrainNearTiles(nearTiles)
 				.rolesReady(rolesReady)
 				.safeHazards(safe)
@@ -154,6 +158,47 @@ public final class EchoPolicyStatusBuilder {
 		if (keep <= 0)
 			return true;
 		return EchoInventory.countMatching(echoHero, cap.optJSONArray("items")) > keep;
+	}
+
+	/**
+	 * Fail-closed legality against the current hero, independent of what the
+	 * generated policy asks for. A custom or stale playbook must not be able to
+	 * waste kit on a target that cannot be affected by it.
+	 */
+	private static boolean allowedAgainstEnemy(
+			String role, JSONObject cap, Set<String> available, Set<String> enemyStatuses) {
+		// Potion of Purity: every blob-based setup / payoff is wasted.
+		if (enemyStatuses.contains(EchoPolicyHazards.PURITY)
+				&& EchoPolicyHazards.isBlobRole(role)) {
+			return false;
+		}
+		// 3-turn paralysis lockout only invalidates ParalyticGas, not the role.
+		if (enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)
+				&& EchoPolicyHazards.SETUP_CC.equals(role)
+				&& !EchoRoleResolver.roleHasReadyItem(
+						EchoPolicyHazards.withoutParalyticGas(cap), available)) {
+			return false;
+		}
+		// Ankh glow / decaying Barrier: do not spend damage kit on an immune hero.
+		boolean shielded = enemyStatuses.contains(EchoPolicyHazards.INVULNERABLE)
+				|| enemyStatuses.contains(EchoPolicyHazards.TIMED_SHIELD);
+		return !shielded || !EchoPolicyHazards.isDamageRole(role);
+	}
+
+	/**
+	 * True while the hero cannot meaningfully take damage from the echo. Shared
+	 * with {@link EchoBoss} so the hunting-melee fallthrough and the role gate
+	 * above can never disagree.
+	 */
+	public static boolean isInvulnerableOrTimedShielded(Char ch, Class<?> src) {
+		if (ch == null || !ch.isAlive()) {
+			return false;
+		}
+		if (ch.isInvulnerable(src) || ch.buff(Invulnerability.class) != null) {
+			return true;
+		}
+		Barrier barrier = ch.buff(Barrier.class);
+		return barrier != null && barrier.shielding() > 0;
 	}
 
 	private static boolean virtualRoleFeasible(String role, EchoBoss boss, Hero enemy, Level level) {
@@ -229,15 +274,19 @@ public final class EchoPolicyStatusBuilder {
 			names.add("paralysed");
 		if (ch.buff(Frost.class) != null)
 			names.add("frozen");
-		// Explicit aliases for specific buffs (backward-compatible with auto-lowercase)
+		// Explicit aliases for specific buffs (backward-compatible with auto-lowercase).
+		// Paralysis.Immunity lowercases to a bare "immunity" that reads as purity —
+		// policy must key on these aliases, never on the simpleName.
 		if (ch.buff(BlobImmunity.class) != null)
-			names.add("purity");
+			names.add(EchoPolicyHazards.PURITY);
 		if (ch.buff(Paralysis.Immunity.class) != null)
-			names.add("paralysis_immunity");
+			names.add(EchoPolicyHazards.PARALYSIS_IMMUNITY);
 		if (ch.buff(Invulnerability.class) != null)
-			names.add("invulnerable");
-		if (ch.buff(Barrier.class) != null && ch.shielding() > 0)
-			names.add("timed_shield");
+			names.add(EchoPolicyHazards.INVULNERABLE);
+		Barrier barrier = ch.buff(Barrier.class);
+		// Barrier's own shielding, not ch.shielding(), which sums every ShieldBuff.
+		if (barrier != null && barrier.shielding() > 0)
+			names.add(EchoPolicyHazards.TIMED_SHIELD);
 		for (Buff buff : ch.buffs()) {
 			names.add(buff.getClass().getSimpleName().toLowerCase(Locale.ROOT));
 		}

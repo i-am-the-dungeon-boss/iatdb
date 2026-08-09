@@ -36,6 +36,10 @@ public final class EchoAoeDots {
 
 	public static final String STATUS = "aoe_dot";
 
+	/** Exit-scoring weights; see {@code exitScore}. Each strictly outranks the next. */
+	private static final int POCKET_WEIGHT = 10000;
+	private static final int DISTANCE_WEIGHT = 100;
+
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Blob>[] GAS_BLOBS = new Class[] {
 			ToxicGas.class,
@@ -90,13 +94,28 @@ public final class EchoAoeDots {
 	 * or a harmful plant.
 	 */
 	public static boolean isAoeHazardForPath(Char ch, int cell) {
+		return isAoeHazardForPath(ch, cell, true);
+	}
+
+	/**
+	 * As {@link #isAoeHazardForPath(Char, int)}, but the predicted gas-growth
+	 * ring can be waived.
+	 * <p>
+	 * The ring around a dense cloud is often the whole corridor, so treating it
+	 * as impassable can leave the echo with no legal step at all — it then
+	 * stands still and keeps taking the damage it was trying to avoid. Callers
+	 * try the strict mask first and fall back to {@code avoidPredictedGas =
+	 * false}. Cells that are harmful <em>now</em>, and harmful plants, are never
+	 * waived.
+	 */
+	public static boolean isAoeHazardForPath(Char ch, int cell, boolean avoidPredictedGas) {
 		if (ch == null || Dungeon.level == null || cell < 0 || cell >= Dungeon.level.length()) {
 			return true;
 		}
 		if (isAoeDotAt(ch, cell)) {
 			return true;
 		}
-		if (isPredictedGasAt(ch, cell)) {
+		if (avoidPredictedGas && isPredictedGasAt(ch, cell)) {
 			return true;
 		}
 		return isHarmfulPlantAt(cell);
@@ -189,6 +208,11 @@ public final class EchoAoeDots {
 		return bestExit(boss, -1, false) >= 0;
 	}
 
+	/** True when {@code cell} is only unsafe because gas is about to spread onto it. */
+	static boolean isPredictedGasOnly(Char ch, int cell) {
+		return !isAoeDotAt(ch, cell) && !isHarmfulPlantAt(cell) && isPredictedGasAt(ch, cell);
+	}
+
 	/**
 	 * Best adjacent cell clear of path hazards, or {@code -1}.
 	 *
@@ -196,6 +220,16 @@ public final class EchoAoeDots {
 	 * @param kite     prefer maximizing distance to {@code enemyPos}
 	 */
 	public static int bestExit(EchoBoss boss, int enemyPos, boolean kite) {
+		int strict = bestExit(boss, enemyPos, kite, true);
+		if (strict >= 0) {
+			return strict;
+		}
+		// Better to stand on a tile gas is about to reach than to stay in the fire.
+		return bestExit(boss, enemyPos, kite, false);
+	}
+
+	private static int bestExit(
+			EchoBoss boss, int enemyPos, boolean kite, boolean avoidPredictedGas) {
 		if (boss == null || Dungeon.level == null) {
 			return -1;
 		}
@@ -207,10 +241,10 @@ public final class EchoAoeDots {
 		int bestScore = Integer.MIN_VALUE;
 		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 			int cell = boss.pos + PathFinder.NEIGHBOURS8[i];
-			if (!level.insideMap(cell) || !boss.policyCellPathable(cell)) {
+			if (!level.insideMap(cell) || !boss.policyCellPathable(cell, avoidPredictedGas)) {
 				continue;
 			}
-			if (isAoeHazardForPath(boss, cell)) {
+			if (isAoeHazardForPath(boss, cell, avoidPredictedGas)) {
 				continue;
 			}
 			int score = exitScore(boss, cell, enemyPos, kite, level);
@@ -222,18 +256,27 @@ public final class EchoAoeDots {
 		return best;
 	}
 
+	/**
+	 * Lexicographic exit preference, widest term first:
+	 * <ol>
+	 * <li>not a one-tile pocket still ringed by hazard,</li>
+	 * <li>the positioning intent — away from the hero when kiting, toward when
+	 * closing,</li>
+	 * <li>clearance from gas and its predicted growth ring.</li>
+	 * </ol>
+	 * The weights keep each term strictly above the next, so clearance breaks
+	 * ties but can never override where the echo is trying to stand.
+	 */
 	private static int exitScore(EchoBoss boss, int cell, int enemyPos, boolean kite, Level level) {
 		int score = 0;
-		// Prefer cells that still have a clear neighbour (avoid 1-tile pockets).
 		if (hasClearNeighbour(boss, cell, level)) {
-			score += 1000;
+			score += POCKET_WEIGHT;
 		}
-		// Prefer clearance from gas / growth.
-		score += 10 * gasClearance(boss, cell, level);
 		if (enemyPos >= 0 && level.insideMap(enemyPos)) {
 			int dist = level.distance(cell, enemyPos);
-			score += kite ? dist : -dist;
+			score += DISTANCE_WEIGHT * (kite ? dist : -dist);
 		}
+		score += gasClearance(boss, cell, level);
 		return score;
 	}
 
@@ -246,7 +289,7 @@ public final class EchoAoeDots {
 			if (!level.passable[n] || level.solid[n]) {
 				continue;
 			}
-			if (!isAoeHazardForPath(boss, n)) {
+			if (!isAoeHazardForPath(boss, n, false)) {
 				return true;
 			}
 		}

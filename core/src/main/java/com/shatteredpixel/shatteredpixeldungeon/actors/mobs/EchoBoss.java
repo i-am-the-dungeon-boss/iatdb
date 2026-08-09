@@ -10,7 +10,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuffTransfer;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
@@ -42,7 +41,6 @@ import com.watabou.utils.PathFinder;
 import com.watabou.utils.Strings;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class EchoBoss extends Mob {
@@ -87,6 +85,15 @@ public class EchoBoss extends Mob {
     private int plantBlockerCell = -1;
     private int pathBlockerCell = -1;
     private int losBlockerCell = -1;
+    /**
+     * While true, pathing also refuses cells gas will spread onto next tick.
+     * Off for ordinary CLOSE_IN / KEEP_DISTANCE steps: the growth ring around a
+     * dense cloud usually spans the whole corridor, and blocking it there only
+     * makes the echo shuffle sideways instead of closing. Leave-AoE exits and
+     * blink landings opt in, since both pick from a scored candidate list and
+     * can fall back when every growth-safe option is gone.
+     */
+    private boolean avoidPredictedGas = false;
     /**
      * Master-style throw/zap gate: set by {@link #busy()}, cleared when
      * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
@@ -414,7 +421,8 @@ public class EchoBoss extends Mob {
             return passable;
         }
         for (int i = 0; i < passable.length; i++) {
-            if (passable[i] && i != pos && EchoAoeDots.isAoeHazardForPath(this, i)) {
+            if (passable[i] && i != pos
+                    && EchoAoeDots.isAoeHazardForPath(this, i, avoidPredictedGas)) {
                 passable[i] = false;
             }
         }
@@ -424,12 +432,24 @@ public class EchoBoss extends Mob {
     /** Adjacent steps refuse current/predicted AoE and harmful plants. */
     @Override
     protected boolean cellIsPathable(int cell) {
-        return super.cellIsPathable(cell) && !EchoAoeDots.isAoeHazardForPath(this, cell);
+        return super.cellIsPathable(cell)
+                && !EchoAoeDots.isAoeHazardForPath(this, cell, avoidPredictedGas);
     }
 
     /** Exposes {@link Mob#cellIsPathable} for leave-AoE neighbour checks. */
     public boolean policyCellPathable(int cell) {
-        return cellIsPathable(cell);
+        return policyCellPathable(cell, avoidPredictedGas);
+    }
+
+    /** As {@link #policyCellPathable(int)} with an explicit growth-ring strictness. */
+    public boolean policyCellPathable(int cell, boolean avoidGrowthRing) {
+        boolean saved = avoidPredictedGas;
+        avoidPredictedGas = avoidGrowthRing;
+        try {
+            return cellIsPathable(cell);
+        } finally {
+            avoidPredictedGas = saved;
+        }
     }
 
     /**
@@ -519,51 +539,32 @@ public class EchoBoss extends Mob {
     }
 
     /**
-     * Echo hero is never placed on the level; sync body combat fields onto the
-     * kit for combat queries only. Borrows {@link #sprite} so Hero-shaped
-     * enchant/glyph VFX do not NPE on a headless kit (Family A / ANDROID-1T).
-     * Mirrors kit HP changes back onto the body (Vampiric / Metabolism).
+     * Echo hero is never placed on the level; sync body combat fields
+     * ({@link #pos}, {@link #paralysed}) onto the kit for combat queries only.
      */
     private int withEchoHeroPosInt(IntAction action) {
-        return withEchoHeroCombat(new ValueAction<Integer>() {
-            @Override
-            public Integer get() {
-                return action.getAsInt();
-            }
-        });
+        int savedPos = echoHero.pos;
+        int savedParalysed = echoHero.paralysed;
+        echoHero.pos = pos;
+        echoHero.paralysed = paralysed;
+        try {
+            return action.getAsInt();
+        } finally {
+            echoHero.pos = savedPos;
+            echoHero.paralysed = savedParalysed;
+        }
     }
 
     private <T> T withEchoHeroPos(ValueAction<T> action) {
-        return withEchoHeroCombat(action);
-    }
-
-    private <T> T withEchoHeroCombat(ValueAction<T> action) {
         int savedPos = echoHero.pos;
         int savedParalysed = echoHero.paralysed;
-        CharSprite savedSprite = echoHero.sprite;
-        Alignment savedAlignment = echoHero.alignment;
-        int savedHp = echoHero.HP;
-        int savedHt = echoHero.HT;
-
         echoHero.pos = pos;
         echoHero.paralysed = paralysed;
-        echoHero.sprite = sprite;
-        echoHero.alignment = alignment;
-        echoHero.HP = HP;
-        echoHero.HT = HT;
-        HashSet<Buff> buffsBefore = EchoCombatBuffTransfer.snapshot(echoHero);
         try {
             return action.get();
         } finally {
-            // Kit heals/damage during procs must land on the on-stage body.
-            HP = Math.max(0, Math.min(HT, echoHero.HP));
-            EchoCombatBuffTransfer.moveNewCombatBuffs(echoHero, this, buffsBefore);
             echoHero.pos = savedPos;
             echoHero.paralysed = savedParalysed;
-            echoHero.sprite = savedSprite;
-            echoHero.alignment = savedAlignment;
-            echoHero.HP = savedHp;
-            echoHero.HT = savedHt;
         }
     }
 
@@ -781,13 +782,7 @@ public class EchoBoss extends Mob {
         if (hero == null || !hero.isAlive()) {
             return false;
         }
-        if (hero.isInvulnerable(getClass())
-                || hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability.class) != null) {
-            return true;
-        }
-        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier barrier = hero
-                .buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier.class);
-        return barrier != null && barrier.shielding() > 0;
+        return EchoPolicyStatusBuilder.isInvulnerableOrTimedShielded(hero, getClass());
     }
 
     /**
