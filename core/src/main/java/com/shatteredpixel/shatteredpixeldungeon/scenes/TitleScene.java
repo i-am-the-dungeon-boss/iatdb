@@ -50,7 +50,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.SupportPrompts;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBrandBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleFeedButtons;
-import com.shatteredpixel.shatteredpixeldungeon.ui.TitleRankedIcon;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleSupportLayout;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoConnectionFailed;
@@ -85,8 +85,7 @@ public class TitleScene extends PixelScene {
 	private Fireball leftFB;
 	private Fireball rightFB;
 
-	private StyledButton btnRanked;
-	private StyledButton btnSolo;
+	private StyledButton btnVillage;
 	private StyledButton btnDebug;
 	private StyledButton btnSupport;
 	private StyledButton btnRankings;
@@ -143,41 +142,25 @@ public class TitleScene extends PixelScene {
 
 		final Chrome.Type GREY_TR = Chrome.Type.GREY_BUTTON_TR;
 
-		btnRanked = new StyledButton(GREY_TR, Messages.get(this, "ranked")) {
+		// Solo and ranked are no longer picked here: the player lands in the
+		// village and commits to a mode at the dungeon mouth instead.
+		btnVillage = new StyledButton(GREY_TR, Messages.get(this, "village")) {
 			@Override
 			protected void onClick() {
-				beginEchoRun(EchoPlayMode.RANKED);
+				enterVillage();
 			}
 
 			@Override
 			protected boolean onLongClick() {
 				if (DeviceCompat.isDebug()) {
-					beginEchoRun(EchoPlayMode.RANKED);
+					enterVillage();
 					return true;
 				}
 				return super.onLongClick();
 			}
 		};
-		btnRanked.icon(Icons.get(TitleRankedIcon.type()));
-		add(btnRanked);
-
-		btnSolo = new StyledButton(GREY_TR, Messages.get(this, "solo")) {
-			@Override
-			protected void onClick() {
-				beginEchoRun(EchoPlayMode.SOLO);
-			}
-
-			@Override
-			protected boolean onLongClick() {
-				if (DeviceCompat.isDebug()) {
-					beginEchoRun(EchoPlayMode.SOLO);
-					return true;
-				}
-				return super.onLongClick();
-			}
-		};
-		btnSolo.icon(Icons.get(Icons.ENTER));
-		add(btnSolo);
+		btnVillage.icon(Icons.get(Icons.ENTER));
+		add(btnVillage);
 
 		if (DebugSettings.isDebugBuild()) {
 			btnDebug = new StyledButton(GREY_TR, Messages.get(this, "debug")) {
@@ -275,13 +258,13 @@ public class TitleScene extends PixelScene {
 			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnVillage.left(), btnVillage.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
+			float rankingsTop = TitleSupportLayout.rankingsY(btnVillage.bottom(), GAP, supportBottom);
 			if (singleMetaRow) {
 				float metaWidth = TitleSupportLayout.landscapeMetaButtonWidth(buttonAreaWidth);
-				btnRankings.setRect(btnSolo.left(), rankingsTop, metaWidth, BTN_HEIGHT);
+				btnRankings.setRect(btnVillage.left(), rankingsTop, metaWidth, BTN_HEIGHT);
 				btnJournal.setRect(btnRankings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
 				btnSettings.setRect(btnJournal.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
 				btnAbout.setRect(btnSettings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
@@ -295,7 +278,7 @@ public class TitleScene extends PixelScene {
 				float midWidth = feedVisible
 						? (float) (Math.floor(buttonAreaWidth / 3f) - 1)
 						: (buttonAreaWidth / 2) - 1;
-				btnRankings.setRect(btnSolo.left(), rankingsTop, midWidth, BTN_HEIGHT);
+				btnRankings.setRect(btnVillage.left(), rankingsTop, midWidth, BTN_HEIGHT);
 				btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 				if (btnNews != null) {
 					btnNews.setRect(btnJournal.right() + 2, btnJournal.top(), btnRankings.width(), BTN_HEIGHT);
@@ -313,11 +296,11 @@ public class TitleScene extends PixelScene {
 			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnVillage.left(), btnVillage.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
-			btnRankings.setRect(btnSolo.left(), rankingsTop, (btnSolo.width()), BTN_HEIGHT);
+			float rankingsTop = TitleSupportLayout.rankingsY(btnVillage.bottom(), GAP, supportBottom);
+			btnRankings.setRect(btnVillage.left(), rankingsTop, (btnVillage.width()), BTN_HEIGHT);
 			btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 			Float newsBottom = null;
 			if (btnNews != null && btnChanges != null) {
@@ -331,7 +314,7 @@ public class TitleScene extends PixelScene {
 		}
 
 		title.setBrandTitleY(TitleBrandBlock.brandTitleYBetween(
-				title.characterBottom(), btnSolo.top(), title.brandTitleHeight()));
+				title.characterBottom(), btnVillage.top(), title.brandTitleHeight()));
 		align(title);
 
 		version = new BitmapText("v" + Game.version, pixelFont);
@@ -475,8 +458,7 @@ public class TitleScene extends PixelScene {
 		leftFB.am = alpha;
 		rightFB.am = alpha;
 
-		btnRanked.enable(alpha != 0 && online);
-		btnSolo.enable(alpha != 0 && online);
+		btnVillage.enable(alpha != 0 && online);
 		if (btnDebug != null) {
 			btnDebug.enable(alpha != 0);
 		}
@@ -491,8 +473,7 @@ public class TitleScene extends PixelScene {
 		btnSettings.enable(alpha != 0);
 		btnAbout.enable(alpha != 0);
 
-		btnRanked.alpha(alpha);
-		btnSolo.alpha(alpha);
+		btnVillage.alpha(alpha);
 		if (btnDebug != null) {
 			btnDebug.alpha(alpha);
 		}
@@ -518,36 +499,27 @@ public class TitleScene extends PixelScene {
 
 	private void layoutPlayModeButtons(float left, float top, float areaWidth, float height) {
 		if (btnDebug != null) {
-			float third = (areaWidth - 4) / 3f;
-			btnSolo.setRect(left, top, third, height);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, top, third, height);
-			btnDebug.setRect(btnRanked.right() + 2, top, third, height);
+			float half = (areaWidth - 2) / 2f;
+			btnVillage.setRect(left, top, half, height);
+			align(btnVillage);
+			btnDebug.setRect(btnVillage.right() + 2, top, half, height);
 		} else {
-			btnSolo.setRect(left, top, (areaWidth / 2) - 1, height);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, top, btnSolo.width(), height);
+			btnVillage.setRect(left, top, areaWidth, height);
+			align(btnVillage);
 		}
 	}
 
-	private void beginEchoRun(EchoPlayMode mode) {
+	/**
+	 * Drops the player onto the ground level. The play mode is no longer chosen
+	 * here — it is chosen at the dungeon entrance in the village — but the
+	 * backend check stays, because this build requires a connection to play.
+	 */
+	private void enterVillage() {
 		if (!EchoBackendProbe.isOnlineReady()) {
 			showOfflineConnectionDialog();
 			return;
 		}
-
-		Runnable start = () -> {
-			GamesInProgress.selectEchoPlayMode(mode);
-			GamesInProgress.selectedClass = null;
-			if (GamesInProgress.checkAll().size() == 0) {
-				GamesInProgress.curSlot = 1;
-				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-			} else {
-				ShatteredPixelDungeon.switchNoFade(StartScene.class);
-			}
-		};
-
-		EchoPlayerAuthGate.ensureReadyThen(start::run);
+		EchoPlayerAuthGate.ensureReadyThen(VillageGateway::enterVillage);
 	}
 
 	/** Debug arena: no backend / auth gate. Debug builds only. */

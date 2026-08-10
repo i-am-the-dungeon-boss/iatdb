@@ -13,18 +13,34 @@ import java.nio.file.Paths;
 class TitleSceneOnlineOnlyTest {
 
 	@Test
-	@DisplayName("title scene offers solo and ranked, both gated on backend online")
-	void titleSceneOffersSoloAndRankedGatedOnOnline() throws IOException {
+	@DisplayName("title scene offers the village, gated on backend online and the auth gate")
+	void titleSceneOffersVillageGatedOnOnline() throws IOException {
 		String source = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java");
 
-		Assertions.assertThat(source).contains("EchoPlayMode.RANKED");
-		Assertions.assertThat(source).contains("EchoPlayMode.SOLO");
-		Assertions.assertThat(source).contains("btnSolo");
-		Assertions.assertThat(source).contains("btnRanked.enable(alpha != 0 && online)");
-		Assertions.assertThat(source).contains("btnSolo.enable(alpha != 0 && online)");
+		// Play mode is now chosen at the dungeon mouth, not here.
+		Assertions.assertThat(source).contains("btnVillage");
+		Assertions.assertThat(source).contains("btnVillage.enable(alpha != 0 && online)");
+		Assertions.assertThat(source).contains("VillageGateway::enterVillage");
+		Assertions.assertThat(source).doesNotContain("btnRanked");
+		Assertions.assertThat(source).doesNotContain("btnSolo");
+
+		// but the game still requires a reachable backend and an identified player
+		Assertions.assertThat(source).contains("EchoBackendProbe.isOnlineReady()");
+		Assertions.assertThat(source).contains("showOfflineConnectionDialog()");
 		Assertions.assertThat(source).contains("EchoPlayerAuthGate.ensureReadyThen");
-		Assertions.assertThat(source).doesNotContain("mode == EchoPlayMode.RANKED");
+	}
+
+	@Test
+	@DisplayName("the solo/ranked choice lives in the dungeon-mouth prompt")
+	void modeChoiceMovedToTheDungeonMouth() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndDungeonMode.java");
+
+		Assertions.assertThat(source).contains("EchoPlayMode.SOLO");
+		Assertions.assertThat(source).contains("EchoPlayMode.RANKED");
+		Assertions.assertThat(source).contains("EchoPlayerAuthGate.ensureReadyThen");
+		Assertions.assertThat(source).contains("VillageGateway.beginRun");
 	}
 
 	private static String readSource(String relativePath) throws IOException {

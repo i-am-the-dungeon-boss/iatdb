@@ -1,233 +1,158 @@
 ### Task 1: Ground Level — House, Village, Dungeon Entrance
 
+**Status**: implemented.
+
 **Goal**: Replace "press Solo/Ranked on the title screen" with "land in a village, walk to the
-dungeon, and choose your mode at its mouth." The player starts in their own house (always solo),
-steps outside into a village with NPCs, and enters the dungeon through a prompt that commits the
-run to Solo or Ranked.
+dungeon, and choose your mode at its mouth." The player lands in a village with their own house
+(always solo), and enters the dungeon through a prompt that commits the run to Solo or Ranked.
 
 #### Scope and Key Concepts
 
-- **Ground level** = a persistent, hand-authored outdoor level that is *not* part of a dungeon run
+- **Ground level** = depth 0. A real `Level`, in a save slot of its own, outside any run
   (see [README.md](README.md#the-one-architectural-decision-everything-hangs-on) for why).
-- **House** — a small interior, reached through a door in the village. Always solo: it stays
-  single-player even after task 2 makes the village shared. It is the player's private space and
-  the natural home for storage/stash and cosmetic progression later.
-- **Village** — the outdoor area. Peaceful: no mobs, no respawner, no hunger pressure, no combat.
-- **Dungeon entrance** — a `Terrain.ENTRANCE` tile whose activation is intercepted to show a
-  Solo/Ranked prompt instead of descending directly.
-- Nothing here changes the existing run: once the player is on depth 1, the game is byte-for-byte
-  the game it is today.
+- **House** — the interior behind the village's front door, on depth 0 / branch 1. Always solo:
+  nothing is ever generated in it, and it is meant to stay single-player even if the village
+  later becomes shared.
+- **Village** — the outdoor area. Peaceful by construction: no spawns, no respawner, no hunger,
+  and the map starts fully revealed.
+- **Dungeon entrance** — a `Terrain.EXIT` tile whose transition is intercepted to raise the
+  Solo/Ranked prompt instead of descending.
+- The run itself is unchanged: once the player is on depth 1, the game is the game it was.
 
-#### Files/Systems to Touch
+#### What shipped
 
-New, under `core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/`:
+New:
 
-| File                                       | Role                                                              |
-| ------------------------------------------ | ----------------------------------------------------------------- |
-| `village/VillageLevel.java`                 | Hand-built outdoor level (`extends Level`)                        |
-| `village/HouseLevel.java`                   | Hand-built house interior (`extends Level`)                       |
-| `village/VillageScene.java`                 | `GameScene`-like scene that hosts a village level                 |
-| `village/VillageSession.java`               | Load/save of village state + the town avatar, mode-independent    |
-| `village/DungeonGateway.java`               | The Solo/Ranked prompt and hand-off into a run                    |
-| `village/npcs/*.java`                       | Village NPCs (see below)                                          |
-| `windows/WndDungeonMode.java`               | `WndOptions` subclass: Solo / Ranked / Cancel                     |
+| File                                              | Role                                                       |
+| ------------------------------------------------- | ---------------------------------------------------------- |
+| `levels/VillageLevel.java`                        | Hand-built outdoor level; owns the mode-prompt interception |
+| `levels/HouseLevel.java`                          | Hand-built house interior, always solo                     |
+| `village/VillageGateway.java`                     | The village↔run seam: slot, namespace, entry, hand-off     |
+| `windows/WndDungeonMode.java`                     | Solo / Ranked / Not yet prompt                             |
+| `actors/mobs/npcs/Villager.java`                  | Conversational villager, three kinds, existing sprites     |
+| `core/src/test/…/village/VillageGroundLevelTest`  | Routing, slot, namespace, prompt mapping                   |
+| `core/src/test/…/village/VillageLevelBuildTest`   | Real map builds, transitions, walkability, peacefulness    |
 
-Existing, touched:
+Changed:
 
-| File                              | Change                                                                        |
-| --------------------------------- | ----------------------------------------------------------------------------- |
-| `scenes/TitleScene.java:146-180`  | "Ranked"/"Solo" buttons → a single **Enter Village** button                   |
-| `scenes/TitleScene.java:533-553`  | `beginEchoRun(mode)` stays, but is called from `DungeonGateway`, not the title |
-| `scenes/HeroSelectScene.java`     | Reached from the village gateway; unchanged otherwise                          |
-| `levels/Level.java`               | Possibly relax `Level` assumptions that presume a run (see Risks)              |
-| `messages/…/village.properties`   | New message bundle                                                             |
-
-Deliberately **not** touched: `Dungeon.init()` (`Dungeon.java:293`) keeps `depth = 1`, and
-`Dungeon.levelClassForDepth` (`Dungeon.java:398`) gains no `case 0`. The village never becomes a
-dungeon depth.
+| File                                    | Change                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------- |
+| `Dungeon.levelClassForDepth`            | Depth 0 → `VillageLevel`, depth 0 / branch 1 → `HouseLevel`, ahead of the debug arena |
+| `Dungeon.init`                          | New `applyVillageStartIfNeeded()` beside the existing debug-start hook               |
+| `actors/buffs/Hunger.act`               | No hunger accrues on the ground level                                               |
+| `scenes/TitleScene`                     | Solo + Ranked buttons replaced by one **Enter the Village** button                   |
+| `scenes/TitleSceneOnlineOnlyTest`       | Re-pinned to the new contract (still online- and auth-gated)                         |
+| `messages/{scenes,levels,windows,actors}` | New strings                                                                       |
 
 #### Layout
 
-Two levels, connected by a door-style transition pair, mirroring how `DeadEndLevel.java:78-88`
-builds a 6-arg `LevelTransition` for a branch.
-
 ```
-VillageLevel  (outdoor, ~40x40)            HouseLevel (interior, ~11x9)
-┌──────────────────────────────┐            ┌───────────────┐
-│  ~ ~ ~ water / shore         │            │  bed  chest   │
-│      ▓ house ▓  ← door ──────┼──────────► │               │
-│      ▓▓▓▓▓▓▓▓▓               │            │   alchemy pot │
-│   shop   smith   well        │            │      ▲ door   │
-│      ░ ░ ░ village green ░   │            └───────┼───────┘
-│         ▼ DUNGEON ENTRANCE   │ ◄──────────────────┘
-└──────────────────────────────┘
+VillageLevel  (33x33, depth 0)                 HouseLevel (13x11, depth 0 / branch 1)
+┌───────────────────────────────┐               ┌─────────────────┐
+│ ~ ~ ~ ~ water ~ ~ ~ ~ ~ ~ ~ ~ │               │ hearth  shelf   │
+│ ▓▓▓▓▓▓▓▓▓  ← house     ▓▓▓▓▓  │               │           pot   │
+│ ▓       ▓        stall ▓   ▓  │               │ chest           │
+│ ▓▓▓█▓▓▓▓▓              ▓▓▓▓▓  │               │        ▲        │
+│    ║ ← front door  ○ well     │               └────────█────────┘
+│    ║        ☼ firepit         │                    door
+│    ║   ░ ░ high grass ░ ░     │
+│  ☗ ║ ☗  ← statues              │
+│    ▼ DUNGEON ENTRANCE          │
+└───────────────────────────────┘
 ```
 
-- `VillageLevel.build()`: `setSize(40, 40)`, `Arrays.fill(map, Terrain.WALL)` then carve with
-  `levels/painters/Painter.fill(...)`, exactly as `levels/DebugArenaLevel.java` does. The outer
-  ring stays `WALL` so the level is closed; visually it is dressed as cliff/treeline.
-- Terrain vocabulary available today (`levels/Terrain.java:29-73`) is enough for a village:
-  `GRASS` / `HIGH_GRASS` / `FURROWED_GRASS` for the green, `WATER` for the shore, `EMPTY_SP` for
-  paved paths, `WALL` + `WALL_DECO` for building shells, `DOOR` / `OPEN_DOOR`, `WELL` and
-  `EMPTY_WELL`, `STATUE` / `STATUE_SP`, `BOOKSHELF`, `ALCHEMY`, `PEDESTAL`, `EMBERS` for a
-  firepit, and `CUSTOM_DECO` / `CUSTOM_DECO_EMPTY` for anything that needs a bespoke visual.
-- **There is no `Terrain.SIGN` and no `Sign.java` in this fork** — signposts must be NPCs or
-  `CustomTilemap` + `desc()` tooltips, not the vanilla sign feature.
-- `HouseLevel` is a single room: walls, one `DOOR` back to the village, `ALCHEMY` pot, a bed
-  rendered as a `CustomTilemap`, and a chest/stash pedestal reserved for later.
+- `VillageLevel.build()` fills the map with `Terrain.WALL`, carves the interior to `GRASS` with
+  `Painter.fill`, then lays the shore, the house shell, the market stall, and a paved
+  (`EMPTY_SP`) path from the front door down to the dungeon mouth. Same shape as
+  `levels/DebugArenaLevel.java`.
+- Terrain is all stock (`levels/Terrain.java`): `GRASS` / `HIGH_GRASS`, `WATER`, `EMPTY_SP`,
+  `WALL` / `WALL_DECO`, `DOOR`, `WELL`, `EMBERS`, `STATUE`, `ENTRANCE`, `EXIT`. This fork has no
+  `Terrain.SIGN` and no `Sign.java`, so flavour text is carried by NPCs and by
+  `tileName`/`tileDesc` overrides.
+- Three transitions on the village: a `REGULAR_ENTRANCE` where the hero arrives (just outside the
+  front door), a `REGULAR_EXIT` at the dungeon mouth pointed at depth 1, and a `BRANCH_ENTRANCE`
+  on the front door pointed at depth 0 / branch 1. The house carries the matching `BRANCH_EXIT`.
+  Same-depth / different-branch transitions are exactly how the mining and vault branches already
+  work, so nothing new was needed in `InterlevelScene`.
 
-#### Assets — reuse only, no new art in task 1
+#### Assets — existing art only
 
-Everything below already ships in `core/src/main/assets/`:
-
-- **Tiles**: `environment/tiles_city.png` is the closest to a built-up settlement and should be
-  the village tileset (`Level.tilesTex()`); `environment/tiles_sewers.png` is the fallback if the
-  city palette reads too grim. `environment/water*.png` for the shore (`Level.waterTex()`),
-  `environment/terrain_features.png` for grass/plants.
-- **Custom tiles**: `environment/custom_tiles/city_quest.png` and `city_boss.png` carry
-  hand-authored city structures — house fronts, arches, paving — to be sampled by
-  `CustomTilemap` overlays for the house exterior, shop awning and the dungeon mouth. Precedent
-  for the technique: `levels/LastLevel.java:262-390` (`CustomFloor`, `CenterPieceVisuals`,
-  `CenterPieceWalls`) and the boss levels.
-- **NPC sprites**: `sprites/shopkeeper.png`, `sprites/blacksmith.png`, `sprites/wandmaker.png`,
-  `sprites/ghost.png`, `sprites/ratking.png`, `sprites/sheep.png` — all existing NPCs with
-  existing sprite classes and dialogue plumbing.
-- **Sky/backdrop**: `interfaces/surface.png` already powers `scenes/SurfaceScene.java`'s sky,
-  clouds and grass patches. `VillageScene` can reuse those visual classes for an outdoor feel
-  above the tilemap. (`SurfaceScene` itself is the vanilla *win screen* — it has no tiles and no
-  hero actor, so it is an art reference, not a base class.)
-- **UI**: `interfaces/chrome.png`, `icons.png` — `WndOptions` picks these up for free.
+- Tiles: `Assets.Environment.TILES_CITY` and `WATER_CITY` for both levels.
+- NPCs: `BlacksmithSprite`, `WandmakerSprite`, `GhostSprite` for the three villager kinds, plus a
+  real `Shopkeeper` at the market stall (its sell/talk/buyback window works unmodified).
+- Music: `Assets.Music.CITY_1` outdoors, `CITY_2` indoors.
+- No new art was added.
 
 #### The Solo / Ranked prompt
 
-Interaction point: the dungeon entrance tile. The idiom already used in this codebase is to
-intercept the transition rather than to hook the tile —
-`levels/SewerLevel.java:148-175` overrides `activateTransition(Hero, LevelTransition)`, shows a
-window, and returns `false` to cancel the move.
+`VillageLevel.activateTransition` intercepts, following `levels/SewerLevel.java:148-175`:
 
-```java
-// VillageLevel
-@Override
-public boolean activateTransition(Hero hero, LevelTransition transition) {
-    if (transition.type != LevelTransition.Type.REGULAR_ENTRANCE) {
-        return super.activateTransition(hero, transition);
-    }
-    Game.runOnRenderThread(() -> GameScene.show(new WndDungeonMode()));
-    return false; // never descend directly; the window drives the hand-off
-}
-```
+- `REGULAR_EXIT` (the dungeon mouth) → show `WndDungeonMode`, return `false` so no descent
+  happens until the prompt is answered.
+- `REGULAR_ENTRANCE` (the arrival tile) → a message: there is nothing above the village.
 
-`WndDungeonMode extends WndOptions` (`windows/WndOptions.java:35`, `onSelect(int)`), offering
-**Solo**, **Ranked** and **Not yet**. Copy can reuse the existing mode blurbs at
-`scenes/HeroSelectScene.java:559-590` / `scenes/StartScene.java:184` rather than inventing new
-strings.
+`WndDungeonMode` offers **Solo**, **Ranked** and **Not yet**. Ranked is disabled, with the reason
+appended to the window body, when `EchoBackendProbe.isOnlineReady()` is false. Selecting a mode
+calls `VillageGateway.beginRun(mode)`, ranked first passing through
+`EchoPlayerAuthGate.ensureReadyThen`.
 
-`onSelect` delegates to `DungeonGateway.beginRun(mode)`, which performs exactly the sequence
-`TitleScene.beginEchoRun(mode)` performs today (`TitleScene.java:533-553`) — and must keep
-performing it in this order, because each step gates the next:
+`beginRun` does what `TitleScene.beginEchoRun` used to, in an order that matters:
 
-1. `EchoBackendProbe.isOnlineReady()` — Ranked requires the backend; if it is down, disable the
-   Ranked option via `WndOptions`' `enabled(int)` hook and say why.
-2. `EchoPlayerAuthGate.ensureReadyThen(...)` — Ranked requires an authenticated player.
-3. `GamesInProgress.selectEchoPlayMode(mode)` (`GamesInProgress.java:57`) — **this is the moment
-   the save namespace is decided**; everything after it reads the `-solo` / `-ranked` folder.
-4. `GamesInProgress.selectedClass = null`, then `HeroSelectScene` (or `StartScene` if saved runs
-   exist for that mode) — hero choice, challenges and seed options follow the mode's own gates
-   (`HeroSelectScene.gameOptionsAllowed(mode)` is SOLO-only, `:592`).
-5. The existing start button then does `Dungeon.echoPlayMode = …`, `Dungeon.initSeed()`,
-   `InterlevelScene.mode = DESCEND` → `Dungeon.init()` → depth 1. Untouched.
+1. **Save the village first**, while the namespace is still solo and the slot is still the
+   village's. Selecting a mode repoints `gameFolder`, so saving afterwards would file the village
+   under `-ranked`.
+2. Clear the town avatar (`Dungeon.hero = null`, `Mob.clearHeldAllies()`) — the run starts fresh.
+3. `GamesInProgress.selectEchoPlayMode(mode)` — the namespace is decided here.
+4. `selectedClass = null`, pick a run slot, then `HeroSelectScene` (nothing saved) or
+   `StartScene` (existing runs in that mode).
 
-Returning from a run (death or victory) drops the player back to `VillageScene`, replacing the
-current `RankingsScene`-then-title flow's terminus.
+Because the run is genuinely fresh, mode-specific gates (`gameOptionsAllowed`, challenges, seed,
+easy mode) all apply normally and nothing has to be migrated.
 
-#### Village state and persistence
+#### Entering and persisting the village
 
-`VillageSession` owns a small `Bundle`, saved to `village/village.dat` via `FileUtils` — outside
-every mode-suffixed folder, because the village belongs to the player, not to a run:
+`VillageGateway.enterVillage()` forces the solo namespace and `VILLAGE_SLOT`, then either
+resumes (`InterlevelScene.Mode.CONTINUE`) if a village save exists, or builds a fresh one
+(`DESCEND` with `startingInVillage` set, which makes `Dungeon.init()` land on depth 0 instead of
+depth 1). The `startingInVillage` flag is transient and never bundled.
 
-- town avatar: hero class skin used for the village sprite, position on the level, facing.
-- flags: whether the house door has been opened, which NPCs have been spoken to, tutorial state.
-- **No inventory, no HP, no hunger, no depth.** The town avatar is a puppet, not a `Hero` with a
-  run behind it. Keeping it dumb is what stops village state from leaking into run balance.
+The town avatar is a normal `Hero` of the last class the player selected, defaulting to Warrior.
+It is deliberately disposable: nothing it carries reaches a run.
 
-Village and house levels are regenerated deterministically from code each time (they are
-hand-authored, not seeded), so only the flags above need storing. If the house later gains a
-stash, that stash is a separate bundle with its own versioning.
+#### Peacefulness
 
-#### Making it peaceful
+Both levels override `createMob()` → `null`, `createMobs()` (village adds only NPCs, house adds
+nothing), and `addRespawner()` → `null`, and mark the map `visited`/`mapped` in `create()`. The
+one change outside the village package is `Hunger.act`, which now returns early on depth 0 — the
+same early-return already used for locked floors and `VaultLevel`.
 
-Both levels override the three spawn hooks to nothing, the way `levels/DeadEndLevel.java:94-103`
-and `levels/LastLevel.java:157-168` do:
+#### Tests
 
-- `createMob()` → `null`
-- `createMobs()` → empty
-- `addRespawner()` → `null`
+`VillageGroundLevelTest` covers the pure decisions: depth-0 routing (including that the debug
+arena never replaces the village), untouched dungeon routing, the ground-level predicates, the
+reserved slot never colliding with a run slot, the solo storage namespace, and the prompt's
+option→mode mapping.
 
-and mark the whole map `visited`/`mapped` in `create()` (as `DebugArenaLevel` does) so there is
-no fog to explore in a hub. NPCs are added explicitly in `createMobs()`, not by the spawner.
+`VillageLevelBuildTest` builds both levels for real and asserts size and revealed state, that all
+three transitions are wired to the right depth/branch and sit on the right terrain, that the
+dungeon mouth is reachable from the front door by flood fill, and that neither level spawns
+anything.
 
-#### NPCs (task 1 set, all reusing existing classes)
+#### Known gaps / follow-ups
 
-| NPC                              | Role in the village                                      |
-| -------------------------------- | -------------------------------------------------------- |
-| `Shopkeeper` (`ShopRoom` stock)  | Sells starting consumables; existing buy/sell `WndOptions` at `Shopkeeper.java:241-290` |
-| `Blacksmith`                     | Flavour now; reforge hook later                          |
-| `Wandmaker`                      | Flavour now                                              |
-| `Sheep`                          | Harmless ambient life on the green                       |
-
-`actors/mobs/npcs/RatKing.java:120-170` is the canonical example of an NPC opening a `WndOptions`
-from `interact(Char)` on the render thread. `levels/LastShopLevel.java` is the best structural
-model overall: a complete hand-built, mob-free floor with a shop on it.
-
-#### Implementation Steps
-
-1. **`VillageLevel` skeleton, no content.** Build a closed 40x40 grass field with one entrance
-   tile and a spawn point. Test: level builds, is fully passable where intended, has exactly one
-   `REGULAR_ENTRANCE` transition, spawns no mobs and no respawner.
-2. **`VillageScene` + `VillageSession`.** Enter it from a temporary debug button; walk the town
-   avatar around; save and reload position. Test: round-trip of the village bundle.
-3. **`HouseLevel` + the door pair.** Village door → house, house door → village, position
-   preserved on both sides. Test: transition targets resolve both ways.
-4. **`WndDungeonMode` + `DungeonGateway`.** Prompt appears on the entrance, `Not yet` cancels the
-   move, Solo/Ranked reach `HeroSelectScene` with `GamesInProgress.selectedEchoPlayMode` set.
-   Test (pure, no UI): `DungeonGateway.resolveMode(...)` and the online/auth gating decide the
-   right target and the right enabled options for backend-up / backend-down / unauthenticated.
-5. **Title screen rewiring.** One **Enter Village** button; the direct Solo/Ranked buttons go
-   away. Keep the debug entry (`btnDebug` / `beginDebugRun`, `TitleScene.java:183-190`) as-is.
-6. **Return path.** Death and victory land back in `VillageScene`.
-7. **Dress the village.** `CustomTilemap` overlays from `city_quest.png` / `city_boss.png`, NPCs,
-   water, the green, and the `surface.png` sky in `VillageScene`.
-8. **Polish.** Message bundle, tile `name()`/`desc()` tooltips for the house and dungeon mouth,
-   music/ambience selection.
-
-Steps 1–4 are the feature; 5–8 make it the front door. Per `AGENTS.md`, each step is TDD —
-AssertJ, `@DisplayName`, tests in `core/src/test/java` — and the pure-helper shape of
-`Dungeon.levelClassForDepth` is the model to copy: put routing and gating decisions in static
-helpers that a test can call without a scene.
-
-#### Risks and open questions
-
-- **`Level` outside a run.** `Level` and `GameScene` reach for `Dungeon.hero`, `Dungeon.depth`
-  and `Statistics` in places. Two options: (a) `VillageScene` sets up a minimal `Dungeon` context
-  (`depth = 0`, a puppet hero) purely as scaffolding without ever calling `Dungeon.init()`, or
-  (b) a slimmer scene that reuses the tilemap/actor rendering but not the run machinery. **(a) is
-  the recommendation** — far less new code, and it keeps NPC interaction, movement and the
-  tilemap working unchanged. The cost is discipline: never save that scaffolding as a run.
-- **Save-slot interaction.** The village is per-player, but runs are per-slot *and* per-mode. If
-  the player has an in-progress Solo run and picks Ranked at the entrance, they must reach the
-  Ranked slot list, not resume the Solo one — `GamesInProgress.selectEchoPlayMode` before
-  `StartScene` already handles this, but it needs an explicit test.
-- **`Statistics.deepestFloor`** is only bumped for `depth > deepestFloor` (`Dungeon.java:373-374`),
-  so a depth-0 concept would be harmless there — but this design avoids depth 0 in runs anyway.
-- **Three-platform safety.** Per `AGENTS.md`, everything must stay inside the RoboVM-safe JDK
-  subset and Android-safe `org.json`; no new dependencies for this task.
-- **Existing saves.** Players mid-run when this ships must still be able to resume. The title
-  screen should keep a "Continue" path straight into the run, bypassing the village, until the
-  run ends.
+- **Returning from a run** still goes wherever it went before (rankings, then title) rather than
+  back to the village. Re-entering is one button, so this is cosmetic, but it is the obvious next
+  polish step.
+- **The house is furnished but inert.** The chest is scenery; there is no stash yet.
+- **No custom art.** The village reads as city tiles, not as a settlement. `CustomTilemap`
+  overlays sampling `custom_tiles/city_quest.png` would do a lot here, following
+  `levels/LastLevel.java:262-390`.
+- **Offline play is still blocked** at the title screen, unchanged from before. Solo could now
+  work offline, since only ranked needs the backend, but that is a product decision and was left
+  alone deliberately.
+- **The village avatar's class is cosmetic-only** and resets to whatever was last picked.
 
 #### Build & verify
-
-Per `AGENTS.md`, and per the `gradle-worktree` rule never run two Gradle builds in one checkout:
 
 ```
 ./gradlew :core:test -q -PerrorProneOff

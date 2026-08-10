@@ -7,11 +7,12 @@ Not implemented, not scheduled — this document exists so task 1's shapes don't
 
 #### What task 1 already gets right for this
 
-- The village is **persistent and mode-independent**, not a depth inside a run. There is a place
-  that exists while nobody is descending — that is the precondition for shared presence.
-- The town avatar in `VillageSession` is a **puppet**: class skin, position, facing, and nothing
-  else. That is almost exactly the payload a presence system needs to broadcast, and it carries
-  no run state that could leak between players.
+- The village is **persistent and outside any run**, in its own save slot under the solo
+  namespace. There is a place that exists while nobody is descending — the precondition for
+  shared presence.
+- The town avatar is **disposable**. It is a real `Hero`, but nothing it carries reaches a run:
+  choosing a mode at the dungeon mouth starts a fresh one. So the presence payload can be just
+  class skin, position and facing, and there is no run state that could leak between players.
 - The village and house levels are **hand-authored and deterministic**, generated from code
   rather than from a seed. Every client renders the identical map with no map synchronisation.
 - **The house is explicitly always solo.** It is the documented private space, so there is
