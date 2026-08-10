@@ -204,7 +204,7 @@ public final class DebugSettings {
 			hero.STR = START_STR;
 		}
 
-		// +100 plate-tier class armor, no armor ability chosen (ranked / solo).
+		// fully-charged class armor, no armor ability chosen (ranked / solo).
 		DebugEchoArsenal.grantHeroClassArmor();
 
 		new Ankh().collect();

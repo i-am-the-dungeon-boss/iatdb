@@ -74,6 +74,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.El
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HallowedGround;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
@@ -608,6 +609,12 @@ public class Hero extends Char {
 			evasion *= 3;
 		}
 
+		// mirrors Mob#defenseSkill: an Illuminated (Guiding Light) target is easier
+		// to hit, as long as the attacker is the Cleric who cast it
+		if (buff(GuidingLight.Illuminated.class) != null && attackerIsCleric(enemy)) {
+			evasion /= 2;
+		}
+
 		if (paralysed > 0) {
 			evasion /= 2;
 		}
@@ -622,6 +629,18 @@ public class Hero extends Char {
 		}
 
 		return Math.max(1, Math.round(evasion));
+	}
+
+	//true if the attacker is the Cleric hero/echo who could have cast Guiding Light
+	private static boolean attackerIsCleric(Char enemy) {
+		if (enemy instanceof Hero) {
+			return ((Hero) enemy).heroClass == HeroClass.CLERIC;
+		}
+		if (enemy instanceof EchoBoss) {
+			Hero echoHero = ((EchoBoss) enemy).getEchoHero();
+			return echoHero != null && echoHero.heroClass == HeroClass.CLERIC;
+		}
+		return false;
 	}
 
 	@Override

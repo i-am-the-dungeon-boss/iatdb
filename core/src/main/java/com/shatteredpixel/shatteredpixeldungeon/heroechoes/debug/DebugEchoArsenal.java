@@ -11,7 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
-import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
@@ -33,7 +33,7 @@ import java.util.List;
  * Lit bombs use {@link #ROLE_BOMB} first (LIGHTTHROW via
  * {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter});
  * other throwables use THROW; potions split drink vs throw.
- * Class armor: {@link #grantArmorAbilityAll()} equips +100 class armor
+ * Class armor: {@link #grantArmorAbilityAll()} equips fully-charged class armor
  * for each kit's hero class with no armor ability chosen.
  */
 public final class DebugEchoArsenal {
@@ -91,8 +91,8 @@ public final class DebugEchoArsenal {
 	}
 
 	/**
-	 * Equips +100 class armor for the kit's hero class with no armor ability
-	 * chosen. Debug builds only via {@link #grantArmorAbilityAll()}.
+	 * Equips fully-charged class armor for the kit's hero class with no armor
+	 * ability chosen. Debug builds only via {@link #grantArmorAbilityAll()}.
 	 *
 	 * @return empty string (no ability assigned)
 	 */
@@ -110,8 +110,8 @@ public final class DebugEchoArsenal {
 	}
 
 	/**
-	 * Arms the living hero and every living echo boss with +100 class armor
-	 * (no ability chosen). Debug builds only.
+	 * Arms the living hero and every living echo boss with fully-charged class
+	 * armor (no ability chosen). Debug builds only.
 	 *
 	 * @return number of echo bosses updated
 	 */
@@ -131,8 +131,8 @@ public final class DebugEchoArsenal {
 	}
 
 	/**
-	 * Equips identified +100 class armor for the living hero's class with no
-	 * armor ability. Debug builds only.
+	 * Equips identified, fully-charged class armor for the living hero's class
+	 * with no armor ability. Debug builds only.
 	 *
 	 * @return true when the hero was armed
 	 */
@@ -145,7 +145,7 @@ public final class DebugEchoArsenal {
 	}
 
 	/**
-	 * Identified +100 charged {@link ClassArmor} for {@code hero}'s class;
+	 * Identified, fully-charged {@link ClassArmor} for {@code hero}'s class;
 	 * clears {@link Hero#armorAbility}.
 	 */
 	static ClassArmor equipClassArmor(Hero hero) {
@@ -155,11 +155,9 @@ public final class DebugEchoArsenal {
 		for (Buff b : hero.buffs(ClassArmor.Charger.class).toArray(new Buff[0])) {
 			b.detach();
 		}
-		Armor base = new PlateArmor();
-		base.level(100);
+		Armor base = new ClothArmor();
 		base.identify();
 		ClassArmor armor = ClassArmor.upgrade(hero, base);
-		armor.level(100);
 		armor.charge = 100f;
 		armor.identify();
 		hero.belongings.armor = armor;

@@ -153,7 +153,7 @@ class DebugSettingsTest {
 
 	@ParameterizedTest(name = "{0} gets {1}")
 	@MethodSource("classArmorByHeroClass")
-	@DisplayName("applyDebugStart equips +100 class armor with no ability for the hero class")
+	@DisplayName("applyDebugStart equips fully-charged class armor with no ability for the hero class")
 	void applyDebugStartEquipsClassArmorForHeroClass(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
 		Hero hero = new Hero();
 		Dungeon.hero = hero;
@@ -165,8 +165,8 @@ class DebugSettingsTest {
 
 		Assertions.assertThat(hero.belongings.armor).isInstanceOf(armorType);
 		ClassArmor armor = (ClassArmor) hero.belongings.armor;
-		Assertions.assertThat(armor.tier).isEqualTo(5);
-		Assertions.assertThat(armor.level()).isEqualTo(100);
+		Assertions.assertThat(armor.tier).isEqualTo(1);
+		Assertions.assertThat(armor.level()).isEqualTo(0);
 		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
 		Assertions.assertThat(hero.armorAbility).isNull();
 	}

@@ -252,8 +252,8 @@ class DebugEchoArsenalTest {
 
 	@ParameterizedTest(name = "{0} echo kit gets {1}")
 	@MethodSource("classArmorByHeroClass")
-	@DisplayName("grantArmorAbility equips latest-tier class armor for the kit hero class")
-	void grantArmorAbilityEquipsLatestTierClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
+	@DisplayName("grantArmorAbility equips fully-charged class armor for the kit hero class")
+	void grantArmorAbilityEquipsFullyChargedClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
 		DebugSettings.setDebugBuildOverride(true);
 		Hero hero = heroOf(heroClass);
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoPolicy.fallback(), 5);
@@ -266,9 +266,9 @@ class DebugEchoArsenalTest {
 		Assertions.assertThat(kit.belongings.armor).isInstanceOf(armorType);
 		ClassArmor armor = (ClassArmor) kit.belongings.armor;
 		Assertions.assertThat(armor.tier)
-				.as("plate-tier class armor")
-				.isEqualTo(5);
-		Assertions.assertThat(armor.level()).isEqualTo(100);
+				.as("cloth-tier base, since equipClassArmor upgrades a fresh ClothArmor")
+				.isEqualTo(1);
+		Assertions.assertThat(armor.level()).isEqualTo(0);
 		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
 		Assertions.assertThat(kit.armorAbility).isNull();
 		Assertions.assertThat(abilityName).isEmpty();
@@ -276,8 +276,8 @@ class DebugEchoArsenalTest {
 
 	@ParameterizedTest(name = "{0} living hero gets {1}")
 	@MethodSource("classArmorByHeroClass")
-	@DisplayName("grantHeroClassArmor equips latest-tier class armor for the living hero class")
-	void grantHeroClassArmorEquipsLatestTierClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
+	@DisplayName("grantHeroClassArmor equips fully-charged class armor for the living hero class")
+	void grantHeroClassArmorEquipsFullyChargedClassArmor(HeroClass heroClass, Class<? extends ClassArmor> armorType) {
 		DebugSettings.setDebugBuildOverride(true);
 		Hero hero = heroOf(heroClass);
 
@@ -285,8 +285,8 @@ class DebugEchoArsenalTest {
 
 		Assertions.assertThat(hero.belongings.armor).isInstanceOf(armorType);
 		ClassArmor armor = (ClassArmor) hero.belongings.armor;
-		Assertions.assertThat(armor.tier).isEqualTo(5);
-		Assertions.assertThat(armor.level()).isEqualTo(100);
+		Assertions.assertThat(armor.tier).isEqualTo(1);
+		Assertions.assertThat(armor.level()).isEqualTo(0);
 		Assertions.assertThat(armor.charge).isGreaterThanOrEqualTo(100f);
 		Assertions.assertThat(hero.armorAbility).isNull();
 	}
@@ -305,8 +305,8 @@ class DebugEchoArsenalTest {
 		Assertions.assertThat(boss.getEchoHero().armorAbility).isNull();
 		Assertions.assertThat(boss.getEchoHero().belongings.armor)
 				.isInstanceOf(WarriorArmor.class);
-		Assertions.assertThat(boss.getEchoHero().belongings.armor.level()).isEqualTo(100);
-		Assertions.assertThat(((ClassArmor) boss.getEchoHero().belongings.armor).tier).isEqualTo(5);
+		Assertions.assertThat(boss.getEchoHero().belongings.armor.level()).isEqualTo(0);
+		Assertions.assertThat(((ClassArmor) boss.getEchoHero().belongings.armor).tier).isEqualTo(1);
 	}
 
 	static Stream<Arguments> classArmorByHeroClass() {
