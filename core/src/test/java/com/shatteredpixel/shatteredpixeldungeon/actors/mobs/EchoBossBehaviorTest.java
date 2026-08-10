@@ -107,12 +107,12 @@ class EchoBossBehaviorTest {
 		Hero hero = EchoTestSupport.warriorHero();
 		hero.armorAbility = new HeroicLeap();
 		EchoPolicy waitPolicy = EchoTestSupport.policyWithCapabilities(new JSONObject()
-				.put("WAIT", EchoTestSupport.capability("*wait")));
-		// Override default_roles to WAIT so policy spends the turn.
+				.put("HOLD", EchoTestSupport.capability("*wait")));
+		// Override default_roles to HOLD so policy spends the turn.
 		JSONObject root = new JSONObject(waitPolicy.root().toString());
 		root.put("selection", new JSONObject()
 				.put("order", new org.json.JSONArray().put("default"))
-				.put("default_roles", new org.json.JSONArray().put("WAIT")));
+				.put("default_roles", new org.json.JSONArray().put("HOLD")));
 		waitPolicy = EchoPolicy.fromJson(root);
 
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, waitPolicy, 5);

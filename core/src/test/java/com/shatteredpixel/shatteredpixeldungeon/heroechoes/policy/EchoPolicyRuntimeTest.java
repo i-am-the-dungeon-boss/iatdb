@@ -49,7 +49,7 @@ class EchoPolicyRuntimeTest {
 				.selfHpRatio(0.1f)
 				.enemyHpRatio(1f)
 				.distance(2)
-				.rolesReady(java.util.Set.of("HEAL", "MELEE", "WAIT"))
+				.rolesReady(java.util.Set.of("HEAL", "MELEE", "HOLD"))
 				.build();
 
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, java.util.Collections.emptyMap());
@@ -94,7 +94,7 @@ class EchoPolicyRuntimeTest {
 						.put("MELEE", new JSONObject()
 								.put("pick", "FIRST_LEGAL")
 								.put("items", new JSONArray().put("*melee")))
-						.put("WAIT", new JSONObject()
+						.put("HOLD", new JSONObject()
 								.put("pick", "FIRST_LEGAL")
 								.put("items", new JSONArray().put("*wait"))))
 				.put("reactions", new JSONArray().put(new JSONObject()
@@ -111,7 +111,7 @@ class EchoPolicyRuntimeTest {
 						.put("order", new JSONArray()
 								.put("reactions").put("recipes").put("positioning")
 								.put("matchups").put("default"))
-						.put("default_roles", new JSONArray().put("MELEE").put("WAIT")))
+						.put("default_roles", new JSONArray().put("MELEE").put("HOLD")))
 				.put("tuning", new JSONObject());
 		return EchoPolicy.fromJson(root);
 	}

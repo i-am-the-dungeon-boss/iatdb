@@ -8,8 +8,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -26,7 +24,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/** Builds per-turn {@link EchoPolicyStatus} from the live fight (canvas §5). */
+/**
+ * Builds per-turn {@link EchoPolicyStatus} from the live fight.
+ * <p>
+ * Design record: {@code hero-echoes/docs/features/echo-policy.md} § "One turn, end to end" →
+ * "Phase 1 — Sense".
+ */
 public final class EchoPolicyStatusBuilder {
 
 	private EchoPolicyStatusBuilder() {
@@ -77,7 +80,6 @@ public final class EchoPolicyStatusBuilder {
 				|| level.distance(boss.pos, enemy.pos) >= 2;
 
 		Set<String> available = EchoInventory.availableIds(echoHero);
-		Set<String> rolesReady = new HashSet<>();
 		Set<String> safe = new HashSet<>();
 		Set<String> unsafe = new HashSet<>();
 		Set<String> selfStatuses = statusNames(boss);
@@ -88,42 +90,46 @@ public final class EchoPolicyStatusBuilder {
 		// Enemy statuses drive hard gates below, so they must be sensed first.
 		Set<String> enemyStatuses = enemy != null ? statusNames(enemy) : new HashSet<String>();
 
-		JSONObject caps = policy.root().optJSONObject("capabilities");
-		if (caps != null) {
-			Iterator<String> keys = caps.keys();
-			while (keys.hasNext()) {
-				String role = keys.next();
-				JSONObject cap = caps.optJSONObject(role);
-				if (cap == null)
-					continue;
-				if (!EchoRoleResolver.roleHasReadyItem(cap, available))
-					continue;
-				if (!virtualRoleFeasible(role, boss, enemy, level))
-					continue;
-				if (!respectsPotionReserve(role, cap, tuning, echoHero))
-					continue;
-				if (!allowedAgainstEnemy(role, cap, available, enemyStatuses))
-					continue;
-				rolesReady.add(role);
-
-				String hazard = cap.optString("hazard", "");
-				if (hazard.isEmpty()) {
-					safe.add(role);
-					continue;
-				}
-				boolean mitigated = clearOfBlast
-						|| (EchoPolicyHazards.FIRE_AOE.equals(hazard) && (onWater || waterNear));
-				if (mitigated) {
-					safe.add(role);
-					safe.add(hazard);
-				} else {
-					unsafe.add(role);
-					unsafe.add(hazard);
-				}
-			}
+		// The echo's own shield drives the SHIELD_SELF anti-stacking gate, so it
+		// must be read from the same helper as the hero's before roles are sensed.
+		int ownShield = EchoUntouchable.temporaryShielding(boss);
+		boss.noteSelfShield(ownShield);
+		if (ownShield > 0) {
+			selfStatuses.add(EchoPolicyHazards.SELF_SHIELDED);
 		}
 
+		// Observe → pre-gate → stance → gate → hazards. The stance needs to know
+		// which roles are ready before it can decide, and the gate then depends on
+		// the stance, so readiness is computed in two passes over one sense.
+		JSONObject caps = policy.root().optJSONObject("capabilities");
+		Set<String> preGateReady = readyRolesBeforeStanceGate(
+				caps, boss, enemy, level, echoHero, tuning, available, enemyStatuses);
+
+		boolean invulnerable = EchoUntouchable.isInvulnerable(enemy, boss.getClass());
+		boolean bigShield = EchoUntouchable.hasBigTemporaryShield(enemy);
+		EchoUntouchable.Stance stance = EchoUntouchable.stanceFor(
+				invulnerable, bigShield, preGateReady,
+				hasStepAwayFrom(boss, enemy, level), boss.disengageTurns(),
+				ownShield > 0, selfHp);
+		if (stance != EchoUntouchable.Stance.NONE) {
+			// Aggregate "attacking this is pointless, but only for now". Derived from
+			// the stance so a playbook can never see it while the echo is fighting on.
+			enemyStatuses.add(EchoPolicyHazards.DAMAGE_IMMUNE);
+		}
+		if (stance == EchoUntouchable.Stance.PREP || stance == EchoUntouchable.Stance.FIGHT) {
+			selfStatuses.add(EchoPolicyHazards.NO_ESCAPE);
+		}
+
+		Set<String> rolesReady = new HashSet<>();
+		for (String role : preGateReady) {
+			if (!EchoUntouchable.gatesRole(stance, role)) {
+				rolesReady.add(role);
+			}
+		}
+		classifyHazards(caps, rolesReady, clearOfBlast, onWater, waterNear, safe, unsafe);
+
 		EchoPolicyStatus.Builder b = new EchoPolicyStatus.Builder()
+				.untouchableStance(stance)
 				.selfHpRatio(selfHp)
 				.enemyHpRatio(enemyHp)
 				.enemyShieldRatio(enemyShield)
@@ -150,6 +156,66 @@ public final class EchoPolicyStatusBuilder {
 		return b.build();
 	}
 
+	/**
+	 * The four capability gates that do not depend on the untouchable stance:
+	 * a ready item, virtual feasibility, the potion reserve, and legality
+	 * against the current hero.
+	 */
+	private static Set<String> readyRolesBeforeStanceGate(
+			JSONObject caps, EchoBoss boss, Hero enemy, Level level, Hero echoHero,
+			JSONObject tuning, Set<String> available, Set<String> enemyStatuses) {
+		Set<String> ready = new HashSet<>();
+		if (caps == null) {
+			return ready;
+		}
+		Iterator<String> keys = caps.keys();
+		while (keys.hasNext()) {
+			String role = keys.next();
+			JSONObject cap = caps.optJSONObject(role);
+			if (cap == null)
+				continue;
+			if (!EchoRoleResolver.roleHasReadyItem(cap, available))
+				continue;
+			if (!virtualRoleFeasible(role, boss, enemy, level))
+				continue;
+			if (!respectsPotionReserve(role, cap, tuning, echoHero))
+				continue;
+			if (!allowedAgainstEnemy(role, cap, available, enemyStatuses))
+				continue;
+			ready.add(role);
+		}
+		return ready;
+	}
+
+	/**
+	 * Splits the <em>final</em> ready roles into safe / unsafe by their declared
+	 * hazard, so a stance-gated role lands in neither.
+	 */
+	private static void classifyHazards(
+			JSONObject caps, Set<String> rolesReady, boolean clearOfBlast,
+			boolean onWater, boolean waterNear, Set<String> safe, Set<String> unsafe) {
+		if (caps == null) {
+			return;
+		}
+		for (String role : rolesReady) {
+			JSONObject cap = caps.optJSONObject(role);
+			String hazard = cap != null ? cap.optString("hazard", "") : "";
+			if (hazard.isEmpty()) {
+				safe.add(role);
+				continue;
+			}
+			boolean mitigated = clearOfBlast
+					|| (EchoPolicyHazards.FIRE_AOE.equals(hazard) && (onWater || waterNear));
+			if (mitigated) {
+				safe.add(role);
+				safe.add(hazard);
+			} else {
+				unsafe.add(role);
+				unsafe.add(hazard);
+			}
+		}
+	}
+
 	private static boolean respectsPotionReserve(
 			String role, JSONObject cap, JSONObject tuning, Hero echoHero) {
 		if (tuning == null)
@@ -167,6 +233,11 @@ public final class EchoPolicyStatusBuilder {
 	 * Fail-closed legality against the current hero, independent of what the
 	 * generated policy asks for. A custom or stale playbook must not be able to
 	 * waste kit on a target that cannot be affected by it.
+	 * <p>
+	 * Note the immunity gate is <em>not</em> here: whether damage roles are
+	 * unready while the hero is untouchable is stance-dependent and lives in
+	 * {@link EchoUntouchable#gatesRole}, because the echo deliberately keeps
+	 * swinging once it has shielded up or run out of disengage budget.
 	 */
 	private static boolean allowedAgainstEnemy(
 			String role, JSONObject cap, Set<String> available, Set<String> enemyStatuses) {
@@ -182,71 +253,35 @@ public final class EchoPolicyStatusBuilder {
 						EchoPolicyHazards.withoutParalyticGas(cap), available)) {
 			return false;
 		}
-		// Ankh glow / decaying Barrier: do not spend damage kit on an immune hero.
-		return !enemyStatuses.contains(EchoPolicyHazards.DAMAGE_IMMUNE)
-				|| !EchoPolicyHazards.isDamageRole(role);
-	}
-
-	/**
-	 * True while attacking the hero is pointless <em>for now</em>: invulnerable,
-	 * or holding a shield that will run out on its own. Shared with
-	 * {@link EchoBoss} so the hunting-melee fallthrough and the role gate above
-	 * can never disagree.
-	 * <p>
-	 * A permanent shield deliberately does not count — see
-	 * {@link #hasTemporaryShield}.
-	 */
-	public static boolean isTemporarilyUndamageable(Char ch, Class<?> src) {
-		if (ch == null || !ch.isAlive()) {
-			return false;
-		}
-		if (ch.isInvulnerable(src) || ch.buff(Invulnerability.class) != null) {
-			return true;
-		}
-		return hasTemporaryShield(ch);
-	}
-
-	/**
-	 * Any active shield that goes away once spent, whether it decays on a timer
-	 * ({@link Barrier}), counts down ({@code Blocking.BlockBuff}) or is tied to
-	 * an ability window.
-	 * <p>
-	 * Shields that recharge instead of detaching — the warrior's Broken Seal —
-	 * are excluded on purpose: there is no window to wait out, so backing off
-	 * would mean backing off forever. Those are fought through as usual.
-	 * <p>
-	 * Note this reads each buff's own {@code shielding()}; {@link Char#shielding()}
-	 * sums every {@code ShieldBuff} and cannot tell the two kinds apart.
-	 */
-	private static boolean hasTemporaryShield(Char ch) {
-		for (Buff buff : ch.buffs()) {
-			if (!(buff instanceof ShieldBuff)) {
-				continue;
-			}
-			ShieldBuff shield = (ShieldBuff) buff;
-			if (shield.shielding() > 0 && shield.detachesAtZero()) {
-				return true;
-			}
-		}
-		return false;
+		return true;
 	}
 
 	private static boolean virtualRoleFeasible(String role, EchoBoss boss, Hero enemy, Level level) {
-		switch (role) {
-			case "MOVE_TO_WATER":
+		EchoRole known = EchoRole.byId(role);
+		if (known == null) {
+			// A role this build does not recognise has no precondition to check.
+			return true;
+		}
+		switch (known) {
+			case SHIELD_SELF:
+				// Anti-stacking: never burn a second shielding item while the one the
+				// echo already spent is still mostly intact. Gated here rather than in
+				// the stance so reactions and recipes obey it too.
+				return !boss.hasMostlyIntactShield();
+			case MOVE_TO_WATER:
 				return level != null
 						&& nearestTerrainCell(level, boss.pos, Terrain.WATER, Integer.MAX_VALUE) != null;
-			case "MOVE_TO_GRASS":
+			case MOVE_TO_GRASS:
 				return level != null
 						&& (nearestTerrainCell(level, boss.pos, Terrain.GRASS, Integer.MAX_VALUE) != null
 								|| nearestTerrainCell(level, boss.pos, Terrain.HIGH_GRASS, Integer.MAX_VALUE) != null);
-			case "LEAVE_AOE":
+			case LEAVE_AOE:
 				return EchoAoeDots.canLeave(boss);
-			case "BLINK":
+			case BLINK:
 				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
-			case "KEEP_DISTANCE":
+			case KEEP_DISTANCE:
 				return hasStepAwayFrom(boss, enemy, level);
-			case "CLEAR_PLANT":
+			case CLEAR_PLANT:
 				return isPlantBlockerAimable(boss);
 			default:
 				return true;
@@ -407,16 +442,12 @@ public final class EchoPolicyStatusBuilder {
 			names.add(EchoPolicyHazards.PURITY);
 		if (ch.buff(Paralysis.Immunity.class) != null)
 			names.add(EchoPolicyHazards.PARALYSIS_IMMUNITY);
-		boolean invulnerable = ch.buff(Invulnerability.class) != null;
-		if (invulnerable)
+		if (ch.buff(Invulnerability.class) != null)
 			names.add(EchoPolicyHazards.INVULNERABLE);
-		boolean tempShield = hasTemporaryShield(ch);
-		if (tempShield)
+		// damage_immune is deliberately not derived here: it is stance-dependent
+		// and added for the enemy only, in build().
+		if (EchoUntouchable.hasTemporaryShield(ch))
 			names.add(EchoPolicyHazards.TEMP_SHIELD);
-		// One status for "attacking this is pointless, but only for now", so the
-		// playbook does not need a new clause every time a source is added.
-		if (invulnerable || tempShield)
-			names.add(EchoPolicyHazards.DAMAGE_IMMUNE);
 		for (Buff buff : ch.buffs()) {
 			names.add(buff.getClass().getSimpleName().toLowerCase(Locale.ROOT));
 		}

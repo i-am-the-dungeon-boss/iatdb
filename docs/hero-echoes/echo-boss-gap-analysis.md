@@ -1,6 +1,6 @@
 > **Related:** [PLAN.md](../../PLAN.md) · [online-integration.md](online-integration.md) · [README](README.md)
 >
-> **Superseded AI notes:** Flat-action stubs (`decideAction`, `wantsToHeal`, `PolicyInterpreter`, armor-ability cooldown) are **removed**. Hunting AI is `EchoPolicyStatusBuilder` → `EchoPolicyMatcher` → `EchoRoleExecutor`. Prefer [online-integration.md](online-integration.md) for the current pipeline; sections below that mention those stubs are historical.
+> **Superseded AI notes:** Flat-action stubs (`decideAction`, `wantsToHeal`, `PolicyInterpreter`, armor-ability cooldown) are **removed**. Hunting AI is `EchoPolicyStatusBuilder` → `EchoPolicyMatcher` → `EchoRoleExecutor`. Prefer [`hero-echoes/docs/features/echo-policy/`](../../../hero-echoes/docs/features/echo-policy/) — the canonical record of echo decision making — for the current pipeline; sections below that mention those stubs are historical.
 
 # Hero vs EchoBoss — Gap Analysis & Implementation Plan
 

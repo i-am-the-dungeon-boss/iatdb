@@ -27,19 +27,38 @@ public final class EchoPolicyHazards {
 	public static final String PLANT_BLOCKED = "plant_blocked";
 	public static final String LOS_BLOCKED = "los_blocked";
 	public static final String PATH_BLOCKED = "path_blocked";
+	/**
+	 * The echo wanted to disengage from an untouchable hero and could not — no
+	 * blink landing and no adjacent cell farther from the hero. JSON-visible
+	 * projection of {@link EchoUntouchable.Stance#PREP} /
+	 * {@link EchoUntouchable.Stance#FIGHT}.
+	 */
+	public static final String NO_ESCAPE = "no_escape";
+	/** The echo is carrying its own temporary shield right now. */
+	public static final String SELF_SHIELDED = "self_shielded";
 
-	// Roles.
-	public static final String PAYOFF_AOE = "PAYOFF_AOE";
-	public static final String SETUP_CC = "SETUP_CC";
-	public static final String MELEE = "MELEE";
-	public static final String RANGED = "RANGED";
-	public static final String FINISHER = "FINISHER";
-	public static final String WEAPON_ABILITY = "WEAPON_ABILITY";
-	public static final String ARMOR_ABILITY = "ARMOR_ABILITY";
-	public static final String CLEAR_LOS = "CLEAR_LOS";
-	public static final String CLEAR_PLANT = "CLEAR_PLANT";
-	public static final String PATH_THROUGH = "PATH_THROUGH";
-	public static final String BLIND = "BLIND";
+	// Role ids, sourced from EchoRole so there is exactly one spelling of each.
+	// Prefer EchoRole directly in new code; these remain for existing call sites.
+	public static final String PAYOFF_AOE = EchoRole.PAYOFF_AOE.id();
+	public static final String SETUP_CC = EchoRole.SETUP_CC.id();
+	public static final String MELEE = EchoRole.MELEE.id();
+	public static final String RANGED = EchoRole.RANGED.id();
+	public static final String FINISHER = EchoRole.FINISHER.id();
+	public static final String WEAPON_ABILITY = EchoRole.WEAPON_ABILITY.id();
+	public static final String ARMOR_ABILITY = EchoRole.ARMOR_ABILITY.id();
+	public static final String CLEAR_LOS = EchoRole.CLEAR_LOS.id();
+	public static final String CLEAR_PLANT = EchoRole.CLEAR_PLANT.id();
+	public static final String PATH_THROUGH = EchoRole.PATH_THROUGH.id();
+	public static final String BLIND = EchoRole.BLIND.id();
+	public static final String CLOSE_IN = EchoRole.CLOSE_IN.id();
+	public static final String KEEP_DISTANCE = EchoRole.KEEP_DISTANCE.id();
+	public static final String BLINK = EchoRole.BLINK.id();
+	/** Strategy-only hold: legal solely via the matcher's {@code if_at_ideal}. */
+	public static final String HOLD = EchoRole.HOLD.id();
+	public static final String KNOCKBACK = EchoRole.KNOCKBACK.id();
+	public static final String FEAR = EchoRole.FEAR.id();
+	/** Barrier-granting kit the echo turns on itself; distinct from ARCANE_ARMOR. */
+	public static final String SHIELD_SELF = EchoRole.SHIELD_SELF.id();
 
 	private static final String PARALYTIC_GAS = "PotionOfParalyticGas";
 
@@ -48,7 +67,7 @@ public final class EchoPolicyHazards {
 
 	/** Roles whose whole point is seeding a blob on the hero. */
 	public static boolean isBlobRole(String role) {
-		return SETUP_CC.equals(role) || PAYOFF_AOE.equals(role);
+		return EchoRole.isBlobRole(role);
 	}
 
 	/**
@@ -58,13 +77,17 @@ public final class EchoPolicyHazards {
 	 * blocker and still hit the hero, so it is an attack, not just a bypass.
 	 */
 	public static boolean isDamageRole(String role) {
-		return MELEE.equals(role)
-				|| RANGED.equals(role)
-				|| FINISHER.equals(role)
-				|| WEAPON_ABILITY.equals(role)
-				|| ARMOR_ABILITY.equals(role)
-				|| PAYOFF_AOE.equals(role)
-				|| PATH_THROUGH.equals(role);
+		return EchoRole.isDamageRole(role);
+	}
+
+	/** Roles whose whole point is putting distance between echo and hero. */
+	public static boolean isDisengageRole(String role) {
+		return EchoRole.isDisengageRole(role);
+	}
+
+	/** Roles the echo can usefully spend a wasted window on — see EchoUntouchable.PREP_ORDER. */
+	public static boolean isPrepRole(String role) {
+		return EchoRole.isPrepRole(role);
 	}
 
 	/**

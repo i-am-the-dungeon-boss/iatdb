@@ -6,7 +6,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** Per-turn sense snapshot for policy matching (canvas §5). */
+/**
+ * Per-turn sense snapshot for policy matching.
+ * <p>
+ * Design record: {@code hero-echoes/docs/features/echo-policy.md} § "One turn, end to end".
+ */
 public final class EchoPolicyStatus {
 
 	public final float selfHpRatio;
@@ -42,6 +46,13 @@ public final class EchoPolicyStatus {
 	 * potions, armor).
 	 */
 	public final boolean selfSpeedGtEnemy;
+	/**
+	 * What the echo is doing about a hero it cannot currently hurt. Its
+	 * JSON-visible projections are {@code damage_immune} on the enemy and
+	 * {@link EchoPolicyHazards#NO_ESCAPE} on self, derived in the same place so
+	 * the three cannot drift.
+	 */
+	public final EchoUntouchable.Stance untouchableStance;
 
 	private EchoPolicyStatus(Builder b) {
 		this.selfHpRatio = b.selfHpRatio;
@@ -62,6 +73,7 @@ public final class EchoPolicyStatus {
 		this.unsafeHazards = Collections.unmodifiableSet(new HashSet<>(b.unsafeHazards));
 		this.terrainNearTiles = b.terrainNearTiles;
 		this.selfSpeedGtEnemy = b.selfSpeedGtEnemy;
+		this.untouchableStance = b.untouchableStance;
 	}
 
 	public boolean isTerrainNear(String type) {
@@ -100,6 +112,7 @@ public final class EchoPolicyStatus {
 		private Set<String> unsafeHazards = new HashSet<>();
 		private int terrainNearTiles = 3;
 		private boolean selfSpeedGtEnemy = false;
+		private EchoUntouchable.Stance untouchableStance = EchoUntouchable.Stance.NONE;
 
 		public Builder selfHpRatio(float v) {
 			selfHpRatio = v;
@@ -188,6 +201,11 @@ public final class EchoPolicyStatus {
 
 		public Builder selfSpeedGtEnemy(boolean v) {
 			selfSpeedGtEnemy = v;
+			return this;
+		}
+
+		public Builder untouchableStance(EchoUntouchable.Stance v) {
+			untouchableStance = v != null ? v : EchoUntouchable.Stance.NONE;
 			return this;
 		}
 

@@ -289,7 +289,7 @@ class EchoLeaveAoeTest {
 				.put("CLOSE_IN", EchoTestSupport.capability("*move_closer"))
 				.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
 				.put("MELEE", EchoTestSupport.capability("*melee"))
-				.put("WAIT", EchoTestSupport.capability("*wait")));
+				.put("HOLD", EchoTestSupport.capability("*wait")));
 	}
 
 	private static void placeOnRow(Hero hero, EchoBoss boss, int heroX, int bossX) {
@@ -309,7 +309,7 @@ class EchoLeaveAoeTest {
 								.put("pick", "MAX_DAMAGE")
 								.put("items", new JSONArray().put("SpiritBow")))
 						.put("MELEE", EchoTestSupport.capability("*melee"))
-						.put("WAIT", EchoTestSupport.capability("*wait")))
+						.put("HOLD", EchoTestSupport.capability("*wait")))
 				.put("reactions", new JSONArray())
 				.put("recipes", new JSONArray())
 				.put("positioning", new JSONObject()
@@ -322,7 +322,7 @@ class EchoLeaveAoeTest {
 						.put("order", new JSONArray()
 								.put("reactions").put("recipes").put("positioning")
 								.put("matchups").put("default"))
-						.put("default_roles", new JSONArray().put("RANGED").put("MELEE").put("WAIT")))
+						.put("default_roles", new JSONArray().put("RANGED").put("MELEE").put("HOLD")))
 				.put("tuning", new JSONObject()));
 	}
 

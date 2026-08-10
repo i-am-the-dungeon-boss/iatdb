@@ -102,7 +102,6 @@ public final class DebugStrategyKit {
 		caps.put("KEEP_DISTANCE", role("FIRST_LEGAL", "*move_further"));
 		caps.put("CLOSE_IN", role("FIRST_LEGAL", "*move_closer"));
 		caps.put("LEAVE_AOE", role("FIRST_LEGAL", "*leave_aoe"));
-		caps.put("WAIT", role("FIRST_LEGAL", "*wait"));
 
 		JSONArray reactions = new JSONArray()
 				.put(reaction("finish_him", 110, "FINISHER", new JSONObject().put("all", new JSONArray()
@@ -186,7 +185,7 @@ public final class DebugStrategyKit {
 				.put("order", new JSONArray()
 						.put("reactions").put("recipes").put("positioning")
 						.put("matchups").put("default"))
-				.put("default_roles", new JSONArray().put("RANGED").put("MELEE").put("WAIT")));
+				.put("default_roles", new JSONArray().put("RANGED").put("MELEE")));
 		root.put("tuning", new JSONObject()
 				.put("aggression", 0.55)
 				.put("finish_hp", 0.15)

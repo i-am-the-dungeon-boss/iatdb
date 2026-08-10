@@ -1,5 +1,11 @@
 ### Task 3: Hero-as-a-Boss AI & Mechanics
 
+> **Superseded for AI behaviour.** The heuristic tuning notes below (HP bands, kite rules, per-class
+> heuristics) were replaced by the policy matcher and `tuning.retreat_hp`. The canonical record of
+> echo decision making is
+> [`hero-echoes/docs/features/echo-policy/`](../../../hero-echoes/docs/features/echo-policy/).
+> This document remains useful for the combat-parity scope list.
+
 **Goal**: Turn a hero echo into a formidable `Mob` (`EchoBoss`) with combat parity and **policy-driven AI** from Hero Echoes.
 
 #### Scope
