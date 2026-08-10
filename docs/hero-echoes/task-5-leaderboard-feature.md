@@ -8,7 +8,7 @@
 - Persist locally; sync to backend when online
 - In-game UI (`WndLeaderboard`); web UI lives in `hero-echoes-backend`
 
-See [online-integration.md](online-integration.md) and backend [leaderboard.md](../../../hero-echoes-backend/docs/features/leaderboard.md).
+See [online-integration.md](online-integration.md) and backend [leaderboard.md](../../../hero-echoes/docs/features/leaderboard.md).
 
 #### Files/Systems to Touch
 

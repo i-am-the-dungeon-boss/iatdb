@@ -39,7 +39,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * Executes a resolved role via SPD item/movement APIs (canvas §9).
+ * Executes a resolved role via SPD item/movement APIs.
+ * <p>
+ * Design record: {@code hero-echoes/docs/features/echo-policy.md} § "Phase 3 — Execute".
  * Inventory from {@code echoHero}; effects/VFX/turn on {@link EchoBoss}
  * via fork-owned adapters ({@link EchoThrowAdapter}, {@link EchoWandAdapter},
  * {@link EchoPotionAdapter}, {@link EchoScrollAdapter}, and related action adapters).
@@ -98,7 +100,7 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 
-		boolean doorBreak = "DOOR_BREAK".equals(choice.useRole)
+		boolean doorBreak = EchoRole.DOOR_BREAK.id().equals(choice.useRole)
 				|| "door_break".equals(choice.layer);
 		int cell;
 		if (doorBreak) {
@@ -170,7 +172,8 @@ public final class EchoRoleExecutor {
 			debugExec("staff zap cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
-		if (item instanceof MeleeWeapon && !(item instanceof MagesStaff)) {
+		// MagesStaff already returned above, so plain MeleeWeapon is unambiguous here.
+		if (item instanceof MeleeWeapon) {
 			Hero kit = boss.getEchoHero();
 			if (kit != null && kit.heroClass == HeroClass.DUELIST) {
 				MeleeWeapon weapon = (MeleeWeapon) item;
@@ -271,21 +274,14 @@ public final class EchoRoleExecutor {
 	 * drinks via role (e.g. Purity, Cleansing, Frost cleanse).
 	 */
 	private static boolean isSelfDrinkRole(String role) {
-		return "HEAL".equals(role)
-				|| "DRINK".equals(role)
-				|| "CLEANSE_BURN".equals(role)
-				|| "CLEANSE".equals(role)
-				|| "PURITY".equals(role)
-				|| "HASTE".equals(role)
-				|| "INVIS".equals(role)
-				|| "LEVITATE".equals(role);
+		EchoRole known = EchoRole.byId(role);
+		return known != null && known.drinksPotion();
 	}
 
 	/** Force shatter / throw regardless of potion default action. */
 	private static boolean isThrowRole(String role) {
-		return "THROW".equals(role)
-				|| "THROW_POTION".equals(role)
-				|| "GAS".equals(role);
+		EchoRole known = EchoRole.byId(role);
+		return known != null && known.throwsPotion();
 	}
 
 	/**

@@ -177,7 +177,7 @@ class EchoPolicyMatcherTest {
 				.enemyInLos(true)
 				.selfClass("MAGE")
 				.selfStatuses(set("stamina"))
-				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "WAIT", "HOLD"))
+				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "HOLD", "HOLD"))
 				.build();
 
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
@@ -199,7 +199,7 @@ class EchoPolicyMatcherTest {
 				.enemyInLos(false)
 				.selfClass("MAGE")
 				.selfStatuses(set("stamina"))
-				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "RANGED", "WAIT", "HOLD"))
+				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "RANGED", "HOLD", "HOLD"))
 				.build();
 
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
@@ -477,20 +477,20 @@ class EchoPolicyMatcherTest {
 				.put("order", new JSONArray().put("reactions").put("default"))
 				.put("default_roles", new JSONArray()));
 		root.put("rules", new JSONArray().put(reaction(
-				"wait_rule", 1, "WAIT",
-				new JSONObject().put("role_ready", "WAIT"))));
+				"hold_rule", 1, "HOLD",
+				new JSONObject().put("role_ready", "HOLD"))));
 		root.put("capabilities", root.getJSONObject("capabilities")
-				.put("WAIT", cap("*wait")));
+				.put("HOLD", cap("*wait")));
 		EchoPolicy policy = EchoPolicy.fromJson(root);
 
 		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
-				.rolesReady(set("WAIT"))
+				.rolesReady(set("HOLD"))
 				.build();
 
 		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
-		Assertions.assertThat(choice.useRole).isEqualTo("WAIT");
+		Assertions.assertThat(choice.useRole).isEqualTo("HOLD");
 		Assertions.assertThat(choice.layer).isEqualTo("rules");
 	}
 
@@ -629,7 +629,7 @@ class EchoPolicyMatcherTest {
 						.put("order", new JSONArray()
 								.put("reactions").put("recipes").put("positioning")
 								.put("matchups").put("default"))
-						.put("default_roles", new JSONArray().put("MELEE").put("WAIT")))
+						.put("default_roles", new JSONArray().put("MELEE").put("HOLD")))
 				.put("tuning", new JSONObject().put("terrain_near_tiles", 3));
 	}
 

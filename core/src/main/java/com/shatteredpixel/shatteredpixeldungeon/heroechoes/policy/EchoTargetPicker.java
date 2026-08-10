@@ -9,7 +9,8 @@ import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.watabou.utils.PathFinder;
 
 /**
- * Picks an aim cell for throws/zaps without UI CellSelector (canvas targeting
+ * Picks an aim cell for throws/zaps without UI CellSelector (see
+ * {@code hero-echoes/docs/features/echo-policy.md} § "Phase 3 — Execute" for the targeting
  * rules).
  */
 public final class EchoTargetPicker {

@@ -21,7 +21,9 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoi
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyMatcher;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatusBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyHazards;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoUntouchable;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossRegionalDeath;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
@@ -46,6 +48,7 @@ import com.watabou.utils.Strings;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class EchoBoss extends Mob {
 
@@ -53,6 +56,8 @@ public class EchoBoss extends Mob {
 
     private static final String ECHO = "echo";
     private static final String ECHO_POLICY = "echo_policy";
+    private static final String DISENGAGE_TURNS = "disengage_turns";
+    private static final String SELF_SHIELD_PEAK = "self_shield_peak";
 
     {
         spriteClass = EchoBossSprite.class;
@@ -108,6 +113,25 @@ public class EchoBoss extends Mob {
     private boolean busy;
     /** When true, policy already deferred turn spend to the VFX callback. */
     private boolean vfxOwnsTurn;
+    /**
+     * Consecutive turns spent running from an untouchable hero. Bundled so a
+     * reload cannot save-scum a fresh
+     * {@link EchoUntouchable#MAX_DISENGAGE_TURNS} window.
+     */
+    private int disengageTurns = 0;
+    /**
+     * Highest temporary shield this echo has carried since its current shield
+     * was last fully spent, for the SHIELD_SELF anti-stacking gate. Bundled
+     * because the fight is on a sealed floor and a reload must not hand the echo
+     * a free second shield.
+     */
+    private int selfShieldPeak = 0;
+    /**
+     * Prep roles already spent in the current untouchable window, so the Java
+     * floor does not re-drink Haste every turn. Not bundled — worst case a
+     * reload grants one extra prep.
+     */
+    private final Set<String> preppedThisWindow = new HashSet<>();
 
     public Echo getEcho() {
         return echo;
@@ -194,6 +218,8 @@ public class EchoBoss extends Mob {
         super.storeInBundle(bundle);
         bundle.put(ECHO, echo.toBundle());
         bundle.put(ECHO_POLICY, echoPolicy.toBundle());
+        bundle.put(DISENGAGE_TURNS, disengageTurns);
+        bundle.put(SELF_SHIELD_PEAK, selfShieldPeak);
     }
 
     @Override
@@ -206,6 +232,9 @@ public class EchoBoss extends Mob {
         Echo stored = Echo.fromBundle(bundle.getBundle(ECHO));
         EchoPolicy policy = EchoPolicy.fromBundle(bundle.getBundle(ECHO_POLICY));
         initFromEcho(stored, Dungeon.depth, policy, false);
+        // getInt gives 0 on saves written before the untouchable ladder existed.
+        disengageTurns = bundle.getInt(DISENGAGE_TURNS);
+        selfShieldPeak = bundle.getInt(SELF_SHIELD_PEAK);
         super.restoreFromBundle(bundle);
         if (state != SLEEPING) {
             BossHealthBar.assignBoss(this);
@@ -287,6 +316,34 @@ public class EchoBoss extends Mob {
             return lastAttackerPos;
         }
         return lastSeenEnemyPos();
+    }
+
+    /** Consecutive turns already spent running from an untouchable hero. */
+    public int disengageTurns() {
+        return disengageTurns;
+    }
+
+    /**
+     * Records this echo's own temporary shield for the SHIELD_SELF anti-stacking
+     * gate. Called once per sense with
+     * {@code EchoUntouchable.temporaryShielding(this)} so the echo's reading and
+     * the hero's can never drift.
+     */
+    public void noteSelfShield(int current) {
+        if (current <= 0) {
+            // Fully spent: the next shield is judged on its own peak.
+            selfShieldPeak = 0;
+        } else if (current > selfShieldPeak) {
+            selfShieldPeak = current;
+        }
+    }
+
+    /**
+     * True while the echo's own shield is still above half of its peak — burning
+     * a second shielding item now would mostly overwrite the first.
+     */
+    public boolean hasMostlyIntactShield() {
+        return EchoUntouchable.temporaryShielding(this) * 2 > selfShieldPeak;
     }
 
     public int plantBlockerCell() {
@@ -405,14 +462,7 @@ public class EchoBoss extends Mob {
 
     /**
      * Policy movement: {@link Mob#getFurther} is protected; updates sprite like
-     * hunting AI.
-     */
-    public boolean policyStepFurther(int cell) {
-        return policyStepFurther(cell, false);
-    }
-
-    /**
-     * As {@link #policyStepFurther(int)}, but while {@code preferPlantCover}
+     * hunting AI. While {@code preferPlantCover}
      * a candidate step that puts a harmful plant on the line back to
      * {@code enemyPos} is favored over one that merely maximizes distance.
      * <p>
@@ -856,35 +906,93 @@ public class EchoBoss extends Mob {
 
         fightRecorder.trackTurn();
 
-        if (tryPolicyAct()) {
+        EchoPolicyStatus status = EchoPolicyStatusBuilder.build(this, echoPolicy);
+        noteStance(status.untouchableStance);
+
+        if (tryPolicyAct(status)) {
             return true;
         }
-        // Do not punch an ankh glow or a shield that is about to expire.
-        if (enemyTemporarilyUndamageable()) {
-            debugAct("policy fallthrough suppressed → WAIT (temporarily undamageable)");
-            spend(TICK);
+        // The hero may be untouchable; the echo still never spends a turn idle.
+        if (forcedUntouchableAct(status)) {
             return true;
         }
-        // Melee / unresolved roles fall through to standard mob hunting AI.
+        // Melee / unresolved roles fall through to standard mob hunting AI. Ranged
+        // has already been tried above, so this is the melee half of "ranged for a
+        // ranged echo, melee for a melee echo".
         debugAct("policy did not spend turn → fall through to mob hunting AI");
         return super.act();
     }
 
-    private boolean enemyTemporarilyUndamageable() {
-        Hero hero = Dungeon.hero;
-        if (hero == null || !hero.isAlive()) {
-            return false;
+    /** Per-turn bookkeeping for the untouchable ladder. */
+    private void noteStance(EchoUntouchable.Stance stance) {
+        if (stance == EchoUntouchable.Stance.RUN) {
+            disengageTurns++;
+        } else {
+            disengageTurns = 0;
         }
-        return EchoPolicyStatusBuilder.isTemporarilyUndamageable(hero, getClass());
+        if (stance == EchoUntouchable.Stance.NONE) {
+            preppedThisWindow.clear();
+        }
     }
 
     /**
-     * Sense → match → resolve → execute (canvas §9).
+     * The Java floor: with the hero untouchable and the playbook out of answers,
+     * shield up, run, prep, or take a last ranged shot — in that order. Returns
+     * false so everything else drops to {@code super.act()} and melees.
+     * <p>
+     * There is deliberately no branch that spends a turn doing nothing.
+     * <p>
+     * {@code Mob.FLEEING} is not used: {@link #act()} short-circuits the whole
+     * policy engine when {@code state != HUNTING}, and {@code Mob.Fleeing.act}
+     * uses bare {@code getFurther}, bypassing the hazard- and cover-aware
+     * retreat scoring in {@link #bestRetreatCell}. State stays HUNTING and
+     * fleeing is a per-turn step. See also {@code Mob.nowhereToRun()}.
+     */
+    private boolean forcedUntouchableAct(EchoPolicyStatus status) {
+        Hero hero = Dungeon.hero;
+        switch (status.untouchableStance) {
+            case SHIELD_UP:
+                if (status.isRoleReady(EchoPolicyHazards.SHIELD_SELF)) {
+                    debugAct("forced → SHIELD_SELF");
+                    return runChoice(status, new EchoPolicyChoice(
+                            EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+                }
+                break;
+            case RUN:
+                if (hero != null && policyStepFurther(hero.pos, true)) {
+                    debugAct("forced → step away (disengageTurns=" + disengageTurns + ")");
+                    spend(1f / speed());
+                    return true;
+                }
+                break;
+            case PREP:
+                EchoPolicyChoice prep = EchoUntouchable.firstReadyPrep(status, preppedThisWindow);
+                if (prep != null) {
+                    debugAct("forced → prep " + prep.useRole);
+                    preppedThisWindow.add(prep.useRole);
+                    return runChoice(status, prep);
+                }
+                break;
+            default:
+                break;
+        }
+        // Policies with no default_roles at all still get a shot off rather than
+        // walking into melee range of a ranged kit.
+        if (status.isRoleReady(EchoPolicyHazards.RANGED) && status.enemyInLos) {
+            debugAct("forced → last-resort RANGED");
+            return runChoice(status, new EchoPolicyChoice(
+                    EchoPolicyHazards.RANGED, "java_untouchable", null));
+        }
+        return false;
+    }
+
+    /**
+     * Sense → match → resolve → execute. Design record:
+     * {@code hero-echoes/docs/features/echo-policy.md} § "One turn, end to end".
      *
      * @return true if the turn was fully spent by policy
      */
-    private boolean tryPolicyAct() {
-        EchoPolicyStatus status = EchoPolicyStatusBuilder.build(this, echoPolicy);
+    private boolean tryPolicyAct(EchoPolicyStatus status) {
         debugAct("sense hpSelf=" + fmt(status.selfHpRatio)
                 + " hpEnemy=" + fmt(status.enemyHpRatio)
                 + " dist=" + status.distance
@@ -893,6 +1001,7 @@ public class EchoBoss extends Mob {
                 + " self=[" + Strings.join(",", status.selfStatuses) + "]"
                 + " enemy=[" + Strings.join(",", status.enemyStatuses) + "]"
                 + " ready=" + status.rolesReady
+                + " stance=" + status.untouchableStance
                 + " recipes=" + recipeSteps);
 
         // Door-break / blind-defense are policy reactions (door_break,
@@ -906,6 +1015,18 @@ public class EchoBoss extends Mob {
                 + " role=" + choice.useRole
                 + (choice.recipeId != null ? " recipe=" + choice.recipeId : ""));
 
+        return runChoice(status, choice);
+    }
+
+    /**
+     * Execute one resolved choice and account for the turn: recipe step advance,
+     * the VFX handshake, and movement-vs-tick spend. Shared by the policy path
+     * and the Java untouchable floor so a forced prep cannot double-spend the
+     * turn a potion already paid for.
+     *
+     * @return true if the turn was fully spent
+     */
+    private boolean runChoice(EchoPolicyStatus status, EchoPolicyChoice choice) {
         int posBefore = pos;
         vfxOwnsTurn = false;
         boolean spent = EchoRoleExecutor.execute(this, echoPolicy, status, choice);

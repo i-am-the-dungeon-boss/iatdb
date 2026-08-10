@@ -91,7 +91,7 @@ Existing classes extended, not replaced:
 
 ## Wire format: echo upload
 
-Maps to `Echo` + backend [echo-pool spec](../../../hero-echoes-backend/docs/features/echo-pool.md):
+Maps to `Echo` + backend [echo-pool spec](../../../hero-echoes/docs/features/echo-pool.md):
 
 ```json
 {
@@ -129,57 +129,36 @@ Same echo fields plus **`echo_policy`** (required for online echo fights):
   "hero_class": "MAGE",
   "echo_data_base64": "...",
   "echo_policy": {
-    "policy_schema_version": 1,
-    "rules": [ ... ],
+    "policy_schema_version": "0.0.1",
+    "capabilities": { "...": "..." },
+    "reactions": [ "..." ],
     "tuning": { "aggression": 0.7 }
   }
 }
 ```
 
-Policy schema: [boss-policy.md](../../../hero-echoes-backend/docs/features/boss-policy.md) in backend repo.
+Policy schema and decision logic: [`hero-echoes/docs/features/echo-policy/`](../../../hero-echoes/docs/features/echo-policy/) — the single doc set covering both sides.
 
 ---
 
 ## Echo policy (client)
 
-The client stores the **merged** role-based `echo_policy` blob from the server (capabilities, reactions, recipes, positioning, matchups, selection, tuning). It does not merge base + delta.
-
-Each hunting turn in `EchoBoss.act()`:
-
-1. `EchoPolicyStatusBuilder` — sense HP, distance, buffs, terrain, `roles_ready`, safety
-2. `EchoPolicyMatcher` — walk `selection.order` (reactions → recipes → positioning → matchups → default)
-3. `EchoRoleResolver` + `EchoTargetPicker` — pick item / aim cell
-4. `EchoRoleExecutor` — drink / throw / zap / move / wait via SPD APIs
-
-Missing or unsupported policy → NOT_FOUND at prefetch (boss never spawns). Hunting turns always go through match/execute; unresolved roles fall through to standard mob AI. Local solo saves may still store `EchoPolicy.fallback()` as an explicit minimal playbook.
-
-**Server owns:** base policy, per-echo delta, merge on GET/POST.  
-**Client owns:** persistence + match/execute.
+Documented in full — pipeline, obligations, ownership split, error handling and license boundary —
+in the single echo-policy doc set:
+[`hero-echoes/docs/features/echo-policy/client.md`](../../../hero-echoes/docs/features/echo-policy/client.md).
 
 ---
 
-## Error handling
+## Error handling (non-policy)
 
-| Situation                      | Client behavior                 |
-| ------------------------------ | ------------------------------- |
-| Network timeout on fetch       | Local echo → default boss       |
-| 404 no echo                    | Default boss                    |
-| Upload POST fails              | Log; local echo already saved   |
-| Leaderboard POST fails         | Log; local record already saved |
-| Malformed / unsupported policy | NOT_FOUND (no echo boss)        |
+| Situation                | Client behavior                 |
+| ------------------------ | ------------------------------- |
+| Network timeout on fetch | Local echo → default boss       |
+| 404 no echo              | Default boss                    |
+| Upload POST fails        | Log; local echo already saved   |
+| Leaderboard POST fails   | Log; local record already saved |
 
 All online calls **non-blocking** on background thread where possible.
-
----
-
-## License boundary
-
-| Component               | License                     |
-| ----------------------- | --------------------------- |
-| Game client (this repo) | GPL v3 (SPD fork)           |
-| Hero Echoes backend     | Proprietary (separate repo) |
-
-The client must not embed proprietary server logic. Policy **data** for one fight is visible; the **generator** is not shipped.
 
 ---
 
@@ -199,8 +178,8 @@ The client must not embed proprietary server logic. Policy **data** for one figh
 
 ## Testing
 
-- Unit: `EchoPolicyMatcher` / `EchoRoleExecutor` / `EchoInventory` with fixture policies
-- Integration: mock server or testcontainers against Hero Echoes test API
-- Do not require live production server in CI
+- Integration: mock server or testcontainers against the Hero Echoes test API
+- Do not require a live production server in CI
+- Policy-side testing: see [echo-policy/client.md](../../../hero-echoes/docs/features/echo-policy/client.md#testing)
 
-Run game tests: `./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.*"`
+Run game tests: `./gradlew :core:test -q -PerrorProneOff --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.*"`

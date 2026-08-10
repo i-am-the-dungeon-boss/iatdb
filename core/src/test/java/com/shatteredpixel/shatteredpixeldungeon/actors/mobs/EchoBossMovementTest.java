@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -439,7 +440,7 @@ class EchoBossMovementTest {
 	}
 
 	@Test
-	@DisplayName("WAIT does not move and does not update movement sprite place")
+	@DisplayName("HOLD does not move and does not update movement sprite place")
 	void waitDoesNotMoveOrUpdateSpritePlace() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, movePolicy(), 5);
@@ -450,8 +451,8 @@ class EchoBossMovementTest {
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
 				boss.getEchoPolicy(),
-				ready("WAIT"),
-				new EchoPolicyChoice("WAIT", "default", null));
+				ready("HOLD"),
+				new EchoPolicyChoice("HOLD", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.pos).isEqualTo(start);
@@ -488,6 +489,117 @@ class EchoBossMovementTest {
 		Assertions.assertThat(runAnim.delay).isEqualTo(1f / 20f);
 	}
 
+	@Test
+	@DisplayName("an untouchable hero makes the echo step away even with an empty playbook")
+	void untouchableHeroMakesTheEchoStepAwayWithAnEmptyPlaybook() {
+		Hero hero = EchoTestSupport.warriorHero();
+		// Nothing in the JSON asks for a disengage — MELEE is the only capability.
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		fillFov(boss);
+		linkTrackingSprite(boss);
+		boss.aggro(hero);
+		Buff.affect(hero, Invulnerability.class, 3f);
+		int distBefore = Dungeon.level.distance(boss.pos, hero.pos);
+
+		boolean acted = boss.act();
+
+		Assertions.assertThat(acted).isTrue();
+		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isGreaterThan(distBefore);
+		Assertions.assertThat(boss.cooldown()).isEqualTo(1f / boss.speed());
+	}
+
+	@Test
+	@DisplayName("untouchable and cornered: the echo swings rather than spending a turn idle")
+	void untouchableAndCorneredNeverSpendsATurnIdle() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		hero.pos = boss.pos - 1;
+		wallOffEveryFartherSide(hero, boss);
+		fillFov(boss);
+		EchoTestSupport.linkStubSprite(boss);
+		boss.aggro(hero);
+		Buff.affect(hero, Invulnerability.class, 3f);
+		int start = boss.pos;
+
+		boss.act();
+
+		// No branch spends the turn on nothing: the echo swings instead.
+		Assertions.assertThat(boss.pos).isEqualTo(start);
+		Assertions.assertThat(EchoTestSupport.stubSpriteAttackCalls(boss)).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("untouchable and cornered with prep kit: the echo preps before swinging")
+	void untouchableAndCorneredPrepsBeforeSwinging() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("MELEE", EchoTestSupport.capability("*melee"))
+				.put("HEAL", EchoTestSupport.capability("PotionOfHealing")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		hero.pos = boss.pos - 1;
+		wallOffEveryFartherSide(hero, boss);
+		fillFov(boss);
+		linkTrackingSprite(boss);
+		boss.aggro(hero);
+		boss.HP = boss.HT / 2;
+		com.shatteredpixel.shatteredpixeldungeon.items.Item potion =
+				new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing();
+		potion.identify();
+		potion.collect(boss.getEchoHero().belongings.backpack);
+		Buff.affect(hero, Invulnerability.class, 3f);
+
+		boolean acted = boss.act();
+
+		Assertions.assertThat(acted).isTrue();
+		Assertions.assertThat(boss.getEchoHero().belongings.getItem(
+				com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing.class))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("a ranged echo falls back to its bow rather than closing to melee")
+	void rangedEchoFallsBackToRangedNotMelee() {
+		Hero hero = huntressHero();
+		EchoPolicy policy = kitePolicy();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		placeOnRow(hero, boss, 1, 4);
+		fillFov(boss);
+		linkTrackingSprite(boss);
+		boss.aggro(hero);
+		EchoTestSupport.attachInstantProjectileParent(boss);
+		int start = boss.pos;
+
+		boolean acted = boss.act();
+
+		Assertions.assertThat(acted).isTrue();
+		// RANGED comes first in default_roles: it shoots from range instead of
+		// walking into melee.
+		Assertions.assertThat(boss.pos).isEqualTo(start);
+	}
+
+	/** Walls every neighbour of {@code boss} that is not strictly closer to the hero. */
+	private static void wallOffEveryFartherSide(Hero hero, EchoBoss boss) {
+		int current = Dungeon.level.distance(boss.pos, hero.pos);
+		for (int i = 0; i < com.watabou.utils.PathFinder.NEIGHBOURS8.length; i++) {
+			int cell = boss.pos + com.watabou.utils.PathFinder.NEIGHBOURS8[i];
+			if (!Dungeon.level.insideMap(cell)) {
+				continue;
+			}
+			if (Dungeon.level.distance(cell, hero.pos) > current) {
+				Dungeon.level.map[cell] = Terrain.WALL;
+			}
+		}
+		Dungeon.level.buildFlagMaps();
+	}
+
 	private static EchoPolicyStatus ready(String role) {
 		return new EchoPolicyStatus.Builder().rolesReady(Set.of(role)).build();
 	}
@@ -510,7 +622,7 @@ class EchoBossMovementTest {
 				.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
 				.put("MOVE_TO_WATER", EchoTestSupport.capability("*move_to_terrain:water"))
 				.put("MOVE_TO_GRASS", EchoTestSupport.capability("*move_to_terrain:grass"))
-				.put("WAIT", EchoTestSupport.capability("*wait"))
+				.put("HOLD", EchoTestSupport.capability("*wait"))
 				.put("MELEE", EchoTestSupport.capability("*melee")));
 	}
 
@@ -544,7 +656,7 @@ class EchoBossMovementTest {
 								.put("pick", "MAX_DAMAGE")
 								.put("items", new JSONArray().put("SpiritBow")))
 						.put("MELEE", EchoTestSupport.capability("*melee"))
-						.put("WAIT", EchoTestSupport.capability("*wait")))
+						.put("HOLD", EchoTestSupport.capability("*wait")))
 				.put("reactions", new JSONArray())
 				.put("recipes", new JSONArray())
 				.put("positioning", new JSONObject()
@@ -557,7 +669,7 @@ class EchoBossMovementTest {
 						.put("order", new JSONArray()
 								.put("reactions").put("recipes").put("positioning")
 								.put("matchups").put("default"))
-						.put("default_roles", new JSONArray().put("RANGED").put("MELEE").put("WAIT")))
+						.put("default_roles", new JSONArray().put("RANGED").put("MELEE").put("HOLD")))
 				.put("tuning", new JSONObject()));
 	}
 

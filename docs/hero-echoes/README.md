@@ -2,6 +2,13 @@
 
 Design and implementation docs for the **Hero Echoes** feature in *I am the Dungeon Boss* (GPL game client fork).
 
+> **Echo decision making is documented elsewhere.** The canonical record of how an echo decides
+> what to do each turn — sensing, selection layers, roles, predicates, the untouchable ladder, and
+> the client/server ownership line — is
+> [`hero-echoes/docs/features/echo-policy/`](../../../hero-echoes/docs/features/echo-policy/).
+> The AI sections of the documents below predate the policy matcher and are kept for their
+> combat-parity checklists only.
+
 The **Hero Echoes service** (API, echo policy generator, web UI, admin) lives in the separate **`hero-echoes-backend`** repo and is proprietary. This folder documents **game client** responsibilities only.
 
 ---
@@ -65,7 +72,7 @@ Echo fetch returns **`echo_policy`** alongside echo fields — one request per f
 | Local echos & storage        | Done                       |
 | Boss replacement (depth 5)   | Done                       |
 | EchoBoss combat / AI stubs   | Partial — see gap analysis |
-| **EchoClient / online sync** | **Not started**            |
-| **Echo policy interpreter**  | **Not started**            |
+| EchoClient / online sync     | Done                       |
+| Echo policy interpreter      | Done — see the canonical doc linked above |
 | Leaderboard local + UI       | Partial                    |
 | All boss depths / triggers   | Partial                    |

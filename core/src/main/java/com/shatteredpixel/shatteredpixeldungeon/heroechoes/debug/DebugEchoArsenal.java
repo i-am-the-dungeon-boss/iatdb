@@ -268,7 +268,6 @@ public final class DebugEchoArsenal {
 		if (otherIds.length() > 0) {
 			defaults.put(ROLE);
 		}
-		defaults.put("WAIT");
 
 		JSONArray reactions = new JSONArray();
 		// Temporarily disabled — door-break spam while tuning invis / fight flow.

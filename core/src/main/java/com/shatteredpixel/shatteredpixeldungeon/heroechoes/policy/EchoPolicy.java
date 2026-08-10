@@ -55,7 +55,7 @@ public final class EchoPolicy {
 		root.put("matchups", new JSONObject());
 		root.put("selection", new JSONObject()
 				.put("order", new JSONArray().put("reactions").put("default"))
-				.put("default_roles", new JSONArray().put("MELEE").put("WAIT")));
+				.put("default_roles", new JSONArray().put("MELEE")));
 		root.put("tuning", new JSONObject());
 		return new EchoPolicy(root);
 	}

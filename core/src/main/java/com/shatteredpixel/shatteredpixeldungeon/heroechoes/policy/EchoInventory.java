@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -67,6 +68,11 @@ public final class EchoInventory {
 	/**
 	 * Duelist weapon abilities need an equipped weapon with enough Charger.
 	 * Non-duelist kits keep melee ids available (unused by WEAPON_ABILITY).
+	 * <p>
+	 * Read-only on purpose: this runs from the per-turn sense path, so it must
+	 * not attach a {@code Charger} as a side effect —
+	 * {@code EchoBoss.scheduleEchoKitBuffs} is the place that legitimately does.
+	 * A missing charger simply reads as "not ready".
 	 */
 	private static boolean duelistWeaponAbilityReady(Hero echoHero, MeleeWeapon weapon) {
 		if (echoHero.heroClass != HeroClass.DUELIST) {
@@ -78,8 +84,13 @@ public final class EchoInventory {
 		if (weapon.STRReq() > echoHero.STR()) {
 			return false;
 		}
-		MeleeWeapon.Charger charger = Buff.affect(echoHero, MeleeWeapon.Charger.class);
-		return (charger.charges + charger.partialCharge) >= weapon.abilityChargeUse(echoHero, null);
+		MeleeWeapon.Charger charger = echoHero.buff(MeleeWeapon.Charger.class);
+		if (charger == null) {
+			return false;
+		}
+		// Abilities whose cost depends on the target mis-report against null.
+		Char target = Dungeon.hero != null && Dungeon.hero.isAlive() ? Dungeon.hero : null;
+		return (charger.charges + charger.partialCharge) >= weapon.abilityChargeUse(echoHero, target);
 	}
 
 	/** Total quantity of items whose class simple name equals {@code itemId}. */

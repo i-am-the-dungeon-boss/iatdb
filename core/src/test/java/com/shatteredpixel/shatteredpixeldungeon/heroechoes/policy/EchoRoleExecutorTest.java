@@ -60,7 +60,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class EchoRoleExecutorTest {
 
 	@Test
-	@DisplayName("WAIT virtual tag spends the turn without attacking")
+	@DisplayName("HOLD virtual tag spends the turn without attacking")
 	void waitVirtualSpendsTurn() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, movePolicy(), 5);
@@ -69,8 +69,8 @@ class EchoRoleExecutorTest {
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
 				boss.getEchoPolicy(),
-				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("WAIT")).build(),
-				new EchoPolicyChoice("WAIT", "default", null));
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HOLD")).build(),
+				new EchoPolicyChoice("HOLD", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 	}
@@ -1099,7 +1099,7 @@ class EchoRoleExecutorTest {
 		return EchoTestSupport.policyWithCapabilities(new JSONObject()
 				.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
 				.put("MELEE", EchoTestSupport.capability("*melee"))
-				.put("WAIT", EchoTestSupport.capability("*wait")));
+				.put("HOLD", EchoTestSupport.capability("*wait")));
 	}
 
 	/** Captures MissileSprites added/recycled onto the boss stage. */
