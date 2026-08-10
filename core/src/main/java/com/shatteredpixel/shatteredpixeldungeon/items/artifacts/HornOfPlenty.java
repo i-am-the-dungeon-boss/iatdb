@@ -37,7 +37,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Blandfruit;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
@@ -122,7 +121,7 @@ public class HornOfPlenty extends Artifact {
 					chargesToUse = 1;
 				}
 
-				useAs(UseContext.hero(hero), chargesToUse);
+				doEatEffect(hero, chargesToUse);
 			}
 
 		} else if (action.equals(AC_STORE)) {
@@ -132,68 +131,39 @@ public class HornOfPlenty extends Artifact {
 		}
 	}
 
-	/**
-	 * Shared snack/eat. Default snack (1 charge). Hunger on {@code ctx.body};
-	 * equip/charge on {@code ctx.kit}.
-	 */
-	public boolean useAs(UseContext ctx) {
-		return useAs(ctx, 1);
-	}
-
-	public boolean useAs(UseContext ctx, int chargesToUse) {
-		if (ctx == null || ctx.body == null || ctx.kit == null) {
-			return false;
-		}
-		if (ctx.body.buff(MagicImmune.class) != null) {
-			return false;
-		}
-		if (!isEquipped(ctx.kit)) {
-			if (ctx.heroFX) {
-				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
-			}
-			return false;
-		}
-		if (charge <= 0 || chargesToUse <= 0) {
-			if (ctx.heroFX) {
-				GLog.i(Messages.get(this, "no_food"));
-			}
-			return false;
-		}
-		if (chargesToUse > charge) {
-			chargesToUse = charge;
-		}
-
+	public void doEatEffect(Hero hero, int chargesToUse) {
 		int satietyPerCharge = (int) (Hunger.STARVING / 5f);
 		if (Dungeon.isChallenged(Challenges.NO_FOOD)) {
 			satietyPerCharge /= 3;
 		}
 
-		Buff.affect(ctx.body, Hunger.class).satisfy(satietyPerCharge * chargesToUse);
-		Statistics.foodEaten++;
-		charge -= chargesToUse;
+		Buff.affect(hero, Hunger.class).satisfy(satietyPerCharge * chargesToUse);
 
-		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.operate(ctx.body.pos);
-			SpellSprite.show(ctx.body, SpellSprite.FOOD);
-			Sample.INSTANCE.play(Assets.Sounds.EAT);
+		Statistics.foodEaten++;
+
+		charge -= chargesToUse;
+		Talent.onArtifactUsed(hero);
+
+		hero.sprite.operate(hero.pos);
+		hero.busy();
+		SpellSprite.show(hero, SpellSprite.FOOD);
+		Sample.INSTANCE.play(Assets.Sounds.EAT);
+		GLog.i(Messages.get(this, "eat"));
+
+		if (Dungeon.hero.hasTalent(Talent.IRON_STOMACH)
+				|| Dungeon.hero.hasTalent(Talent.ENERGIZING_MEAL)
+				|| Dungeon.hero.hasTalent(Talent.MYSTICAL_MEAL)
+				|| Dungeon.hero.hasTalent(Talent.INVIGORATING_MEAL)
+				|| Dungeon.hero.hasTalent(Talent.FOCUSED_MEAL)
+				|| Dungeon.hero.hasTalent(Talent.ENLIGHTENING_MEAL)) {
+			hero.spend(Food.TIME_TO_EAT - 2);
+		} else {
+			hero.spend(Food.TIME_TO_EAT);
 		}
-		if (ctx.heroFX) {
-			Talent.onArtifactUsed(ctx.kit);
-			ctx.turns.busy();
-			GLog.i(Messages.get(this, "eat"));
-			if (ctx.kit.hasTalent(Talent.IRON_STOMACH)
-					|| ctx.kit.hasTalent(Talent.ENERGIZING_MEAL)
-					|| ctx.kit.hasTalent(Talent.MYSTICAL_MEAL)
-					|| ctx.kit.hasTalent(Talent.INVIGORATING_MEAL)
-					|| ctx.kit.hasTalent(Talent.FOCUSED_MEAL)
-					|| ctx.kit.hasTalent(Talent.ENLIGHTENING_MEAL)) {
-				ctx.kit.spend(Food.TIME_TO_EAT - 2);
-			} else {
-				ctx.kit.spend(Food.TIME_TO_EAT);
-			}
-			Talent.onFoodEaten(ctx.kit, satietyPerCharge * chargesToUse, this);
-			Badges.validateFoodEaten();
-		}
+
+		Talent.onFoodEaten(hero, satietyPerCharge * chargesToUse, this);
+
+		Badges.validateFoodEaten();
 
 		if (charge >= 8)
 			image = ItemSpriteSheet.ARTIFACT_HORN4;
@@ -205,12 +175,6 @@ public class HornOfPlenty extends Artifact {
 			image = ItemSpriteSheet.ARTIFACT_HORN1;
 
 		updateQuickslot();
-		return true;
-	}
-
-	/** @deprecated use {@link #useAs(UseContext, int)} */
-	public void doEatEffect(Hero hero, int chargesToUse) {
-		useAs(UseContext.hero(hero), chargesToUse);
 	}
 
 	@Override

@@ -27,7 +27,6 @@ package com.shatteredpixel.shatteredpixeldungeon.items.stones;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment;
@@ -55,56 +54,33 @@ public class StoneOfAugmentation extends InventoryStone {
 	}
 
 	@Override
-	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
-		// Echo: no WndAugment — default SPEED / EVASION
-		if (item instanceof Weapon) {
-			applyAs(ctx, (Weapon) item, Weapon.Augment.SPEED);
-		} else if (item instanceof Armor) {
-			applyAs(ctx, (Armor) item, Armor.Augment.EVASION);
-		} else {
-			return false;
-		}
-		return true;
-	}
-
-	@Override
 	protected void onItemSelected(Item item) {
+
 		GameScene.show(new WndAugment(item));
+
 	}
 
 	public void apply(Weapon weapon, Weapon.Augment augment) {
-		applyAs(UseContext.hero(curUser), weapon, augment);
+
+		weapon.augment = augment;
+		useAnimation();
+		ScrollOfUpgrade.upgrade(curUser);
+		if (!anonymous) {
+			curItem.detach(curUser.belongings.backpack);
+			Catalog.countUse(getClass());
+			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
+		}
 	}
 
 	public void apply(Armor armor, Armor.Augment augment) {
-		applyAs(UseContext.hero(curUser), armor, augment);
-	}
 
-	private void applyAs(UseContext ctx, Weapon weapon, Weapon.Augment augment) {
-		weapon.augment = augment;
-		if (ctx.heroFX) {
-			curUser = ctx.kit;
-			useAnimation();
-			ScrollOfUpgrade.upgrade(ctx.kit);
-		}
-		if (!anonymous) {
-			detach(ctx.kit.belongings.backpack);
-			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
-		}
-	}
-
-	private void applyAs(UseContext ctx, Armor armor, Armor.Augment augment) {
 		armor.augment = augment;
-		if (ctx.heroFX) {
-			curUser = ctx.kit;
-			useAnimation();
-			ScrollOfUpgrade.upgrade(ctx.kit);
-		}
+		useAnimation();
+		ScrollOfUpgrade.upgrade(curUser);
 		if (!anonymous) {
-			detach(ctx.kit.belongings.backpack);
+			curItem.detach(curUser.belongings.backpack);
 			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
+			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
 		}
 	}
 

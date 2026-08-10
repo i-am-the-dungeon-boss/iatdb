@@ -12,11 +12,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
@@ -188,7 +188,7 @@ class EchoBossMovementTest {
 		Assertions.assertThat(potion).isNotNull();
 		Assertions.assertThat(boss.speed()).isEqualTo(1f);
 
-		potion.drinkAs(UseContext.echo(boss));
+		EchoPotionAdapter.drink(boss, potion);
 
 		Assertions.assertThat(boss.buff(Haste.class))
 				.as("drinkAs applies self-buffs to the boss body")

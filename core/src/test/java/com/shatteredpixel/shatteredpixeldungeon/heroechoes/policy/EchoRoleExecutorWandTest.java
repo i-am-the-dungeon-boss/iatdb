@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandBridge;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,7 @@ class EchoRoleExecutorWandTest {
 		wand.curCharges = 3;
 		wand.maxCharges = 3;
 
-		wand.spendChargesForAi();
+		WandBridge.spendCharges(wand);
 
 		Assertions.assertThat(wand.curCharges).isEqualTo(2);
 	}

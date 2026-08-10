@@ -7,8 +7,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.Smok
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link SmokeBomb} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilitySmokeBombTest {
@@ -61,9 +61,6 @@ class EchoArmorAbilitySmokeBombTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
@@ -78,19 +75,19 @@ class EchoArmorAbilitySmokeBombTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new SmokeBomb().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SmokeBomb(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.pos).isEqualTo(dest);
 		Assertions.assertThat(f.boss.pos).isNotEqualTo(start);
 		Assertions.assertThat(f.boss.getEchoHero().pos).isEqualTo(kitPosBefore);
 		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(f.boss)).isEqualTo(dest);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SmokeBomb activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo SmokeBomb adapter activate spends ClassArmor charge from the kit")
 	void smokeBombSpendsCharge() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -102,17 +99,17 @@ class EchoArmorAbilitySmokeBombTest {
 		SmokeBomb ability = new SmokeBomb();
 		float expectedUse = ability.chargeUse(f.boss.getEchoHero());
 
-		boolean ok = ability.activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, ability, dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - expectedUse);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SmokeBomb activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo SmokeBomb adapter activate clears busy so the boss turn can resume")
 	void smokeBombClearsBusy() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -121,7 +118,7 @@ class EchoArmorAbilitySmokeBombTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new SmokeBomb().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SmokeBomb(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -141,7 +138,7 @@ class EchoArmorAbilitySmokeBombTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new SmokeBomb().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SmokeBomb(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.pos).isEqualTo(dest);
@@ -164,17 +161,17 @@ class EchoArmorAbilitySmokeBombTest {
 		SmokeBomb ability = new SmokeBomb();
 		float expectedUse = ability.chargeUse(kit);
 
-		boolean ok = ability.activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, ability, dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(expectedUse).isLessThan(35f);
 		Assertions.assertThat(armor.charge).isEqualTo(100f - expectedUse);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo SmokeBomb activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo SmokeBomb adapter activate refuses when ClassArmor charge is too low")
 	void smokeBombRefusesLowCharge() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -184,7 +181,7 @@ class EchoArmorAbilitySmokeBombTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 0;
 
-		boolean ok = new SmokeBomb().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SmokeBomb(), dest);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(f.boss.pos).isEqualTo(start);

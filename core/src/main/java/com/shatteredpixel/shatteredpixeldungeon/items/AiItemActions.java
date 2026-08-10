@@ -24,10 +24,6 @@ public final class AiItemActions {
 		}
 	}
 
-	public static void withUser(Hero user, Runnable action) {
-		withUser(user, Item.curItem, action);
-	}
-
 	/** Package bridge for AI throws after inventory detach (same as player {@code onThrow}). */
 	public static void onThrow(Item item, int cell) {
 		item.onThrow(cell);

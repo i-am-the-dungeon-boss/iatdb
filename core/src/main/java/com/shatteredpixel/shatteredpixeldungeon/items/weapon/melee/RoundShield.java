@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -30,7 +27,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -66,7 +62,7 @@ public class RoundShield extends MeleeWeapon {
 	public int DRMax(int lvl){
 		return 4 + lvl;
 	}
-	
+
 	public String statsInfo(){
 		if (isIdentified()){
 			return Messages.get(this, "stats_desc", 4+buffedLvl());
@@ -76,13 +72,8 @@ public class RoundShield extends MeleeWeapon {
 	}
 
 	@Override
-	protected boolean duelistAbility(UseContext ctx, Integer target) {
-		return RoundShield.guardAbility(ctx, 5 + buffedLvl(), this);
-	}
-
-	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		duelistAbility(UseContext.hero(hero), target);
+		RoundShield.guardAbility(hero, 5+buffedLvl(), this);
 	}
 
 	@Override
@@ -99,23 +90,12 @@ public class RoundShield extends MeleeWeapon {
 		return Integer.toString(5 + level);
 	}
 
-	public static boolean guardAbility(UseContext ctx, int duration, MeleeWeapon wep){
-		wep.beforeAbilityUsed(ctx, null);
-		Buff.prolong(ctx.body, GuardTracker.class, duration).hasBlocked = false;
-		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.operate(ctx.body.pos);
-		}
-		if (ctx.heroFX) {
-			ctx.kit.spendAndNext(Actor.TICK);
-		}
-		wep.afterAbilityUsed(ctx);
-		return true;
-	}
-
-	/** @deprecated use {@link #guardAbility(UseContext, int, MeleeWeapon)} */
-	@Deprecated
 	public static void guardAbility(Hero hero, int duration, MeleeWeapon wep){
-		guardAbility(UseContext.hero(hero), duration, wep);
+		wep.beforeAbilityUsed(hero, null);
+		Buff.prolong(hero, GuardTracker.class, duration).hasBlocked = false;
+		hero.sprite.operate(hero.pos);
+		hero.spendAndNext(Actor.TICK);
+		wep.afterAbilityUsed(hero);
 	}
 
 	public static class GuardTracker extends FlavourBuff {

@@ -31,7 +31,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -45,23 +44,16 @@ public class ScrollOfTerror extends Scroll {
 
 	@Override
 	public void doRead() {
-		doReadAs(UseContext.hero(curUser));
-	}
 
-	@Override
-	protected boolean doReadAs(UseContext ctx) {
-		detach(ctx.kit.belongings.backpack);
-
-		if (UseContext.canWorldFx(ctx.body)) {
-			new Flare( 5, 32 ).color( 0xFF0000, true ).show( ctx.body.sprite, 2f );
-			Sample.INSTANCE.play( Assets.Sounds.READ );
-		}
+		detach(curUser.belongings.backpack);
+		new Flare( 5, 32 ).color( 0xFF0000, true ).show( curUser.sprite, 2f );
+		Sample.INSTANCE.play( Assets.Sounds.READ );
 
 		int count = 0;
 		Mob affected = null;
 		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
-				Buff.affect( mob, Terror.class, Terror.DURATION ).object = ctx.body.id();
+				Buff.affect( mob, Terror.class, Terror.DURATION ).object = curUser.id();
 
 				if (mob.buff(Terror.class) != null){
 					count++;
@@ -70,24 +62,21 @@ public class ScrollOfTerror extends Scroll {
 			}
 		}
 
-		if (ctx.heroFX) {
-			switch (count) {
-			case 0:
-				GLog.i( Messages.get(this, "none") );
-				break;
-			case 1:
-				GLog.i( Messages.get(this, "one", affected.name()) );
-				break;
-			default:
-				GLog.i( Messages.get(this, "many") );
-			}
-			identify();
+		switch (count) {
+		case 0:
+			GLog.i( Messages.get(this, "none") );
+			break;
+		case 1:
+			GLog.i( Messages.get(this, "one", affected.name()) );
+			break;
+		default:
+			GLog.i( Messages.get(this, "many") );
 		}
+		identify();
 
-		readAnimation(ctx);
-		return true;
+		readAnimation();
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

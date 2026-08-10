@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -28,7 +25,6 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -51,23 +47,13 @@ public class Scimitar extends MeleeWeapon {
 	}
 
 	@Override
-	protected boolean duelistAbility(UseContext ctx, Integer target) {
-		beforeAbilityUsed(ctx, null);
-		//1 turn less as using the ability is instant
-		Buff.prolong(ctx.body, SwordDance.class, 3 + buffedLvl());
-		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.operate(ctx.body.pos);
-		}
-		if (ctx.body instanceof Hero) {
-			((Hero) ctx.body).next();
-		}
-		afterAbilityUsed(ctx);
-		return true;
-	}
-
-	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		duelistAbility(UseContext.hero(hero), target);
+		beforeAbilityUsed(hero, null);
+		//1 turn less as using the ability is instant
+		Buff.prolong(hero, SwordDance.class, 3+buffedLvl());
+		hero.sprite.operate(hero.pos);
+		hero.next();
+		afterAbilityUsed(hero);
 	}
 
 	@Override

@@ -38,7 +38,12 @@ spotless {
 // --- Error Prone -------------------------------------------------------------
 // Full SPD sources trip many ERROR-severity checks. Default: warnings only so
 // compile stays green. Fail the build with: ./gradlew … -PerrorProneErrors
+// Day-to-day / agent test runs: ./gradlew … -PerrorProneOff (skips EP entirely).
 tasks.withType(JavaCompile).configureEach { compile ->
+	if (project.hasProperty('errorProneOff')) {
+		options.errorprone.enabled = false
+		return
+	}
 	// Default javac -Xmaxwarns is 100; this codebase exceeds that easily.
 	options.compilerArgs.addAll(['-Xmaxwarns', '5000'])
 	options.errorprone {

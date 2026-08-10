@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.armor;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
@@ -8,9 +10,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WildM
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.MageArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
@@ -24,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link WildMagic} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityWildMagicTest {
@@ -75,13 +77,10 @@ class EchoArmorAbilityWildMagicTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs damages the player from kit wands")
+	@DisplayName("Echo WildMagic adapter activate damages the player from kit wands")
 	void wildMagicDamagesPlayerFromKitWands() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
@@ -89,16 +88,16 @@ class EchoArmorAbilityWildMagicTest {
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo WildMagic adapter activate spends ClassArmor charge from the kit")
 	void wildMagicSpendsCharge() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
@@ -106,24 +105,24 @@ class EchoArmorAbilityWildMagicTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 25f);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo WildMagic adapter activate clears busy so the boss turn can resume")
 	void wildMagicClearsBusy() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -139,14 +138,14 @@ class EchoArmorAbilityWildMagicTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs fires frost wand VFX without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires frost wand VFX without NPE when kit is headless")
 	void wildMagicFrostWandDoesNotNpeWhenKitHeadless() {
 		Hero player = magePlayer();
 		WandOfFrost seed = new WandOfFrost();
@@ -166,7 +165,7 @@ class EchoArmorAbilityWildMagicTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		Assertions.assertThatCode(() -> new WildMagic().activateAs(UseContext.echo(boss), armor, player.pos))
+		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(boss, armor, new WildMagic(), player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
@@ -174,7 +173,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs fires disintegration DeathRay without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires disintegration DeathRay without NPE when kit is headless")
 	void wildMagicDisintegrationDoesNotNpeWhenKitHeadless() {
 		Hero player = magePlayer();
 		WandOfDisintegration seed = new WandOfDisintegration();
@@ -195,7 +194,7 @@ class EchoArmorAbilityWildMagicTest {
 		armor.charge = 100;
 		int hpBefore = player.HP;
 
-		Assertions.assertThatCode(() -> new WildMagic().activateAs(UseContext.echo(boss), armor, player.pos))
+		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(boss, armor, new WildMagic(), player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
@@ -203,7 +202,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs fires MagicMissile VFX when the body sprite has a parent")
+	@DisplayName("Echo WildMagic adapter activate fires MagicMissile VFX when the body sprite has a parent")
 	void wildMagicFiresMagicMissileWhenParentLive() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
@@ -212,25 +211,25 @@ class EchoArmorAbilityWildMagicTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs applies wand damage synchronously without a sprite parent")
+	@DisplayName("Echo WildMagic adapter activate applies wand damage synchronously without a sprite parent")
 	void wildMagicHeadlessStillDamagesPlayer() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
-		Assertions.assertThat(UseContext.canWorldFx(f.boss)).isFalse();
+		Assertions.assertThat(Char.canWorldFx(f.boss)).isFalse();
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
@@ -238,7 +237,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs spends wand charge from the kit")
+	@DisplayName("Echo WildMagic adapter activate spends wand charge from the kit")
 	void wildMagicSpendsWandCharge() {
 		Fight f = fight();
 		WandOfMagicMissile wand = new WandOfMagicMissile();
@@ -247,16 +246,16 @@ class EchoArmorAbilityWildMagicTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(wand.curCharges).isLessThan(chargesBefore);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo WildMagic adapter activate refuses when ClassArmor charge is too low")
 	void wildMagicRefusesLowCharge() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
@@ -264,7 +263,7 @@ class EchoArmorAbilityWildMagicTest {
 		armor.charge = 0;
 		int hpBefore = f.player.HP;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.player.pos);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(f.player.HP).isEqualTo(hpBefore);
@@ -272,7 +271,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs skips effect when aimed at the boss body")
+	@DisplayName("Echo WildMagic adapter activate skips effect when aimed at the boss body")
 	void wildMagicSkipsSelfTarget() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
@@ -280,7 +279,7 @@ class EchoArmorAbilityWildMagicTest {
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
 
-		boolean ok = new WildMagic().activateAs(f.echo(), armor, f.boss.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WildMagic(), f.boss.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(100f);

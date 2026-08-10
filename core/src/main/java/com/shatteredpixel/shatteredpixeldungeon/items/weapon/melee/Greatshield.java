@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,7 +23,6 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -57,7 +53,7 @@ public class Greatshield extends MeleeWeapon {
 	public int DRMax(int lvl){
 		return 6 + 2*lvl;
 	}
-	
+
 	public String statsInfo(){
 		if (isIdentified()){
 			return Messages.get(this, "stats_desc", 6+2*buffedLvl());
@@ -67,13 +63,8 @@ public class Greatshield extends MeleeWeapon {
 	}
 
 	@Override
-	protected boolean duelistAbility(UseContext ctx, Integer target) {
-		return RoundShield.guardAbility(ctx, 3 + buffedLvl(), this);
-	}
-
-	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		duelistAbility(UseContext.hero(hero), target);
+		RoundShield.guardAbility(hero, 3+buffedLvl(), this);
 	}
 
 	@Override

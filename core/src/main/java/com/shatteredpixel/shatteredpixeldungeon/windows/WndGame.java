@@ -194,7 +194,8 @@ public class WndGame extends Window {
 				protected void onClick() {
 					int updated = DebugEchoArsenal.grantArmorAbilityAll();
 					hide();
-					if (updated > 0) {
+					if (updated > 0 || (Dungeon.hero != null && Dungeon.hero.isAlive()
+							&& Dungeon.hero.belongings.armor instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor)) {
 						GLog.p(Messages.get(WndGame.class, "echo_armor_ability_granted", updated));
 					} else {
 						GLog.w(Messages.get(WndGame.class, "echo_armor_ability_none"));

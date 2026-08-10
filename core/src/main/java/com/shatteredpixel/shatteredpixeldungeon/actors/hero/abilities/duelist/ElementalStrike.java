@@ -56,7 +56,6 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
@@ -106,7 +105,7 @@ import java.util.HashMap;
 public class ElementalStrike extends ArmorAbility {
 
 	// TODO a few duplicates here (curse duplicates are fine)
-	private static final HashMap<Class<? extends Weapon.Enchantment>, Integer> effectTypes = new HashMap<>();
+	public static final HashMap<Class<? extends Weapon.Enchantment>, Integer> effectTypes = new HashMap<>();
 	static {
 		effectTypes.put(Blazing.class, MagicMissile.FIRE_CONE);
 		effectTypes.put(Chilling.class, MagicMissile.FROST_CONE);
@@ -149,111 +148,86 @@ public class ElementalStrike extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Hero kit = ctx.kit;
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 		if (target == null) {
 			return;
 		}
 
-		armor.charge -= chargeUse(kit);
-		armor.updateQuickslot();
+		armor.charge -= chargeUse(hero);
+		Item.updateQuickslot();
 
-		int savedPos = kit.pos;
-		com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite savedSprite = kit.sprite;
-		boolean borrow = body != kit;
-		if (borrow) {
-			kit.pos = body.pos;
-			kit.sprite = body.sprite;
+		Ballistica aim = new Ballistica(hero.pos, target, Ballistica.WONT_STOP);
+
+		int maxDist = 4 + hero.pointsInTalent(Talent.ELEMENTAL_REACH);
+		int dist = Math.min(aim.dist, maxDist);
+
+		ConeAOE cone = new ConeAOE(aim,
+				dist,
+				65 + 10 * hero.pointsInTalent(Talent.ELEMENTAL_REACH),
+				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
+
+		KindOfWeapon w = hero.belongings.weapon();
+		Weapon.Enchantment enchantment = null;
+		if (w instanceof MeleeWeapon) {
+			enchantment = ((MeleeWeapon) w).enchantment;
 		}
-		try {
-			Ballistica aim = new Ballistica(body.pos, target, Ballistica.WONT_STOP);
+		Class<? extends Weapon.Enchantment> enchCls = null;
+		if (enchantment != null) {
+			enchCls = enchantment.getClass();
+		}
 
-			int maxDist = 4 + kit.pointsInTalent(Talent.ELEMENTAL_REACH);
-			int dist = Math.min(aim.dist, maxDist);
+		// cast to cells at the tip, rather than all cells, better performance.
+		for (Ballistica ray : cone.outerRays) {
+			((MagicMissile) hero.sprite.parent.recycle(MagicMissile.class)).reset(
+					effectTypes.get(enchCls),
+					hero.sprite,
+					ray.path.get(ray.dist),
+					null);
+		}
 
-			ConeAOE cone = new ConeAOE(aim,
-					dist,
-					65 + 10 * kit.pointsInTalent(Talent.ELEMENTAL_REACH),
-					Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
+		Weapon.Enchantment finalEnchantment = enchantment;
+		hero.sprite.attack(target, new Callback() {
+			@Override
+			public void call() {
 
-			KindOfWeapon w = kit.belongings.weapon();
-			Weapon.Enchantment enchantment = null;
-			if (w instanceof MeleeWeapon) {
-				enchantment = ((MeleeWeapon) w).enchantment;
-			}
-			Class<? extends Weapon.Enchantment> enchCls = null;
-			if (enchantment != null) {
-				enchCls = enchantment.getClass();
-			}
+				Char enemy = Actor.findChar(target);
 
-			Weapon.Enchantment finalEnchantment = enchantment;
-			final int strikeTarget = target;
-			Callback applyStrike = new Callback() {
-				@Override
-				public void call() {
-
-					Char enemy = Actor.findChar(strikeTarget);
-
-					if (enemy != null) {
-						if (kit.isCharmedBy(enemy)) {
-							enemy = null;
-						} else if (enemy.alignment == body.alignment) {
-							enemy = null;
-						} else if (!kit.canAttack(enemy)) {
-							enemy = null;
-						}
+				if (enemy != null) {
+					if (hero.isCharmedBy(enemy)) {
+						enemy = null;
+					} else if (enemy.alignment == hero.alignment) {
+						enemy = null;
+					} else if (!hero.canAttack(enemy)) {
+						enemy = null;
 					}
-
-					preAttackEffect(cone, kit, body, finalEnchantment);
-
-					if (enemy != null) {
-						if (ctx.heroFX) {
-							AttackIndicator.target(enemy);
-						}
-						oldEnemyPos = enemy.pos;
-						if (kit.attack(enemy, 1, 0, Char.INFINITE_ACCURACY)) {
-							if (UseContext.canWorldFx(body)) {
-								Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-							}
-						}
-					}
-
-					perCellEffect(cone, body, finalEnchantment);
-
-					perCharEffect(cone, kit, body, enemy, finalEnchantment);
-
-					Invisibility.dispel(body);
-					ctx.turns.spendAfterThrow(kit.attackDelay());
-				}
-			};
-
-			if (UseContext.canWorldFx(body)) {
-				// cast to cells at the tip, rather than all cells, better performance.
-				for (Ballistica ray : cone.outerRays) {
-					((MagicMissile) body.sprite.parent.recycle(MagicMissile.class)).reset(
-							effectTypes.get(enchCls),
-							body.sprite,
-							ray.path.get(ray.dist),
-							null);
 				}
 
-				body.sprite.attack(strikeTarget, applyStrike);
-				Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-			} else {
-				applyStrike.call();
+				preAttackEffect(cone, hero, hero, finalEnchantment);
+
+				if (enemy != null) {
+					AttackIndicator.target(enemy);
+					oldEnemyPos = enemy.pos;
+					if (hero.attack(enemy, 1, 0, Char.INFINITE_ACCURACY)) {
+						Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+					}
+				}
+
+				perCellEffect(cone, hero, finalEnchantment);
+
+				perCharEffect(cone, hero, hero, enemy, finalEnchantment);
+
+				Invisibility.dispel();
+				hero.spendAndNext(hero.attackDelay());
 			}
-		} finally {
-			if (borrow) {
-				kit.pos = savedPos;
-				kit.sprite = savedSprite;
-			}
-		}
+		});
+
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
+		hero.busy();
 
 	}
 
 	// effects that trigger before the attack
-	private void preAttackEffect(ConeAOE cone, Hero hero, Char body, Weapon.Enchantment ench) {
+	public void preAttackEffect(ConeAOE cone, Hero hero, Char body, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
 		for (Char ch : Actor.chars()) {
@@ -317,7 +291,7 @@ public class ElementalStrike extends ArmorAbility {
 	};
 
 	// effects that affect the cells of the environment themselves
-	private void perCellEffect(ConeAOE cone, Char body, Weapon.Enchantment ench) {
+	public void perCellEffect(ConeAOE cone, Char body, Weapon.Enchantment ench) {
 
 		int targetsHit = 0;
 		for (Char ch : Actor.chars()) {
@@ -385,10 +359,14 @@ public class ElementalStrike extends ArmorAbility {
 		}
 	}
 
-	private int oldEnemyPos;
+	protected int oldEnemyPos;
+
+	public void setOldEnemyPos(int pos) {
+		oldEnemyPos = pos;
+	}
 
 	// effects that affect the characters within the cone AOE
-	private void perCharEffect(ConeAOE cone, Hero hero, Char body, Char primaryTarget, Weapon.Enchantment ench) {
+	public void perCharEffect(ConeAOE cone, Hero hero, Char body, Char primaryTarget, Weapon.Enchantment ench) {
 
 		float powerMulti = 1f + 0.30f * Dungeon.hero.pointsInTalent(Talent.STRIKING_FORCE);
 

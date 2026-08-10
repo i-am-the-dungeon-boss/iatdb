@@ -50,9 +50,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
-import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
@@ -456,154 +454,133 @@ public abstract class Wand extends Item {
 		return 1;
 	}
 
-	/**
-	 * Decrement charges without {@link #wandUsed()} hero turn / talent side effects
-	 * (EchoBoss AI).
-	 */
-	public void spendChargesForAi() {
-		curCharges = Math.max(0, curCharges - (cursed ? 1 : chargesPerCast()));
-	}
 
 	/**
-	 * Shared wand zap for Hero and Echo. Cell already chosen (no CellSelector).
-	 * Always {@link #onZap} then {@link #wandUsed(UseContext)}; projectile VFX
-	 * runs whenever {@code kit.sprite} has a scene parent; heroFX gates QuickSlot /
-	 * talents / turn spend / curse-discover log.
+	 * Hero wand zap — cell already chosen (no CellSelector).
+	 * Echo uses {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter}.
 	 */
-	public boolean zapAs(UseContext ctx, int target) {
-		if (Dungeon.level == null || target < 0) {
+	public boolean zap(Hero user, int target) {
+		if (Dungeon.level == null || user == null || target < 0) {
 			return false;
 		}
 
-		Hero kit = ctx.kit;
-		int savedPos = kit.pos;
-		CharSprite savedSprite = kit.sprite;
-		boolean borrow = ctx.body != kit;
-		if (borrow) {
-			kit.pos = ctx.body.pos;
-			kit.sprite = ctx.body.sprite;
+		setCurrent(user);
+		final Ballistica shot = new Ballistica(user.pos, target, collisionProperties(target));
+		int cell = shot.collisionPos;
+		if (target == user.pos || cell == user.pos) {
+			return false;
 		}
-		// Keep borrowed sprite/pos until deferred onZap finishes (ANDROID-1N /
-		// ANDROID-1K).
-		boolean restoreDeferred = false;
-		try {
-			setCurrent(kit);
-			final Ballistica shot = new Ballistica(ctx.body.pos, target, collisionProperties(target));
-			int cell = shot.collisionPos;
-			if (target == ctx.body.pos || cell == ctx.body.pos) {
-				return false;
-			}
+		if (!tryToZap(user, target)) {
+			return false;
+		}
 
-			if (!tryToZap(kit, target)) {
-				return false;
-			}
+		user.busy();
 
-			ctx.turns.busy();
-
-			if (ctx.heroFX) {
-				// attempts to target the cell aimed at if something is there, otherwise targets
-				// the collision pos.
-				if (Actor.findChar(target) != null) {
-					QuickSlotButton.target(Actor.findChar(target));
-				} else {
-					QuickSlotButton.target(Actor.findChar(cell));
-				}
-				// backup barrier logic — triggers before the wand zap, mostly so the barrier
-				// helps vs skeletons
-				applyBackupBarrier(kit);
-			}
-
-			boolean canFx = UseContext.canWorldFx(kit);
-			Callback afterZap = () -> {
-				try {
-					AiItemActions.withUser(kit, this, () -> {
-						onZap(shot);
-						wandUsed(ctx);
-					});
-				} finally {
-					if (borrow) {
-						kit.sprite = savedSprite;
-						kit.pos = savedPos;
+		//backup barrier logic
+		//This triggers before the wand zap, mostly so the barrier helps vs skeletons
+		// Hero backup-barrier talent riders applied before the zap lands.
+		if (user.hasTalent(Talent.BACKUP_BARRIER)
+				&& curCharges == chargesPerCast()
+				&& charger != null && charger.target == user) {
+			//regular. If hero owns wand but it isn't in belongings it must be in the staff
+			if (user.heroClass == HeroClass.MAGE && !user.belongings.contains(this)) {
+				//grants 3/5 shielding
+				int shieldToGive = 1 + 2 * Dungeon.hero.pointsInTalent(Talent.BACKUP_BARRIER);
+				Buff.affect(Dungeon.hero, Barrier.class).setShield(shieldToGive);
+				Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE,
+						Integer.toString(shieldToGive), FloatingText.SHIELDING);
+			//metamorphed. Triggers if wand is highest level hero has
+			} else if (user.heroClass != HeroClass.MAGE) {
+				boolean highest = true;
+				for (Item i : user.belongings.getAllItems(Wand.class)) {
+					if (i.level() > level()) {
+						highest = false;
 					}
 				}
-			};
-			if (canFx) {
-				restoreDeferred = true;
-				kit.sprite.zap(cell);
-				if (cursed) {
-					if (ctx.heroFX && !cursedKnown) {
-						GLog.n(Messages.get(this, "curse_discover", name()));
-					}
-					CursedWand.cursedZap(this, kit,
-							new Ballistica(kit.pos, target, Ballistica.MAGIC_BOLT),
-							afterZap);
-				} else {
-					fx(shot, () -> {
-						if (ctx.heroFX && Random.Float() < WondrousResin.extraCurseEffectChance()) {
-							onZap(shot);
-							WondrousResin.forcePositive = true;
-							CursedWand.cursedZap(this, kit,
-									new Ballistica(kit.pos, target, Ballistica.MAGIC_BOLT), () -> {
-										WondrousResin.forcePositive = false;
-										wandUsed(ctx);
-									});
-						} else {
-							afterZap.call();
-						}
-					});
+				if (highest) {
+					//grants 3/5 shielding
+					int shieldToGive = 1 + 2 * Dungeon.hero.pointsInTalent(Talent.BACKUP_BARRIER);
+					Buff.affect(Dungeon.hero, Barrier.class).setShield(shieldToGive);
+					Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE,
+							Integer.toString(shieldToGive), FloatingText.SHIELDING);
 				}
-				cursedKnown = true;
-				return true;
 			}
+		}
 
-			// Headless / off-stage: apply immediately (no MagicMissile parent).
-			restoreDeferred = true;
-			afterZap.call();
+		//attempts to target the cell aimed at if something is there, otherwise targets the collision pos.
+		if (Actor.findChar(target) != null) {
+			QuickSlotButton.target(Actor.findChar(target));
+		} else {
+			QuickSlotButton.target(Actor.findChar(cell));
+		}
+
+		Callback afterZap = new Callback() {
+			@Override
+			public void call() {
+				onZap(shot);
+				wandUsed();
+			}
+		};
+
+		// Headless / off-stage: apply immediately (no MagicMissile parent).
+		if (user.sprite == null || user.sprite.parent == null) {
+			if (cursed) {
+				if (!cursedKnown) {
+					GLog.n(Messages.get(Wand.class, "curse_discover", name()));
+				}
+				CursedWand.cursedZap(this, user,
+						new Ballistica(user.pos, target, Ballistica.MAGIC_BOLT),
+						new Callback() {
+							@Override
+							public void call() {
+								wandUsed();
+							}
+						});
+			} else {
+				afterZap.call();
+			}
 			cursedKnown = true;
 			return true;
-		} finally {
-			if (borrow && !restoreDeferred) {
-				kit.sprite = savedSprite;
-				kit.pos = savedPos;
-			}
 		}
-	}
 
-	/** Hero backup-barrier talent riders applied before the zap lands. */
-	private void applyBackupBarrier(Hero user) {
-		if (!user.hasTalent(Talent.BACKUP_BARRIER)
-				|| curCharges != chargesPerCast()
-				|| charger == null
-				|| charger.target != user) {
-			return;
-		}
-		// regular: if hero owns wand, but it isn't in belongings it must be in the staff
-		if (user.heroClass == HeroClass.MAGE && !user.belongings.contains(this)) {
-			// grants 3/5 shielding
-			int shieldToGive = 1 + 2 * user.pointsInTalent(Talent.BACKUP_BARRIER);
-			Buff.affect(user, Barrier.class).setShield(shieldToGive);
-			if (user.sprite != null) {
-				user.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
-						FloatingText.SHIELDING);
+		user.sprite.zap(cell);
+
+		if (cursed) {
+			if (!cursedKnown) {
+				GLog.n(Messages.get(Wand.class, "curse_discover", name()));
 			}
-			// metamorphed: triggers if wand is highest level hero has
-		} else if (user.heroClass != HeroClass.MAGE) {
-			boolean highest = true;
-			for (Item i : user.belongings.getAllItems(Wand.class)) {
-				if (i.level() > level()) {
-					highest = false;
+			CursedWand.cursedZap(this, user,
+					new Ballistica(user.pos, target, Ballistica.MAGIC_BOLT),
+					new Callback() {
+						@Override
+						public void call() {
+							wandUsed();
+						}
+					});
+		} else {
+			fx(shot, new Callback() {
+				@Override
+				public void call() {
+					onZap(shot);
+					if (Random.Float() < WondrousResin.extraCurseEffectChance()) {
+						WondrousResin.forcePositive = true;
+						CursedWand.cursedZap(Wand.this, user,
+								new Ballistica(user.pos, target, Ballistica.MAGIC_BOLT),
+								new Callback() {
+									@Override
+									public void call() {
+										WondrousResin.forcePositive = false;
+										wandUsed();
+									}
+								});
+					} else {
+						wandUsed();
+					}
 				}
-			}
-			if (highest) {
-				// grants 3/5 shielding
-				int shieldToGive = 1 + 2 * user.pointsInTalent(Talent.BACKUP_BARRIER);
-				Buff.affect(user, Barrier.class).setShield(shieldToGive);
-				if (user.sprite != null) {
-					user.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
-							FloatingText.SHIELDING);
-				}
-			}
+			});
 		}
+		cursedKnown = true;
+		return true;
 	}
 
 	public void fx(Ballistica bolt, Callback callback) {
@@ -625,113 +602,99 @@ public abstract class Wand extends Item {
 	}
 
 	/**
-	 * Hero convenience: charge + talent riders + spendAndNext.
-	 * Shared execute uses {@link #wandUsed(UseContext)}.
+	 * Hero post-zap: charge spend, talent riders, and spendAndNext.
+	 * Echo uses {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter}.
 	 */
 	public void wandUsed() {
-		wandUsed(UseContext.hero(curUser));
-	}
-
-	/**
-	 * Shared post-zap: always spends charges; heroFX riders + turn only when
-	 * {@code ctx.heroFX}.
-	 */
-	public void wandUsed(UseContext ctx) {
-		spendChargesForAi();
-
-		if (ctx.heroFX) {
-			if (!isIdentified()) {
-				float uses = Math.min(availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this));
-				availableUsesToID -= uses;
-				usesLeftToID -= uses;
-				if (usesLeftToID <= 0 || Dungeon.hero.pointsInTalent(Talent.SCHOLARS_INTUITION) == 2) {
-					if (ShardOfOblivion.passiveIDDisabled()) {
-						if (usesLeftToID > -1) {
-							GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), name());
-						}
-						setIDReady();
-					} else {
-						identify();
-						GLog.p(Messages.get(Wand.class, "identify"));
-						Badges.validateItemLevelAquired(this);
-					}
-				}
+		if (!isIdentified()) {
+			float uses = Math.min(availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this));
+			availableUsesToID -= uses;
+			usesLeftToID -= uses;
+			if (usesLeftToID <= 0 || Dungeon.hero.pointsInTalent(Talent.SCHOLARS_INTUITION) == 2) {
 				if (ShardOfOblivion.passiveIDDisabled()) {
-					Buff.prolong(curUser, ShardOfOblivion.WandUseTracker.class, 50f);
-				}
-			}
-
-			// inside staff
-			if (charger != null && charger.target == Dungeon.hero && !Dungeon.hero.belongings.contains(this)) {
-				if (Dungeon.hero.hasTalent(Talent.EXCESS_CHARGE) && curCharges >= maxCharges) {
-					int shieldToGive = Math
-							.round(buffedLvl() * 0.67f * Dungeon.hero.pointsInTalent(Talent.EXCESS_CHARGE));
-					Buff.affect(Dungeon.hero, Barrier.class).setShield(shieldToGive);
-					Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
-							FloatingText.SHIELDING);
-				}
-			}
-
-			// remove magic charge at a higher priority, if we are benefiting from it are
-			// and not the
-			// wand that just applied it
-			// remove magic charge at a higher priority, if we are benefiting from it are
-			// and not the
-			// wand that just applied it
-			WandOfMagicMissile.MagicCharge buff = curUser.buff(WandOfMagicMissile.MagicCharge.class);
-			if (buff != null
-					&& buff.wandJustApplied() != this
-					&& buff.level() == buffedLvl()
-					&& buffedLvl() > super.buffedLvl()) {
-				buff.detach();
-			} else {
-				ScrollEmpower empower = curUser.buff(ScrollEmpower.class);
-				if (empower != null) {
-					empower.use();
-				}
-			}
-
-			// If hero owns wand, but it isn't in belongings it must be in the staff
-			if (Dungeon.hero.hasTalent(Talent.EMPOWERED_STRIKE)
-					&& charger != null && charger.target == Dungeon.hero
-					&& !Dungeon.hero.belongings.contains(this)) {
-
-				Buff.prolong(Dungeon.hero, Talent.EmpoweredStrikeTracker.class, 10f);
-			}
-
-			if (Dungeon.hero.hasTalent(Talent.LINGERING_MAGIC)
-					&& charger != null && charger.target == Dungeon.hero) {
-
-				Buff.prolong(Dungeon.hero, Talent.LingeringMagicTracker.class, 5f);
-			}
-
-			// 10/20/30%
-			if (Dungeon.hero.heroClass != HeroClass.CLERIC
-					&& Dungeon.hero.hasTalent(Talent.DIVINE_SENSE)) {
-				Buff.prolong(Dungeon.hero, DivineSense.DivineSenseTracker.class, Dungeon.hero.cooldown() + 1);
-			}
-
-			// 10/20/30%
-			if (Dungeon.hero.heroClass != HeroClass.CLERIC
-					&& Dungeon.hero.hasTalent(Talent.CLEANSE)
-					&& Random.Int(10) < Dungeon.hero.pointsInTalent(Talent.CLEANSE)) {
-				boolean removed = false;
-				for (Buff b : Dungeon.hero.buffs()) {
-					if (b.type == Buff.buffType.NEGATIVE
-							&& !(b instanceof LostInventory)) {
-						b.detach();
-						removed = true;
+					if (usesLeftToID > -1) {
+						GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), name());
 					}
+					setIDReady();
+				} else {
+					identify();
+					GLog.p(Messages.get(Wand.class, "identify"));
+					Badges.validateItemLevelAquired(this);
 				}
-				if (removed)
-					new Flare(6, 32).color(0xFF4CD2, true).show(Dungeon.hero.sprite, 2f);
+			}
+			if (ShardOfOblivion.passiveIDDisabled()) {
+				Buff.prolong(curUser, ShardOfOblivion.WandUseTracker.class, 50f);
 			}
 		}
 
-		Invisibility.dispel(ctx.body);
+		// inside staff
+		if (charger != null && charger.target == Dungeon.hero && !Dungeon.hero.belongings.contains(this)) {
+			if (Dungeon.hero.hasTalent(Talent.EXCESS_CHARGE) && curCharges >= maxCharges) {
+				int shieldToGive = Math
+						.round(buffedLvl() * 0.67f * Dungeon.hero.pointsInTalent(Talent.EXCESS_CHARGE));
+				Buff.affect(Dungeon.hero, Barrier.class).setShield(shieldToGive);
+				Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive),
+						FloatingText.SHIELDING);
+			}
+		}
 
+		curCharges -= cursed ? 1 : chargesPerCast();
+
+		// remove magic charge at a higher priority, if we are benefiting from it are and
+		// not the wand that just applied it
+		WandOfMagicMissile.MagicCharge buff = curUser.buff(WandOfMagicMissile.MagicCharge.class);
+		if (buff != null
+				&& buff.wandJustApplied() != this
+				&& buff.level() == buffedLvl()
+				&& buffedLvl() > super.buffedLvl()) {
+			buff.detach();
+		} else {
+			ScrollEmpower empower = curUser.buff(ScrollEmpower.class);
+			if (empower != null) {
+				empower.use();
+			}
+		}
+
+		// If hero owns wand, but it isn't in belongings it must be in the staff
+		if (Dungeon.hero.hasTalent(Talent.EMPOWERED_STRIKE)
+				&& charger != null && charger.target == Dungeon.hero
+				&& !Dungeon.hero.belongings.contains(this)) {
+
+			Buff.prolong(Dungeon.hero, Talent.EmpoweredStrikeTracker.class, 10f);
+		}
+
+		if (Dungeon.hero.hasTalent(Talent.LINGERING_MAGIC)
+				&& charger != null && charger.target == Dungeon.hero) {
+
+			Buff.prolong(Dungeon.hero, Talent.LingeringMagicTracker.class, 5f);
+		}
+
+		// 10/20/30%
+		if (Dungeon.hero.heroClass != HeroClass.CLERIC
+				&& Dungeon.hero.hasTalent(Talent.DIVINE_SENSE)) {
+			Buff.prolong(Dungeon.hero, DivineSense.DivineSenseTracker.class, Dungeon.hero.cooldown() + 1);
+		}
+
+		// 10/20/30%
+		if (Dungeon.hero.heroClass != HeroClass.CLERIC
+				&& Dungeon.hero.hasTalent(Talent.CLEANSE)
+				&& Random.Int(10) < Dungeon.hero.pointsInTalent(Talent.CLEANSE)) {
+			boolean removed = false;
+			for (Buff b : Dungeon.hero.buffs()) {
+				if (b.type == Buff.buffType.NEGATIVE
+						&& !(b instanceof LostInventory)) {
+					b.detach();
+					removed = true;
+				}
+			}
+			if (removed)
+				new Flare(6, 32).color(0xFF4CD2, true).show(Dungeon.hero.sprite, 2f);
+		}
+
+		Invisibility.dispel();
 		updateQuickslot();
-		ctx.turns.spendAfterThrow(TIME_TO_ZAP);
+
+		curUser.spendAndNext(TIME_TO_ZAP);
 	}
 
 	@Override
@@ -910,7 +873,7 @@ public abstract class Wand extends Item {
 					return;
 				}
 
-				curWand.zapAs(UseContext.hero(curUser), target);
+				curWand.zap(curUser, target);
 			}
 		}
 

@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,21 +23,20 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class Gauntlet extends MeleeWeapon {
-	
+
 	{
 		image = ItemSpriteSheet.GAUNTLETS;
 		hitSound = Assets.Sounds.HIT_CRUSH;
 		hitSoundPitch = 1.2f;
-		
+
 		tier = 5;
 		DLY = 0.5f; //2x speed
 	}
-	
+
 	@Override
 	public int max(int lvl) {
 		return  Math.round(2.5f*(tier+1)) +     //15 base, down from 30
@@ -53,14 +49,10 @@ public class Gauntlet extends MeleeWeapon {
 	}
 
 	@Override
-	protected boolean duelistAbility(UseContext ctx, Integer target) {
-		int dmgBoost = augment.damageFactor(5 + buffedLvl());
-		return Sai.comboStrikeAbility(ctx, target, 0, dmgBoost, this);
-	}
-
-	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		duelistAbility(UseContext.hero(hero), target);
+		//+(5+lvl) damage, roughly +50% base damage, +50% scaling
+		int dmgBoost = augment.damageFactor(5 + buffedLvl());
+		Sai.comboStrikeAbility(hero, target, 0, dmgBoost, this);
 	}
 
 	@Override

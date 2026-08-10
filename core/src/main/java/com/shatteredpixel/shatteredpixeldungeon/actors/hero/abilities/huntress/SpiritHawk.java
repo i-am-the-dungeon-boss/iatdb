@@ -40,7 +40,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbili
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -86,9 +85,7 @@ public class SpiritHawk extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Hero kit = ctx.kit;
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 		HawkAlly ally = getHawk();
 
 		if (ally != null) {
@@ -100,31 +97,27 @@ public class SpiritHawk extends ArmorAbility {
 		} else {
 			ArrayList<Integer> spawnPoints = new ArrayList<>();
 			for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
-				int p = body.pos + PathFinder.NEIGHBOURS8[i];
+				int p = hero.pos + PathFinder.NEIGHBOURS8[i];
 				if (Actor.findChar(p) == null && (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {
 					spawnPoints.add(p);
 				}
 			}
 
 			if (!spawnPoints.isEmpty()) {
-				armor.charge -= chargeUse(kit);
+				armor.charge -= chargeUse(hero);
 				armor.updateQuickslot();
 
 				ally = new HawkAlly();
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
-				// Headless tests have no GameScene — still register the actor
-				if (ally.sprite == null) {
-					Actor.add(ally);
-				}
 
 				ScrollOfTeleportation.appear(ally, ally.pos);
 				Dungeon.observe();
 
-				Invisibility.dispel(body);
-				ctx.turns.spendAfterThrow(Actor.TICK);
+				Invisibility.dispel();
+				hero.spendAndNext(Actor.TICK);
 
-			} else if (ctx.heroFX) {
+			} else {
 				GLog.w(Messages.get(this, "no_space"));
 			}
 		}
@@ -141,7 +134,7 @@ public class SpiritHawk extends ArmorAbility {
 		return new Talent[] { Talent.EAGLE_EYE, Talent.GO_FOR_THE_EYES, Talent.SWIFT_SPIRIT, Talent.HEROIC_ENERGY };
 	}
 
-	private static HawkAlly getHawk() {
+	public static HawkAlly getHawk() {
 		for (Char ch : Actor.chars()) {
 			if (ch instanceof HawkAlly) {
 				return (HawkAlly) ch;

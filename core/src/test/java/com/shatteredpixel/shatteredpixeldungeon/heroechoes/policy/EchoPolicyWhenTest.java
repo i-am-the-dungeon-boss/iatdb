@@ -55,6 +55,19 @@ class EchoPolicyWhenTest {
 	}
 
 	@Test
+	@DisplayName("role_not_ready is true when role is absent from rolesReady")
+	void roleNotReadyWhenAbsent() {
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(set("MELEE"))
+				.build();
+
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("role_not_ready", "LEAVE_AOE"), status)).isTrue();
+		Assertions.assertThat(EchoPolicyWhen.matches(
+				new JSONObject().put("role_not_ready", "MELEE"), status)).isFalse();
+	}
+
+	@Test
 	@DisplayName("terrain_near is true within terrainNearTiles")
 	void terrainNearWithinThreshold() {
 		EchoPolicyStatus status = new EchoPolicyStatus.Builder()

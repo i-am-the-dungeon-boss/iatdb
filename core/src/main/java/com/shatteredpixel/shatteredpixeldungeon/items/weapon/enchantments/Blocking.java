@@ -31,7 +31,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HoldFast;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -60,7 +59,7 @@ public class Blocking extends Weapon.Enchantment {
 			BlockBuff b = Buff.affect(attacker, BlockBuff.class);
 			int shield = Math.round(powerMulti * (2 + weapon.buffedLvl()));
 			b.setShield(shield);
-			if (UseContext.canWorldFx(attacker)) {
+			if (Char.canWorldFx(attacker)) {
 				attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield),
 						FloatingText.SHIELDING);
 				attacker.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 5);

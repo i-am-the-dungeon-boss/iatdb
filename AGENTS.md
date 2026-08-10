@@ -14,13 +14,15 @@ When matching “master style,” compare against the `master` branch. Implement
 ## Commands
 
 ```bash
-./gradlew :core:test
-./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
-./gradlew :core:test --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
+# Iterative / agent runs — quiet, no Error Prone warning flood
+./gradlew :core:test -q -PerrorProneOff
+./gradlew :core:test -q -PerrorProneOff --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest"
+./gradlew :core:test -q -PerrorProneOff --tests "com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoAndStorageTest.fromHeroCapturesRequiredFields"
 ./gradlew :desktop:run
 ```
 
 Windows: `gradlew.bat`. Prefer targeted `:core:test` unless a full build is requested.
+Agents always use `-q -PerrorProneOff` for tests; omit those only for PR quality gates or when EP output is requested.
 
 Concurrent Gradle: check `./gradlew --status` first; use a **git worktree** for a second run — never two builds in the same checkout (see `.cursor/rules/gradle-worktree.mdc`).
 

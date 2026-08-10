@@ -41,7 +41,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.SpiritForm;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
@@ -97,58 +96,25 @@ public class Trinity extends ArmorAbility {
 		bodyForm = form;
 	}
 
-	@Override
-	public boolean activateAs(UseContext ctx, ClassArmor armor, Integer target) {
-		if (!ctx.heroFX) {
-			return activateEchoAuto(ctx, armor);
-		}
-		return super.activateAs(ctx, armor, target);
+	/** Echo adapter reads imbued forms without UI. */
+	public Bundlable bodyFormForEcho() {
+		return bodyForm;
 	}
 
-	/**
-	 * Prefer bodyForm buff on {@code ctx.body}; mind/spirit need extra targeting.
-	 */
-	private boolean activateEchoAuto(UseContext ctx, ClassArmor armor) {
-		if (bodyForm == null && mindForm == null && spiritForm == null) {
-			return false;
-		}
-		if (bodyForm == null) {
-			return false;
-		}
-		// Do not use trinityChargeUsePerEffect — it reads Dungeon.hero.armorAbility
-		float cost = chargeUse(ctx.kit);
-		Class<?> cls = bodyForm.getClass();
-		if (Weapon.Enchantment.class.isAssignableFrom(cls) || Armor.Glyph.class.isAssignableFrom(cls)) {
-			for (Class<?> ench : Weapon.Enchantment.rare) {
-				if (ench.equals(cls)) {
-					cost *= 2;
-					break;
-				}
-			}
-			for (Class<?> glyph : Armor.Glyph.rare) {
-				if (glyph.equals(cls)) {
-					cost *= 2;
-					break;
-				}
-			}
-		}
-		if (armor.charge < cost) {
-			return false;
-		}
-		Buff.prolong(ctx.body, BodyForm.BodyFormBuff.class, BodyForm.duration()).setEffect(bodyForm);
-		armor.charge -= cost;
-		Invisibility.dispel(ctx.body);
-		return true;
+	public Bundlable mindFormForEcho() {
+		return mindForm;
+	}
+
+	public Bundlable spiritFormForEcho() {
+		return spiritForm;
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 
 		if (bodyForm == null && mindForm == null && spiritForm == null) {
-			if (ctx.heroFX) {
-				GLog.w(Messages.get(this, "no_imbue"));
-			}
-		} else if (ctx.heroFX) {
+			GLog.w(Messages.get(this, "no_imbue"));
+		} else {
 			GameScene.show(new WndUseTrinity(armor));
 		}
 

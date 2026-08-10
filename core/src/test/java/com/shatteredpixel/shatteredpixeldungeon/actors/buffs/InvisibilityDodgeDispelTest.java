@@ -6,13 +6,13 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter;
 
 @ExtendWith(GdxTestExtension.class)
 class InvisibilityDodgeDispelTest {
@@ -36,7 +36,7 @@ class InvisibilityDodgeDispelTest {
 		knives.quantity(3);
 		Assertions.assertThat(knives.collect(boss.getEchoHero().belongings.backpack)).isTrue();
 
-		boolean spent = knives.throwAs(UseContext.echo(boss), hero.pos);
+		boolean spent = EchoThrowAdapter.throwItem(boss, knives, hero.pos);
 		Assertions.assertThat(spent).isTrue();
 
 		Assertions.assertThat(hero.buff(Invisibility.class))

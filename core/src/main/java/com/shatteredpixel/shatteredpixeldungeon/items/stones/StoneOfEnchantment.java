@@ -29,7 +29,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
@@ -53,38 +52,34 @@ public class StoneOfEnchantment extends InventoryStone {
 	}
 
 	@Override
-	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
+	protected void onItemSelected(Item item) {
 		if (!anonymous) {
-			detach(ctx.kit.belongings.backpack);
+			curItem.detach(curUser.belongings.backpack);
 			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
+			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());
 		}
 
 		if (item instanceof Weapon) {
+
 			((Weapon) item).enchant();
+
 		} else {
+
 			((Armor) item).inscribe();
+
 		}
 
-		if (UseContext.canWorldFx(ctx.body)) {
-			ctx.body.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.1f, 5);
-			Enchanting.show(ctx.kit, item);
-		}
-		if (ctx.heroFX) {
-			if (item instanceof Weapon) {
-				GLog.p(Messages.get(this, "weapon"));
-			} else {
-				GLog.p(Messages.get(this, "armor"));
-			}
-			curUser = ctx.kit;
-			useAnimation();
-		}
-		return true;
-	}
+		curUser.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.1f, 5);
+		Enchanting.show(curUser, item);
 
-	@Override
-	protected void onItemSelected(Item item) {
-		onItemSelectedAs(UseContext.hero(curUser), item);
+		if (item instanceof Weapon) {
+			GLog.p(Messages.get(this, "weapon"));
+		} else {
+			GLog.p(Messages.get(this, "armor"));
+		}
+
+		useAnimation();
+
 	}
 
 	@Override

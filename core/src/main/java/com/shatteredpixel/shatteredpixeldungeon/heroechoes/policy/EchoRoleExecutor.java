@@ -6,8 +6,18 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoClericAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoChainsAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCloakAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoDuelistAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoHornAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoInventoryStoneAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoScrollAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoThrowAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
@@ -15,12 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfMagicalSight;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.InventoryStone;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
@@ -36,8 +41,8 @@ import org.json.JSONObject;
 /**
  * Executes a resolved role via SPD item/movement APIs (canvas §9).
  * Inventory from {@code echoHero}; effects/VFX/turn on {@link EchoBoss}
- * via shared {@link UseContext} paths ({@code drinkAs}/{@code throwAs}/
- * {@code zapAs}/{@code activateAs}/{@code readAs}).
+ * via fork-owned adapters ({@link EchoThrowAdapter}, {@link EchoWandAdapter},
+ * {@link EchoPotionAdapter}, {@link EchoScrollAdapter}, and related action adapters).
  *
  * @return true if the turn was spent; false to let the boss fall through (e.g.
  *         melee).
@@ -47,13 +52,30 @@ public final class EchoRoleExecutor {
 	private EchoRoleExecutor() {
 	}
 
+	/**
+	 * Narrows a capability to the items that can still affect this hero. Under
+	 * the 3-turn {@code Paralysis.Immunity} lockout the rest of {@code SETUP_CC}
+	 * is fine, but Paralytic Gas would be thrown away — so it is dropped from the
+	 * pick list rather than the whole role being disabled.
+	 */
+	static JSONObject capForEnemy(String role, JSONObject cap, EchoPolicyStatus status) {
+		if (cap == null || status == null) {
+			return cap;
+		}
+		if (EchoPolicyHazards.SETUP_CC.equals(role)
+				&& status.enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)) {
+			return EchoPolicyHazards.withoutParalyticGas(cap);
+		}
+		return cap;
+	}
+
 	public static boolean execute(
 			EchoBoss boss,
 			EchoPolicy policy,
 			EchoPolicyStatus status,
 			EchoPolicyChoice choice) {
 		JSONObject caps = policy.root().optJSONObject("capabilities");
-		JSONObject cap = caps != null ? caps.optJSONObject(choice.useRole) : null;
+		JSONObject cap = capForEnemy(choice.useRole, caps != null ? caps.optJSONObject(choice.useRole) : null, status);
 		java.util.Set<String> available = EchoInventory.availableIds(boss.getEchoHero());
 		String itemId = choice.itemId != null
 				? choice.itemId
@@ -114,7 +136,7 @@ public final class EchoRoleExecutor {
 			EchoPolicyChoice choice,
 			JSONObject cap) {
 		if (item instanceof Scroll) {
-			boolean ok = ((Scroll) item).readAs(UseContext.echo(boss));
+			boolean ok = EchoScrollAdapter.read(boss, (Scroll) item);
 			debugExec("scroll " + itemId + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
@@ -125,7 +147,7 @@ public final class EchoRoleExecutor {
 		}
 		if (item instanceof Wand) {
 			boolean ok = cell >= 0 && Dungeon.level != null
-					&& ((Wand) item).zapAs(UseContext.echo(boss), cell);
+					&& EchoWandAdapter.zap(boss, (Wand) item, cell);
 			debugExec("wand " + itemId + " cell=" + cell + " charges=" + ((Wand) item).curCharges
 					+ " → " + (ok ? "spent" : "fail"));
 			return ok;
@@ -138,13 +160,13 @@ public final class EchoRoleExecutor {
 				return false;
 			}
 			boolean ok = cell >= 0 && Dungeon.level != null
-					&& ((SpiritBow) item).knockArrow().throwAs(UseContext.echo(boss), cell);
+					&& EchoThrowAdapter.throwItem(boss, ((SpiritBow) item).knockArrow(), cell);
 			debugExec("spirit bow cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof MagesStaff) {
 			boolean ok = cell >= 0 && Dungeon.level != null
-					&& ((MagesStaff) item).zapAs(UseContext.echo(boss), cell);
+					&& EchoWandAdapter.zapStaff(boss, (MagesStaff) item, cell);
 			debugExec("staff zap cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
@@ -159,7 +181,7 @@ public final class EchoRoleExecutor {
 					debugExec("no aim cell for melee ability " + itemId);
 					return false;
 				}
-				boolean ok = weapon.abilityAs(UseContext.echo(boss), target);
+				boolean ok = EchoDuelistAdapter.useAbility(boss, weapon, target);
 				debugExec("melee ability " + itemId + " cell=" + target + " → " + (ok ? "spent" : "fail"));
 				return ok;
 			}
@@ -169,12 +191,12 @@ public final class EchoRoleExecutor {
 				debugExec("no aim cell for " + itemId);
 				return false;
 			}
-			boolean ok = item.throwAs(UseContext.echo(boss), cell);
+			boolean ok = EchoThrowAdapter.throwItem(boss, item, cell);
 			debugExec("throwable " + itemId + " cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof InventoryStone) {
-			boolean ok = ((InventoryStone) item).useAs(UseContext.echo(boss));
+			boolean ok = EchoInventoryStoneAdapter.use(boss, (InventoryStone) item);
 			debugExec("inventory stone " + itemId + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
@@ -184,12 +206,12 @@ public final class EchoRoleExecutor {
 			return ok;
 		}
 		if (item instanceof CloakOfShadows) {
-			boolean ok = ((CloakOfShadows) item).useAs(UseContext.echo(boss));
+			boolean ok = EchoCloakAdapter.toggleStealth(boss, (CloakOfShadows) item);
 			debugExec("artifact CloakOfShadows → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
 		if (item instanceof HornOfPlenty) {
-			boolean ok = ((HornOfPlenty) item).useAs(UseContext.echo(boss));
+			boolean ok = EchoHornAdapter.snack(boss, (HornOfPlenty) item);
 			debugExec("artifact HornOfPlenty → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
@@ -198,7 +220,7 @@ public final class EchoRoleExecutor {
 				debugExec("artifact EtherealChains no aim");
 				return false;
 			}
-			boolean ok = ((EtherealChains) item).useAs(UseContext.echo(boss), cell);
+			boolean ok = EchoChainsAdapter.cast(boss, (EtherealChains) item, cell);
 			debugExec("artifact EtherealChains cell=" + cell + " → " + (ok ? "spent" : "fail"));
 			return ok;
 		}
@@ -279,17 +301,6 @@ public final class EchoRoleExecutor {
 				|| EchoPolicyHazards.PAYOFF_AOE.equals(hazard);
 	}
 
-	/**
-	 * {@code apply(Char)} is a no-op on non-Hero — refuse without consuming.
-	 */
-	private static boolean isHeroOnlyDrink(Potion potion) {
-		return potion instanceof PotionOfStrength
-				|| potion instanceof PotionOfExperience
-				|| potion instanceof ElixirOfMight
-				|| potion instanceof PotionOfMindVision
-				|| potion instanceof PotionOfMagicalSight;
-	}
-
 	private static boolean executeVirtual(
 			EchoBoss boss, EchoPolicy policy, EchoPolicyStatus status, String tag) {
 		Hero enemy = Dungeon.hero;
@@ -300,7 +311,10 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 		if ("*move_further".equals(tag)) {
-			return enemy != null && boss.policyStepFurther(enemy.pos);
+			// A kiting echo wants a harmful plant between itself and the hero —
+			// Level.pressCell triggers it for the hero too, so it is real cover.
+			boolean kite = EchoPolicyMatcher.wantsKeepDistance(policy, status);
+			return enemy != null && boss.policyStepFurther(enemy.pos, kite);
 		}
 		if ("*move_closer".equals(tag)) {
 			return enemy != null && boss.policyStepCloser(enemy.pos);
@@ -321,31 +335,27 @@ public final class EchoRoleExecutor {
 	}
 
 	/**
-	 * Potion execute: self-drink via {@link Potion#drinkAs}, throw via
-	 * {@link Item#throwAs}.
+	 * Potion execute: self-drink via {@link EchoPotionAdapter}, throw via
+	 * {@link EchoThrowAdapter}.
 	 */
 	private static boolean executePotion(EchoBoss boss, Potion potion, String role, int cell) {
-		UseContext ctx = UseContext.echo(boss);
 		// Targeted cone — not self-drink / shatter
 		if (potion instanceof PotionOfDragonsBreath) {
 			if (cell < 0 || Dungeon.level == null) {
 				return false;
 			}
-			return ((PotionOfDragonsBreath) potion).breatheAs(ctx, cell);
+			return EchoPotionAdapter.breathe(boss, (PotionOfDragonsBreath) potion, cell);
 		}
 		if (shouldSelfDrink(potion, role)) {
-			if (isHeroOnlyDrink(potion)) {
-				return false;
-			}
-			return potion.drinkAs(ctx);
+			return EchoPotionAdapter.drink(boss, potion);
 		}
 		if (cell < 0 || Dungeon.level == null) {
 			return false;
 		}
-		return potion.throwAs(ctx, cell);
+		return EchoPotionAdapter.throwPotion(boss, potion, cell);
 	}
 
-	/** ClassArmor charge skill via {@link ArmorAbility#activateAs}. */
+	/** ClassArmor charge skill via {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter}. */
 	private static boolean executeArmorAbility(EchoBoss boss, ClassArmor armor, int cell) {
 		Hero kit = boss.getEchoHero();
 		ArmorAbility ability = kit != null ? kit.armorAbility : null;
@@ -353,7 +363,7 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 		Integer target = null;
-		// Match activateAs: a non-null targetingPrompt requires a cell, even when
+		// Match adapter: a non-null targetingPrompt requires a cell, even when
 		// useTargeting() is false (ShadowClone / SpiritHawk / PowerOfMany).
 		if (ability.targetingPrompt() != null) {
 			if (cell < 0) {
@@ -361,7 +371,7 @@ public final class EchoRoleExecutor {
 			}
 			target = cell;
 		}
-		return ability.activateAs(UseContext.echo(boss), armor, target);
+		return EchoArmorAbilityAdapter.activate(boss, armor, ability, target);
 	}
 
 	private static boolean executeHolyTome(EchoBoss boss, HolyTome tome, JSONObject cap, int cell) {
@@ -376,7 +386,7 @@ public final class EchoRoleExecutor {
 			}
 			target = cell;
 		}
-		return tome.castAs(UseContext.echo(boss), spell, target);
+		return EchoClericAdapter.cast(boss, tome, spell, target);
 	}
 
 	/**

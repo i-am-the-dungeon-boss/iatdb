@@ -9,12 +9,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link PowerOfMany} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  *
  * <p>Policy executor gap: {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoTargetPicker}
  * aims at the Hero (enemy) cell. Summon requires an empty passable tile, so
@@ -53,13 +53,10 @@ class EchoArmorAbilityPowerOfManyTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo PowerOfMany activateAs summons LightAlly with PowerBuff and Barrier on empty FOV cell")
+	@DisplayName("Echo PowerOfMany adapter activate summons LightAlly with PowerBuff and Barrier on empty FOV cell")
 	void summonsLightAllyOnEmptyFovCell() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -69,7 +66,7 @@ class EchoArmorAbilityPowerOfManyTest {
 		ClericArmor armor = new ClericArmor();
 		armor.charge = 100;
 
-		boolean ok = new PowerOfMany().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new PowerOfMany(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		PowerOfMany.LightAlly ally = findMob(PowerOfMany.LightAlly.class);
@@ -77,12 +74,12 @@ class EchoArmorAbilityPowerOfManyTest {
 		Assertions.assertThat(ally.pos).isEqualTo(dest);
 		Assertions.assertThat(ally.buff(PowerOfMany.PowerBuff.class)).isNotNull();
 		Assertions.assertThat(ally.buff(Barrier.class)).isNotNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo PowerOfMany activateAs spends ClassArmor charge from the kit")
+	@DisplayName("Echo PowerOfMany adapter activate spends ClassArmor charge from the kit")
 	void spendsCharge() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -92,17 +89,17 @@ class EchoArmorAbilityPowerOfManyTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new PowerOfMany().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new PowerOfMany(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 35f);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo PowerOfMany activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo PowerOfMany adapter activate clears busy so the boss turn can resume")
 	void clearsBusy() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -111,14 +108,14 @@ class EchoArmorAbilityPowerOfManyTest {
 		ClericArmor armor = new ClericArmor();
 		armor.charge = 100;
 
-		boolean ok = new PowerOfMany().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new PowerOfMany(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
 	@Test
-	@DisplayName("Echo PowerOfMany activateAs refuses when ClassArmor charge is too low")
+	@DisplayName("Echo PowerOfMany adapter activate refuses when ClassArmor charge is too low")
 	void refusesLowCharge() {
 		Fight f = fight();
 		int dest = emptyAdjacent(f.boss.pos);
@@ -127,7 +124,7 @@ class EchoArmorAbilityPowerOfManyTest {
 		ClericArmor armor = new ClericArmor();
 		armor.charge = 0;
 
-		boolean ok = new PowerOfMany().activateAs(f.echo(), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new PowerOfMany(), dest);
 
 		Assertions.assertThat(ok).isFalse();
 		Assertions.assertThat(findMob(PowerOfMany.LightAlly.class)).isNull();
@@ -135,7 +132,7 @@ class EchoArmorAbilityPowerOfManyTest {
 	}
 
 	@Test
-	@DisplayName("Echo PowerOfMany activateAs refuses occupied non-ally cell without spending charge")
+	@DisplayName("Echo PowerOfMany adapter activate refuses occupied non-ally cell without spending charge")
 	void refusesEnemyOccupiedCell() {
 		Fight f = fight();
 
@@ -143,12 +140,12 @@ class EchoArmorAbilityPowerOfManyTest {
 		armor.charge = 100;
 		float chargeBefore = armor.charge;
 
-		boolean ok = new PowerOfMany().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new PowerOfMany(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isEqualTo(chargeBefore);
 		Assertions.assertThat(findMob(PowerOfMany.LightAlly.class)).isNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 

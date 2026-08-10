@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -30,7 +27,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -39,14 +35,14 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 public class Crossbow extends MeleeWeapon {
-	
+
 	{
 		image = ItemSpriteSheet.CROSSBOW;
 		hitSound = Assets.Sounds.HIT;
 		hitSoundPitch = 1f;
-		
+
 		//check Dart.class for additional properties
-		
+
 		tier = 4;
 	}
 
@@ -143,32 +139,17 @@ public class Crossbow extends MeleeWeapon {
 	}
 
 	@Override
-	protected boolean duelistAbility(UseContext ctx, Integer target) {
-		Hero kit = ctx.kit;
-		Char body = ctx.body;
-
-		if (kit.buff(ChargedShot.class) != null){
-			if (ctx.heroFX) {
-				GLog.w(Messages.get(this, "ability_cant_use"));
-			}
-			return false;
-		}
-
-		beforeAbilityUsed(ctx, null);
-		Buff.affect(kit, ChargedShot.class);
-		if (UseContext.canWorldFx(body)) {
-			body.sprite.operate(body.pos);
-		}
-		if (body instanceof Hero) {
-			((Hero) body).next();
-		}
-		afterAbilityUsed(ctx);
-		return true;
-	}
-
-	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		duelistAbility(UseContext.hero(hero), target);
+		if (hero.buff(ChargedShot.class) != null){
+			GLog.w(Messages.get(this, "ability_cant_use"));
+			return;
+		}
+
+		beforeAbilityUsed(hero, null);
+		Buff.affect(hero, ChargedShot.class);
+		hero.sprite.operate(hero.pos);
+		hero.next();
+		afterAbilityUsed(hero);
 	}
 
 	@Override

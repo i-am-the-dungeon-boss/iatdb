@@ -15,9 +15,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
@@ -60,19 +60,16 @@ class EchoBossArsenalArmorAbilityKindsTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 
 	@Test
-	@DisplayName("Echo DeathMark activateAs marks the player from boss body aim")
+	@DisplayName("Echo DeathMark adapter activate marks the player from boss body aim")
 	void deathMarkMarksPlayer() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.player.buff(DeathMark.DeathMarkTracker.class)).isNotNull();
@@ -80,13 +77,13 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo DeathMark activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo DeathMark adapter activate clears busy so the boss turn can resume")
 	void deathMarkClearsBusy() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new DeathMark().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new DeathMark(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.boss.isBusy())
@@ -95,7 +92,7 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo ElementalStrike activateAs damages the Hero from boss body aim")
+	@DisplayName("Echo ElementalStrike adapter activate damages the Hero from boss body aim")
 	void elementalStrikeDamagesHero() {
 		Fight f = fight();
 		DuelistArmor armor = new DuelistArmor();
@@ -104,7 +101,7 @@ class EchoBossArsenalArmorAbilityKindsTest {
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
 		int hpBefore = f.player.HP;
 
-		boolean ok = new ElementalStrike().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalStrike(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);
@@ -112,7 +109,7 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs fires frost wand VFX without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires frost wand VFX without NPE when kit is headless")
 	void wildMagicFrostWandDoesNotNpeWhenKitHeadless() {
 		Hero player = new Hero();
 		Dungeon.hero = player;
@@ -137,14 +134,14 @@ class EchoBossArsenalArmorAbilityKindsTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		Assertions.assertThatCode(() -> new WildMagic().activateAs(UseContext.echo(boss), armor, player.pos))
+		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(boss, armor, new WildMagic(), player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic activateAs fires disintegration DeathRay without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires disintegration DeathRay without NPE when kit is headless")
 	void wildMagicDisintegrationDoesNotNpeWhenKitHeadless() {
 		Hero player = new Hero();
 		Dungeon.hero = player;
@@ -170,20 +167,20 @@ class EchoBossArsenalArmorAbilityKindsTest {
 		armor.charge = 100;
 		int hpBefore = player.HP;
 
-		Assertions.assertThatCode(() -> new WildMagic().activateAs(UseContext.echo(boss), armor, player.pos))
+		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(boss, armor, new WildMagic(), player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone activateAs spawns a ShadowAlly beside the boss body")
+	@DisplayName("Echo ShadowClone adapter activate spawns a ShadowAlly beside the boss body")
 	void shadowCloneSpawnsAllyBesideBoss() {
 		Fight f = fight();
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new ShadowClone().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ShadowClone(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);
@@ -194,13 +191,13 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo SpiritHawk activateAs spawns a HawkAlly beside the boss body")
+	@DisplayName("Echo SpiritHawk adapter activate spawns a HawkAlly beside the boss body")
 	void spiritHawkSpawnsAllyBesideBoss() {
 		Fight f = fight();
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
 
-		boolean ok = new SpiritHawk().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpiritHawk(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);
@@ -211,13 +208,13 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo AscendedForm activateAs applies AscendBuff on the boss body")
+	@DisplayName("Echo AscendedForm adapter activate applies AscendBuff on the boss body")
 	void ascendedFormAppliesAscendBuffOnBoss() {
 		Fight f = fight();
 		ClericArmor armor = new ClericArmor();
 		armor.charge = 100;
 
-		boolean ok = new AscendedForm().activateAs(f.echo(), armor, null);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new AscendedForm(), null);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);
@@ -227,7 +224,7 @@ class EchoBossArsenalArmorAbilityKindsTest {
 	}
 
 	@Test
-	@DisplayName("Echo Ratmogrify activateAs transforms an enemy into a TransmogRat")
+	@DisplayName("Echo Ratmogrify adapter activate transforms an enemy into a TransmogRat")
 	void ratmogrifyTransformsEnemyBesideBoss() {
 		Fight f = fight();
 		int cell = emptyAdjacent(f.boss.pos);
@@ -242,7 +239,7 @@ class EchoBossArsenalArmorAbilityKindsTest {
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;
 
-		boolean ok = new Ratmogrify().activateAs(f.echo(), armor, cell);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Ratmogrify(), cell);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);

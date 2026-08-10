@@ -31,7 +31,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -45,32 +44,22 @@ public class ScrollOfRage extends Scroll {
 
 	@Override
 	public void doRead() {
-		doReadAs(UseContext.hero(curUser));
-	}
 
-	@Override
-	protected boolean doReadAs(UseContext ctx) {
-		detach(ctx.kit.belongings.backpack);
-		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-			mob.beckon(ctx.body.pos);
+		detach(curUser.belongings.backpack);
+		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+			mob.beckon( curUser.pos );
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
 				Buff.prolong(mob, Amok.class, 5f);
 			}
 		}
 
-		if (UseContext.canWorldFx(ctx.body)) {
-			if (ctx.body.sprite != null) {
-				ctx.body.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
-			}
-			Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
-		}
-		if (ctx.heroFX) {
-			GLog.w(Messages.get(this, "roar"));
-			identify();
-		}
+		GLog.w( Messages.get(this, "roar") );
+		identify();
 
-		readAnimation(ctx);
-		return true;
+		curUser.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+		Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );
+
+		readAnimation();
 	}
 
 	@Override

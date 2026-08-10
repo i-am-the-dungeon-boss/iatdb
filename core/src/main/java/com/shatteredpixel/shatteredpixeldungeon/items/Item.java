@@ -47,7 +47,6 @@ import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
@@ -682,117 +681,94 @@ public class Item implements Bundlable {
 		Sample.INSTANCE.play(Assets.Sounds.MISS, 0.6f, 0.6f, 1.5f);
 	}
 
-	/**
-	 * Throw VFX only: zap + sound + {@link MissileSprite} of this item.
-	 * No inventory detach and no actor time spend — callers own those.
-	 * If {@code from} is off-stage, invokes {@code onArrive} immediately.
-	 *
-	 * @return collision cell of the throw
-	 */
-	public int castVisual(CharSprite from, int fromPos, int dst, Callback onArrive) {
-		final int cell = throwPos(fromPos, dst);
-		if (from == null || from.parent == null) {
-			if (onArrive != null) {
-				onArrive.call();
-			}
-			return cell;
-		}
-
-		from.zap(cell);
-		throwSound();
-
-		Char atCell = Actor.findChar(cell);
-		if (atCell != null && atCell.sprite != null) {
-			((MissileSprite) from.parent.recycle(MissileSprite.class))
-					.reset(from, atCell.sprite, this, onArrive);
-		} else {
-			((MissileSprite) from.parent.recycle(MissileSprite.class))
-					.reset(from, cell, this, onArrive);
-		}
-		return cell;
-	}
-
-	/**
-	 * Shared throwable execute for Hero and Echo. Cell is already chosen (no
-	 * CellSelector). Uses {@code ctx.body} for VFX / origin, {@code ctx.kit} for
-	 * inventory / {@link #curUser}, and {@code ctx.turns} for busy / spend.
-	 *
-	 * @return true if the throw was started (turn policy applied by
-	 *         {@code ctx.turns})
-	 */
-	public boolean throwAs(UseContext ctx, int dst) {
-		ctx.turns.busy();
-
-		final int cell = throwPos(ctx.body.pos, dst);
-		final Char enemy = Actor.findChar(cell);
-		if (ctx.heroFX) {
-			QuickSlotButton.target(enemy);
-		}
-
-		final float delay = castDelay(ctx.kit, cell);
-
-		castVisual(ctx.body.sprite, ctx.body.pos, dst, () -> {
-			// Re-apply throw intent here: MissileSprite can delay this callback, and
-			// static flags (e.g. Bomb.lightingFuse) must not be assumed to still hold.
-			beforeThrown(ctx, cell);
-			Hero kit = ctx.kit;
-			Char body = ctx.body;
-			int savedPos = kit.pos;
-			CharSprite savedSprite = kit.sprite;
-			boolean borrow = body != kit;
-			if (borrow) {
-				kit.pos = body.pos;
-				kit.sprite = body.sprite;
-			}
-			try {
-				AiItemActions.withUser(kit, Item.this, () -> {
-					Item i = Item.this.detach(kit.belongings.backpack);
-					if (i != null) {
-						prepareThrownItem(i, ctx, cell);
-						i.onThrow(cell);
-					}
-
-					if (ctx.heroFX
-							&& enemy != null
-							&& kit.hasTalent(Talent.IMPROVISED_PROJECTILES)
-							&& !(Item.this instanceof MissileWeapon)
-							&& kit.buff(Talent.ImprovisedProjectileCooldown.class) == null) {
-						if (enemy.alignment != kit.alignment) {
-							Sample.INSTANCE.play(Assets.Sounds.HIT);
-							Buff.affect(enemy, Blindness.class,
-									1f + kit.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
-							Buff.affect(kit, Talent.ImprovisedProjectileCooldown.class, 50f);
-						}
-					}
-				});
-				ctx.turns.spendAfterThrow(delay);
-			} finally {
-				if (borrow) {
-					kit.sprite = savedSprite;
-					kit.pos = savedPos;
-				}
-			}
-		});
-		return true;
-	}
-
-	/**
-	 * Hook run immediately before inventory detach / {@link #onThrow} inside
-	 * {@link #throwAs} (after any missile VFX delay). Default no-op.
-	 */
-	protected void beforeThrown(UseContext ctx, int cell) {
-	}
-
-	/**
-	 * Hook after detach and before {@link #onThrow} so subclasses can mark the
-	 * specific thrown instance (important for stack splits).
-	 */
-	protected void prepareThrownItem(Item thrown, UseContext ctx, int cell) {
-	}
-
 	/** Player Hero convenience — aim already resolved; opens no selector. */
 	public void cast(final Hero user, final int dst) {
-		throwAs(UseContext.hero(user), dst);
+
+		final int cell = throwPos(user, dst);
+		// Headless / off-stage: master always uses sprite.parent; complete sync for tests.
+		if (user.sprite == null || user.sprite.parent == null) {
+			user.busy();
+			Char enemy = Actor.findChar(cell);
+			QuickSlotButton.target(enemy);
+			final float delay = castDelay(user, cell);
+			curUser = user;
+			Item i = Item.this.detach(user.belongings.backpack);
+			if (i != null)
+				i.onThrow(cell);
+			if (enemy != null
+					&& curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
+					&& !(Item.this instanceof MissileWeapon)
+					&& curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null
+					&& enemy.alignment != curUser.alignment) {
+				Sample.INSTANCE.play(Assets.Sounds.HIT);
+				Buff.affect(enemy, Blindness.class,
+						1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
+				Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);
+			}
+			if (user.buff(Talent.LethalMomentumTracker.class) != null) {
+				user.buff(Talent.LethalMomentumTracker.class).detach();
+				user.next();
+			} else {
+				user.spendAndNext(delay);
+			}
+			return;
+		}
+
+		user.sprite.zap(cell);
+		user.busy();
+
+		throwSound();
+
+		Char enemy = Actor.findChar(cell);
+		QuickSlotButton.target(enemy);
+
+		final float delay = castDelay(user, cell);
+
+		if (enemy != null) {
+			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).reset(user.sprite,
+					enemy.sprite,
+					this,
+					new Callback() {
+						@Override
+						public void call() {
+							curUser = user;
+							Item i = Item.this.detach(user.belongings.backpack);
+							if (i != null)
+								i.onThrow(cell);
+							if (curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
+									&& !(Item.this instanceof MissileWeapon)
+									&& curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null) {
+								if (enemy != null && enemy.alignment != curUser.alignment) {
+									Sample.INSTANCE.play(Assets.Sounds.HIT);
+									Buff.affect(enemy, Blindness.class,
+											1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
+									Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);
+								}
+							}
+							if (user.buff(Talent.LethalMomentumTracker.class) != null) {
+								user.buff(Talent.LethalMomentumTracker.class).detach();
+								user.next();
+							} else {
+								user.spendAndNext(delay);
+							}
+						}
+					});
+		} else {
+			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).reset(user.sprite,
+					cell,
+					this,
+					new Callback() {
+						@Override
+						public void call() {
+							curUser = user;
+							Item i = Item.this.detach(user.belongings.backpack);
+							user.spend(delay);
+							if (i != null)
+								i.onThrow(cell);
+							user.next();
+						}
+					});
+		}
 	}
 
 	public float castDelay(Char user, int cell) {

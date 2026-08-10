@@ -24,8 +24,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.En
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Shockwave;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
@@ -161,7 +161,7 @@ class EchoArmorAbilityNextTurnTest {
 		Integer target = targeting.cell(f);
 		fillFov(f.boss);
 
-		ability.activateAs(f.echo(), armor, target);
+		EchoArmorAbilityAdapter.activate(f.boss, armor, ability, target);
 
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
@@ -174,7 +174,7 @@ class EchoArmorAbilityNextTurnTest {
 		Integer target = targeting.cell(f);
 		fillFov(f.boss);
 
-		ability.activateAs(f.echo(), armor, target);
+		EchoArmorAbilityAdapter.activate(f.boss, armor, ability, target);
 
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
@@ -186,7 +186,7 @@ class EchoArmorAbilityNextTurnTest {
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 0;
 
-		boolean ok = new Shockwave().activateAs(f.echo(), armor, f.player.pos);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new Shockwave(), f.player.pos);
 
 		Assertions.assertThat(ok).isFalse();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -237,8 +237,5 @@ class EchoArmorAbilityNextTurnTest {
 			this.ability = ability;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 	}
 }

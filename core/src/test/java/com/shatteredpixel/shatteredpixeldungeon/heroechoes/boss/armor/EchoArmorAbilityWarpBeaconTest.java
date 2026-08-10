@@ -6,8 +6,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WarpB
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.MageArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Echo {@link WarpBeacon} via
- * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility#activateAs}.
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.EchoArmorAbilityAdapter}.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoArmorAbilityWarpBeaconTest {
@@ -40,9 +40,6 @@ class EchoArmorAbilityWarpBeaconTest {
 			this.boss = boss;
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
-		}
 
 		Hero kit() {
 			return boss.getEchoHero();
@@ -50,7 +47,7 @@ class EchoArmorAbilityWarpBeaconTest {
 	}
 
 	@Test
-	@DisplayName("Echo WarpBeacon activateAs places WarpBeaconTracker on the kit")
+	@DisplayName("Echo WarpBeacon adapter activate places WarpBeaconTracker on the kit")
 	void placeBeaconOnKit() {
 		Fight f = fight();
 		int beacon = f.boss.pos;
@@ -60,12 +57,12 @@ class EchoArmorAbilityWarpBeaconTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WarpBeacon().activateAs(f.echo(), armor, beacon);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), beacon);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(f.kit().buff(WarpBeacon.WarpBeaconTracker.class)).isNotNull();
 		Assertions.assertThat(f.boss.buff(WarpBeacon.WarpBeaconTracker.class)).isNull();
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
@@ -80,19 +77,19 @@ class EchoArmorAbilityWarpBeaconTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		Assertions.assertThat(new WarpBeacon().activateAs(f.echo(), armor, beacon)).isTrue();
+		Assertions.assertThat(EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), beacon)).isTrue();
 
 		int away = emptyAdjacent(f.boss.pos);
 		Assertions.assertThat(away).isGreaterThanOrEqualTo(0);
 		f.boss.pos = away;
 		Dungeon.level.occupyCell(f.boss);
 
-		boolean recalled = new WarpBeacon().activateAs(f.echo(), armor, f.boss.pos);
+		boolean recalled = EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), f.boss.pos);
 
 		Assertions.assertThat(recalled).isTrue();
 		Assertions.assertThat(f.boss.pos).isEqualTo(beacon);
 		Assertions.assertThat(EchoTestSupport.stubSpritePlacedCell(f.boss)).isEqualTo(beacon);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 
@@ -107,14 +104,14 @@ class EchoArmorAbilityWarpBeaconTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		Assertions.assertThat(new WarpBeacon().activateAs(f.echo(), armor, beacon)).isTrue();
+		Assertions.assertThat(EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), beacon)).isTrue();
 
 		int away = emptyAdjacent(f.boss.pos);
 		Assertions.assertThat(away).isGreaterThanOrEqualTo(0);
 		f.boss.pos = away;
 		Dungeon.level.occupyCell(f.boss);
 
-		boolean recalled = new WarpBeacon().activateAs(f.echo(), armor, f.boss.pos);
+		boolean recalled = EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), f.boss.pos);
 
 		Assertions.assertThat(recalled).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -131,7 +128,7 @@ class EchoArmorAbilityWarpBeaconTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		boolean ok = new WarpBeacon().activateAs(f.echo(), armor, beacon);
+		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), beacon);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
@@ -148,7 +145,7 @@ class EchoArmorAbilityWarpBeaconTest {
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 
-		Assertions.assertThat(new WarpBeacon().activateAs(f.echo(), armor, beacon)).isTrue();
+		Assertions.assertThat(EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), beacon)).isTrue();
 		float chargeAfterPlace = armor.charge;
 
 		int away = emptyAdjacent(f.boss.pos);
@@ -156,9 +153,9 @@ class EchoArmorAbilityWarpBeaconTest {
 		f.boss.pos = away;
 		Dungeon.level.occupyCell(f.boss);
 
-		Assertions.assertThat(new WarpBeacon().activateAs(f.echo(), armor, f.boss.pos)).isTrue();
+		Assertions.assertThat(EchoArmorAbilityAdapter.activate(f.boss, armor, new WarpBeacon(), f.boss.pos)).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(chargeAfterPlace);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 

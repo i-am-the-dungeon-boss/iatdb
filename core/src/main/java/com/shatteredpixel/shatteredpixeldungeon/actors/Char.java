@@ -577,7 +577,8 @@ public abstract class Char extends Actor {
 				combinedLethality.detach();
 			}
 
-			if (enemy.sprite != null) {
+			// Attacker may be a headless Echo kit (sprite borrow already restored).
+			if (enemy.sprite != null && sprite != null) {
 				enemy.sprite.bloodBurstA(sprite.center(), effectiveDamage);
 				enemy.sprite.flash();
 			}
@@ -846,7 +847,8 @@ public abstract class Char extends Actor {
 		return (a != null && a.buff(cls) != null) || (b != null && b.buff(cls) != null);
 	}
 
-	// currently only used by invisible chars, or by the hero
+	// Used by invisible attackers in Char.hit; Hero and EchoBoss apply weapon/STR
+	// gates.
 	public boolean canSurpriseAttack() {
 		return true;
 	}
@@ -1523,5 +1525,13 @@ public abstract class Char extends Actor {
 
 	public static boolean hasProp(Char ch, Property p) {
 		return (ch != null && ch.properties().contains(p));
+	}
+
+	/**
+	 * World VFX (attack / jump / zap / MagicMissile / emitters) when the char's
+	 * sprite is attached to a scene.
+	 */
+	public static boolean canWorldFx(Char ch) {
+		return ch != null && ch.sprite != null && ch.sprite.parent != null;
 	}
 }

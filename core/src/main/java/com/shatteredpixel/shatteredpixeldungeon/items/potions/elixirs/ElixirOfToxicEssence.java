@@ -28,7 +28,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ToxicImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PoisonParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCorrosiveGas;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
@@ -41,7 +40,7 @@ public class ElixirOfToxicEssence extends Elixir {
 	@Override
 	public void apply(Char ch) {
 		Buff.affect(ch, ToxicImbue.class).set(ToxicImbue.DURATION);
-		if (UseContext.canWorldFx(ch)) {
+		if (Char.canWorldFx(ch)) {
 			ch.sprite.emitter().burst(PoisonParticle.SPLASH, 10);
 		}
 	}

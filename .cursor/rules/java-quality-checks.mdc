@@ -12,12 +12,14 @@ Config: [`gradle/java-quality.gradle`](gradle/java-quality.gradle). JVM modules 
 | When                                | What                                                                             |
 | ----------------------------------- | -------------------------------------------------------------------------------- |
 | Day-to-day editing                  | Nothing — match **master** style by hand                                         |
+| Agent / iterative `:core:test`      | Always `./gradlew :core:test -q -PerrorProneOff …` (skips EP warning flood)      |
 | Optional after a chunk of edits     | `./gradlew :core:spotlessApply`                                                  |
-| Before PR / finishing a feature     | `./gradlew :core:spotlessCheck :core:test`                                       |
+| Before PR / finishing a feature     | `./gradlew :core:spotlessCheck :core:test` (no `-PerrorProneOff`)                |
 | Feature done / bug hunt (optional)  | `./gradlew :core:compileJava` (Error Prone warnings) and/or `:core:spotbugsMain` |
 | Release / strict gate (opt-in only) | `-PerrorProneErrors` / `-PspotbugsErrors` — **not** default                      |
 
 Do **not** run SpotBugs or Error Prone on every save, every small edit, or as a substitute for tests.
+Agents must not run tests without `-q -PerrorProneOff` unless the user wants EP output or a PR gate.
 
 ## How to treat findings
 

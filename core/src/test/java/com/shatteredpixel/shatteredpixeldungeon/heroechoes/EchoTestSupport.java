@@ -37,6 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,10 +49,14 @@ public final class EchoTestSupport {
 	public static final String LEADERBOARD_FILE = "leaderboard.json";
 	public static final String TEST_GAME_VERSION = "0.0.1";
 
+	private static boolean deferAttackCallbacks;
+	private static final ArrayList<Callback> pendingAttackCallbacks = new ArrayList<>();
+
 	private EchoTestSupport() {
 	}
 
 	public static void resetWorkflowState() {
+		setDeferAttackCallbacks(false);
 		FileUtils.deleteDir("echoes");
 		FileUtils.deleteDir("echoes-solo");
 		FileUtils.deleteDir("echoes-solo-easy");
@@ -238,6 +243,30 @@ public final class EchoTestSupport {
 
 	public static int stubSpriteZapCalls(Char ch) {
 		return stubSprite(ch) == null ? 0 : stubSprite(ch).zapCalls;
+	}
+
+	/**
+	 * When true, {@link StubCharSprite#attack(int, Callback)} queues the callback
+	 * instead of running it — reproduces production CharSprite timing where
+	 * EchoKitBorrow.run restores the kit before the swing completes.
+	 */
+	public static void setDeferAttackCallbacks(boolean defer) {
+		deferAttackCallbacks = defer;
+		if (!defer) {
+			pendingAttackCallbacks.clear();
+		}
+	}
+
+	public static int pendingDeferredAttackCallbacks() {
+		return pendingAttackCallbacks.size();
+	}
+
+	public static void flushDeferredAttackCallbacks() {
+		ArrayList<Callback> copy = new ArrayList<>(pendingAttackCallbacks);
+		pendingAttackCallbacks.clear();
+		for (Callback callback : copy) {
+			callback.call();
+		}
 	}
 
 	private static StubCharSprite stubSprite(Char ch) {
@@ -503,8 +532,17 @@ public final class EchoTestSupport {
 				turnTo(ch.pos, cell);
 			}
 			if (callback != null) {
-				callback.call();
+				if (deferAttackCallbacks) {
+					pendingAttackCallbacks.add(callback);
+				} else {
+					callback.call();
+				}
 			}
+		}
+
+		@Override
+		public void operate(int cell) {
+			operate(cell, null);
 		}
 
 		@Override

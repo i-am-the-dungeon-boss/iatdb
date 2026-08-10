@@ -39,25 +39,27 @@ import com.watabou.utils.Random;
 
 public class AntiEntropy extends Glyph {
 
-	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );
-	
+	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing(0x000000);
+
 	@Override
-	public int proc( Armor armor, Char attacker, Char defender, int damage) {
+	public int proc(Armor armor, Char attacker, Char defender, int damage) {
 
-		float procChance = 1/8f * procChanceMultiplier(defender);
-		if ( Random.Float() < procChance ) {
+		float procChance = 1 / 8f * procChanceMultiplier(defender);
+		if (Random.Float() < procChance) {
 
-			for (int i : PathFinder.NEIGHBOURS8){
-				Freezing.affect(defender.pos+i);
+			for (int i : PathFinder.NEIGHBOURS8) {
+				Freezing.affect(defender.pos + i);
 			}
 
 			if (!Dungeon.level.water[defender.pos]) {
 				Buff.affect(defender, Burning.class).reignite(defender, 4);
 			}
-			defender.sprite.emitter().burst( FlameParticle.FACTORY, 5 );
+			if (Char.canWorldFx(defender)) {
+				defender.sprite.emitter().burst(FlameParticle.FACTORY, 5);
+			}
 
 		}
-		
+
 		return damage;
 	}
 

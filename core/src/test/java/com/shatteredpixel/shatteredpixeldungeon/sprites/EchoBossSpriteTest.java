@@ -8,7 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
@@ -263,7 +263,7 @@ class EchoBossSpriteTest {
 		pot.identify();
 		pot.collect(boss.getEchoHero().belongings.backpack);
 
-		Assertions.assertThat(pot.drinkAs(UseContext.echo(boss))).isTrue();
+		Assertions.assertThat(EchoPotionAdapter.drink(boss, pot)).isTrue();
 		tickSprite(sprite);
 
 		Assertions.assertThat(boss.buff(Invisibility.class)).isNotNull();
@@ -292,7 +292,7 @@ class EchoBossSpriteTest {
 		wand.identify();
 		wand.curCharges = wand.maxCharges;
 		Assertions.assertThat(wand.collect(player.belongings.backpack)).isTrue();
-		Assertions.assertThat(wand.zapAs(UseContext.hero(player), boss.pos)).isTrue();
+		Assertions.assertThat(wand.zap(player, boss.pos)).isTrue();
 
 		tickSprite(sprite);
 

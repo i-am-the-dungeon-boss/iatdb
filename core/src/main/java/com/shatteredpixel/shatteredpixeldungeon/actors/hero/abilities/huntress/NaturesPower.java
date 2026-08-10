@@ -26,19 +26,17 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.noosa.particles.Emitter;
 
 public class NaturesPower extends ArmorAbility {
 
@@ -47,23 +45,19 @@ public class NaturesPower extends ArmorAbility {
 	}
 
 	@Override
-	protected void activate(ClassArmor armor, UseContext ctx, Integer target) {
-		Char body = ctx.body;
-		Buff.prolong(body, naturesPowerTracker.class, naturesPowerTracker.DURATION);
-		body.buff(naturesPowerTracker.class).extensionsLeft = 2;
-		if (UseContext.canWorldFx(body)) {
-			body.sprite.operate(body.pos);
-			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-			Emitter e = body.sprite.emitter();
-			if (e != null) {
-				e.burst(LeafParticle.GENERAL, 10);
-			}
-		}
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 
-		armor.charge -= chargeUse(ctx.kit);
+		Buff.prolong(hero, naturesPowerTracker.class, naturesPowerTracker.DURATION);
+		hero.buff(naturesPowerTracker.class).extensionsLeft = 2;
+		hero.sprite.operate(hero.pos);
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
+		hero.sprite.emitter().burst(LeafParticle.GENERAL, 10);
+
+		armor.charge -= chargeUse(hero);
 		armor.updateQuickslot();
-		Invisibility.dispel(body);
-		ctx.turns.spendAfterThrow(Actor.TICK);
+		Invisibility.dispel();
+		hero.spendAndNext(Actor.TICK);
+
 	}
 
 	@Override
@@ -73,10 +67,10 @@ public class NaturesPower extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[] { Talent.GROWING_POWER, Talent.NATURES_WRATH, Talent.WILD_MOMENTUM, Talent.HEROIC_ENERGY };
+		return new Talent[]{Talent.GROWING_POWER, Talent.NATURES_WRATH, Talent.WILD_MOMENTUM, Talent.HEROIC_ENERGY};
 	}
 
-	public static class naturesPowerTracker extends FlavourBuff {
+	public static class naturesPowerTracker extends FlavourBuff{
 
 		{
 			type = buffType.POSITIVE;
@@ -86,7 +80,7 @@ public class NaturesPower extends ArmorAbility {
 
 		public int extensionsLeft = 2;
 
-		public void extend(int turns) {
+		public void extend( int turns ){
 			if (extensionsLeft > 0 && turns > 0) {
 				spend(turns);
 				extensionsLeft--;

@@ -17,6 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.AuraOfProtection;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BlessSpell;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Cleanse;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Flash;
@@ -28,7 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Radiance;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ShieldOfLight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoClericAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -102,8 +103,8 @@ class EchoBossArsenalClericSpellKindsTest {
 			return boss.getEchoHero();
 		}
 
-		UseContext echo() {
-			return UseContext.echo(boss);
+		boolean cast(ClericSpell spell, Integer target) {
+			return EchoClericAdapter.cast(boss, tome, spell, target);
 		}
 	}
 
@@ -114,7 +115,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		f.player.invisible = 1;
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), Smite.INSTANCE, f.player.pos)).isTrue();
+		Assertions.assertThat(f.cast(Smite.INSTANCE, f.player.pos)).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
 	}
 
@@ -124,7 +125,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Fight f = fight();
 		f.kit().subClass = HeroSubClass.PRIEST;
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), Radiance.INSTANCE, null)).isTrue();
+		Assertions.assertThat(f.cast(Radiance.INSTANCE, null)).isTrue();
 		Assertions.assertThat(f.player.buff(
 				com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight.Illuminated.class))
 				.isNotNull();
@@ -140,7 +141,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		f.boss.HP = Math.max(1, f.boss.HT / 4);
 		int hpBefore = f.boss.HP;
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), LayOnHands.INSTANCE, f.boss.pos)).isTrue();
+		Assertions.assertThat(f.cast(LayOnHands.INSTANCE, f.boss.pos)).isTrue();
 		int shield = f.boss.buff(Barrier.class) != null ? f.boss.buff(Barrier.class).shielding() : 0;
 		Assertions.assertThat(f.boss.HP + shield).isGreaterThan(hpBefore);
 	}
@@ -151,7 +152,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Fight f = fight();
 		takeTalent(f.kit(), Talent.BLESS, 1);
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), BlessSpell.INSTANCE, f.boss.pos)).isTrue();
+		Assertions.assertThat(f.cast(BlessSpell.INSTANCE, f.boss.pos)).isTrue();
 		Assertions.assertThat(f.boss.buff(Bless.class)).isNotNull();
 		Assertions.assertThat(f.kit().buff(Bless.class)).isNull();
 	}
@@ -163,7 +164,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		takeTalent(f.kit(), Talent.CLEANSE, 1);
 		com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(f.boss, Burning.class);
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), Cleanse.INSTANCE, null)).isTrue();
+		Assertions.assertThat(f.cast(Cleanse.INSTANCE, null)).isTrue();
 		Assertions.assertThat(f.boss.buff(Burning.class)).isNull();
 	}
 
@@ -174,7 +175,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		takeTalent(f.kit(), Talent.DIVINE_SENSE, 1);
 		String before = f.tome.status();
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), DivineSense.INSTANCE, null)).isTrue();
+		Assertions.assertThat(f.cast(DivineSense.INSTANCE, null)).isTrue();
 		Assertions.assertThat(f.tome.status()).isNotEqualTo(before);
 	}
 
@@ -184,7 +185,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Fight f = fight();
 		takeTalent(f.kit(), Talent.SHIELD_OF_LIGHT, 1);
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), ShieldOfLight.INSTANCE, f.player.pos)).isTrue();
+		Assertions.assertThat(f.cast(ShieldOfLight.INSTANCE, f.player.pos)).isTrue();
 		Assertions.assertThat(f.boss.buff(ShieldOfLight.ShieldOfLightTracker.class)).isNotNull();
 	}
 
@@ -195,7 +196,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		takeTalent(f.kit(), Talent.HALLOWED_GROUND, 1);
 		String before = f.tome.status();
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), HallowedGround.INSTANCE, f.player.pos)).isTrue();
+		Assertions.assertThat(f.cast(HallowedGround.INSTANCE, f.player.pos)).isTrue();
 		Assertions.assertThat(f.tome.status()).isNotEqualTo(before);
 	}
 
@@ -205,7 +206,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Fight f = fightPriest(1);
 		takeTalent(f.kit(), Talent.MNEMONIC_PRAYER, 1);
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), MnemonicPrayer.INSTANCE, f.player.pos)).isTrue();
+		Assertions.assertThat(f.cast(MnemonicPrayer.INSTANCE, f.player.pos)).isTrue();
 		Assertions.assertThat(f.player.buff(
 				com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight.Illuminated.class))
 				.isNotNull();
@@ -217,7 +218,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Fight f = fight();
 		takeTalent(f.kit(), Talent.AURA_OF_PROTECTION, 1);
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), AuraOfProtection.INSTANCE, null)).isTrue();
+		Assertions.assertThat(f.cast(AuraOfProtection.INSTANCE, null)).isTrue();
 		Assertions.assertThat(f.boss.buff(AuraOfProtection.AuraBuff.class)).isNotNull();
 	}
 
@@ -230,7 +231,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		f.player.invisible = 1;
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), Judgement.INSTANCE, null)).isTrue();
+		Assertions.assertThat(f.cast(Judgement.INSTANCE, null)).isTrue();
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
 	}
 
@@ -257,7 +258,7 @@ class EchoBossArsenalClericSpellKindsTest {
 		Dungeon.level.map[dest] = Terrain.EMPTY;
 		int start = f.boss.pos;
 
-		Assertions.assertThat(f.tome.castAs(f.echo(), Flash.INSTANCE, dest)).isTrue();
+		Assertions.assertThat(f.cast(Flash.INSTANCE, dest)).isTrue();
 		Assertions.assertThat(f.boss.pos).isEqualTo(dest);
 		Assertions.assertThat(f.boss.pos).isNotEqualTo(start);
 	}

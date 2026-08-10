@@ -30,7 +30,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.watabou.utils.BArray;
@@ -66,7 +65,7 @@ public class Shocking extends Weapon.Enchantment {
 				}
 			}
 
-			if (UseContext.canWorldFx(attacker)) {
+			if (Char.canWorldFx(attacker)) {
 				attacker.sprite.parent.addToFront(new Lightning(arcs, null));
 				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 			}
@@ -89,7 +88,7 @@ public class Shocking extends Weapon.Enchantment {
 	public static void arc(Char attacker, Char defender, int dist, ArrayList<Char> affected,
 			ArrayList<Lightning.Arc> arcs) {
 
-		if (UseContext.canWorldFx(defender)) {
+		if (Char.canWorldFx(defender)) {
 			defender.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);
 			defender.sprite.flash();
 		}
@@ -107,7 +106,7 @@ public class Shocking extends Weapon.Enchantment {
 
 		affected.addAll(hitThisArc);
 		for (Char hit : hitThisArc) {
-			if (UseContext.canWorldFx(defender) && UseContext.canWorldFx(hit)) {
+			if (Char.canWorldFx(defender) && Char.canWorldFx(hit)) {
 				arcs.add(new Lightning.Arc(defender.sprite.center(), hit.sprite.center()));
 			}
 			arc(attacker, hit, (Dungeon.level.water[hit.pos] && !hit.flying) ? 2 : 1, affected, arcs);

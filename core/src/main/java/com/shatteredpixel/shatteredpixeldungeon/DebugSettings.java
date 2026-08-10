@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugEchoArsenal;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugStrategyKit;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -202,6 +203,9 @@ public final class DebugSettings {
 		if (START_STR > Hero.STARTING_STR) {
 			hero.STR = START_STR;
 		}
+
+		// fully-charged class armor, no armor ability chosen (ranked / solo).
+		DebugEchoArsenal.grantHeroClassArmor();
 
 		new Ankh().collect();
 		Ankh blessed = new Ankh();

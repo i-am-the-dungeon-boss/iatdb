@@ -7,8 +7,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBossTurnAssert;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PathFinder;
@@ -35,7 +35,7 @@ class EchoArmorAbilityFeintTest {
 		DuelistArmor armor = new DuelistArmor();
 		armor.charge = 100;
 
-		boolean ok = new Feint().activateAs(UseContext.echo(boss), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(boss, armor, new Feint(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(boss.pos).isEqualTo(dest);
@@ -50,12 +50,12 @@ class EchoArmorAbilityFeintTest {
 		Assertions.assertThat(image).isNotNull();
 		Assertions.assertThat(image.pos).isEqualTo(start);
 		Assertions.assertThat(image.alignment).isEqualTo(boss.alignment);
-	
+
 		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
 
 	@Test
-	@DisplayName("Echo Feint activateAs clears busy so the boss turn can resume")
+	@DisplayName("Echo Feint adapter activate clears busy so the boss turn can resume")
 	void echoFeintClearsBusy() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -68,7 +68,7 @@ class EchoArmorAbilityFeintTest {
 		DuelistArmor armor = new DuelistArmor();
 		armor.charge = 100;
 
-		boolean ok = new Feint().activateAs(UseContext.echo(boss), armor, dest);
+		boolean ok = EchoArmorAbilityAdapter.activate(boss, armor, new Feint(), dest);
 
 		Assertions.assertThat(ok).isTrue();
 		EchoBossTurnAssert.assertCanTakeNextTurn(boss);

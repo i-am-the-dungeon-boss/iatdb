@@ -16,6 +16,14 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
 import com.watabou.utils.PathFinder;
 
 /**
@@ -27,6 +35,19 @@ import com.watabou.utils.PathFinder;
 public final class EchoAoeDots {
 
 	public static final String STATUS = "aoe_dot";
+
+	/** Exit-scoring weights; see {@code exitScore}. Each strictly outranks the next. */
+	private static final int POCKET_WEIGHT = 10000;
+	private static final int DISTANCE_WEIGHT = 100;
+
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends Blob>[] GAS_BLOBS = new Class[] {
+			ToxicGas.class,
+			CorrosiveGas.class,
+			ParalyticGas.class,
+			ConfusionGas.class,
+			StenchGas.class,
+	};
 
 	private EchoAoeDots() {
 	}
@@ -68,6 +89,113 @@ public final class EchoAoeDots {
 		return false;
 	}
 
+	/**
+	 * Cells policy movement must refuse: current AoE DoT, next-tick gas growth,
+	 * or a harmful plant.
+	 */
+	public static boolean isAoeHazardForPath(Char ch, int cell) {
+		return isAoeHazardForPath(ch, cell, true);
+	}
+
+	/**
+	 * As {@link #isAoeHazardForPath(Char, int)}, but the predicted gas-growth
+	 * ring can be waived.
+	 * <p>
+	 * The ring around a dense cloud is often the whole corridor, so treating it
+	 * as impassable can leave the echo with no legal step at all — it then
+	 * stands still and keeps taking the damage it was trying to avoid. Callers
+	 * try the strict mask first and fall back to {@code avoidPredictedGas =
+	 * false}. Cells that are harmful <em>now</em>, and harmful plants, are never
+	 * waived.
+	 */
+	public static boolean isAoeHazardForPath(Char ch, int cell, boolean avoidPredictedGas) {
+		if (ch == null || Dungeon.level == null || cell < 0 || cell >= Dungeon.level.length()) {
+			return true;
+		}
+		if (isAoeDotAt(ch, cell)) {
+			return true;
+		}
+		if (avoidPredictedGas && isPredictedGasAt(ch, cell)) {
+			return true;
+		}
+		return isHarmfulPlantAt(cell);
+	}
+
+	public static boolean isHarmfulPlantAt(int cell) {
+		if (Dungeon.level == null || cell < 0 || cell >= Dungeon.level.length()) {
+			return false;
+		}
+		Plant plant = Dungeon.level.plants.get(cell);
+		if (plant == null) {
+			return false;
+		}
+		return plant instanceof Firebloom
+				|| plant instanceof Sorrowmoss
+				|| plant instanceof Blindweed
+				|| plant instanceof Stormvine
+				|| plant instanceof Icecap
+				|| plant instanceof Fadeleaf
+				|| plant instanceof Rotberry;
+	}
+
+	/**
+	 * True when {@link Blob#evolve()} gas diffusion would put volume on
+	 * {@code cell} next tick (read-only; does not mutate blob state).
+	 */
+	public static boolean isPredictedGasAt(Char ch, int cell) {
+		if (ch == null || Dungeon.level == null) {
+			return false;
+		}
+		Level level = Dungeon.level;
+		if (cell < 0 || cell >= level.length() || level.solid[cell]) {
+			return false;
+		}
+		for (int g = 0; g < GAS_BLOBS.length; g++) {
+			Class<? extends Blob> blobClass = GAS_BLOBS[g];
+			if (ch.isImmune(blobClass)) {
+				continue;
+			}
+			Blob blob = level.blobs.get(blobClass);
+			if (blob == null || blob.volume <= 0 || blob.cur == null) {
+				continue;
+			}
+			if (predictedGasVolume(blob, cell, level) > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** One-step Blob.evolve gas value at cell (orthogonal average − 1). */
+	static int predictedGasVolume(Blob blob, int cell, Level level) {
+		int[] cur = blob.cur;
+		if (cur == null || cell < 0 || cell >= cur.length || level.solid[cell]) {
+			return 0;
+		}
+		int width = level.width();
+		int x = cell % width;
+		int y = cell / width;
+		int count = 1;
+		int sum = cur[cell];
+		if (x > 0 && !level.solid[cell - 1]) {
+			sum += cur[cell - 1];
+			count++;
+		}
+		if (x < width - 1 && !level.solid[cell + 1]) {
+			sum += cur[cell + 1];
+			count++;
+		}
+		if (y > 0 && !level.solid[cell - width]) {
+			sum += cur[cell - width];
+			count++;
+		}
+		if (y < level.height() - 1 && !level.solid[cell + width]) {
+			sum += cur[cell + width];
+			count++;
+		}
+		return sum >= count ? (sum / count) - 1 : 0;
+	}
+
 	private static boolean harmful(
 			Char ch, int cell, Class<? extends Blob> blob, Class<?> immunity) {
 		return Blob.volumeAt(cell, blob) > 0 && !ch.isImmune(immunity);
@@ -80,13 +208,28 @@ public final class EchoAoeDots {
 		return bestExit(boss, -1, false) >= 0;
 	}
 
+	/** True when {@code cell} is only unsafe because gas is about to spread onto it. */
+	static boolean isPredictedGasOnly(Char ch, int cell) {
+		return !isAoeDotAt(ch, cell) && !isHarmfulPlantAt(cell) && isPredictedGasAt(ch, cell);
+	}
+
 	/**
-	 * Best adjacent cell clear of AoE hazards, or {@code -1}.
+	 * Best adjacent cell clear of path hazards, or {@code -1}.
 	 *
 	 * @param enemyPos hero cell for distance scoring; ignored when &lt; 0
 	 * @param kite     prefer maximizing distance to {@code enemyPos}
 	 */
 	public static int bestExit(EchoBoss boss, int enemyPos, boolean kite) {
+		int strict = bestExit(boss, enemyPos, kite, true);
+		if (strict >= 0) {
+			return strict;
+		}
+		// Better to stand on a tile gas is about to reach than to stay in the fire.
+		return bestExit(boss, enemyPos, kite, false);
+	}
+
+	private static int bestExit(
+			EchoBoss boss, int enemyPos, boolean kite, boolean avoidPredictedGas) {
 		if (boss == null || Dungeon.level == null) {
 			return -1;
 		}
@@ -98,23 +241,77 @@ public final class EchoAoeDots {
 		int bestScore = Integer.MIN_VALUE;
 		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 			int cell = boss.pos + PathFinder.NEIGHBOURS8[i];
-			if (!level.insideMap(cell) || !boss.policyCellPathable(cell)) {
+			if (!level.insideMap(cell) || !boss.policyCellPathable(cell, avoidPredictedGas)) {
 				continue;
 			}
-			if (isAoeDotAt(boss, cell)) {
+			if (isAoeHazardForPath(boss, cell, avoidPredictedGas)) {
 				continue;
 			}
-			int score;
-			if (enemyPos < 0 || !level.insideMap(enemyPos)) {
-				score = 0;
-			} else {
-				int dist = level.distance(cell, enemyPos);
-				score = kite ? dist : -dist;
-			}
+			int score = exitScore(boss, cell, enemyPos, kite, level);
 			if (best < 0 || score > bestScore || (score == bestScore && cell < best)) {
 				best = cell;
 				bestScore = score;
 			}
+		}
+		return best;
+	}
+
+	/**
+	 * Lexicographic exit preference, widest term first:
+	 * <ol>
+	 * <li>not a one-tile pocket still ringed by hazard,</li>
+	 * <li>the positioning intent — away from the hero when kiting, toward when
+	 * closing,</li>
+	 * <li>clearance from gas and its predicted growth ring.</li>
+	 * </ol>
+	 * The weights keep each term strictly above the next, so clearance breaks
+	 * ties but can never override where the echo is trying to stand.
+	 */
+	private static int exitScore(EchoBoss boss, int cell, int enemyPos, boolean kite, Level level) {
+		int score = 0;
+		if (hasClearNeighbour(boss, cell, level)) {
+			score += POCKET_WEIGHT;
+		}
+		if (enemyPos >= 0 && level.insideMap(enemyPos)) {
+			int dist = level.distance(cell, enemyPos);
+			score += DISTANCE_WEIGHT * (kite ? dist : -dist);
+		}
+		score += gasClearance(boss, cell, level);
+		return score;
+	}
+
+	private static boolean hasClearNeighbour(EchoBoss boss, int cell, Level level) {
+		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+			int n = cell + PathFinder.NEIGHBOURS8[i];
+			if (!level.insideMap(n) || n == boss.pos) {
+				continue;
+			}
+			if (!level.passable[n] || level.solid[n]) {
+				continue;
+			}
+			if (!isAoeHazardForPath(boss, n, false)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Count of {@code cell}'s neighbours clear of current or predicted gas.
+	 * Public so other movement scoring — e.g. {@link EchoBoss}'s retreat-step
+	 * choice — can use the same tiebreak this class uses for exit scoring.
+	 */
+	public static int gasClearance(EchoBoss boss, int cell, Level level) {
+		int best = 0;
+		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
+			int n = cell + PathFinder.NEIGHBOURS8[i];
+			if (!level.insideMap(n)) {
+				continue;
+			}
+			if (isAoeDotAt(boss, n) || isPredictedGasAt(boss, n)) {
+				continue;
+			}
+			best++;
 		}
 		return best;
 	}

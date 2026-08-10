@@ -6,8 +6,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
@@ -134,7 +134,7 @@ class WandOfLightningTest {
 		int hpBefore = player.HP;
 		player.invisible = 1;
 
-		Assertions.assertThatCode(() -> wand.zapAs(UseContext.echo(boss), player.pos))
+		Assertions.assertThatCode(() -> EchoWandAdapter.zap(boss, wand, player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
@@ -157,7 +157,7 @@ class WandOfLightningTest {
 		int hpBefore = player.HP;
 		player.invisible = 1;
 
-		Assertions.assertThatCode(() -> wand.zapAs(UseContext.echo(boss), player.pos))
+		Assertions.assertThatCode(() -> EchoWandAdapter.zap(boss, wand, player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 	}

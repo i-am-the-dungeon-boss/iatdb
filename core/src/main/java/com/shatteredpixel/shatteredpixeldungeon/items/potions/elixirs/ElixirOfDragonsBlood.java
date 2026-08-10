@@ -29,7 +29,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.watabou.noosa.audio.Sample;
@@ -43,7 +42,7 @@ public class ElixirOfDragonsBlood extends Elixir {
 	@Override
 	public void apply(Char ch) {
 		Buff.affect(ch, FireImbue.class).set(FireImbue.DURATION);
-		if (UseContext.canWorldFx(ch)) {
+		if (Char.canWorldFx(ch)) {
 			Sample.INSTANCE.play(Assets.Sounds.BURNING);
 			ch.sprite.emitter().burst(FlameParticle.FACTORY, 10);
 		}

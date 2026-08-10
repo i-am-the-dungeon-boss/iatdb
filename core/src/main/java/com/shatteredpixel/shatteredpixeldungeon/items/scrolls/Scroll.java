@@ -36,7 +36,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.ItemStatusHandler;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfAntiMagic;
@@ -56,7 +55,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -189,86 +187,37 @@ public abstract class Scroll extends Item {
 		super.execute(hero, action);
 
 		if (action.equals(AC_READ)) {
-			readAs(UseContext.hero(hero));
-		}
-	}
 
-	/**
-	 * Shared self-read for Hero and Echo. Effects that are Char-safe apply to
-	 * {@code ctx.body}; inventory comes from {@code ctx.kit}; turn/VFX via
-	 * {@code ctx.turns} / {@code ctx.heroFX}.
-	 *
-	 * @return false when the scroll cannot run in this context (blocked or
-	 *         Hero-UI-only under Echo)
-	 */
-	public boolean readAs(UseContext ctx) {
-		if (ctx == null || ctx.kit == null || ctx.body == null) {
-			return false;
-		}
-		if (ctx.body.buff(MagicImmune.class) != null) {
-			if (ctx.heroFX) {
+			if (hero.buff(MagicImmune.class) != null) {
 				GLog.w(Messages.get(this, "no_magic"));
-			}
-			return false;
-		}
-		if (ctx.body.buff(Blindness.class) != null) {
-			if (ctx.heroFX) {
+			} else if (hero.buff(Blindness.class) != null) {
 				GLog.w(Messages.get(this, "blinded"));
-			}
-			return false;
-		}
-		if (ctx.kit.buff(UnstableSpellbook.bookRecharge.class) != null
-				&& ctx.kit.buff(UnstableSpellbook.bookRecharge.class).isCursed()
-				&& !(this instanceof ScrollOfRemoveCurse || this instanceof ScrollOfAntiMagic)) {
-			if (ctx.heroFX) {
+			} else if (hero.buff(UnstableSpellbook.bookRecharge.class) != null
+					&& hero.buff(UnstableSpellbook.bookRecharge.class).isCursed()
+					&& !(this instanceof ScrollOfRemoveCurse || this instanceof ScrollOfAntiMagic)) {
 				GLog.n(Messages.get(this, "cursed"));
+			} else {
+				doRead();
 			}
-			return false;
-		}
-		setCurrent(ctx.kit);
-		return doReadAs(ctx);
-	}
 
-	/**
-	 * Scroll effect body. Default keeps the Hero {@link #doRead()} path when
-	 * {@code heroFX}; Echo contexts refuse unless a subclass overrides with a
-	 * Char-safe implementation.
-	 */
-	protected boolean doReadAs(UseContext ctx) {
-		if (!ctx.heroFX) {
-			return false;
 		}
-		doRead();
-		return true;
 	}
 
 	public abstract void doRead();
 
 	public void readAnimation() {
-		readAnimation(UseContext.hero(curUser));
-	}
+		Invisibility.dispel();
+		curUser.spend(TIME_TO_READ);
+		curUser.busy();
+		((HeroSprite) curUser.sprite).read();
 
-	protected void readAnimation(UseContext ctx) {
-		Invisibility.dispel(ctx.body);
-		if (UseContext.canWorldFx(ctx.body)) {
-			if (ctx.body.sprite instanceof HeroSprite) {
-				((HeroSprite) ctx.body.sprite).read();
-			} else if (ctx.body.sprite instanceof EchoBossSprite) {
-				((EchoBossSprite) ctx.body.sprite).read();
-			} else {
-				ctx.body.sprite.operate(ctx.body.pos);
-			}
+		if (!anonymous) {
+			Catalog.countUse(getClass());
 		}
-		if (ctx.heroFX) {
-			ctx.kit.spend(TIME_TO_READ);
-			ctx.turns.busy();
-			if (!anonymous) {
-				Catalog.countUse(getClass());
-			}
-			if (Random.Float() < talentChance) {
-				Talent.onScrollUsed(ctx.kit, ctx.body.pos, talentFactor, getClass());
-			}
+		if (Random.Float() < talentChance) {
+			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());
 		}
+
 	}
 
 	public boolean isKnown() {

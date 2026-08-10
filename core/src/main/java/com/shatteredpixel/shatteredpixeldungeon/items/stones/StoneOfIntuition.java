@@ -30,7 +30,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
@@ -69,22 +68,6 @@ public class StoneOfIntuition extends InventoryStone {
 			return !((Scroll) item).isKnown();
 		}
 		return false;
-	}
-
-	@Override
-	protected boolean onItemSelectedAs(UseContext ctx, Item item) {
-		// Echo: skip guess UI — identify the unknown item
-		item.identify();
-		if (!anonymous) {
-			detach(ctx.kit.belongings.backpack);
-			Catalog.countUse(getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, getClass());
-		}
-		if (ctx.heroFX) {
-			curUser = ctx.kit;
-			useAnimation();
-		}
-		return true;
 	}
 
 	@Override

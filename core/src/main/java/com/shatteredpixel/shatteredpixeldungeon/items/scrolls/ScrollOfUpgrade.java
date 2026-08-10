@@ -33,7 +33,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
@@ -67,46 +66,6 @@ public class ScrollOfUpgrade extends InventoryScroll {
 
 		GameScene.show(new WndUpgrade(this, item, identifiedByUse));
 
-	}
-
-	/**
-	 * Echo: auto-upgrade first upgradable kit item (no {@link WndUpgrade}).
-	 * Hero: opens the upgrade confirmation window via {@link #doRead()}.
-	 */
-	@Override
-	protected boolean doReadAs(UseContext ctx) {
-		if (ctx.heroFX) {
-			doRead();
-			return true;
-		}
-		Item pick = null;
-		for (Item item : ctx.kit.belongings) {
-			if (item != this && usableOnItem(item)) {
-				pick = item;
-				break;
-			}
-		}
-		if (pick == null) {
-			return false;
-		}
-		ScrollOfUpgrade scroll = this;
-		if (!anonymous) {
-			Item detached = detach(ctx.kit.belongings.backpack);
-			if (detached instanceof ScrollOfUpgrade) {
-				scroll = (ScrollOfUpgrade) detached;
-			}
-		}
-		Hero prevUser = curUser;
-		Item prevItem = curItem;
-		curUser = ctx.kit;
-		curItem = scroll;
-		try {
-			scroll.upgradeItem(pick);
-		} finally {
-			curUser = prevUser;
-			curItem = prevItem;
-		}
-		return true;
 	}
 
 	public void reShowSelector(boolean force) {

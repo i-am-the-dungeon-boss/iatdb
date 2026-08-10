@@ -154,6 +154,28 @@ class EchoBossSurpriseAttackTest {
 	}
 
 	@Test
+	@DisplayName("body paralysis halves EchoBoss defenseSkill via kit")
+	void bodyParalysisHalvesDefenseSkillViaKit() {
+		Hero kit = boss.getEchoHero();
+		int kitPos = kit.pos;
+
+		kit.paralysed = 1;
+		kit.pos = boss.pos;
+		int expected = kit.defenseSkill(hero);
+		kit.paralysed = 0;
+		kit.pos = kitPos;
+
+		boss.paralysed = 1;
+		Assertions.assertThat(kit.paralysed).isZero();
+
+		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(expected);
+		Assertions.assertThat(kit.paralysed)
+				.as("kit paralysed must not leak after combat query")
+				.isZero();
+		Assertions.assertThat(kit.pos).isEqualTo(kitPos);
+	}
+
+	@Test
 	@DisplayName("invisible hero always hits EchoBoss via Char.hit")
 	void invisibleHeroAlwaysHitsEchoBoss() {
 		hero.invisible = 1;
@@ -178,6 +200,42 @@ class EchoBossSurpriseAttackTest {
 
 		Assertions.assertThat(Char.hit(boss, hero, false)).isTrue();
 		Assertions.assertThat(hero).isNotInstanceOf(Mob.class);
+	}
+
+	@Test
+	@DisplayName("EchoBoss with dagger can surprise attack")
+	void echoBossWithDaggerCanSurpriseAttack() {
+		Hero kit = boss.getEchoHero();
+		Dagger dagger = new Dagger();
+		dagger.identify();
+		kit.belongings.weapon = dagger;
+		kit.STR = Math.max(kit.STR(), dagger.STRReq());
+
+		Assertions.assertThat(boss.canSurpriseAttack()).isTrue();
+	}
+
+	@Test
+	@DisplayName("EchoBoss with flail cannot surprise attack")
+	void echoBossWithFlailCannotSurpriseAttack() {
+		Hero kit = boss.getEchoHero();
+		Flail flail = new Flail();
+		flail.identify();
+		kit.belongings.weapon = flail;
+		kit.STR = Math.max(kit.STR(), flail.STRReq());
+
+		Assertions.assertThat(boss.canSurpriseAttack()).isFalse();
+	}
+
+	@Test
+	@DisplayName("EchoBoss with under-STR weapon cannot surprise attack")
+	void echoBossWithUnderStrWeaponCannotSurpriseAttack() {
+		Hero kit = boss.getEchoHero();
+		Greataxe axe = new Greataxe();
+		axe.identify();
+		kit.belongings.weapon = axe;
+		kit.STR = axe.STRReq() - 1;
+
+		Assertions.assertThat(boss.canSurpriseAttack()).isFalse();
 	}
 
 	@Test

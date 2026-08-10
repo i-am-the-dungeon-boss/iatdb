@@ -5,9 +5,6 @@
  * Shattered Pixel Dungeon
  * Copyright (C) 2014-2026 Evan Debenham
  *
- * I am the Dungeon Boss
- * Copyright (C) 2026 Dungeon Boss
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,7 +30,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
-import com.shatteredpixel.shatteredpixeldungeon.items.UseContext;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -62,42 +58,26 @@ public class DivineSense extends ClericSpell {
 
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
-		castAs(UseContext.hero(hero), tome, null);
-	}
-
-	@Override
-	public boolean castAs(UseContext ctx, HolyTome tome, Integer target) {
-		if (ctx == null || ctx.body == null || ctx.kit == null || tome == null) {
-			return false;
-		}
-
-		Buff.prolong(ctx.body, DivineSenseTracker.class, DivineSenseTracker.DURATION);
+		Buff.prolong(hero, DivineSenseTracker.class, DivineSenseTracker.DURATION);
 		Dungeon.observe();
 
-		if (UseContext.canWorldFx(ctx.body)) {
-			Sample.INSTANCE.play(Assets.Sounds.READ);
-			SpellSprite.show(ctx.body, SpellSprite.VISION);
-			ctx.body.sprite.operate(ctx.body.pos);
-		}
-		if (ctx.heroFX) {
-			ctx.kit.next();
-		}
+		Sample.INSTANCE.play(Assets.Sounds.READ);
+
+		SpellSprite.show(hero, SpellSprite.VISION);
+		hero.sprite.operate(hero.pos);
+		hero.next();
 
 		Char ally = PowerOfMany.getPoweredAlly();
-		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
+		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
 			Buff.prolong(ally, DivineSenseTracker.class, DivineSenseTracker.DURATION);
-			if (UseContext.canWorldFx(ally)) {
-				SpellSprite.show(ally, SpellSprite.VISION);
-			}
+			SpellSprite.show(ally, SpellSprite.VISION);
 		}
 
-		onSpellCast(ctx, tome);
-		return true;
+		onSpellCast(tome, hero);
 	}
 
-	public String desc() {
-		return Messages.get(this, "desc", 4 + 4 * Dungeon.hero.pointsInTalent(Talent.DIVINE_SENSE)) + "\n\n"
-				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
+	public String desc(){
+		return Messages.get(this, "desc", 4+4*Dungeon.hero.pointsInTalent(Talent.DIVINE_SENSE)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
 	}
 
 	public static class DivineSenseTracker extends FlavourBuff {
