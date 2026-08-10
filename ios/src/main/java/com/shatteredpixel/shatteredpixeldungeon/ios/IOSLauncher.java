@@ -33,6 +33,7 @@ import com.badlogic.gdx.backends.iosrobovm.IOSPreferences;
 import com.badlogic.gdx.backends.iosrobovm.bindings.metalangle.MGLDrawableColorFormat;
 import com.badlogic.gdx.backends.iosrobovm.bindings.metalangle.MGLDrawableDepthFormat;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
@@ -66,6 +67,9 @@ public class IOSLauncher extends IOSApplication.Delegate {
 		NSException.registerDefaultJavaUncaughtExceptionHandler();
 		Thread.UncaughtExceptionHandler robovmHandler = Thread.getDefaultUncaughtExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+			// The process dies below without ever reaching GameScene.onPause, so save the
+			// run here or lose everything since the last floor transition. Never throws.
+			Dungeon.saveAllOnCrash();
 			SentryCrashReporting.reportAndFlush(throwable);
 			if (robovmHandler != null) {
 				robovmHandler.uncaughtException(thread, throwable);

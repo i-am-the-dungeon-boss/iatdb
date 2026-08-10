@@ -1104,6 +1104,31 @@ public class Dungeon {
 		}
 	}
 
+	/**
+	 * Last-chance save from a launcher's uncaught-exception handler.
+	 *
+	 * A crash exits via {@code System.exit}, so {@code GameScene.onPause} never runs and
+	 * the run rolls back to the last floor transition. This saves what is in memory
+	 * instead. It must never throw: the caller still has to report the original crash,
+	 * and a failure here (or half-built state left by the crash) cannot be allowed to
+	 * replace it.
+	 *
+	 * @return true if a save was written
+	 */
+	public static boolean saveAllOnCrash() {
+		try {
+			// saveAll() itself skips a dead hero; level is needed by saveLevel().
+			if (hero == null || level == null || GamesInProgress.curSlot <= 0) {
+				return false;
+			}
+			saveAll();
+			return hero.isAlive() || WndResurrect.instance != null;
+		} catch (Throwable ignored) {
+			// Deliberately swallowed — the crash being reported matters more.
+			return false;
+		}
+	}
+
 	public static void loadGame(int save) throws IOException {
 		loadGame(save, true);
 	}

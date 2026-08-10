@@ -32,6 +32,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Preferences;
 import com.badlogic.gdx.utils.Architecture;
 import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -102,6 +103,9 @@ public class DesktopLauncher {
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread thread, Throwable throwable) {
+				// System.exit below skips GameScene.onPause, so save the run here or lose
+				// everything since the last floor transition. Never throws.
+				Dungeon.saveAllOnCrash();
 				// reportAndFlush (not Game.reportException) — avoids a duplicate Sentry event
 				SentryCrashReporting.reportAndFlush(throwable);
 				StringWriter sw = new StringWriter();
