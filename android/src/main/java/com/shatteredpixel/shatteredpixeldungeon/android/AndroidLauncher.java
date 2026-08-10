@@ -43,6 +43,7 @@ import com.badlogic.gdx.backends.android.AndroidAudio;
 import com.badlogic.gdx.backends.android.AsynchronousAndroidAudio;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeType;
 import com.badlogic.gdx.utils.GdxNativesLoader;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
@@ -108,6 +109,18 @@ public class AndroidLauncher extends AndroidApplication {
 					}
 				});
 			}
+
+			// Installed after Sentry auto-init so this runs first and the save happens
+			// before the crash is reported. The process dies without ever reaching
+			// GameScene.onPause, which would otherwise cost the run everything since
+			// the last floor transition. saveAllOnCrash() never throws.
+			Thread.UncaughtExceptionHandler previousHandler = Thread.getDefaultUncaughtExceptionHandler();
+			Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+				Dungeon.saveAllOnCrash();
+				if (previousHandler != null) {
+					previousHandler.uncaughtException(thread, throwable);
+				}
+			});
 
 			Gdx.app = this;
 			EchoOnlineSettings.loadDefaultDotEnv();
