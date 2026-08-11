@@ -247,6 +247,7 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_DEBUG_START = "debug_start";
 	public static final String KEY_DEBUG_START_DEPTH = "debug_start_depth";
 	public static final String KEY_DEBUG_STRATEGY_KIT = "debug_strategy_kit";
+	public static final String KEY_UNLOCK_EVERYTHING = "unlock_everything";
 
 	public static final String KEY_SUPPORT_NAGGED = "support_nagged";
 	public static final String KEY_VICTORY_NAGGED = "victory_nagged";
@@ -286,6 +287,14 @@ public class SPDSettings extends GameSettings {
 
 	public static void debugStrategyKit(boolean value) {
 		put(KEY_DEBUG_STRATEGY_KIT, value);
+	}
+
+	public static void unlockEverything(boolean value) {
+		put(KEY_UNLOCK_EVERYTHING, value);
+	}
+
+	public static boolean unlockEverything() {
+		return getBoolean(KEY_UNLOCK_EVERYTHING, false);
 	}
 
 	public static boolean debugStrategyKit() {

@@ -870,6 +870,7 @@ public class WndSettings extends WndTabbed {
 		CheckBox chkUpdates;
 		CheckBox chkBetas;
 		CheckBox chkWifi;
+		CheckBox chkUnlockEverything;
 
 		@Override
 		protected void createChildren() {
@@ -928,6 +929,16 @@ public class WndSettings extends WndTabbed {
 				chkWifi.checked(SPDSettings.WiFi());
 				add(chkWifi);
 			}
+
+			chkUnlockEverything = new CheckBox(Messages.get(this, "unlock_everything")) {
+				@Override
+				protected void onClick() {
+					super.onClick();
+					SPDSettings.unlockEverything(checked());
+				}
+			};
+			chkUnlockEverything.checked(SPDSettings.unlockEverything());
+			add(chkUnlockEverything);
 		}
 
 		@Override
@@ -959,6 +970,9 @@ public class WndSettings extends WndTabbed {
 				chkWifi.setRect(0, pos + GAP, width, BTN_HEIGHT);
 				pos = chkWifi.bottom();
 			}
+
+			chkUnlockEverything.setRect(0, pos + GAP, width, BTN_HEIGHT);
+			pos = chkUnlockEverything.bottom();
 
 			height = pos;
 
