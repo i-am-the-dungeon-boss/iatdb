@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HouseLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndDungeonMode;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -80,30 +81,17 @@ class VillageGroundLevelTest {
 
     @Test
     @DisplayName("The ground level is always rebuilt, never resumed from disk")
-    void groundLevelIsNeverRestored() throws java.io.IOException {
-        String source = readSource(
-                "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/village/VillageGateway.java");
-
+    void groundLevelIsNeverRestored() {
         // A saved Level restores its own width and height from its bundle, so a
         // village written by an older build would keep that build's map forever
         // — which is exactly how a hero ended up standing off the edge of the
         // house map. The ground level holds no progress, so it is never resumed.
-        Assertions.assertThat(source).contains("InterlevelScene.Mode.DESCEND");
-        Assertions.assertThat(source).doesNotContain("InterlevelScene.Mode.CONTINUE");
-        Assertions.assertThat(source).contains("discardStoredVillage()");
-    }
+        VillageGateway.prepareVillageEntry();
 
-    private static String readSource(String relativePath) throws java.io.IOException {
-        java.nio.file.Path dir = java.nio.file.Paths.get("").toAbsolutePath();
-        for (int i = 0; i < 8 && dir != null; i++) {
-            java.nio.file.Path candidate = dir.resolve(relativePath);
-            if (java.nio.file.Files.isRegularFile(candidate)) {
-                return java.nio.file.Files.readString(candidate,
-                        java.nio.charset.StandardCharsets.UTF_8);
-            }
-            dir = dir.getParent();
-        }
-        throw new AssertionError("Could not find " + relativePath);
+        Assertions.assertThat(InterlevelScene.mode)
+                .isEqualTo(InterlevelScene.Mode.VILLAGE)
+                .isNotEqualTo(InterlevelScene.Mode.CONTINUE);
+        Assertions.assertThat(VillageGateway.villageExists()).isFalse();
     }
 
     @Test

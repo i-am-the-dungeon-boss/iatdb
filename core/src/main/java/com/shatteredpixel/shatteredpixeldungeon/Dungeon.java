@@ -67,7 +67,6 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DebugArenaLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HouseLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
-import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
@@ -322,23 +321,10 @@ public class Dungeon {
 		GamesInProgress.selectedClass.initHero(hero);
 
 		applyDebugStartIfNeeded();
-		applyVillageStartIfNeeded();
 	}
 
 	private static void applyDebugStartIfNeeded() {
 		DebugSettings.applyDebugStart();
-	}
-
-	/**
-	 * Entering the ground level starts on depth 0 rather than depth 1. Applied
-	 * after the debug start so the village always wins when both are asked for.
-	 */
-	private static void applyVillageStartIfNeeded() {
-		if (!VillageGateway.startingInVillage()) {
-			return;
-		}
-		depth = VillageLevel.VILLAGE_DEPTH;
-		branch = 0;
 	}
 
 	public static boolean isChallenged(int mask) {

@@ -93,8 +93,7 @@ public class HouseLevel extends Level {
 
 		int door = doorCell();
 		map[door] = Terrain.DOOR;
-		transitions.add(new LevelTransition(this, door, LevelTransition.Type.BRANCH_EXIT,
-				VillageLevel.VILLAGE_DEPTH, 0, LevelTransition.Type.BRANCH_ENTRANCE));
+		transitions.add(buildExit(door));
 
 		feeling = Feeling.NONE;
 		// a shade further than the dungeon's 8, so a room reads at a glance
@@ -108,6 +107,28 @@ public class HouseLevel extends Level {
 
 	public int doorCell() {
 		return cell(WIDTH / 2, DOOR_ROW);
+	}
+
+	/** The tile inside the door: where the hero stands on coming home. */
+	public int doorstepCell() {
+		return doorCell() - width();
+	}
+
+	/**
+	 * The way out: the doorway triggers it, but the hero arrives on the tile
+	 * inside it rather than in it.
+	 *
+	 * <p>The far side of the door is another level, not another cell, so a hero
+	 * standing in the doorway has nothing to walk into — and keyboard movement
+	 * can only ever aim at a neighbouring cell, never at the one underfoot,
+	 * which left the door openable by tap alone. Arriving one step inside gives
+	 * every input something to aim at, and keeps the doorstep itself walkable.
+	 */
+	private LevelTransition buildExit(int door) {
+		LevelTransition exit = new LevelTransition(this, door, LevelTransition.Type.BRANCH_EXIT,
+				VillageLevel.VILLAGE_DEPTH, 0, LevelTransition.Type.BRANCH_ENTRANCE);
+		exit.centerCell = doorstepCell();
+		return exit;
 	}
 
 	@Override

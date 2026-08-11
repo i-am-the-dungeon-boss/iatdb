@@ -291,6 +291,12 @@ public class InventoryPane extends Component {
 	}
 
 	public void updateInventory() {
+		// the pane outlives the hero for a frame when a run is being started or
+		// left; there are no belongings to show until the next one exists
+		if (Dungeon.hero == null) {
+			return;
+		}
+
 		if (selector == null) {
 			blocker.target = bg;
 			KeyEvent.removeKeyListener(keyBlocker);

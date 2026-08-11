@@ -5,8 +5,10 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HouseLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.HighGrass;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
 import org.assertj.core.api.Assertions;
@@ -51,7 +53,7 @@ class VillageLevelBuildTest {
     }
 
     @Test
-    @DisplayName("The village has a dungeon mouth leading to depth 1 and a door into the house")
+    @DisplayName("The dungeon mouth is the village's only way out, and it leads to depth 1")
     void villageTransitionsAreWired() {
         VillageLevel level = village();
 
@@ -61,15 +63,12 @@ class VillageLevelBuildTest {
         Assertions.assertThat(toDungeon.destBranch).isZero();
         Assertions.assertThat(level.map[toDungeon.cell()]).isEqualTo(Terrain.EXIT);
 
-        LevelTransition toHouse = level.getTransition(LevelTransition.Type.BRANCH_ENTRANCE);
-        Assertions.assertThat(toHouse).isNotNull();
-        Assertions.assertThat(toHouse.destDepth).isEqualTo(VillageLevel.VILLAGE_DEPTH);
-        Assertions.assertThat(toHouse.destBranch).isEqualTo(VillageLevel.HOUSE_BRANCH);
-        Assertions.assertThat(level.map[toHouse.cell()]).isEqualTo(Terrain.DOOR);
+        // the house is built and still routes, but nothing here opens onto it
+        Assertions.assertThat(level.transitions).hasSize(1);
     }
 
     @Test
-    @DisplayName("The house door leads back to the village it was entered from")
+    @DisplayName("The house, though unreachable for now, still leads back to the village")
     void houseReturnsToVillage() {
         HouseLevel level = house();
 
@@ -77,19 +76,86 @@ class VillageLevelBuildTest {
         Assertions.assertThat(back).isNotNull();
         Assertions.assertThat(back.destDepth).isEqualTo(VillageLevel.VILLAGE_DEPTH);
         Assertions.assertThat(back.destBranch).isZero();
-        Assertions.assertThat(level.map[back.cell()]).isEqualTo(Terrain.DOOR);
+        // the doorway triggers it; the hero comes home to the tile inside it
+        Assertions.assertThat(level.map[level.doorCell()]).isEqualTo(Terrain.DOOR);
+        Assertions.assertThat(back.cell()).isEqualTo(level.doorstepCell());
     }
 
     @Test
-    @DisplayName("The hero can walk from the front door to the dungeon mouth")
-    void pathFromHouseToDungeonIsWalkable() {
+    @DisplayName("The hero can walk from where they arrive to the dungeon mouth")
+    void pathFromArrivalToDungeonIsWalkable() {
         VillageLevel level = village();
 
-        int door = level.houseDoor();
-        int mouth = level.dungeonEntrance();
-        Assertions.assertThat(reachable(level, door, mouth))
-                .as("dungeon entrance reachable from the front door")
+        Assertions.assertThat(reachable(level, level.arrivalCell(), level.dungeonEntrance()))
+                .as("dungeon entrance reachable from the arrival point")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("The village has no way up: no entrance stairs and no entrance transition")
+    void villageHasNoStairsUp() {
+        VillageLevel level = village();
+
+        Assertions.assertThat(level.map).doesNotContain(Terrain.ENTRANCE);
+        Assertions.assertThat(level.transitions)
+                .extracting(transition -> transition.type)
+                .doesNotContain(LevelTransition.Type.REGULAR_ENTRANCE,
+                        LevelTransition.Type.SURFACE);
+    }
+
+    @Test
+    @DisplayName("The hero arrives at the dungeon mouth, a step short of standing on it")
+    void arrivalCellIsBesideTheDungeonMouth() {
+        VillageLevel level = village();
+
+        int arrival = level.arrivalCell();
+        Assertions.assertThat(arrival).isNotEqualTo(level.dungeonEntrance());
+        Assertions.assertThat(level.adjacent(arrival, level.dungeonEntrance())).isTrue();
+        Assertions.assertThat(level.invalidHeroPos(arrival)).isFalse();
+        Assertions.assertThat(level.passable[arrival]).isTrue();
+        Assertions.assertThat(level.map[arrival]).isEqualTo(Terrain.EMPTY_SP);
+    }
+
+    @Test
+    @DisplayName("Village grass is see-through, so nothing in town hides behind a hedge")
+    void villageGrassDoesNotBlockSight() {
+        VillageLevel level = village();
+
+        int grass = anyGrassCell(level);
+        Assertions.assertThat(level.losBlocking[grass]).isFalse();
+
+        // and it stays see-through when the map is edited cell by cell
+        Level.set(grass, Terrain.HIGH_GRASS, level);
+        Assertions.assertThat(level.losBlocking[grass]).isFalse();
+    }
+
+    @Test
+    @DisplayName("Walking through village grass leaves it standing and yields nothing")
+    void villageGrassIsNeverTrampled() {
+        VillageLevel level = village();
+        Dungeon.level = level;
+
+        int grass = anyGrassCell(level);
+        HighGrass.trample(level, grass);
+
+        Assertions.assertThat(level.map[grass]).isEqualTo(Terrain.HIGH_GRASS);
+        Assertions.assertThat(level.heaps.valueList()).isEmpty();
+        Assertions.assertThat(level.grassCanBeTrampled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Dungeon grass still tramples: the village opt-out is village-only")
+    void dungeonGrassStillTramples() {
+        Assertions.assertThat(new SewerLevel().grassCanBeTrampled()).isTrue();
+    }
+
+    private int anyGrassCell(VillageLevel level) {
+        for (int i = 0; i < level.length(); i++) {
+            if (level.map[i] == Terrain.HIGH_GRASS) {
+                return i;
+            }
+        }
+        throw new AssertionError("the village grew no tall grass");
     }
 
     @Test

@@ -115,6 +115,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Toast;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
@@ -619,7 +620,11 @@ public class GameScene extends PixelScene {
 		}
 		Camera.main.panTo(hero.center(), 2.5f);
 
-		if (InterlevelScene.mode != InterlevelScene.Mode.NONE) {
+		if (VillageSession.inVillage()) {
+			// the town gets no depth banner, floor feeling or dungeon warnings
+			InterlevelScene.mode = InterlevelScene.Mode.NONE;
+
+		} else if (InterlevelScene.mode != InterlevelScene.Mode.NONE) {
 			if (Dungeon.depth == Statistics.deepestFloor
 					&& (InterlevelScene.mode == InterlevelScene.Mode.DESCEND
 							|| InterlevelScene.mode == InterlevelScene.Mode.FALL)) {
@@ -868,19 +873,36 @@ public class GameScene extends PixelScene {
 
 	private static float waterOfs = 0;
 
+	/**
+	 * Repaints the item displays, which all read the hero's belongings.
+	 *
+	 * <p>Returns false and does nothing when there is no hero: the scene stays
+	 * live for a frame or two after {@code Dungeon.hero} is cleared — leaving
+	 * town for a run does exactly that — and a pending refresh would otherwise
+	 * dereference the hero that just went away. The request stays pending so the
+	 * next hero still gets it.
+	 */
+	public static boolean refreshItemDisplays() {
+		if (Dungeon.hero == null) {
+			return false;
+		}
+
+		QuickSlotButton.refresh();
+		InventoryPane.refresh();
+		if (ActionIndicator.action instanceof MeleeWeapon.Charger) {
+			// Champion weapon swap uses items, needs refreshing whenever item displays are
+			// updated
+			ActionIndicator.refresh();
+		}
+		return true;
+	}
+
 	@Override
 	public synchronized void update() {
 		lastOffset = null;
 
-		if (updateItemDisplays) {
+		if (updateItemDisplays && refreshItemDisplays()) {
 			updateItemDisplays = false;
-			QuickSlotButton.refresh();
-			InventoryPane.refresh();
-			if (ActionIndicator.action instanceof MeleeWeapon.Charger) {
-				// Champion weapon swap uses items, needs refreshing whenever item displays are
-				// updated
-				ActionIndicator.refresh();
-			}
 		}
 
 		if (Dungeon.hero == null || scene == null) {

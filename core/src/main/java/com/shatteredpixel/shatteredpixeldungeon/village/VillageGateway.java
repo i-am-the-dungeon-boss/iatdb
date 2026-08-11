@@ -34,6 +34,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.StartScene;
 
+import java.io.IOException;
+
 /**
  * The seam between the ground level and a dungeon run.
  *
@@ -52,22 +54,7 @@ public final class VillageGateway {
 	 */
 	public static final int VILLAGE_SLOT = GamesInProgress.MAX_SLOTS + 1;
 
-	/**
-	 * Set while a village level is being generated, so {@code Dungeon.init}
-	 * starts on depth 0 instead of depth 1. Transient by design — it never
-	 * belongs in a save.
-	 */
-	private static boolean startingInVillage = false;
-
 	private VillageGateway() {
-	}
-
-	public static boolean startingInVillage() {
-		return startingInVillage;
-	}
-
-	public static void clearStartingInVillage() {
-		startingInVillage = false;
 	}
 
 	/** The village is a solo, private place; its saves live in the solo folder. */
@@ -115,17 +102,73 @@ public final class VillageGateway {
 	 * level persistence.
 	 */
 	public static void enterVillage() {
+		prepareVillageEntry();
+		ShatteredPixelDungeon.switchScene(InterlevelScene.class);
+	}
+
+	/**
+	 * Everything {@link #enterVillage()} changes before the scene switch, split
+	 * out so the state it sets can be asserted directly.
+	 *
+	 * <p>The village never runs {@code Dungeon.init()} — that is run setup, and
+	 * town is not a run. {@code InterlevelScene.Mode.VILLAGE} routes the loading
+	 * thread to {@link VillageSession#enter()} instead.
+	 */
+	public static void prepareVillageEntry() {
 		GamesInProgress.selectEchoPlayMode(villageStorageMode());
 		GamesInProgress.curSlot = VILLAGE_SLOT;
 		discardStoredVillage();
 
 		GamesInProgress.selectedClass = villageHeroClass();
 		Dungeon.hero = null;
+		Dungeon.level = null;
 		Dungeon.initSeed();
-		startingInVillage = true;
-		InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
+		InterlevelScene.mode = InterlevelScene.Mode.VILLAGE;
+	}
 
+	/**
+	 * Climb out of depth 1 and walk home.
+	 *
+	 * <p>The run is not abandoned: it is saved to its own slot first, exactly as
+	 * quitting to the title screen would, and can be resumed from the dungeon
+	 * mouth later. What is left behind is the dungeon hero — the player arrives
+	 * in town as a {@link VillageHero}, carrying nothing out of the dungeon.
+	 *
+	 * <p>Order matters: the run must be written while {@code gameFolder} still
+	 * points at its play mode, before entering the village repoints it at solo.
+	 *
+	 * @return true once the walk home has been committed
+	 */
+	public static boolean returnToVillage() {
+		if (!prepareReturnToVillage()) {
+			return false;
+		}
 		ShatteredPixelDungeon.switchScene(InterlevelScene.class);
+		return true;
+	}
+
+	/**
+	 * Everything {@link #returnToVillage()} changes before the scene switch.
+	 * Returns false if the run could not be written, in which case nothing has
+	 * moved and the player stays where they are — a walk home is never worth
+	 * losing a floor over.
+	 */
+	public static boolean prepareReturnToVillage() {
+		try {
+			Dungeon.saveAll();
+		} catch (IOException e) {
+			ShatteredPixelDungeon.reportException(e);
+			return false;
+		}
+
+		// the town avatar wears the class the player has been playing
+		if (Dungeon.hero != null) {
+			GamesInProgress.selectedClass = Dungeon.hero.heroClass;
+		}
+		Mob.clearHeldAllies();
+
+		prepareVillageEntry();
+		return true;
 	}
 
 	/**
@@ -138,11 +181,14 @@ public final class VillageGateway {
 	 * lives in the solo one.
 	 */
 	public static void beginRun(EchoPlayMode mode) {
-		discardStoredVillage();
+		// the town avatar, its level and its actors are dropped here; the run
+		// builds a hero of its own in Dungeon.init()
+		VillageSession.leave();
 
+		discardStoredVillage();
 		Mob.clearHeldAllies();
 		Dungeon.hero = null;
-		startingInVillage = false;
+		Dungeon.level = null;
 
 		GamesInProgress.selectEchoPlayMode(mode);
 		GamesInProgress.selectedClass = null;

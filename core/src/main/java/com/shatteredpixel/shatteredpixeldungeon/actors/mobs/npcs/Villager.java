@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.BlacksmithSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ShopkeeperSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.WandmakerSprite;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
 import com.watabou.noosa.Game;
@@ -49,7 +50,8 @@ public class Villager extends NPC {
 	public enum Kind {
 		SMITH,
 		SAGE,
-		ELDER
+		ELDER,
+		KEEPER
 	}
 
 	private static final String KIND = "kind";
@@ -70,6 +72,9 @@ public class Villager extends NPC {
 				break;
 			case SAGE:
 				spriteClass = WandmakerSprite.class;
+				break;
+			case KEEPER:
+				spriteClass = ShopkeeperSprite.class;
 				break;
 			case ELDER:
 			default:

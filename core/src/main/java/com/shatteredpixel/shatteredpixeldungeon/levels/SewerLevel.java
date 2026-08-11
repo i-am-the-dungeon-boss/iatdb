@@ -52,13 +52,12 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.SurfaceScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.particles.PixelParticle;
-import com.watabou.utils.Callback;
 import com.watabou.utils.ColorMath;
 import com.watabou.utils.PointF;
 import com.watabou.utils.Random;
@@ -86,21 +85,21 @@ public class SewerLevel extends RegularLevel {
 			Music.INSTANCE.playTracks(SEWER_TRACK_LIST, SEWER_TRACK_CHANCES, false);
 		}
 	}
-	
+
 	@Override
 	protected int standardRooms(boolean forceMax) {
 		if (forceMax) return 6;
 		//4 to 6, average 5
 		return 4+Random.chances(new float[]{1, 3, 1});
 	}
-	
+
 	@Override
 	protected int specialRooms(boolean forceMax) {
 		if (forceMax) return 2;
 		//1 to 2, average 1.8
 		return 1+Random.chances(new float[]{1, 4});
 	}
-	
+
 	@Override
 	protected Painter painter() {
 		return new SewerPainter()
@@ -108,17 +107,17 @@ public class SewerLevel extends RegularLevel {
 				.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 4)
 				.setTraps(nTraps(), trapClasses(), trapChances());
 	}
-	
+
 	@Override
 	public String tilesTex() {
 		return Assets.Environment.TILES_SEWERS;
 	}
-	
+
 	@Override
 	public String waterTex() {
 		return Assets.Environment.WATER_SEWERS;
 	}
-	
+
 	@Override
 	protected Class<?>[] trapClasses() {
 		return Dungeon.depth == 1 ?
@@ -144,18 +143,16 @@ public class SewerLevel extends RegularLevel {
 		Ghost.Quest.spawn( this, roomExit );
 		super.createMobs();
 	}
-	
+
 	@Override
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
 		if (transition.type == LevelTransition.Type.SURFACE){
 			if (hero.belongings.getItem( Amulet.class ) == null) {
-				Game.runOnRenderThread(new Callback() {
-					@Override
-					public void call() {
-						GameScene.show( new WndMessage( Messages.get(hero, "leave") ) );
-					}
-				});
-				return false;
+				//without the amulet the stairs lead home, not out of the game:
+				//the run is saved where it stands and the dungeon hero stays
+				//behind, while the player walks back into the village
+				beforeTransition();
+				return VillageGateway.returnToVillage();
 			} else {
 				Statistics.ascended = true;
 				Game.switchScene(SurfaceScene.class, new Game.SceneChangeCallback() {
@@ -217,7 +214,7 @@ public class SewerLevel extends RegularLevel {
 			}
 		}
 	}
-	
+
 	@Override
 	public String tileName( int tile ) {
 		switch (tile) {
@@ -230,7 +227,7 @@ public class SewerLevel extends RegularLevel {
 				return super.tileName( tile );
 		}
 	}
-	
+
 	@Override
 	public String tileDesc(int tile) {
 		switch (tile) {
@@ -245,38 +242,38 @@ public class SewerLevel extends RegularLevel {
 				return super.tileDesc( tile );
 		}
 	}
-	
+
 	private static class Sink extends Emitter {
-		
+
 		private int pos;
 		private float rippleDelay = 0;
-		
+
 		private static final Emitter.Factory factory = new Factory() {
-			
+
 			@Override
 			public void emit( Emitter emitter, int index, float x, float y ) {
 				WaterParticle p = (WaterParticle)emitter.recycle( WaterParticle.class );
 				p.reset( x, y );
 			}
 		};
-		
+
 		public Sink( int pos ) {
 			super();
-			
+
 			this.pos = pos;
-			
+
 			PointF p = DungeonTilemap.tileCenterToWorld( pos );
 			pos( p.x - 2, p.y + 3, 4, 0 );
-			
+
 			pour( factory, 0.1f );
 		}
-		
+
 		@Override
 		public void update() {
 			if (visible = (pos < Dungeon.level.heroFOV.length && Dungeon.level.heroFOV[pos])) {
-				
+
 				super.update();
-				
+
 				if (!isFrozen() && (rippleDelay -= Game.elapsed) <= 0) {
 					Ripple ripple = GameScene.ripple( pos + Dungeon.level.width() );
 					if (ripple != null) {
@@ -287,27 +284,27 @@ public class SewerLevel extends RegularLevel {
 			}
 		}
 	}
-	
+
 	public static final class WaterParticle extends PixelParticle {
-		
+
 		public WaterParticle() {
 			super();
-			
+
 			acc.y = 50;
 			am = 0.5f;
-			
+
 			color( ColorMath.random( 0xb6ccc2, 0x3b6653 ) );
 			size( 2 );
 		}
-		
+
 		public void reset( float x, float y ) {
 			revive();
-			
+
 			this.x = x;
 			this.y = y;
-			
+
 			speed.set( Random.Float( -2, +2 ), 0 );
-			
+
 			left = lifespan = 0.4f;
 		}
 	}

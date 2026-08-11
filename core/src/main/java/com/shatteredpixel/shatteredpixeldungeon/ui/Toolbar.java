@@ -42,6 +42,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
@@ -332,6 +333,13 @@ public class Toolbar extends Component {
 				Dungeon.hero.search(true);
 				return true;
 			}
+
+			@Override
+			public void enable(boolean value) {
+				// update() re-enables every tool each time the hero becomes
+				// ready, so the hidden-in-town state has to be re-applied here
+				super.enable(value && visible);
+			}
 		});
 		btnSearch.icon(192, 0, 16, 16);
 
@@ -531,6 +539,11 @@ public class Toolbar extends Component {
 
 		float right = width;
 
+		// nothing is hidden in the village, so searching has nothing to find
+		btnSearch.visible = !VillageSession.inVillage();
+		btnSearch.enable(lastEnabled);
+		float searchW = btnSearch.visible ? btnSearch.width() : 0;
+
 		int quickslotsToShow = 4;
 		if (PixelScene.uiCamera.width > 152)
 			quickslotsToShow++;
@@ -563,9 +576,9 @@ public class Toolbar extends Component {
 		if (SPDSettings.interfaceSize() > 0) {
 			btnInventory.setPos(right - btnInventory.width(), y);
 			btnWait.setPos(btnInventory.left() - btnWait.width(), y);
-			btnSearch.setPos(btnWait.left() - btnSearch.width(), y);
+			btnSearch.setPos(btnWait.left() - searchW, y);
 
-			right = btnSearch.left();
+			right = btnWait.left() - searchW;
 			for (int i = endingSlot; i >= startingSlot; i--) {
 				if (i == endingSlot) {
 					btnQuick[i].border(0, 2);
@@ -583,6 +596,7 @@ public class Toolbar extends Component {
 
 			// swap button never appears on larger interface sizes
 
+			parkHiddenSearch();
 			return;
 		}
 
@@ -614,6 +628,9 @@ public class Toolbar extends Component {
 				btnWait.setPos(x, y);
 				btnSearch.setPos(btnWait.right(), y);
 
+				// where the left-hand group actually ends, with or without search
+				float toolsRight = btnWait.right() + searchW;
+
 				btnInventory.setPos(right - btnInventory.width(), y);
 
 				float left = 0;
@@ -621,12 +638,12 @@ public class Toolbar extends Component {
 				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);
 				for (int i = startingSlot + 1; i <= endingSlot; i++) {
 					btnQuick[i].setPos(btnQuick[i - 1].left() - btnQuick[i].width(), y + 2);
-					shift = btnSearch.right() - btnQuick[i].left();
+					shift = toolsRight - btnQuick[i].left();
 				}
 
 				if (btnSwap.visible) {
 					btnSwap.setPos(btnQuick[endingSlot].left() - (btnSwap.width() - 2), y + 3);
-					shift = btnSearch.right() - btnSwap.left();
+					shift = toolsRight - btnSwap.left();
 				}
 
 				break;
@@ -634,7 +651,7 @@ public class Toolbar extends Component {
 			// center = group but.. well.. centered, so all we need to do is pre-emptively
 			// set the right side further in.
 			case CENTER:
-				float toolbarWidth = btnWait.width() + btnSearch.width() + btnInventory.width();
+				float toolbarWidth = btnWait.width() + searchW + btnInventory.width();
 				for (Button slot : btnQuick) {
 					if (slot.visible)
 						toolbarWidth += slot.width();
@@ -645,8 +662,8 @@ public class Toolbar extends Component {
 
 			case GROUP:
 				btnWait.setPos(right - btnWait.width(), y);
-				btnSearch.setPos(btnWait.left() - btnSearch.width(), y);
-				btnInventory.setPos(btnSearch.left() - btnInventory.width(), y);
+				btnSearch.setPos(btnWait.left() - searchW, y);
+				btnInventory.setPos(btnWait.left() - searchW - btnInventory.width(), y);
 
 				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);
 				for (int i = startingSlot + 1; i <= endingSlot; i++) {
@@ -690,6 +707,18 @@ public class Toolbar extends Component {
 
 		}
 
+		parkHiddenSearch();
+
+	}
+
+	/**
+	 * Moves the search button off-screen when it is hidden, so it can never be
+	 * hit. Mirrors what the layout already does for unused quickslots.
+	 */
+	private void parkHiddenSearch() {
+		if (!btnSearch.visible) {
+			btnSearch.setPos(btnSearch.left(), PixelScene.uiCamera.height);
+		}
 	}
 
 	public static void updateLayout() {
