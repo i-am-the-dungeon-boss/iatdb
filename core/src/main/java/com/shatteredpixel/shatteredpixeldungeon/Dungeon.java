@@ -65,9 +65,6 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.DebugArenaLevel;
-import com.shatteredpixel.shatteredpixeldungeon.levels.HouseLevel;
-import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
-import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
@@ -322,23 +319,10 @@ public class Dungeon {
 		GamesInProgress.selectedClass.initHero(hero);
 
 		applyDebugStartIfNeeded();
-		applyVillageStartIfNeeded();
 	}
 
 	private static void applyDebugStartIfNeeded() {
 		DebugSettings.applyDebugStart();
-	}
-
-	/**
-	 * Entering the ground level starts on depth 0 rather than depth 1. Applied
-	 * after the debug start so the village always wins when both are asked for.
-	 */
-	private static void applyVillageStartIfNeeded() {
-		if (!VillageGateway.startingInVillage()) {
-			return;
-		}
-		depth = VillageLevel.VILLAGE_DEPTH;
-		branch = 0;
 	}
 
 	public static boolean isChallenged(int mask) {
@@ -410,11 +394,6 @@ public class Dungeon {
 
 	// Pure helper for routing, to enable test coverage
 	public static Class<? extends Level> levelClassForDepth(int depth, int branch) {
-		// The ground level sits above the dungeon and is never replaced by the
-		// debug arena, so the village stays reachable in every build.
-		if (depth == VillageLevel.VILLAGE_DEPTH) {
-			return branch == VillageLevel.HOUSE_BRANCH ? HouseLevel.class : VillageLevel.class;
-		}
 		if (echoPlayMode == EchoPlayMode.DEBUG && EchoPlayMode.isAllowed(EchoPlayMode.DEBUG)) {
 			return DebugArenaLevel.class;
 		}
@@ -624,7 +603,7 @@ public class Dungeon {
 
 	/**
 	 * Resolves echo boss data before level generation.
-	 *
+	 * 
 	 * @return true only when a spawnable echo was found
 	 */
 	public static boolean prefetchEchoBossForDepth(int depth) {

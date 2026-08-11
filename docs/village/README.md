@@ -22,48 +22,36 @@ Related: [`../hero-echoes/`](../hero-echoes/) (play modes, online client, auth),
 
 ## The one architectural decision everything hangs on
 
-**The village is an ordinary `Level` at depth 0, but it is not part of any run.** It is a real
-level — same tilemap, same `GameScene`, same hero, same movement and NPC interaction as anywhere
-else in the game — living in a reserved save slot of its own, always under the solo namespace. A
-*run* only begins when the player walks into the dungeon entrance and picks a mode.
+**The village shares nothing with the dungeon.** It is not a dungeon depth, not a `Level`, and the
+figure the player walks around the village is not a `Hero`. While the player is in the village
+there is no dungeon at all: `Dungeon`, the hero, and the run save are only created when the player
+answers the prompt at the dungeon entrance and picks a mode.
 
-The constraint that forces this is concrete: run saves are namespaced by play mode.
-`GamesInProgress.gameFolder(slot)` appends `EchoPlayModePaths.gameFolderSuffix()` —
-`-solo` / `-ranked` / `-debug` (`core/src/main/java/…/GamesInProgress.java:102`,
-`heroechoes/EchoPlayModePaths.java:33-43`). Echo storage and the leaderboard file are namespaced
-the same way, and `Dungeon.init()` reads the mode when deciding seed, challenges and easy-mode
-eligibility (`Dungeon.java:243-265`). So a run genuinely cannot start before the mode is known,
-without either guessing the folder or migrating save data mid-run.
+This costs real code — the village brings its own map data, tilemap renderer, avatar, movement and
+save file rather than reusing the dungeon's. It buys a boundary that holds:
 
-Two ways out were considered. Building a bespoke village *scene* outside the `Level`/`Hero`
-machinery avoids the save question entirely, but re-implements movement, rendering and NPC
-interaction — a large amount of new surface for a hub with no mechanics. The shipped approach
-instead keeps the village a real level and sidesteps the namespacing with two cheap invariants:
-
-- **A reserved save slot.** `VillageGateway.VILLAGE_SLOT = GamesInProgress.MAX_SLOTS + 1`, past
-  every run slot. `GamesInProgress.firstEmpty()` and `checkAll()` only scan `1..MAX_SLOTS`, so
-  the village can never collide with a run or appear in the save list.
-- **Always solo storage.** The village is stored under `-solo` because it *is* a private, solo
-  place. Nothing about it is mode-specific, so nothing needs migrating when a run commits to
-  ranked.
-
-The ordering that results:
+- **Permadeath and persistence are different lifetimes.** The run hero dies; the village persists.
+  Sharing one object forces death to be special-cased forever.
+- **Ranked integrity.** Nothing can cross from the village into a run, because there is nothing to
+  cross with — a run starts fresh from hero select. No rule needs enforcing.
+- **No shared bookkeeping to get wrong.** An earlier draft made the village depth 0 of a real run
+  in a reserved save slot; it crashed because a hero position belonging to one ground-level map was
+  applied to the other through shared depth/branch state. That entire class of bug is gone.
+- **Multiplayer later.** Task 2 needs a hub that exists independently of any run, and a presence
+  payload with no run state in it. That is exactly what this is.
 
 ```
-TitleScene ──"Enter the Village"──► depth 0, slot VILLAGE_SLOT, solo namespace
+TitleScene ──"Enter the Village"──► VillageScene (own map, avatar, save file)
+                 │                    no Dungeon, no Hero, no run save exists yet
                  │
-                 ├── house door ──► depth 0 / branch 1 (HouseLevel, always solo)
+                 ├── front door ──► the house (always solo)
                  │
                  └── dungeon entrance ──► WndDungeonMode [Solo | Ranked | Not yet]
-                          → save the village (still solo)
-                          → GamesInProgress.selectEchoPlayMode(mode)   ← namespace decided here
-                          → HeroSelectScene / StartScene
-                          → InterlevelScene(DESCEND) → Dungeon.init() → depth 1
+                          → VillageSave.save()
+                          → GamesInProgress.selectEchoPlayMode(mode)  ← the run is created here
+                          → HeroSelectScene / StartScene → the game as it has always been
 ```
 
-The village hero is a throwaway town avatar: choosing a mode at the mouth starts a genuinely
-fresh run, so nothing carries from the village into the dungeon and no save is ever migrated.
-
-This still leaves task 2 room: the village is persistent and run-independent, which is what a
-shared village and a chat channel need. The one thing it does *not* give for free is a village
-that exists while the player is descending — see task 2's open questions.
+The one thing the village still borrows from the dungeon side is *art*: `DungeonTileSheet`'s tile
+indices, which are plain constants describing where sprites sit on a tileset and carry no run
+state.

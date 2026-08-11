@@ -32,7 +32,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfCha
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.SaltCube;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
-import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -71,9 +70,7 @@ public class Hunger extends Buff implements Hero.Doom {
 				|| target.buff(WellFed.class) != null
 				|| SPDSettings.intro()
 				|| target.buff(ScrollOfChallenge.ChallengeArena.class) != null
-				|| Dungeon.level instanceof VaultLevel
-				// nobody goes hungry standing around their own village
-				|| VillageLevel.isGroundLevel(Dungeon.depth)){
+				|| Dungeon.level instanceof VaultLevel){
 			spend(TICK);
 			return true;
 		}
@@ -90,7 +87,7 @@ public class Hunger extends Buff implements Hero.Doom {
 					target.damage( (int)partialDamage, this);
 					partialDamage -= (int)partialDamage;
 				}
-
+				
 			} else {
 
 				float hungerDelay = 1f;
@@ -120,7 +117,7 @@ public class Hunger extends Buff implements Hero.Doom {
 				level = newLevel;
 
 			}
-
+			
 			spend( TICK );
 
 		} else {
