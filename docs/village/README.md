@@ -22,36 +22,40 @@ Related: [`../hero-echoes/`](../hero-echoes/) (play modes, online client, auth),
 
 ## The one architectural decision everything hangs on
 
-**The village shares nothing with the dungeon.** It is not a dungeon depth, not a `Level`, and the
-figure the player walks around the village is not a `Hero`. While the player is in the village
-there is no dungeon at all: `Dungeon`, the hero, and the run save are only created when the player
-answers the prompt at the dungeon entrance and picks a mode.
+The boundary is drawn through **state and lifetime, not through machinery**.
 
-This costs real code — the village brings its own map data, tilemap renderer, avatar, movement and
-save file rather than reusing the dungeon's. It buys a boundary that holds:
+**Separate:** the figure standing in the village is not the run hero, and the village is not part
+of a run. Nothing crosses from the village into the dungeon, and the village outlives every run's
+death. The dungeon run is *created* only when the player answers the Solo/Ranked prompt at the
+dungeon entrance.
 
-- **Permadeath and persistence are different lifetimes.** The run hero dies; the village persists.
-  Sharing one object forces death to be special-cased forever.
-- **Ranked integrity.** Nothing can cross from the village into a run, because there is nothing to
-  cross with — a run starts fresh from hero select. No rule needs enforcing.
-- **No shared bookkeeping to get wrong.** An earlier draft made the village depth 0 of a real run
-  in a reserved save slot; it crashed because a hero position belonging to one ground-level map was
-  applied to the other through shared depth/branch state. That entire class of bug is gone.
-- **Multiplayer later.** Task 2 needs a hub that exists independently of any run, and a presence
-  payload with no run state in it. That is exactly what this is.
+**Shared:** everything the player touches. The village is a `Level`, played in `GameScene`, with
+the dungeon's own controls, camera, cell selector, fog of war and autotiled visuals. Reimplementing
+those produces a hub that plays and looks subtly wrong, so the village extends the dungeon's
+presentation rather than duplicating it. Its field of view is 12 against the dungeon's 8 — a little
+further, because the village is safe and should read as open, but not so far that the map is simply
+handed over.
+
+Two invariants keep the separate half honest, given that `GamesInProgress.gameFolder` is keyed by
+play mode (`-solo` / `-ranked` / `-debug`) and `Dungeon.init()` reads the mode when choosing seed
+and challenges:
+
+- **A reserved save slot.** `VillageGateway.VILLAGE_SLOT = GamesInProgress.MAX_SLOTS + 1`, past
+  every run slot. `firstEmpty()` and `checkAll()` only scan `1..MAX_SLOTS`, so the village can
+  never collide with a run or appear in the save list.
+- **Always-solo storage.** The village is stored under `-solo` because it is a private, solo place.
+  Nothing about it is mode-specific, so nothing needs migrating when a run commits to ranked.
+
+The town avatar is disposable: choosing a mode at the mouth starts a genuinely fresh run from hero
+select, so nothing carries down and no save is ever migrated.
 
 ```
-TitleScene ──"Enter the Village"──► VillageScene (own map, avatar, save file)
-                 │                    no Dungeon, no Hero, no run save exists yet
+TitleScene ──"Enter the Village"──► depth 0, slot VILLAGE_SLOT, solo namespace
                  │
-                 ├── front door ──► the house (always solo)
+                 ├── front door ──► depth 0 / branch 1 (the house, always solo)
                  │
                  └── dungeon entrance ──► WndDungeonMode [Solo | Ranked | Not yet]
-                          → VillageSave.save()
+                          → save the village (still solo)
                           → GamesInProgress.selectEchoPlayMode(mode)  ← the run is created here
-                          → HeroSelectScene / StartScene → the game as it has always been
+                          → HeroSelectScene / StartScene → depth 1
 ```
-
-The one thing the village still borrows from the dungeon side is *art*: `DungeonTileSheet`'s tile
-indices, which are plain constants describing where sprites sit on a tileset and carry no run
-state.

@@ -7,12 +7,12 @@ Not implemented, not scheduled — this document exists so task 1's shapes don't
 
 #### What task 1 already gets right for this
 
-- The village is **persistent and completely outside any run**, with its own map, scene and save
-  file. There is a place that exists while nobody is descending — the precondition for shared
-  presence.
-- The avatar is **already just a portrait**: `VillageAvatar` holds a hero class, a cell and a walk
-  route, and nothing else. That is almost exactly the presence payload, and there is no run state
-  that could leak between players because the village has none to leak.
+- The village is **persistent and outside any run**, in its own save slot under the solo
+  namespace. There is a place that exists while nobody is descending — the precondition for
+  shared presence.
+- The town avatar is **disposable**. It is a real `Hero`, but nothing it carries reaches a run:
+  choosing a mode at the dungeon mouth starts a fresh one. So the presence payload can be just
+  class skin, position and facing, and there is no run state that could leak between players.
 - The village and house levels are **hand-authored and deterministic**, generated from code
   rather than from a seed. Every client renders the identical map with no map synchronisation.
 - **The house is explicitly always solo.** It is the documented private space, so there is
@@ -72,4 +72,4 @@ Revisit only with a measurement, not a preference.
   profanity rules.
 - **Does the house need a door lock?** If houses ever become visitable, "always solo" becomes a
   toggle rather than an invariant. Task 1 should not build the toggle, but should not assume the
-  invariant anywhere outside the house map either.
+  invariant anywhere outside `HouseLevel` either.
