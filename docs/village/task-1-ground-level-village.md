@@ -110,12 +110,20 @@ calls `VillageGateway.beginRun(mode)`, ranked first passing through
 Because the run is genuinely fresh, mode-specific gates (`gameOptionsAllowed`, challenges, seed,
 easy mode) all apply normally and nothing has to be migrated.
 
-#### Entering and persisting the village
+#### Entering the village
 
-`VillageGateway.enterVillage()` forces the solo namespace and `VILLAGE_SLOT`, then either
-resumes (`InterlevelScene.Mode.CONTINUE`) if a village save exists, or builds a fresh one
-(`DESCEND` with `startingInVillage` set, which makes `Dungeon.init()` land on depth 0 instead of
-depth 1). The `startingInVillage` flag is transient and never bundled.
+`VillageGateway.enterVillage()` forces the solo namespace and `VILLAGE_SLOT`, discards any stored
+ground level, and always builds a fresh one (`DESCEND` with `startingInVillage` set, which makes
+`Dungeon.init()` land on depth 0 instead of depth 1). The `startingInVillage` flag is transient and
+never bundled.
+
+**The ground level is never resumed from disk.** A saved `Level` restores its own width and height
+from its bundle, so a village written by an older build would keep that build's map forever — which
+is precisely how a hero ended up standing off the edge of the house map after the geometry was
+fixed. The village is hand-authored and carries no progress, so rebuilding it costs the player
+nothing and keeps the map in step with the code. The consequence to remember: anything the house
+gains later — a stash, cosmetics — needs its own versioned storage, because level persistence is
+not available to it.
 
 The town avatar is a normal `Hero` of the last class the player selected, defaulting to Warrior.
 It is deliberately disposable: nothing it carries reaches a run.

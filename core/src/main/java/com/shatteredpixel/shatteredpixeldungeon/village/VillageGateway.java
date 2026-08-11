@@ -30,20 +30,17 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
-import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.StartScene;
-
-import java.io.IOException;
 
 /**
  * The seam between the ground level and a dungeon run.
  *
  * <p>The village is a real level, but it is deliberately <em>not</em> part of
- * any run: it lives in its own save slot and is always stored under the solo
- * namespace, because {@code GamesInProgress.gameFolder} is keyed by play mode
- * and the mode is not known until the player reaches the dungeon mouth. Runs
+ * any run: it uses a save slot of its own under the solo namespace, and is
+ * rebuilt on every entry rather than resumed. {@code GamesInProgress.gameFolder}
+ * is keyed by play mode and the mode is not known until the dungeon mouth. Runs
  * therefore begin the way they always have — mode first, then hero select, then
  * depth 1 — with the mode chosen in the world rather than on the title screen.
  */
@@ -87,29 +84,46 @@ public final class VillageGateway {
 		return selected != null ? selected : HeroClass.WARRIOR;
 	}
 
-	/** True when an existing village save should be resumed rather than rebuilt. */
+	/** True when village save data is sitting on disk. */
 	public static boolean villageExists() {
 		return GamesInProgress.gameExists(VILLAGE_SLOT);
 	}
 
 	/**
-	 * Enter the ground level from the title screen: resume the saved village if
-	 * there is one, otherwise build a fresh one on depth 0.
+	 * Throws away any stored ground level.
+	 *
+	 * <p>Saved levels are restored from their bundle, which carries its own
+	 * width and height — so a village written by an older build keeps that
+	 * build's map forever, no matter what the level code now says. The ground
+	 * level holds nothing worth that risk, so it is never resumed from disk.
+	 */
+	public static void discardStoredVillage() {
+		if (villageExists()) {
+			Dungeon.deleteGame(VILLAGE_SLOT, true);
+		}
+		GamesInProgress.delete(VILLAGE_SLOT);
+	}
+
+	/**
+	 * Enter the ground level from the title screen.
+	 *
+	 * <p>Always rebuilt, never restored. The village is hand-authored and
+	 * carries no progress — no experience, no inventory that survives, no
+	 * quest state — so regenerating it costs the player nothing and keeps the
+	 * map in step with the code that draws it. Anything the house gains later
+	 * (a stash, cosmetics) must therefore be stored on its own, not left to
+	 * level persistence.
 	 */
 	public static void enterVillage() {
 		GamesInProgress.selectEchoPlayMode(villageStorageMode());
 		GamesInProgress.curSlot = VILLAGE_SLOT;
+		discardStoredVillage();
 
-		if (villageExists()) {
-			startingInVillage = false;
-			InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
-		} else {
-			GamesInProgress.selectedClass = villageHeroClass();
-			Dungeon.hero = null;
-			Dungeon.initSeed();
-			startingInVillage = true;
-			InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
-		}
+		GamesInProgress.selectedClass = villageHeroClass();
+		Dungeon.hero = null;
+		Dungeon.initSeed();
+		startingInVillage = true;
+		InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
 
 		ShatteredPixelDungeon.switchScene(InterlevelScene.class);
 	}
@@ -118,12 +132,13 @@ public final class VillageGateway {
 	 * Answer to the dungeon-mouth prompt: commit to a play mode and hand off to
 	 * the ordinary run-start flow.
 	 *
-	 * <p>Order matters. The village must be saved <em>before</em> the mode is
-	 * selected, because selecting it repoints {@code GamesInProgress.gameFolder}
-	 * at that mode's folder and the village belongs in the solo one.
+	 * <p>Order matters. The stored ground level is dropped <em>before</em> the
+	 * mode is selected, because selecting it repoints
+	 * {@code GamesInProgress.gameFolder} at that mode's folder, and the village
+	 * lives in the solo one.
 	 */
 	public static void beginRun(EchoPlayMode mode) {
-		saveVillage();
+		discardStoredVillage();
 
 		Mob.clearHeldAllies();
 		Dungeon.hero = null;
@@ -149,16 +164,4 @@ public final class VillageGateway {
 		return empty == -1 ? 1 : empty;
 	}
 
-	/** Persists the village so it is unchanged when the player comes back. */
-	public static void saveVillage() {
-		if (Dungeon.hero == null || !VillageLevel.isGroundLevel(Dungeon.depth)) {
-			return;
-		}
-		try {
-			Dungeon.saveAll();
-		} catch (IOException e) {
-			// a village that fails to save is not worth losing the run over
-			ShatteredPixelDungeon.reportException(e);
-		}
-	}
 }

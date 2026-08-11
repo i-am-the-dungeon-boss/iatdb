@@ -45,6 +45,9 @@ and challenges:
   never collide with a run or appear in the save list.
 - **Always-solo storage.** The village is stored under `-solo` because it is a private, solo place.
   Nothing about it is mode-specific, so nothing needs migrating when a run commits to ranked.
+- **Never resumed.** The ground level is discarded and rebuilt on every entry. Saved levels carry
+  their own dimensions in their bundle, so a stored village would outlive any change to the map —
+  and did, crashing once the house geometry changed underneath an existing save.
 
 The town avatar is disposable: choosing a mode at the mouth starts a genuinely fresh run from hero
 select, so nothing carries down and no save is ever migrated.
