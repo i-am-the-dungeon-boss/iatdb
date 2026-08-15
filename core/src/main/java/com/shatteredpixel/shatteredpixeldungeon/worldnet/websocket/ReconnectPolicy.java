@@ -50,29 +50,32 @@ final class ReconnectPolicy {
 	 * — in which nothing arrives. Opening the replacement first and handing over
 	 * only when it is up means there is no moment without a live socket.
 	 *
-	 * <p>Must stay below the server's own minimum lifetime, or the server closes
-	 * first and this never gets the chance to run.
+	 * <p>Must stay below the server's own lifetime, or the server closes first and
+	 * this never gets the chance to run. The server closes at 290s — 10s under the
+	 * function's 300s maximum duration — so this leaves a 10s overlap in which the
+	 * replacement handshakes while the old socket is still carrying traffic.
 	 */
-	private static final float ROTATE_AFTER_SECONDS = 215f;
+	private static final float ROTATE_AFTER_SECONDS = 280f;
 	/**
 	 * Spread added to the rotation deadline, drawn once per socket.
 	 *
-	 * <p>In ordinary play this changes nothing: players enter the village at
-	 * their own moments, so their rotations are already scattered. It matters
-	 * after an event that drops many sockets at once — an instance reaped, a zone
-	 * failing over — because a fixed interval would then hold those clients in
-	 * lockstep permanently, with nothing to ever separate them again. Since a
-	 * replacement overlaps the socket it replaces, such a group would present the
-	 * platform with a periodic burst of twice its number in connections, which is
-	 * the sort of thing that gets a village split across two instances for no
-	 * reason. A per-socket draw lets the grouping decay instead.
+	 * <p>**Zero.** A spread has to be paid for out of the overlap: the deadline
+	 * moves back by the full width of the window so that even the latest draw
+	 * still clears the server's close, which means every socket gives up that
+	 * time whether its own draw needed it or not. With the server's lifetime
+	 * pushed up against the function's maximum duration there is no longer room
+	 * for both a spread and a usable handshake budget, and the budget is worth
+	 * more.
 	 *
-	 * <p>Bounded so the sum stays under the server's minimum lifetime: the client
-	 * must always be the one that moves first. The five seconds left between the
-	 * two are the replacement's handshake budget — miss it and the server closes
-	 * the live socket first, which costs a short gap rather than anything worse.
+	 * <p>What it bought was the decay of lockstep: after an event that drops many
+	 * sockets at once — an instance reaped, a zone failing over — a fixed
+	 * interval holds those clients together indefinitely, and since a replacement
+	 * overlaps the socket it replaces, they present the platform with a periodic
+	 * burst of twice their number in connections. That is now permanent rather
+	 * than decaying. The mechanism is left in place, so restoring it is one
+	 * non-zero value plus a matching reduction in {@link #ROTATE_AFTER_SECONDS}.
 	 */
-	private static final float ROTATE_JITTER_SECONDS = 20f;
+	private static final float ROTATE_JITTER_SECONDS = 0f;
 	private static final float[] BACKOFF_SECONDS = { 1f, 2f, 5f, 15f, 30f };
 
 	private int failureStreak;
