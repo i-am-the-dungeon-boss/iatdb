@@ -69,7 +69,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
 
 		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
 		sync.awaitBackgroundTasksForTests();
@@ -87,7 +87,7 @@ class EchoOnlineSyncTest {
 
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
-		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
 
 		sync.postLeaderboardResultAsync(new EchoFightResult(
 				"5-1", true, 5, 1L, "0.0.1", "MAGE", 10, 5, 8));
@@ -110,7 +110,7 @@ class EchoOnlineSyncTest {
 		EchoOnlineSettings.setOnlineEnabled(true);
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
 
 		sync.uploadEchoAsync(EchoTestSupport.warriorEchoWithData(5));
 		sync.awaitBackgroundTasksForTests();

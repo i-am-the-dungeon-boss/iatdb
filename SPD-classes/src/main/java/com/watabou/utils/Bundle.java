@@ -488,6 +488,11 @@ public class Bundle {
 	private static final int GZIP_BUFFER = 1024*4; //4 kb
 
 	public static Bundle read( InputStream stream ) throws IOException {
+		return read( stream, true );
+	}
+
+	//callers that parse speculatively pass false, so a failed attempt isn't reported as a fault
+	public static Bundle read( InputStream stream, boolean reportErrors ) throws IOException {
 
 		try {
 			if (!stream.markSupported()){
@@ -530,7 +535,9 @@ public class Bundle {
 
 			return new Bundle( (JSONObject) json );
 		} catch (Exception e) {
-			Game.reportException(e);
+			if (reportErrors) {
+				Game.reportException(e);
+			}
 			throw new IOException();
 		}
 	}

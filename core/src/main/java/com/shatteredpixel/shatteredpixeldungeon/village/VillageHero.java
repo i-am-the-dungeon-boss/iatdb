@@ -27,6 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.village;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 
 /**
  * The town avatar: a {@link Hero} in everything the presentation layer touches,
@@ -54,6 +55,12 @@ public class VillageHero extends Hero {
 		// reachable from the status-pane avatar in town. Empty tiers grant
 		// nothing, since points come from levelling.
 		Talent.initClassTalents(this);
+	}
+
+	/** Town look, decided here rather than by anything on the dungeon side. */
+	@Override
+	public HeroSprite createSprite() {
+		return new VillageHeroSprite();
 	}
 
 	/** No {@code Regeneration}, no {@code Hunger}: neither belongs in town. */

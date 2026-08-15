@@ -125,10 +125,16 @@ public class AndroidLauncher extends AndroidApplication {
 			Gdx.app = this;
 			EchoOnlineSettings.loadDefaultDotEnv();
 			String echoBackendUrl = BuildConfig.ECHO_BACKEND_URL;
+			String echoWorldSocketUrl = BuildConfig.ECHO_WORLD_SOCKET_URL;
 			if (BuildConfig.DEBUG) {
 				echoBackendUrl = EchoOnlineSettings.forAndroidEmulatorLoopback(echoBackendUrl);
+				// The emulator's localhost is the device, not the development
+				// machine, so the dev bridge needs the same rewrite the backend
+				// URL gets or the socket dials into the sandbox and hangs.
+				echoWorldSocketUrl = EchoOnlineSettings.forAndroidEmulatorLoopback(echoWorldSocketUrl);
 			}
-			EchoOnlineSettings.setBuildDefaults(echoBackendUrl, BuildConfig.ECHO_API_KEY);
+			EchoOnlineSettings.setBuildDefaults(
+					echoBackendUrl, BuildConfig.ECHO_API_KEY, echoWorldSocketUrl);
 			if (UpdateImpl.supportsUpdates()) {
 				Updates.service = UpdateImpl.getUpdateService();
 				EchoUpdates.baseUrlOverride = EchoOnlineSettings.backendUrl();

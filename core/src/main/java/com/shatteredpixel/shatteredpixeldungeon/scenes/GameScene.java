@@ -33,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -116,6 +117,13 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNet;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.LocalPlayerTag;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.NameTag;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.VillageUpdateGate;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.WorldChatBar;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.WorldSceneChannel;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
@@ -128,6 +136,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpdateAvailable;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpgrade;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.glwrap.Blending;
@@ -208,6 +217,8 @@ public class GameScene extends PixelScene {
 	private static boolean invVisible = true;
 
 	private Toolbar toolbar;
+	private final WorldSceneChannel worldChannel = new WorldSceneChannel();
+	private final VillageUpdateGate updateGate = new VillageUpdateGate();
 	private Toast prompt;
 
 	private AttackIndicator attack;
@@ -324,10 +335,17 @@ public class GameScene extends PixelScene {
 		mobs = new Group();
 		add(mobs);
 
-		hero = new HeroSprite();
+		hero = Dungeon.hero.createSprite();
 		hero.place(Dungeon.hero.pos);
 		hero.updateArmor();
 		mobs.add(hero);
+
+		// The local hero has no roster entry, so their name comes from the
+		// account rather than from the presence snapshot the ghosts use.
+		String localName = LocalPlayerTag.label();
+		if (localName != null) {
+			mobs.add(new NameTag(hero, localName));
+		}
 
 		for (Mob mob : Dungeon.level.mobs) {
 			addMobSprite(mob);
@@ -528,7 +546,10 @@ public class GameScene extends PixelScene {
 		toolbar.camera = uiCamera;
 		add(toolbar);
 
-		if (uiSize == 2) {
+		// The village has no gear to manage, so the docked inventory pane is never
+		// built there. Every caller already guards on a null `inventory` (it does
+		// not exist at smaller interface sizes either), so nothing else changes.
+		if (uiSize == 2 && !VillageSession.inVillage()) {
 			inventory = new InventoryPane();
 			inventory.camera = uiCamera;
 			inventory.setPos(uiCamera.width - inventory.width() - insets.right,
@@ -537,6 +558,14 @@ public class GameScene extends PixelScene {
 
 			toolbar.setRect(insets.left, uiCamera.height - toolbar.height() - inventory.height() - insets.bottom,
 					uiCamera.width - insets.right, toolbar.height());
+		} else if (VillageSession.inVillage()) {
+			// Every button on it is hidden in the village, so the empty frame is
+			// collapsed to nothing rather than left as a grey strip. Zero height at
+			// the bottom edge also means `toolbar.top()` hands the full screen back
+			// to the tag layout below.
+			toolbar.visible = toolbar.active = false;
+			toolbar.setRect(insets.left, uiCamera.height - insets.bottom,
+					uiCamera.width - insets.right, 0);
 		} else {
 			toolbar.setRect(insets.left, uiCamera.height - toolbar.height() - insets.bottom,
 					uiCamera.width - insets.right, toolbar.height());
@@ -782,6 +811,8 @@ public class GameScene extends PixelScene {
 			toggleInvPane();
 		fadeIn();
 
+		openWorldChannel();
+
 		// re-show WndResurrect if needed
 		if (!Dungeon.hero.isAlive()) {
 			// check if hero has an unblessed ankh
@@ -811,6 +842,8 @@ public class GameScene extends PixelScene {
 		}
 
 		Emitter.freezeEmitters = false;
+
+		worldChannel.detach();
 
 		scene = null;
 		Badges.saveGlobal();
@@ -905,11 +938,19 @@ public class GameScene extends PixelScene {
 			updateItemDisplays = false;
 		}
 
+		// Above the hero guard on purpose: that early return also skips
+		// super.update(), so a chat overlay added as a child would freeze for
+		// the frames a level transition spends with no hero.
+		WorldNet.tick(Game.elapsed);
+
 		if (Dungeon.hero == null || scene == null) {
 			return;
 		}
 
 		super.update();
+
+		worldChannel.publishHeroPosition();
+		syncVillageUpdateGate();
 
 		if (notifyDelay > 0)
 			notifyDelay -= Game.elapsed;
@@ -1036,6 +1077,22 @@ public class GameScene extends PixelScene {
 		float tagLeft = tagsOnLeft ? 0 : uiCamera.width - tagWidth;
 
 		float y = SPDSettings.interfaceSize() == 0 ? scene.toolbar.top() - 2 : scene.status.top() - 2;
+
+		// The chat bar sits directly above the hero info panel, and the game log
+		// stacks above it rather than behind it.
+		WorldChatBar chatBar = scene.worldChannel.bar();
+		if (chatBar != null) {
+			float barWidth = SPDSettings.interfaceSize() == 0
+					? uiCamera.width - tagWidth - insets.left
+					: 160 - insets.left;
+			chatBar.setRect(
+					tagsOnLeft ? tagWidth : insets.left,
+					y - WorldChatBar.HEIGHT,
+					barWidth,
+					WorldChatBar.HEIGHT);
+			y = chatBar.top() - 2;
+		}
+
 		if (SPDSettings.interfaceSize() == 0) {
 			if (tagsOnLeft) {
 				scene.log.setRect(tagWidth, y, uiCamera.width - tagWidth - insets.right, 0);
@@ -1120,6 +1177,33 @@ public class GameScene extends PixelScene {
 		mobs.add(sprite);
 		sprite.link(mob);
 		sortMobSprites();
+	}
+
+	private void openWorldChannel() {
+		worldChannel.enter();
+		syncWorldChannelUi();
+	}
+
+	private void syncVillageUpdateGate() {
+		AvailableUpdateData update = updateGate.due(VillageSession.inVillage());
+		if (update == null) {
+			return;
+		}
+		addToFront(new WndUpdateAvailable(
+				update, () -> ShatteredPixelDungeon.platform.openURI(ProjectLinks.LATEST_RELEASE_URL)));
+	}
+
+	private void syncWorldChannelUi() {
+		if (worldChannel.sync(this, uiCamera)) {
+			layoutTags();
+		}
+	}
+
+	/** Called after the world chat setting changes, so the bar appears or leaves at once. */
+	public static void updateWorldChannel() {
+		if (scene != null) {
+			scene.syncWorldChannelUi();
+		}
 	}
 
 	// ensures that mob sprites are drawn from top to bottom, in case of overlap
@@ -1226,6 +1310,28 @@ public class GameScene extends PixelScene {
 
 	public static void add(EmoIcon icon) {
 		scene.emoicons.add(icon);
+	}
+
+	/**
+	 * Adds a remote player's ghost to the mob layer.
+	 *
+	 * <p>It has to live in {@code mobs} rather than {@code effects} so that
+	 * {@link #sortMobSprites()} depth-sorts it with everyone else and the walls
+	 * layer still occludes it — {@code effects} draws over walls.
+	 */
+	public static void addRemotePlayer(Gizmo sprite) {
+		if (scene == null) {
+			return;
+		}
+		scene.mobs.add(sprite);
+		sortMobSprites();
+	}
+
+	public static void removeRemotePlayer(Gizmo sprite) {
+		if (scene == null) {
+			return;
+		}
+		scene.mobs.remove(sprite);
 	}
 
 	public static void add(CharHealthIndicator indicator) {

@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.online;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
@@ -43,7 +44,7 @@ public final class EchoOnlineSync {
 	}
 
 	public void uploadEchoAsync(Echo echo) {
-		if (!shouldSync() || echo == null) {
+		if (!shouldSync() || echo == null || Dungeon.currentRunModified()) {
 			return;
 		}
 		submit(() -> {
@@ -60,7 +61,7 @@ public final class EchoOnlineSync {
 	}
 
 	public void postLeaderboardResultAsync(EchoFightResult result) {
-		if (!shouldSync() || result == null) {
+		if (!shouldSync() || result == null || Dungeon.currentRunModified()) {
 			return;
 		}
 		submit(() -> {
@@ -71,6 +72,34 @@ public final class EchoOnlineSync {
 				client.postLeaderboardResult(result);
 			} catch (Exception e) {
 				SentryCrashReporting.report(e);
+			}
+		});
+	}
+
+	/**
+	 * Delivers anything the queue is still holding. Unlike the upload paths this runs
+	 * for modified saves — it is the only thing a modified run ever sends — and stays
+	 * silent on every failure so a detected player sees nothing.
+	 */
+	public void flushIntegrityReportsAsync() {
+		// deliberately not gated on shouldSync(): that requires RANKED, and a modified
+		// save is worth knowing about whichever mode it was loaded in. A configured
+		// backend and an existing session are enough.
+		if (!EchoOnlineSettings.isConfigured() || IntegrityReportQueue.pending().isEmpty()) {
+			return;
+		}
+		submit(() -> {
+			if (!ensurePlayerSession()) {
+				return;
+			}
+			for (IntegrityReport report : IntegrityReportQueue.pending()) {
+				try {
+					client.postIntegrityReport(report);
+					IntegrityReportQueue.acknowledge(report.reportId);
+				} catch (Exception ignored) {
+					// keep it queued and try again next time; never reported anywhere
+					return;
+				}
 			}
 		});
 	}

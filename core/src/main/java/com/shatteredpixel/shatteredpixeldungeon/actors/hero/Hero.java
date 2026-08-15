@@ -464,6 +464,17 @@ public class Hero extends Char {
 		Buff.affect(this, Hunger.class);
 	}
 
+	/**
+	 * Builds this hero's sprite.
+	 *
+	 * <p>A hook rather than a {@code new HeroSprite()} at the call site, so a
+	 * subclass can supply its own without {@code GameScene} having to know which
+	 * kind of hero it is looking at.
+	 */
+	public HeroSprite createSprite() {
+		return new HeroSprite();
+	}
+
 	public int tier() {
 		Armor armor = belongings.armor();
 		if (armor instanceof ClassArmor) {

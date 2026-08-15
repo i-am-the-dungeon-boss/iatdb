@@ -90,7 +90,12 @@ public class IOSLauncher extends IOSApplication.Delegate {
 		EchoOnlineSettings.loadDefaultDotEnv();
 		EchoOnlineSettings.setBuildDefaults(
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
-				EchoBuildConfig.ECHO_API_KEY);
+				EchoBuildConfig.ECHO_API_KEY,
+				// No socket override. A packaged app reaches no project .env on a
+				// device, and there is no debug variant baking one in, so the empty
+				// value is what makes worldSocketUrl() derive wss:// from the
+				// backend URL above -- which is the production endpoint anyway.
+				"");
 
 		// Preserve RoboVM NPE/mach handlers while third-party SDKs install theirs.
 		Signals.installSignals(

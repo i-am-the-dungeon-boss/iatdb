@@ -21,12 +21,14 @@ public final class EchoPlayerSession {
 	private static final String KEY_USERNAME = "username";
 	private static final String KEY_HAS_CREDENTIALS = "has_credentials";
 	private static final String KEY_EMAIL = "email";
+	private static final String KEY_MUTED_UNTIL = "muted_until";
 
 	private static String deviceId;
 	private static String jwt = "";
 	private static String username = "";
 	private static boolean hasCredentials;
 	private static String email = "";
+	private static long mutedUntil;
 	private static boolean loaded;
 
 	private EchoPlayerSession() {
@@ -66,16 +68,38 @@ public final class EchoPlayerSession {
 		return !Strings.isBlank(jwt) && !Strings.isBlank(username);
 	}
 
+	/**
+	 * Epoch ms at which a server-side chat mute lifts; 0 when there is none.
+	 *
+	 * <p>Delivered by the authentication response rather than asked for, and held
+	 * here as a raw deadline. That is the whole reason the world socket carries no
+	 * mute traffic: the deadline is known locally, so the client can grey its own
+	 * composer out and let the mute expire without another round trip.
+	 *
+	 * <p>Whether it is still running is
+	 * {@link com.shatteredpixel.shatteredpixeldungeon.worldnet.ServerMute}'s
+	 * question, not this class's — the session stores what the server said and
+	 * nothing more.
+	 */
+	public static synchronized long mutedUntil() {
+		ensureLoaded();
+		return mutedUntil;
+	}
+
 	public static synchronized void applyAuthResponse(
 			String token,
 			String name,
 			boolean credentials,
-			String linkedEmail) {
+			String linkedEmail,
+			long muteExpiry) {
 		ensureLoaded();
 		jwt = token != null ? token : "";
 		username = name != null ? name.trim() : "";
 		hasCredentials = credentials;
 		email = linkedEmail != null ? linkedEmail.trim() : "";
+		// Taken as given rather than merged with what is already held: the server
+		// is the authority, and an absent value means the mute has been lifted.
+		mutedUntil = Math.max(muteExpiry, 0L);
 		persist();
 	}
 
@@ -85,6 +109,7 @@ public final class EchoPlayerSession {
 		username = "";
 		hasCredentials = false;
 		email = "";
+		mutedUntil = 0L;
 		persist();
 	}
 
@@ -95,6 +120,7 @@ public final class EchoPlayerSession {
 		username = "";
 		hasCredentials = false;
 		email = "";
+		mutedUntil = 0L;
 		loaded = false;
 		try {
 			if (FileUtils.fileExists(SESSION_FILE)) {
@@ -125,12 +151,14 @@ public final class EchoPlayerSession {
 			username = bundle.contains(KEY_USERNAME) ? bundle.getString(KEY_USERNAME) : "";
 			hasCredentials = bundle.contains(KEY_HAS_CREDENTIALS) && bundle.getBoolean(KEY_HAS_CREDENTIALS);
 			email = bundle.contains(KEY_EMAIL) ? bundle.getString(KEY_EMAIL) : "";
+			mutedUntil = bundle.contains(KEY_MUTED_UNTIL) ? bundle.getLong(KEY_MUTED_UNTIL) : 0L;
 		} catch (IOException ignored) {
 			deviceId = null;
 			jwt = "";
 			username = "";
 			hasCredentials = false;
 			email = "";
+			mutedUntil = 0L;
 		}
 	}
 
@@ -144,6 +172,7 @@ public final class EchoPlayerSession {
 			bundle.put(KEY_USERNAME, username != null ? username : "");
 			bundle.put(KEY_HAS_CREDENTIALS, hasCredentials);
 			bundle.put(KEY_EMAIL, email != null ? email : "");
+			bundle.put(KEY_MUTED_UNTIL, mutedUntil);
 			FileUtils.bundleToFile(SESSION_FILE, bundle);
 		} catch (IOException ignored) {
 		}

@@ -56,7 +56,8 @@ public class News {
 		if (Gdx.app.getType() == Application.ApplicationType.Android && Gdx.app.getVersion() < 20){
 			useHTTPS = false; //android versions below 5.0 don't support TLSv1.2 by default
 		}
-		service.checkForArticles(!SPDSettings.WiFi(), useHTTPS, new NewsService.NewsResultCallback() {
+		// Always-online game: metered connections are not a reason to skip the fetch.
+		service.checkForArticles(true, useHTTPS, new NewsService.NewsResultCallback() {
 			@Override
 			public void onArticlesFound(ArrayList<NewsArticle> articles) {
 				lastCheck = new Date();

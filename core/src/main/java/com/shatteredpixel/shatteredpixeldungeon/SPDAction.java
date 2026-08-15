@@ -89,6 +89,7 @@ public class SPDAction extends GameAction {
 
 	public static final GameAction HERO_INFO    = new SPDAction("hero_info");
 	public static final GameAction JOURNAL      = new SPDAction("journal");
+	public static final GameAction CHAT         = new SPDAction("chat");
 
 	public static final GameAction ZOOM_IN      = new SPDAction("zoom_in");
 	public static final GameAction ZOOM_OUT     = new SPDAction("zoom_out");
@@ -141,7 +142,8 @@ public class SPDAction extends GameAction {
 		defaultBindings.put( Input.Keys.TAB,            SPDAction.CYCLE);
 		defaultBindings.put( Input.Keys.X,              SPDAction.TAG_ACTION );
 		defaultBindings.put( Input.Keys.C,              SPDAction.TAG_LOOT );
-		defaultBindings.put( Input.Keys.ENTER,          SPDAction.TAG_LOOT );
+		//ENTER opens/sends world chat; TAG_LOOT keeps C
+		defaultBindings.put( Input.Keys.ENTER,          SPDAction.CHAT );
 		defaultBindings.put( Input.Keys.R,              SPDAction.TAG_RESUME );
 
 		defaultBindings.put( Input.Keys.H,              SPDAction.HERO_INFO );

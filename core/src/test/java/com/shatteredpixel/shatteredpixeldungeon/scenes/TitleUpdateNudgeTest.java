@@ -40,32 +40,32 @@ class TitleUpdateNudgeTest {
 	}
 
 	@Test
-	@DisplayName("requests update check when updates enabled")
-	void requestsCheckWhenEnabled() {
+	@DisplayName("always requests the update check on title")
+	void alwaysRequestsCheck() {
 		AtomicInteger checks = new AtomicInteger();
-		Updates.service = trackingService(checks);
+		Updates.service = trackingService(checks, true);
 
-		TitleScene.requestUpdateCheckIfEnabled(true);
+		TitleScene.requestUpdateCheck();
 
 		Assertions.assertThat(checks.get()).isEqualTo(1);
 	}
 
 	@Test
-	@DisplayName("skips update check when updates disabled")
-	void skipsCheckWhenDisabled() {
+	@DisplayName("requests the update check even when the service reports no prompt support")
+	void requestsCheckWithoutPromptSupport() {
 		AtomicInteger checks = new AtomicInteger();
-		Updates.service = trackingService(checks);
+		Updates.service = trackingService(checks, false);
 
-		TitleScene.requestUpdateCheckIfEnabled(false);
+		TitleScene.requestUpdateCheck();
 
-		Assertions.assertThat(checks.get()).isZero();
+		Assertions.assertThat(checks.get()).isEqualTo(1);
 	}
 
-	private static UpdateService trackingService(AtomicInteger checks) {
+	private static UpdateService trackingService(AtomicInteger checks, boolean supportsPrompts) {
 		return new UpdateService() {
 			@Override
 			public boolean supportsUpdatePrompts() {
-				return true;
+				return supportsPrompts;
 			}
 
 			@Override

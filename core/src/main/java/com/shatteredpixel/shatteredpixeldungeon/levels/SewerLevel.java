@@ -52,8 +52,9 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.SurfaceScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
-import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndLeaveDungeon;
 import com.watabou.noosa.Game;
+import com.watabou.utils.Callback;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.particles.Emitter;
@@ -150,9 +151,17 @@ public class SewerLevel extends RegularLevel {
 			if (hero.belongings.getItem( Amulet.class ) == null) {
 				//without the amulet the stairs lead home, not out of the game:
 				//the run is saved where it stands and the dungeon hero stays
-				//behind, while the player walks back into the village
-				beforeTransition();
-				return VillageGateway.returnToVillage();
+				//behind, while the player walks back into the village.
+				//the walk home is confirmed first, so a stray step up does not
+				//end the trip; refusing the transition leaves the hero on the
+				//stair until the prompt is answered
+				Game.runOnRenderThread(new Callback() {
+					@Override
+					public void call() {
+						GameScene.show(new WndLeaveDungeon());
+					}
+				});
+				return false;
 			} else {
 				Statistics.ascended = true;
 				Game.switchScene(SurfaceScene.class, new Game.SceneChangeCallback() {

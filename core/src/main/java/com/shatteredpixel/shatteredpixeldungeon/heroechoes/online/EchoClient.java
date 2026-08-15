@@ -37,24 +37,30 @@ public final class EchoClient {
 				new JavaEchoHttpTransport());
 	}
 
-	public boolean checkHealth() throws Exception {
+	/**
+	 * Reachability probe and version source in one call. Returns the backend's
+	 * game version name, or null when the backend did not answer with one —
+	 * callers treat null as unreachable rather than substituting a placeholder.
+	 */
+	public String fetchGameVersion() throws Exception {
 		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
 				"GET",
-				baseUrl + "/health",
+				baseUrl + "/v1/game-version",
 				jsonHeaders(false, false),
 				null));
-		return isHealthy(response.statusCode, response.body);
+		return parseVersionName(response.statusCode, response.body);
 	}
 
-	static boolean isHealthy(int statusCode, String body) {
+	static String parseVersionName(int statusCode, String body) {
 		if (statusCode != 200 || Strings.isBlank(body)) {
-			return false;
+			return null;
 		}
 		try {
 			JSONObject json = new JSONObject(body);
-			return "ok".equals(json.optString("status"));
+			String versionName = json.optString("version_name", "");
+			return Strings.isBlank(versionName) ? null : versionName.trim();
 		} catch (Exception ignored) {
-			return false;
+			return null;
 		}
 	}
 
@@ -157,8 +163,11 @@ public final class EchoClient {
 		String name = json.optString("username", EchoPlayerSession.username());
 		boolean credentials = json.optBoolean("has_credentials", false);
 		String linkedEmail = json.has("email") ? json.optString("email", "") : "";
-		// Keep existing JWT; only refresh profile metadata.
-		EchoPlayerSession.applyAuthResponse(EchoPlayerSession.jwt(), name, credentials, linkedEmail);
+		// Keep existing JWT; only refresh profile metadata. `muted_until` rides
+		// along here on purpose: this is the one call that re-reads it, so a mute
+		// applied since the last launch is picked up without any polling.
+		EchoPlayerSession.applyAuthResponse(
+				EchoPlayerSession.jwt(), name, credentials, linkedEmail, json.optLong("muted_until", 0L));
 		return true;
 	}
 
@@ -230,6 +239,29 @@ public final class EchoClient {
 		ensureSuccess(response);
 	}
 
+	public void postIntegrityReport(IntegrityReport report) throws Exception {
+		JSONObject body = new JSONObject();
+		body.put("report_id", report.reportId);
+		body.put("detected_at", report.detectedAt);
+		body.put("reason", report.reason);
+		body.put("hero_class", report.heroClass);
+		body.put("hero_level", report.heroLevel);
+		body.put("depth", report.depth);
+		body.put("seed", report.seed);
+		body.put("game_version", report.gameVersion);
+		body.put("echo_play_mode", report.playMode);
+		body.put("easy_mode", report.easyMode);
+		body.put("save_slot", report.saveSlot);
+		body.put("client_id", EchoPlayerSession.deviceId());
+
+		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
+				"POST",
+				baseUrl + "/v1/integrity/report",
+				jsonHeaders(true, true),
+				body.toString()));
+		ensureSuccess(response);
+	}
+
 	public List<EchoLeaderboardEntry> fetchLeaderboard(int depth, int limit) throws Exception {
 		String url = baseUrl + "/v1/leaderboard/" + depth + "?limit=" + limit + easyModeQueryAmp();
 		EchoHttpTransport.Response response = transport.send(new EchoHttpTransport.Request(
@@ -257,7 +289,8 @@ public final class EchoClient {
 		String name = json.optString("username", "");
 		boolean credentials = json.optBoolean("has_credentials", false);
 		String linkedEmail = json.has("email") ? json.optString("email", "") : "";
-		EchoPlayerSession.applyAuthResponse(token, name, credentials, linkedEmail);
+		EchoPlayerSession.applyAuthResponse(
+				token, name, credentials, linkedEmail, json.optLong("muted_until", 0L));
 	}
 
 	private Map<String, String> jsonHeaders(boolean includeApiKey, boolean includeBearer) {

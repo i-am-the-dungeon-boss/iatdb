@@ -348,7 +348,14 @@ public class StatusPane extends Component {
 		}
 
 		// the town avatar never levels, so the experience bar has nothing to say
-		exp.visible = expText.visible = !VillageSession.inVillage();
+		boolean village = VillageSession.inVillage();
+		exp.visible = expText.visible = !village;
+
+		// Nor does it have a build to inspect: talents, subclass and gear all
+		// belong to a run. Deactivating rather than hiding keeps the portrait and
+		// the health bar where they are, and closes the keyboard shortcut too,
+		// which a visibility flag alone would leave live.
+		heroInfo.active = heroInfoOnBar.active = !village;
 
 		if (large) {
 			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();

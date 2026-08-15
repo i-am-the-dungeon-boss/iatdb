@@ -244,6 +244,11 @@ public class SPDSettings extends GameSettings {
 
 	public static final String KEY_HERO_ECHOES_WEAK_SNAPSHOTS = "hero_echoes_weak_snapshots";
 	public static final String KEY_PLAYER_NAME = "player_name";
+	public static final String KEY_WORLD_CHAT = "world_chat";
+	public static final String KEY_WORLD_CHAT_MUTED = "world_chat_muted";
+
+	/** Never stored; see {@link #worldChat()}. Off on every launch. */
+	private static boolean worldChatThisSession = false;
 	public static final String KEY_DEBUG_START = "debug_start";
 	public static final String KEY_DEBUG_START_DEPTH = "debug_start_depth";
 	public static final String KEY_DEBUG_STRATEGY_KIT = "debug_strategy_kit";
@@ -266,6 +271,36 @@ public class SPDSettings extends GameSettings {
 
 	public static String playerName() {
 		return getString(KEY_PLAYER_NAME, "");
+	}
+
+	/**
+	 * Whether the world channel stays open once the player is in the dungeon.
+	 * The village channel is separate and always connects.
+	 *
+	 * <p>Session-scoped on purpose: it is held in memory and starts off on every
+	 * launch, rather than being saved. Joining a public channel is a choice worth
+	 * making knowingly, and a flag persisted once would quietly keep a player in
+	 * chat during every future run without ever asking again — which is exactly
+	 * what a first-entry consent notice is supposed to prevent.
+	 *
+	 * <p>{@link #KEY_WORLD_CHAT} is kept only so an older build's saved value can
+	 * be recognised and ignored; nothing writes it any more.
+	 */
+	public static void worldChat(boolean value) {
+		worldChatThisSession = value;
+	}
+
+	public static boolean worldChat() {
+		return worldChatThisSession;
+	}
+
+	/** Comma-joined lowercased usernames; see {@code worldnet.MuteList}. */
+	public static void worldChatMuted(String value) {
+		put(KEY_WORLD_CHAT_MUTED, value != null ? value : "");
+	}
+
+	public static String worldChatMuted() {
+		return getString(KEY_WORLD_CHAT_MUTED, "");
 	}
 
 	public static void debugStart(boolean value) {
@@ -316,6 +351,19 @@ public class SPDSettings extends GameSettings {
 
 	public static int lastClass() {
 		return getInt(KEY_LAST_CLASS, 0, 0, 3);
+	}
+
+	// Bitmask of save slots this install has already written a checksummed file for. Kept
+	// in settings rather than in the save folder so that copying, editing or deleting a
+	// save file cannot reset it, and named for what it is to nobody in particular.
+	public static final String KEY_SLOT_LAYOUT = "slot_layout";
+
+	public static void slotLayout(int value) {
+		put(KEY_SLOT_LAYOUT, value);
+	}
+
+	public static int slotLayout() {
+		return getInt(KEY_SLOT_LAYOUT, 0);
 	}
 
 	public static void challenges(int value) {

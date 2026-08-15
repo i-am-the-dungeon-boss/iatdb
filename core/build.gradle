@@ -19,7 +19,42 @@ dependencies {
     testRuntimeOnly "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 }
 
+// Headless runs get a scratch working directory under build/, never a source dir.
+// The game's save sandbox is libGDX's Local file type, which resolves against the
+// process working directory, so a run rooted in src/main/assets writes real save
+// data (bones.dat, game<n>-solo/, echoes-solo/) into the committed asset tree.
+// The assets go on the classpath instead: libGDX resolves an Internal file handle
+// against the working directory first and the classpath second, so bundles and
+// textures still load. Plain java.io readers get the tree via iatdb.assetsDir.
+def gameFilesDir = layout.buildDirectory.dir('game-files').get().asFile
+def assetsDir = file('src/main/assets')
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
-    workingDir = file('src/main/assets')
+    workingDir = gameFilesDir
+    classpath += files(assetsDir)
+    systemProperty 'iatdb.assetsDir', assetsDir.absolutePath
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+// Renders the village level to a PNG with the real city tileset, so layout
+// changes can be checked without launching the game.
+//   ./gradlew :core:renderVillage
+//   ./gradlew :core:renderVillage -Prender="--scale 4 --no-markers --out map.png"
+tasks.register('renderVillage', JavaExec) {
+    group = 'documentation'
+    description = 'Renders VillageLevel to docs/village/village-map.png'
+    classpath = sourceSets.test.runtimeClasspath + files(assetsDir)
+    mainClass = 'com.shatteredpixel.shatteredpixeldungeon.tools.VillageMapRenderer'
+    workingDir = gameFilesDir
+    systemProperty 'iatdb.assetsDir', assetsDir.absolutePath
+    systemProperty 'iatdb.rootDir', rootProject.projectDir.absolutePath
+    doFirst {
+        workingDir.mkdirs()
+    }
+    if (project.hasProperty('render')) {
+        args((project.property('render') as String).split('\\s+'))
+    }
 }

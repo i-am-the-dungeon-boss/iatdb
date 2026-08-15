@@ -29,12 +29,14 @@ public final class EchoOnlineSettings {
 
 	public static final String BACKEND_URL = "ECHO_BACKEND_URL";
 	public static final String API_KEY = "ECHO_API_KEY";
+	public static final String WORLD_SOCKET_URL = "ECHO_WORLD_SOCKET_URL";
 
 	private static Boolean testOnlineOverride;
 	private static String testBackendUrlOverride;
 	private static String testApiKeyOverride;
 	private static String buildDefaultBackendUrl;
 	private static String buildDefaultApiKey;
+	private static String buildDefaultWorldSocketUrl;
 
 	private static final Map<String, String> dotEnv = new HashMap<>();
 	/** When non-null, replaces {@link System#getenv(String)} (tests only). */
@@ -85,13 +87,32 @@ public final class EchoOnlineSettings {
 	}
 
 	/**
+	 * Optional separate origin for the world socket; empty means "same as
+	 * {@link #backendUrl()}", which is the production arrangement.
+	 *
+	 * <p>Set only for local development, where the dev socket bridge runs on its
+	 * own port because the Next dev server owns 3000 and cannot perform the
+	 * WebSocket upgrade itself.
+	 */
+	public static String worldSocketUrl() {
+		String fromEnvOrDotEnv = trimToEmpty(resolve(WORLD_SOCKET_URL));
+		if (!fromEnvOrDotEnv.isEmpty()) {
+			return fromEnvOrDotEnv;
+		}
+		// Android has no project directory to read a .env from, so the build-baked
+		// value is the only channel that reaches a device or emulator at all.
+		return trimToEmpty(buildDefaultWorldSocketUrl);
+	}
+
+	/**
 	 * Platform/build defaults used when env and dotenv do not supply a value.
 	 * Android: {@code BuildConfig}; desktop/iOS: {@code EchoBuildConfig} reading
 	 * Gradle-baked {@code echo-build.properties} (from root {@code .env}).
 	 */
-	public static void setBuildDefaults(String backendUrl, String apiKey) {
+	public static void setBuildDefaults(String backendUrl, String apiKey, String worldSocketUrl) {
 		buildDefaultBackendUrl = backendUrl;
 		buildDefaultApiKey = apiKey;
+		buildDefaultWorldSocketUrl = worldSocketUrl;
 	}
 
 	/** Maps desktop loopback hosts to the Android emulator host-loopback alias. */
@@ -158,6 +179,7 @@ public final class EchoOnlineSettings {
 		testApiKeyOverride = null;
 		buildDefaultBackendUrl = null;
 		buildDefaultApiKey = null;
+		buildDefaultWorldSocketUrl = null;
 		dotEnv.clear();
 		testEnv = null;
 	}

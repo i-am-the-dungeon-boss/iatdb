@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ExtendWith(GdxTestExtension.class)
@@ -68,11 +69,74 @@ class UpdatesImmediateCheckTest {
 	}
 
 	@Test
-	@DisplayName("immediate check returns null when update prompts unsupported")
+	@DisplayName("immediate check returns null only when no update service exists")
 	void immediateCheckSkippedWithoutService() {
 		Updates.service = null;
 
 		Assertions.assertThat(Updates.checkForUpdateImmediate()).isNull();
+	}
+
+	@Test
+	@DisplayName("version check runs even when the service reports no prompt support")
+	void checksWithoutPromptSupport() {
+		AtomicInteger checks = new AtomicInteger();
+		Updates.service = meteredRecordingService(checks, new AtomicBoolean(), false);
+
+		Updates.checkForUpdate();
+		Updates.checkForUpdateImmediate();
+
+		Assertions.assertThat(checks.get()).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("version check always allows metered connections")
+	void checksOverMeteredConnections() {
+		AtomicBoolean useMetered = new AtomicBoolean();
+		Updates.service = meteredRecordingService(new AtomicInteger(), useMetered, true);
+
+		Updates.checkForUpdate();
+
+		Assertions.assertThat(useMetered.get()).isTrue();
+	}
+
+	private static UpdateService meteredRecordingService(
+			AtomicInteger checks, AtomicBoolean useMeteredSeen, boolean supportsPrompts) {
+		return new UpdateService() {
+			@Override
+			public boolean supportsUpdatePrompts() {
+				return supportsPrompts;
+			}
+
+			@Override
+			public boolean supportsBetaChannel() {
+				return false;
+			}
+
+			@Override
+			public void checkForUpdate(boolean useMetered, boolean includeBetas, UpdateResultCallback callback) {
+				checks.incrementAndGet();
+				useMeteredSeen.set(useMetered);
+				callback.onNoUpdateFound();
+			}
+
+			@Override
+			public void initializeUpdate(AvailableUpdateData data) {
+			}
+
+			@Override
+			public boolean supportsReviews() {
+				return false;
+			}
+
+			@Override
+			public void initializeReview(ReviewResultCallback callback) {
+				callback.onComplete();
+			}
+
+			@Override
+			public void openReviewURI() {
+			}
+		};
 	}
 
 	private static UpdateService immediateService(AvailableUpdateData update) {

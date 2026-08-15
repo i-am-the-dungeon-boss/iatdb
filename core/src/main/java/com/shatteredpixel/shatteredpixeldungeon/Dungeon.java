@@ -87,6 +87,8 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPrefetchUserChoic
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.CompositeEchoLookup;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.IntegrityReport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoFetchResult;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
@@ -95,6 +97,9 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.shatteredpixel.shatteredpixeldungeon.utils.SaveChecksum;
+import com.shatteredpixel.shatteredpixeldungeon.utils.SaveFiles;
+import com.shatteredpixel.shatteredpixeldungeon.utils.SaveIntegrity;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
 import com.watabou.noosa.Game;
 import com.watabou.utils.BArray;
@@ -239,6 +244,16 @@ public class Dungeon {
 	public static long seed;
 	public static long lastPlayed;
 
+	/**
+	 * Whether the run being played right now came from modified save data. This, not the
+	 * raw flag in {@link SaveIntegrity}, is what gates capturing: the flag is a static that
+	 * outlives the run it describes, and a run that has ended must never silence whatever
+	 * comes after it.
+	 */
+	public static boolean currentRunModified() {
+		return hero != null && SaveIntegrity.isModified();
+	}
+
 	// we initialize the seed separately so that things like interlevelscene can
 	// access it early
 	public static void initSeed() {
@@ -265,6 +280,7 @@ public class Dungeon {
 	public static void init() {
 
 		initialVersion = version = Game.versionCode;
+		SaveIntegrity.reset();
 		challenges = Challenges.allowedForPlayMode(echoPlayMode) ? SPDSettings.challenges() : 0;
 		easyMode = SPDSettings.easyModeAllowedForPlayMode(echoPlayMode) && SPDSettings.easyMode();
 		mobsToChampion = 1;
@@ -1013,6 +1029,8 @@ public class Dungeon {
 	private static final String QUESTS = "quests";
 	private static final String BADGES = "badges";
 
+	// the game file carries the run's seed inside it, so it cannot also be keyed on it;
+	// depth files are keyed on the run they belong to, which stops one being moved between runs
 	public static void saveGame(int save) {
 		try {
 			Bundle bundle = new Bundle();
@@ -1083,7 +1101,7 @@ public class Dungeon {
 			Badges.saveLocal(badges);
 			bundle.put(BADGES, badges);
 
-			FileUtils.bundleToFile(GamesInProgress.gameFile(save), bundle);
+			SaveFiles.writeGame(save, bundle, SaveIntegrity.isModified());
 
 		} catch (IOException e) {
 			GamesInProgress.setUnknown(save);
@@ -1095,7 +1113,7 @@ public class Dungeon {
 		Bundle bundle = new Bundle();
 		bundle.put(LEVEL, level);
 
-		FileUtils.bundleToFile(GamesInProgress.depthFile(save, depth, branch), bundle);
+		SaveFiles.writeLevel(save, bundle, seed, depth, branch, SaveIntegrity.isModified());
 	}
 
 	public static void saveAll() throws IOException {
@@ -1136,13 +1154,28 @@ public class Dungeon {
 		}
 	}
 
+	/**
+	 * Marks the current run exactly as a detection would, for the debug pause menu.
+	 * Returns false if there is no run to mark. Nothing here is release-build code.
+	 */
+	public static boolean markSaveModified(String reason) {
+		if (hero == null) {
+			return false;
+		}
+		SaveIntegrity.note(SaveChecksum.State.TAMPERED, GamesInProgress.curSlot, seed, reason);
+		return true;
+	}
+
 	public static void loadGame(int save) throws IOException {
 		loadGame(save, true);
 	}
 
 	public static void loadGame(int save, boolean fullLoad) throws IOException {
 
-		Bundle bundle = FileUtils.bundleFromFile(GamesInProgress.gameFile(save));
+		SaveIntegrity.reset();
+
+		SaveChecksum.Result loaded = SaveFiles.readGame(save);
+		Bundle bundle = loaded.bundle;
 
 		initialVersion = bundle.getInt(INIT_VER);
 		version = bundle.getInt(VERSION);
@@ -1245,6 +1278,12 @@ public class Dungeon {
 		Statistics.restoreFromBundle(bundle);
 		Generator.restoreFromBundle(bundle);
 
+		// deferred to here so a report can describe the run it belongs to
+		SaveIntegrity.note(loaded.state, save, seed, IntegrityReport.REASON_GAME_FILE);
+
+		// anything still queued from an offline detection gets another chance on every
+		// load; the flush is a no-op when there is nothing to send
+		EchoOnlineSync.instance().flushIntegrityReportsAsync();
 	}
 
 	public static Level loadLevel(int save) throws IOException {
@@ -1252,7 +1291,9 @@ public class Dungeon {
 		Dungeon.level = null;
 		Actor.clear();
 
-		Bundle bundle = FileUtils.bundleFromFile(GamesInProgress.depthFile(save, depth, branch));
+		SaveChecksum.Result loaded = SaveFiles.readLevel(save, seed, depth, branch);
+		SaveIntegrity.note(loaded.state, save, seed, IntegrityReport.REASON_DEPTH_FILE);
+		Bundle bundle = loaded.bundle;
 
 		Level level = (Level) bundle.get(LEVEL);
 

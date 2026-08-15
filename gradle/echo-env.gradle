@@ -47,6 +47,14 @@ ext.echoEnvOrProp = { String key ->
 /** Single API key for all platforms and build types. */
 ext.echoApiKey = ext.echoEnvOrProp('ECHO_API_KEY')
 
+/**
+ * Local-development override for the world socket endpoint (the `pnpm dev:socket`
+ * bridge). Empty in any real build, where the socket shares the backend origin.
+ * Baked in rather than read from .env at runtime because Android has no project
+ * directory on the device to read one from.
+ */
+ext.echoWorldSocketUrl = ext.echoEnvOrProp('ECHO_WORLD_SOCKET_URL')
+
 ext.echoDebugBackendUrl = ext.echoEnvOrProp('ECHO_BACKEND_URL')
 ext.echoReleaseBackendUrl = ext.echoEnvOrProp('ECHO_BACKEND_URL_RELEASE')
 if (!ext.echoReleaseBackendUrl) {
