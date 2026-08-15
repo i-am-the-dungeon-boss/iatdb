@@ -26,6 +26,7 @@ package com.watabou.noosa;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -70,7 +71,11 @@ public class TextInput extends Component {
 		super();
 		this.bg = bg;
 		this.multiline = multiline;
-		add(bg);
+		// Optional: a field drawn inside a panel that already has its own chrome
+		// wants no second frame of its own. layout() is null-safe to match.
+		if (bg != null) {
+			add(bg);
+		}
 
 		// use a custom viewport here to ensure stage camera matches game camera
 		Viewport viewport = new Viewport() {
@@ -188,6 +193,38 @@ public class TextInput extends Component {
 			stage.setKeyboardFocus(textField);
 		}
 		Game.platform.setOnscreenKeyboardVisible(true, multiline);
+	}
+
+	/**
+	 * True while any text field holds keyboard focus.
+	 *
+	 * <p>Game key handlers must stand down when this is set: the libGDX stage
+	 * consumes typed characters, but PD's own {@code KeyEvent} listeners are a
+	 * separate path, so movement bindings would otherwise fire on every letter
+	 * and walk the hero around while the player types.
+	 */
+	public static boolean isEditing() {
+		return keyboardOwner != null;
+	}
+
+	/**
+	 * Left-aligns the text. Single-line fields centre by default, which suits a
+	 * dialog box but not a chat line that has to sit flush with a prompt.
+	 */
+	public void alignLeft() {
+		textField.setAlignment(Align.left);
+	}
+
+	/**
+	 * Overrides the skin's font colour, which is hard-coded to black in
+	 * {@code gdx/textfield.json} and is unreadable on a dark panel.
+	 *
+	 * @param color packed RGB, e.g. {@code 0x888888}
+	 */
+	public void setFontColor(int color) {
+		TextField.TextFieldStyle style = textField.getStyle();
+		style.fontColor = new Color((color << 8) | 0xFF);
+		textField.setStyle(style);
 	}
 
 	public void enterPressed() {

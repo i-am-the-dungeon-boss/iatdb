@@ -50,6 +50,9 @@ public final class ProjectLinks {
 
 	public static final String GITHUB_RELEASES_URL = GITHUB_REPO_URL + "/releases";
 
+	/** Where a player is sent to install the build the server expects. */
+	public static final String LATEST_RELEASE_URL = GITHUB_RELEASES_URL + "/latest";
+
 	public static final String GITHUB_RELEASES_API_URL = "https://api.github.com/repos/" + GITHUB_OWNER_REPO
 			+ "/releases";
 

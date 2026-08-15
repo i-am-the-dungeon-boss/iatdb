@@ -44,21 +44,45 @@ public final class TitleSupportLayout {
 	}
 
 	/**
+	 * Rows the play buttons occupy.
+	 *
+	 * <p>Three shapes, for three amounts of room:
+	 *
+	 * <ul>
+	 * <li><b>Desktop</b> — a row each: Village, then Solo and Ranked together,
+	 * then Debug. There is height to spare, and full-width targets suit a mouse.
+	 * <li><b>Phone landscape</b> — one row. 234px holds all four side by side,
+	 * and vertical space is the scarce thing.
+	 * <li><b>Portrait</b> — two rows. 133px will not hold three or four buttons
+	 * with room for an icon and a label, so Village takes the full width and the
+	 * shortcuts (with Debug) share the row beneath it.
+	 * </ul>
+	 */
+	public static int playRows(boolean landscape, boolean desktop, boolean debugVisible) {
+		if (desktop) {
+			return debugVisible ? 3 : 2;
+		}
+		return landscape ? 1 : 2;
+	}
+
+	/**
 	 * Number of title button rows for gap sizing.
 	 *
+	 * @param playRows       rows the play buttons take, from {@link #playRows}
 	 * @param landscape      whether the title scene is in landscape
 	 * @param supportVisible whether the Support row is shown
 	 * @param feedVisible    whether the News/Changes buttons are shown
 	 * @param singleMetaRow  phone landscape: one meta row of four buttons
 	 */
 	public static int buttonRows(
+			int playRows,
 			boolean landscape,
 			boolean supportVisible,
 			boolean feedVisible,
 			boolean singleMetaRow) {
 		if (landscape && singleMetaRow) {
 			// play + one meta row (Rankings|Journal|Settings|About); optional Support.
-			int rows = 2;
+			int rows = playRows + 1;
 			if (supportVisible) {
 				rows++;
 			}
@@ -66,7 +90,7 @@ public final class TitleSupportLayout {
 		}
 		// play + rankings + settings; Support is its own row;
 		// News/Changes only add a row in portrait.
-		int rows = 3;
+		int rows = playRows + 2;
 		if (supportVisible) {
 			rows++;
 		}
@@ -74,6 +98,37 @@ public final class TitleSupportLayout {
 			rows++;
 		}
 		return rows;
+	}
+
+	/**
+	 * Play buttons sharing the widest play row.
+	 *
+	 * <p>The counterpart to {@link #playRows}: that says how the four buttons stack,
+	 * this says how many of them end up side by side on the row that holds the most.
+	 * Desktop pairs Solo and Ranked, phone landscape puts everything on one row, and
+	 * portrait gives Village its own and leaves the shortcuts below it.
+	 */
+	public static int playSlots(boolean landscape, boolean desktop, boolean debugVisible) {
+		if (desktop) {
+			return 2;
+		}
+		if (landscape) {
+			return debugVisible ? 4 : 3;
+		}
+		return debugVisible ? 3 : 2;
+	}
+
+	/**
+	 * Width of one button when {@code slots} of them share the area with 2px gutters.
+	 *
+	 * <p>The gutters come out of the area rather than being added to it, so a row
+	 * always ends exactly where the button area does however many buttons are on it.
+	 */
+	public static float slotWidth(float areaWidth, int slots) {
+		if (slots <= 1) {
+			return areaWidth;
+		}
+		return (areaWidth - 2 * (slots - 1)) / slots;
 	}
 
 	/**

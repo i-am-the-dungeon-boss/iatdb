@@ -64,7 +64,10 @@ public class DesktopLauncher {
 		EchoOnlineSettings.loadDefaultDotEnv();
 		EchoOnlineSettings.setBuildDefaults(
 				EchoOnlineSettings.PRODUCTION_BACKEND_URL,
-				EchoBuildConfig.ECHO_API_KEY);
+				EchoBuildConfig.ECHO_API_KEY,
+				// No build-baked socket override: this platform reads the project
+				// .env at runtime, so ECHO_WORLD_SOCKET_URL is already in scope.
+				"");
 
 		String earlyVersion = DesktopLauncher.class.getPackage().getSpecificationVersion();
 		if (earlyVersion == null) {

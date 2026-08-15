@@ -35,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
 import com.watabou.input.GameAction;
@@ -345,6 +346,16 @@ public class StatusPane extends Component {
 			oldShield = shield;
 			oldMax = max;
 		}
+
+		// the town avatar never levels, so the experience bar has nothing to say
+		boolean village = VillageSession.inVillage();
+		exp.visible = expText.visible = !village;
+
+		// Nor does it have a build to inspect: talents, subclass and gear all
+		// belong to a run. Deactivating rather than hiding keeps the portrait and
+		// the health bar where they are, and closes the keyboard shortcut too,
+		// which a visibility flag alone would leave live.
+		heroInfo.active = heroInfoOnBar.active = !village;
 
 		if (large) {
 			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();

@@ -49,17 +49,20 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.utils.Random;
 
 public class HighGrass {
-	
+
 	//prevents items dropped from grass, from trampling that same grass.
 	//yes this is a bit ugly, oh well.
 	private static boolean freezeTrample = false;
 
 	public static void trample( Level level, int pos ) {
-		
+
 		if (freezeTrample) return;
-		
+
+		//scenery grass stays standing, and yields nothing for standing in it
+		if (!level.grassCanBeTrampled()) return;
+
 		Char ch = Actor.findChar(pos);
-		
+
 		if (level.map[pos] == Terrain.FURROWED_GRASS){
 			if (ch instanceof Hero && ((Hero) ch).heroClass == HeroClass.HUNTRESS){
 				//Do nothing
@@ -67,7 +70,7 @@ public class HighGrass {
 			} else {
 				Level.set(pos, Terrain.GRASS);
 			}
-			
+
 		} else {
 			if (ch instanceof Hero && ((Hero) ch).heroClass == HeroClass.HUNTRESS){
 				Level.set(pos, Terrain.FURROWED_GRASS);
@@ -75,9 +78,9 @@ public class HighGrass {
 			} else {
 				Level.set(pos, Terrain.GRASS);
 			}
-			
+
 			int naturalismLevel = 0;
-			
+
 			if (ch != null) {
 				SandalsOfNature.Naturalism naturalism = ch.buff( SandalsOfNature.Naturalism.class );
 				if (naturalism != null) {
@@ -127,7 +130,7 @@ public class HighGrass {
 			if (Dungeon.level instanceof VaultLevel){
 				naturalismLevel = -1;
 			}
-			
+
 			if (naturalismLevel >= 0) {
 				// Seed, scales from 1/25 to 1/9
 				float lootChance = 1/(25f - naturalismLevel*4f);
@@ -142,7 +145,7 @@ public class HighGrass {
 						level.drop(Generator.random(Generator.Category.SEED), pos).sprite.drop();
 					}
 				}
-				
+
 				// Dew, scales from 1/6 to 1/4
 				lootChance = 1/(6f -naturalismLevel/2f);
 
@@ -159,14 +162,14 @@ public class HighGrass {
 			if (ch != null) {
 				Camouflage.activate(ch, ch.glyphLevel(Camouflage.class));
 			}
-			
+
 		}
-		
+
 		freezeTrample = false;
-		
+
 		if (ShatteredPixelDungeon.scene() instanceof GameScene) {
 			GameScene.updateMap(pos);
-			
+
 			CellEmitter.get(pos).burst(LeafParticle.LEVEL_SPECIFIC, 4);
 			if (Dungeon.level.heroFOV[pos]) Dungeon.observe();
 		}

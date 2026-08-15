@@ -78,6 +78,7 @@ android {
 
         buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString('')
         buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString('')
+        buildConfigField 'String', 'ECHO_WORLD_SOCKET_URL', quoteBuildConfigString('')
         buildConfigField 'String', 'SENTRY_DSN', quoteBuildConfigString(sentryDsn)
     }
 
@@ -106,6 +107,8 @@ android {
             manifestPlaceholders.sentryAutoInit = 'false'
             buildConfigField 'String', 'ECHO_BACKEND_URL', quoteBuildConfigString(echoDebugBackendUrl)
             buildConfigField 'String', 'ECHO_API_KEY', quoteBuildConfigString(echoApiKey)
+            // Only debug gets this; a release build must never dial a dev bridge.
+            buildConfigField 'String', 'ECHO_WORLD_SOCKET_URL', quoteBuildConfigString(echoWorldSocketUrl)
             buildConfigField 'String', 'SENTRY_DSN', quoteBuildConfigString('')
             dependencies {
                 debugImplementation project(':services:updates:echoUpdates')

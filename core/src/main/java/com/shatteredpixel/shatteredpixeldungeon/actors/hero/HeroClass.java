@@ -341,7 +341,7 @@ public enum HeroClass {
 
 	public boolean isUnlocked() {
 		// always unlock on debug builds
-		if (DeviceCompat.isDebug())
+		if (DeviceCompat.isDebug() || SPDSettings.unlockEverything())
 			return true;
 
 		switch (this) {

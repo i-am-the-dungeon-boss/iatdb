@@ -58,6 +58,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossFetchRecovery;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutcome;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
@@ -93,7 +94,7 @@ public class InterlevelScene extends PixelScene {
 	private static float fadeTime;
 
 	public enum Mode {
-		DESCEND, ASCEND, CONTINUE, RESURRECT, RETURN, FALL, RESET, NONE
+		DESCEND, ASCEND, CONTINUE, RESURRECT, RETURN, FALL, RESET, NONE, VILLAGE
 	}
 
 	public static Mode mode;
@@ -173,6 +174,11 @@ public class InterlevelScene extends PixelScene {
 			case FALL:
 				// not accurate, but you can't ever fall into a new region
 				loadingDepth = Dungeon.depth;
+				break;
+			case VILLAGE:
+				// the ground level has no splash of its own, so it borrows the
+				// first region's, as entering town always did
+				loadingDepth = 1;
 				break;
 			case ASCEND:
 				fadeTime = FAST_FADE;
@@ -489,6 +495,9 @@ public class InterlevelScene extends PixelScene {
 								break;
 							case RESET:
 								reset();
+								break;
+							case VILLAGE:
+								VillageSession.enter();
 								break;
 						}
 

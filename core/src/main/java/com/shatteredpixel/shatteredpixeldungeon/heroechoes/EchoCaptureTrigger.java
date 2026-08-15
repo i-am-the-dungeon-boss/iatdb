@@ -17,7 +17,10 @@ public final class EchoCaptureTrigger {
 	}
 
 	public static boolean shouldCapture(int depth, boolean heroAlive) {
+		// a run loaded from modified save data records nothing at all — not online, and
+		// not locally either. The boss fight itself resolves as usual.
 		return heroAlive
+				&& !Dungeon.currentRunModified()
 				&& com.shatteredpixel.shatteredpixeldungeon.levels.EchoReplacementDecider.isBossDepth(depth);
 	}
 

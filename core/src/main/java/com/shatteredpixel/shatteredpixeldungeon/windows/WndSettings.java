@@ -28,14 +28,16 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
+import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNet;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
-import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
@@ -866,10 +868,9 @@ public class WndSettings extends WndTabbed {
 
 		RenderedTextBlock title;
 		ColorBlock sep1;
-		CheckBox chkNews;
-		CheckBox chkUpdates;
 		CheckBox chkBetas;
-		CheckBox chkWifi;
+		CheckBox chkWorldChat;
+		CheckBox chkUnlockEverything;
 
 		@Override
 		protected void createChildren() {
@@ -880,29 +881,12 @@ public class WndSettings extends WndTabbed {
 			sep1 = new ColorBlock(1, 1, 0xFF000000);
 			add(sep1);
 
-			chkNews = new CheckBox(Messages.get(this, "news")) {
-				@Override
-				protected void onClick() {
-					super.onClick();
-					SPDSettings.news(checked());
-					News.clearArticles();
-				}
-			};
-			chkNews.checked(SPDSettings.news());
-			add(chkNews);
+			// No "check for news" toggle either: this is an always-online game, so
+			// news is fetched unconditionally.
 
-			if (Updates.supportsUpdates() && Updates.supportsUpdatePrompts()) {
-				chkUpdates = new CheckBox(Messages.get(this, "updates")) {
-					@Override
-					protected void onClick() {
-						super.onClick();
-						SPDSettings.updates(checked());
-						Updates.clearUpdate();
-					}
-				};
-				chkUpdates.checked(SPDSettings.updates());
-				add(chkUpdates);
-
+			// No "check for updates" toggle: the version check is mandatory (it gates
+			// outdated clients out of echo boss floors), so there is nothing to opt out of.
+			if (Updates.supportsUpdates()) {
 				if (Updates.supportsBetaChannel()) {
 					chkBetas = new CheckBox(Messages.get(this, "betas")) {
 						@Override
@@ -917,17 +901,35 @@ public class WndSettings extends WndTabbed {
 				}
 			}
 
-			if (!DeviceCompat.isDesktop()) {
-				chkWifi = new CheckBox(Messages.get(this, "wifi")) {
-					@Override
-					protected void onClick() {
-						super.onClick();
-						SPDSettings.WiFi(checked());
+			// No "WiFi only" toggle: this is an always-online game, so a metered
+			// connection never suppresses network work.
+
+			// Governs runs only — the village always joins the channel.
+			chkWorldChat = new CheckBox(Messages.get(this, "world_chat")) {
+				@Override
+				protected void onClick() {
+					super.onClick();
+					SPDSettings.worldChat(checked());
+					// Apply immediately if the player is already in a run,
+					// rather than making them descend again for it to take.
+					if (Dungeon.hero != null && !VillageSession.inVillage()) {
+						WorldNet.enterRun();
+						GameScene.updateWorldChannel();
 					}
-				};
-				chkWifi.checked(SPDSettings.WiFi());
-				add(chkWifi);
-			}
+				}
+			};
+			chkWorldChat.checked(SPDSettings.worldChat());
+			add(chkWorldChat);
+
+			chkUnlockEverything = new CheckBox(Messages.get(this, "unlock_everything")) {
+				@Override
+				protected void onClick() {
+					super.onClick();
+					SPDSettings.unlockEverything(checked());
+				}
+			};
+			chkUnlockEverything.checked(SPDSettings.unlockEverything());
+			add(chkUnlockEverything);
 		}
 
 		@Override
@@ -936,29 +938,18 @@ public class WndSettings extends WndTabbed {
 			sep1.size(width, 1);
 			sep1.y = title.bottom() + 3 * GAP;
 
-			float pos;
-			if (width > 200 && chkUpdates != null) {
-				chkNews.setRect(0, sep1.y + 1 + GAP, width / 2 - 1, BTN_HEIGHT);
-				chkUpdates.setRect(chkNews.right() + GAP, chkNews.top(), width / 2 - 1, BTN_HEIGHT);
-				pos = chkUpdates.bottom();
-			} else {
-				chkNews.setRect(0, sep1.y + 1 + GAP, width, BTN_HEIGHT);
-				pos = chkNews.bottom();
-				if (chkUpdates != null) {
-					chkUpdates.setRect(0, chkNews.bottom() + GAP, width, BTN_HEIGHT);
-					pos = chkUpdates.bottom();
-				}
-			}
+			float pos = sep1.y + 1;
 
 			if (chkBetas != null) {
 				chkBetas.setRect(0, pos + GAP, width, BTN_HEIGHT);
 				pos = chkBetas.bottom();
 			}
 
-			if (chkWifi != null) {
-				chkWifi.setRect(0, pos + GAP, width, BTN_HEIGHT);
-				pos = chkWifi.bottom();
-			}
+			chkWorldChat.setRect(0, pos + GAP, width, BTN_HEIGHT);
+			pos = chkWorldChat.bottom();
+
+			chkUnlockEverything.setRect(0, pos + GAP, width, BTN_HEIGHT);
+			pos = chkUnlockEverything.bottom();
 
 			height = pos;
 

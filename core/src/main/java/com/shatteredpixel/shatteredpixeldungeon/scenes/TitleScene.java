@@ -51,7 +51,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBrandBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleFeedButtons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleRankedIcon;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageGateway;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleSupportLayout;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TitleVillageIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoConnectionFailed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
@@ -85,8 +87,9 @@ public class TitleScene extends PixelScene {
 	private Fireball leftFB;
 	private Fireball rightFB;
 
-	private StyledButton btnRanked;
+	private StyledButton btnVillage;
 	private StyledButton btnSolo;
+	private StyledButton btnRanked;
 	private StyledButton btnDebug;
 	private StyledButton btnSupport;
 	private StyledButton btnRankings;
@@ -143,23 +146,26 @@ public class TitleScene extends PixelScene {
 
 		final Chrome.Type GREY_TR = Chrome.Type.GREY_BUTTON_TR;
 
-		btnRanked = new StyledButton(GREY_TR, Messages.get(this, "ranked")) {
+		// Village leads: it is where the game is meant to be entered. Solo and
+		// ranked stay beside it as shortcuts for players who only want a run, and
+		// commit through the same VillageGateway entry point the dungeon mouth uses.
+		btnVillage = new StyledButton(GREY_TR, Messages.get(this, "village")) {
 			@Override
 			protected void onClick() {
-				beginEchoRun(EchoPlayMode.RANKED);
+				enterVillage();
 			}
 
 			@Override
 			protected boolean onLongClick() {
 				if (DeviceCompat.isDebug()) {
-					beginEchoRun(EchoPlayMode.RANKED);
+					enterVillage();
 					return true;
 				}
 				return super.onLongClick();
 			}
 		};
-		btnRanked.icon(Icons.get(TitleRankedIcon.type()));
-		add(btnRanked);
+		btnVillage.icon(TitleVillageIcon.get());
+		add(btnVillage);
 
 		btnSolo = new StyledButton(GREY_TR, Messages.get(this, "solo")) {
 			@Override
@@ -178,6 +184,24 @@ public class TitleScene extends PixelScene {
 		};
 		btnSolo.icon(Icons.get(Icons.ENTER));
 		add(btnSolo);
+
+		btnRanked = new StyledButton(GREY_TR, Messages.get(this, "ranked")) {
+			@Override
+			protected void onClick() {
+				beginEchoRun(EchoPlayMode.RANKED);
+			}
+
+			@Override
+			protected boolean onLongClick() {
+				if (DeviceCompat.isDebug()) {
+					beginEchoRun(EchoPlayMode.RANKED);
+					return true;
+				}
+				return super.onLongClick();
+			}
+		};
+		btnRanked.icon(Icons.get(TitleRankedIcon.type()));
+		add(btnRanked);
 
 		if (DebugSettings.isDebugBuild()) {
 			btnDebug = new StyledButton(GREY_TR, Messages.get(this, "debug")) {
@@ -239,8 +263,10 @@ public class TitleScene extends PixelScene {
 		final int BTN_HEIGHT = 20;
 		boolean feedVisible = TitleFeedButtons.visible();
 		boolean singleMetaRow = TitleSupportLayout.singleLandscapeMetaRow(landscape(), DeviceCompat.isDesktop());
+		int playRows = TitleSupportLayout.playRows(
+				landscape(), DeviceCompat.isDesktop(), btnDebug != null);
 		int buttonRows = TitleSupportLayout.buttonRows(
-				landscape(), btnSupport != null, feedVisible, singleMetaRow);
+				playRows, landscape(), btnSupport != null, feedVisible, singleMetaRow);
 		float brandTitleHeight = title.brandTitleHeight();
 		float characterOffset = title.characterBottom() - title.top();
 		float desiredLogoTop = title.top() - insets.top;
@@ -272,16 +298,16 @@ public class TitleScene extends PixelScene {
 		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L - 6 : PixelScene.MIN_WIDTH_P - 2;
 		float btnAreaLeft = insets.left + (w - buttonAreaWidth) / 2f;
 		if (landscape()) {
-			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
+			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT, GAP);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnVillage.left(), lastPlayRowBottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
+			float rankingsTop = TitleSupportLayout.rankingsY(lastPlayRowBottom(), GAP, supportBottom);
 			if (singleMetaRow) {
 				float metaWidth = TitleSupportLayout.landscapeMetaButtonWidth(buttonAreaWidth);
-				btnRankings.setRect(btnSolo.left(), rankingsTop, metaWidth, BTN_HEIGHT);
+				btnRankings.setRect(btnVillage.left(), rankingsTop, metaWidth, BTN_HEIGHT);
 				btnJournal.setRect(btnRankings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
 				btnSettings.setRect(btnJournal.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
 				btnAbout.setRect(btnSettings.right() + 2, rankingsTop, metaWidth, BTN_HEIGHT);
@@ -295,7 +321,7 @@ public class TitleScene extends PixelScene {
 				float midWidth = feedVisible
 						? (float) (Math.floor(buttonAreaWidth / 3f) - 1)
 						: (buttonAreaWidth / 2) - 1;
-				btnRankings.setRect(btnSolo.left(), rankingsTop, midWidth, BTN_HEIGHT);
+				btnRankings.setRect(btnVillage.left(), rankingsTop, midWidth, BTN_HEIGHT);
 				btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 				if (btnNews != null) {
 					btnNews.setRect(btnJournal.right() + 2, btnJournal.top(), btnRankings.width(), BTN_HEIGHT);
@@ -310,14 +336,17 @@ public class TitleScene extends PixelScene {
 				}
 			}
 		} else {
-			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT);
+			layoutPlayModeButtons(btnAreaLeft, insets.top + reservedTop + GAP, buttonAreaWidth, BTN_HEIGHT, GAP);
 			Float supportBottom = null;
 			if (btnSupport != null) {
-				btnSupport.setRect(btnSolo.left(), btnSolo.bottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
+				btnSupport.setRect(btnSolo.left(), lastPlayRowBottom() + GAP, buttonAreaWidth, BTN_HEIGHT);
 				supportBottom = btnSupport.bottom();
 			}
-			float rankingsTop = TitleSupportLayout.rankingsY(btnSolo.bottom(), GAP, supportBottom);
-			btnRankings.setRect(btnSolo.left(), rankingsTop, (btnSolo.width()), BTN_HEIGHT);
+			float rankingsTop = TitleSupportLayout.rankingsY(lastPlayRowBottom(), GAP, supportBottom);
+			// halves of the button area, independent of how the play rows above are
+			// split (Debug turns the shortcut row into thirds)
+			float metaWidth = (buttonAreaWidth / 2) - 1;
+			btnRankings.setRect(btnSolo.left(), rankingsTop, metaWidth, BTN_HEIGHT);
 			btnJournal.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
 			Float newsBottom = null;
 			if (btnNews != null && btnChanges != null) {
@@ -331,7 +360,7 @@ public class TitleScene extends PixelScene {
 		}
 
 		title.setBrandTitleY(TitleBrandBlock.brandTitleYBetween(
-				title.characterBottom(), btnSolo.top(), title.brandTitleHeight()));
+				title.characterBottom(), btnVillage.top(), title.brandTitleHeight()));
 		align(title);
 
 		version = new BitmapText("v" + Game.version, pixelFont);
@@ -397,7 +426,7 @@ public class TitleScene extends PixelScene {
 
 		uiAlpha = 1f;
 		updateFade();
-		requestUpdateCheckIfEnabled(SPDSettings.updates());
+		requestUpdateCheck();
 		EchoBackendProbe.probeAsync(this::onBackendProbeComplete);
 	}
 
@@ -405,11 +434,13 @@ public class TitleScene extends PixelScene {
 	private boolean offlineErrorShown;
 	private boolean updateNudgeShown;
 
-	/** Starts an async game-version check when the updates preference is on. */
-	static void requestUpdateCheckIfEnabled(boolean updatesEnabled) {
-		if (updatesEnabled) {
-			Updates.checkForUpdate();
-		}
+	/**
+	 * Starts the async game-version check. Unconditional by design — the check
+	 * gates outdated clients out of echo boss floors, so no preference or
+	 * connection type may suppress it.
+	 */
+	static void requestUpdateCheck() {
+		Updates.checkForUpdate();
 	}
 
 	/** True when an update is ready and this title visit has not nudged yet. */
@@ -475,8 +506,9 @@ public class TitleScene extends PixelScene {
 		leftFB.am = alpha;
 		rightFB.am = alpha;
 
-		btnRanked.enable(alpha != 0 && online);
+		btnVillage.enable(alpha != 0 && online);
 		btnSolo.enable(alpha != 0 && online);
+		btnRanked.enable(alpha != 0 && online);
 		if (btnDebug != null) {
 			btnDebug.enable(alpha != 0);
 		}
@@ -491,8 +523,9 @@ public class TitleScene extends PixelScene {
 		btnSettings.enable(alpha != 0);
 		btnAbout.enable(alpha != 0);
 
-		btnRanked.alpha(alpha);
+		btnVillage.alpha(alpha);
 		btnSolo.alpha(alpha);
+		btnRanked.alpha(alpha);
 		if (btnDebug != null) {
 			btnDebug.alpha(alpha);
 		}
@@ -516,38 +549,75 @@ public class TitleScene extends PixelScene {
 
 	}
 
-	private void layoutPlayModeButtons(float left, float top, float areaWidth, float height) {
+	/**
+	 * Village first, then the Solo/Ranked shortcuts, then Debug — in as many rows
+	 * as {@link TitleSupportLayout#playRows} budgets vertical space for.
+	 */
+	private void layoutPlayModeButtons(float left, float top, float areaWidth, float height, float gap) {
+		boolean desktop = DeviceCompat.isDesktop();
+		float slotWidth = TitleSupportLayout.slotWidth(
+				areaWidth, TitleSupportLayout.playSlots(landscape(), desktop, btnDebug != null));
+
+		if (!desktop && landscape()) {
+			// phone landscape: 234px holds them all, and the height is the scarce thing
+			btnVillage.setRect(left, top, slotWidth, height);
+			align(btnVillage);
+			btnSolo.setRect(btnVillage.right() + 2, top, slotWidth, height);
+			btnRanked.setRect(btnSolo.right() + 2, top, slotWidth, height);
+			if (btnDebug != null) {
+				btnDebug.setRect(btnRanked.right() + 2, top, slotWidth, height);
+			}
+			return;
+		}
+
+		// Village takes the full width in both of the remaining shapes; what differs is
+		// only where Debug goes — its own row on desktop, the shortcut row in portrait.
+		btnVillage.setRect(left, top, areaWidth, height);
+		align(btnVillage);
+
+		float shortcutTop = btnVillage.bottom() + gap;
+		btnSolo.setRect(left, shortcutTop, slotWidth, height);
+		btnRanked.setRect(btnSolo.right() + 2, shortcutTop, slotWidth, height);
 		if (btnDebug != null) {
-			float third = (areaWidth - 4) / 3f;
-			btnSolo.setRect(left, top, third, height);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, top, third, height);
-			btnDebug.setRect(btnRanked.right() + 2, top, third, height);
-		} else {
-			btnSolo.setRect(left, top, (areaWidth / 2) - 1, height);
-			align(btnSolo);
-			btnRanked.setRect(btnSolo.right() + 2, top, btnSolo.width(), height);
+			if (desktop) {
+				btnDebug.setRect(left, btnSolo.bottom() + gap, areaWidth, height);
+			} else {
+				btnDebug.setRect(btnRanked.right() + 2, shortcutTop, slotWidth, height);
+			}
 		}
 	}
 
+	/** Bottom of the lowest play row, whichever button ended up there. */
+	private float lastPlayRowBottom() {
+		float bottom = Math.max(btnVillage.bottom(), btnRanked.bottom());
+		return btnDebug != null ? Math.max(bottom, btnDebug.bottom()) : bottom;
+	}
+
+	/**
+	 * Skips the village and commits straight to a mode. Goes through
+	 * {@link VillageGateway#beginRun} rather than starting the run here, so a run
+	 * reached from the title screen is set up exactly like one begun at the
+	 * dungeon mouth.
+	 */
 	private void beginEchoRun(EchoPlayMode mode) {
 		if (!EchoBackendProbe.isOnlineReady()) {
 			showOfflineConnectionDialog();
 			return;
 		}
+		EchoPlayerAuthGate.ensureReadyThen(() -> VillageGateway.beginRun(mode));
+	}
 
-		Runnable start = () -> {
-			GamesInProgress.selectEchoPlayMode(mode);
-			GamesInProgress.selectedClass = null;
-			if (GamesInProgress.checkAll().size() == 0) {
-				GamesInProgress.curSlot = 1;
-				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-			} else {
-				ShatteredPixelDungeon.switchNoFade(StartScene.class);
-			}
-		};
-
-		EchoPlayerAuthGate.ensureReadyThen(start::run);
+	/**
+	 * Drops the player onto the ground level. The play mode is no longer chosen
+	 * here — it is chosen at the dungeon entrance in the village — but the
+	 * backend check stays, because this build requires a connection to play.
+	 */
+	private void enterVillage() {
+		if (!EchoBackendProbe.isOnlineReady()) {
+			showOfflineConnectionDialog();
+			return;
+		}
+		EchoPlayerAuthGate.ensureReadyThen(VillageGateway::enterVillage);
 	}
 
 	/** Debug arena: no backend / auth gate. Debug builds only. */
@@ -601,8 +671,7 @@ public class TitleScene extends PixelScene {
 
 		public NewsButton(Chrome.Type type, String label) {
 			super(type, label);
-			if (SPDSettings.news())
-				News.checkForNews();
+			News.checkForNews();
 		}
 
 		int unreadCount = -1;
@@ -643,8 +712,7 @@ public class TitleScene extends PixelScene {
 
 		public ChangesButton(Chrome.Type type, String label) {
 			super(type, label);
-			if (SPDSettings.updates())
-				Updates.checkForUpdate();
+			Updates.checkForUpdate();
 		}
 
 		boolean updateShown = false;

@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.utils.SaveFiles;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.FileUtils;
 
@@ -160,7 +161,9 @@ public class GamesInProgress {
 			Info info;
 			try {
 
-				Bundle bundle = FileUtils.bundleFromFile(gameFile(slot));
+				// slot previews read every save on the title screen, so the checksum
+				// verdict is deliberately ignored here; only loading a run acts on it
+				Bundle bundle = SaveFiles.readGame(slot).bundle;
 
 				if (bundle.getInt("version") < ShatteredPixelDungeon.v2_5_4) {
 					info = null;

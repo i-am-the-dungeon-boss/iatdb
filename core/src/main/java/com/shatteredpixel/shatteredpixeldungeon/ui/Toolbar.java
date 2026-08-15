@@ -42,6 +42,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
@@ -332,6 +333,13 @@ public class Toolbar extends Component {
 				Dungeon.hero.search(true);
 				return true;
 			}
+
+			@Override
+			public void enable(boolean value) {
+				// update() re-enables every tool each time the hero becomes
+				// ready, so the hidden-in-town state has to be re-applied here
+				super.enable(value && visible);
+			}
 		});
 		btnSearch.icon(192, 0, 16, 16);
 
@@ -529,7 +537,20 @@ public class Toolbar extends Component {
 	@Override
 	protected void layout() {
 
+		if (VillageSession.inVillage()) {
+			emptyBarForVillage();
+			return;
+		}
+
 		float right = width;
+
+		btnSearch.visible = true;
+		btnSearch.enable(lastEnabled);
+		float searchW = btnSearch.width();
+
+		btnInventory.visible = true;
+		btnInventory.enable(lastEnabled);
+		float invW = btnInventory.width();
 
 		int quickslotsToShow = 4;
 		if (PixelScene.uiCamera.width > 152)
@@ -561,11 +582,11 @@ public class Toolbar extends Component {
 		}
 
 		if (SPDSettings.interfaceSize() > 0) {
-			btnInventory.setPos(right - btnInventory.width(), y);
+			btnInventory.setPos(right - invW, y);
 			btnWait.setPos(btnInventory.left() - btnWait.width(), y);
-			btnSearch.setPos(btnWait.left() - btnSearch.width(), y);
+			btnSearch.setPos(btnWait.left() - searchW, y);
 
-			right = btnSearch.left();
+			right = btnWait.left() - searchW;
 			for (int i = endingSlot; i >= startingSlot; i--) {
 				if (i == endingSlot) {
 					btnQuick[i].border(0, 2);
@@ -614,19 +635,22 @@ public class Toolbar extends Component {
 				btnWait.setPos(x, y);
 				btnSearch.setPos(btnWait.right(), y);
 
-				btnInventory.setPos(right - btnInventory.width(), y);
+				// where the left-hand group actually ends, with or without search
+				float toolsRight = btnWait.right() + searchW;
+
+				btnInventory.setPos(right - invW, y);
 
 				float left = 0;
 
 				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);
 				for (int i = startingSlot + 1; i <= endingSlot; i++) {
 					btnQuick[i].setPos(btnQuick[i - 1].left() - btnQuick[i].width(), y + 2);
-					shift = btnSearch.right() - btnQuick[i].left();
+					shift = toolsRight - btnQuick[i].left();
 				}
 
 				if (btnSwap.visible) {
 					btnSwap.setPos(btnQuick[endingSlot].left() - (btnSwap.width() - 2), y + 3);
-					shift = btnSearch.right() - btnSwap.left();
+					shift = toolsRight - btnSwap.left();
 				}
 
 				break;
@@ -634,7 +658,7 @@ public class Toolbar extends Component {
 			// center = group but.. well.. centered, so all we need to do is pre-emptively
 			// set the right side further in.
 			case CENTER:
-				float toolbarWidth = btnWait.width() + btnSearch.width() + btnInventory.width();
+				float toolbarWidth = btnWait.width() + searchW + invW;
 				for (Button slot : btnQuick) {
 					if (slot.visible)
 						toolbarWidth += slot.width();
@@ -645,8 +669,8 @@ public class Toolbar extends Component {
 
 			case GROUP:
 				btnWait.setPos(right - btnWait.width(), y);
-				btnSearch.setPos(btnWait.left() - btnSearch.width(), y);
-				btnInventory.setPos(btnSearch.left() - btnInventory.width(), y);
+				btnSearch.setPos(btnWait.left() - searchW, y);
+				btnInventory.setPos(btnWait.left() - searchW - invW, y);
 
 				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);
 				for (int i = startingSlot + 1; i <= endingSlot; i++) {
@@ -690,6 +714,36 @@ public class Toolbar extends Component {
 
 		}
 
+	}
+
+	/**
+	 * Empties the bar in the village, instead of laying it out and undoing it.
+	 *
+	 * <p>Nothing on the bar applies there: no search, because nothing is hidden
+	 * for it to find; no waiting out a turn; no gear, and so no quickslots. The
+	 * whole of the layout below this exists to arrange buttons the village has
+	 * none of, which is why it is skipped rather than run and then reversed —
+	 * that reversal is what put a village special case into the width arithmetic
+	 * of every branch.
+	 *
+	 * <p>Buttons are deactivated as well as hidden, because {@code active} is what
+	 * gates their keyboard shortcuts — invisible buttons would still answer their
+	 * keys. Moved off-screen for the same reason, so nothing can be hit.
+	 */
+	private void emptyBarForVillage() {
+		hideTool(btnWait);
+		hideTool(btnSearch);
+		hideTool(btnInventory);
+		hideTool(btnSwap);
+		for (QuickslotTool slot : btnQuick) {
+			hideTool(slot);
+		}
+	}
+
+	private static void hideTool(Button button) {
+		button.visible = false;
+		button.active = false;
+		button.setPos(button.left(), PixelScene.uiCamera.height);
 	}
 
 	public static void updateLayout() {

@@ -42,28 +42,40 @@ class EchoBackendProbeTest {
 	}
 
 	@Test
-	@DisplayName("health probe auto-retries once then succeeds")
-	void healthProbeAutoRetriesThenSucceeds() {
+	@DisplayName("reachability probe auto-retries once then succeeds")
+	void reachabilityProbeAutoRetriesThenSucceeds() {
 		EchoBackendProbe.probeRetryDelayMs = 0L;
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(503, "{}");
-		transport.enqueue(200, "{\"status\":\"ok\"}");
+		transport.enqueue(200, "{\"version_name\":\"1.4.2\"}");
 		EchoClient client = new EchoClient("https://echo.test", "", transport);
 
-		Assertions.assertThat(EchoBackendProbe.checkHealthWithRetry(client)).isTrue();
+		Assertions.assertThat(EchoBackendProbe.checkReachableWithRetry(client)).isTrue();
 		Assertions.assertThat(transport.requests).hasSize(2);
 	}
 
 	@Test
-	@DisplayName("health probe reports unreachable after initial attempt and retry both fail")
-	void healthProbeUnreachableAfterRetryFails() {
+	@DisplayName("reachability probe uses the game-version endpoint, not /health")
+	void reachabilityProbeUsesGameVersionEndpoint() {
+		EchoBackendProbe.probeRetryDelayMs = 0L;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(200, "{\"version_name\":\"1.4.2\"}");
+		EchoClient client = new EchoClient("https://echo.test", "", transport);
+
+		Assertions.assertThat(EchoBackendProbe.checkReachableWithRetry(client)).isTrue();
+		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/game-version");
+	}
+
+	@Test
+	@DisplayName("reachability probe reports unreachable after initial attempt and retry both fail")
+	void reachabilityProbeUnreachableAfterRetryFails() {
 		EchoBackendProbe.probeRetryDelayMs = 0L;
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(503, "{}");
 		transport.enqueue(503, "{}");
 		EchoClient client = new EchoClient("https://echo.test", "", transport);
 
-		Assertions.assertThat(EchoBackendProbe.checkHealthWithRetry(client)).isFalse();
+		Assertions.assertThat(EchoBackendProbe.checkReachableWithRetry(client)).isFalse();
 		Assertions.assertThat(transport.requests).hasSize(2);
 	}
 }

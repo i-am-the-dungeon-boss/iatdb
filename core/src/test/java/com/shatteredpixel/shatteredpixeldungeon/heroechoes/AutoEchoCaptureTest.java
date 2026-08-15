@@ -74,7 +74,7 @@ class AutoEchoCaptureTest {
         EchoOnlineSettings.setOnlineEnabled(true);
         EchoOnlineSettings.setBackendUrl("https://echo.test");
         EchoOnlineSettings.setApiKey("secret");
-        EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null);
+        EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
         EchoOnlineSync sync = new EchoOnlineSync(
                 new EchoClient("https://echo.test", "secret", transport));
         EchoOnlineSync.setDefaultForTests(sync);

@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.services.updates;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
@@ -35,7 +36,7 @@ import com.watabou.utils.Bundle;
  */
 public class EchoUpdates extends UpdateService {
 
-	static final String DEFAULT_UPDATE_URL = "https://github.com/i-am-the-dungeon-boss/iatdb/releases/latest";
+	static final String DEFAULT_UPDATE_URL = ProjectLinks.LATEST_RELEASE_URL;
 
 	/** Optional override set by launchers (e.g. from EchoOnlineSettings). */
 	public static String baseUrlOverride = "";
@@ -52,11 +53,8 @@ public class EchoUpdates extends UpdateService {
 
 	@Override
 	public void checkForUpdate(boolean useMetered, boolean includeBetas, UpdateResultCallback callback) {
-		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()) {
-			callback.onConnectionFailed();
-			return;
-		}
-
+		// Always-online game: the version check runs on any connection, so useMetered
+		// is accepted for interface compatibility and deliberately ignored.
 		String base = resolveBaseUrl();
 		if (base.isEmpty()) {
 			callback.onConnectionFailed();

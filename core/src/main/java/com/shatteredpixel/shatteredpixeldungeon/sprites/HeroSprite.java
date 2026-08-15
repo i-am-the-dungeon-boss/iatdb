@@ -55,7 +55,7 @@ public class HeroSprite extends CharSprite {
 	public HeroSprite() {
 		super();
 
-		texture(Dungeon.hero.heroClass.spritesheet());
+		texture(appearanceClass().spritesheet());
 		updateArmor();
 
 		link(Dungeon.hero);
@@ -71,9 +71,39 @@ public class HeroSprite extends CharSprite {
 		updateArmor();
 	}
 
+	/**
+	 * The animation film for one armour tier, with no dependency on
+	 * {@code Dungeon.hero}.
+	 *
+	 * <p>Extracted so remote players in the village can be drawn without a
+	 * local hero to read a tier from — both the constructor and
+	 * {@link #updateArmor()} reach straight into {@code Dungeon.hero}, so
+	 * neither could be reused as-is.
+	 */
+	public static TextureFilm film(int tier) {
+		return new TextureFilm(tiers(), tier, FRAME_WIDTH, FRAME_HEIGHT);
+	}
+
+	/**
+	 * The class this hero is drawn as; by default, the one being played.
+	 *
+	 * <p>Overridable so a subclass can present a different look without this
+	 * class knowing anything about why. Called from the constructor, so an
+	 * override must not depend on its own instance fields having been set —
+	 * constants are safe, instance state is not.
+	 */
+	protected HeroClass appearanceClass() {
+		return Dungeon.hero.heroClass;
+	}
+
+	/** The armour tier this hero is drawn in; by default, the one worn. */
+	protected int appearanceTier() {
+		return Dungeon.hero.tier();
+	}
+
 	public void updateArmor() {
 
-		TextureFilm film = new TextureFilm(tiers(), Dungeon.hero.tier(), FRAME_WIDTH, FRAME_HEIGHT);
+		TextureFilm film = film(appearanceTier());
 
 		idle = new Animation(1, true);
 		idle.frames(film, 0, 0, 0, 1, 0, 0, 1, 1);

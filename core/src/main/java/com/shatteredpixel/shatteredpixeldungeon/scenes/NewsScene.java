@@ -44,7 +44,6 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Camera;
-import com.watabou.noosa.Game;
 import com.watabou.noosa.NinePatch;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.RectF;
@@ -179,7 +178,6 @@ public class NewsScene extends PixelScene {
 
 		NinePatch bg;
 		RenderedTextBlock text;
-		RedButton button;
 
 		@Override
 		protected void createChildren() {
@@ -193,37 +191,9 @@ public class NewsScene extends PixelScene {
 			}
 
 			if (!News.articlesAvailable()) {
-				if (SPDSettings.news()) {
-					if (SPDSettings.WiFi() && !Game.platform.connectedToUnmeteredNetwork()) {
-						message += "\n\n" + Messages.get(this, "metered_network");
-
-						button = new RedButton(Messages.get(this, "enable_data")) {
-							@Override
-							protected void onClick() {
-								super.onClick();
-								SPDSettings.WiFi(false);
-								News.checkForNews();
-								ShatteredPixelDungeon.seamlessResetScene();
-							}
-						};
-						add(button);
-					} else {
-						message += "\n\n" + Messages.get(this, "no_internet");
-					}
-				} else {
-					message += "\n\n" + Messages.get(this, "news_disabled");
-
-					button = new RedButton(Messages.get(this, "enable_news")) {
-						@Override
-						protected void onClick() {
-							super.onClick();
-							SPDSettings.news(true);
-							News.checkForNews();
-							ShatteredPixelDungeon.seamlessResetScene();
-						}
-					};
-					add(button);
-				}
+				// Always-online game: news is never disabled and never gated on the
+				// connection type, so the only reason for an empty list is no connection.
+				message += "\n\n" + Messages.get(this, "no_internet");
 			}
 
 			if (message.startsWith("\n\n"))
@@ -243,15 +213,6 @@ public class NewsScene extends PixelScene {
 			text.setPos(x + bg.marginLeft(), y + bg.marginTop() + 1);
 
 			height = (text.bottom()) - y;
-
-			if (button != null) {
-				height += 4;
-				button.multiline = true;
-				button.setSize(width - bg.marginHor(), 16);
-				button.setSize(width - bg.marginHor(), Math.max(button.reqHeight(), 16));
-				button.setPos(x + (width - button.width()) / 2, y + height);
-				height = button.bottom() - y;
-			}
 
 			height += bg.marginBottom() + 1;
 

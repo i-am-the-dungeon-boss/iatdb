@@ -571,6 +571,14 @@ public abstract class Level implements Bundlable {
 		return null;
 	}
 
+	/**
+	 * Whether walking through tall grass flattens it (and shakes loot out of it).
+	 * Levels that use grass as scenery rather than as a resource say no.
+	 */
+	public boolean grassCanBeTrampled() {
+		return true;
+	}
+
 	// returns true if we immediately transition, false otherwise
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
 		if (locked) {

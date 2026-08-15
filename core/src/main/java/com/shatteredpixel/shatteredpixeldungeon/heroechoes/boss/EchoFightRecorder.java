@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayModePaths;
@@ -50,6 +51,10 @@ public final class EchoFightRecorder {
 	}
 
 	private void persist(EchoFightResult result) {
+		// a run loaded from modified save data leaves no trace, local or online
+		if (Dungeon.currentRunModified()) {
+			return;
+		}
 		if (EchoPlayModePaths.persistsLeaderboardLocally()) {
 			storage.append(result);
 		}

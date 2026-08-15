@@ -40,6 +40,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.EchoSnapshotDebug;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.IntegrityReport;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene;
@@ -50,6 +51,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.SaveIntegrity;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
 
@@ -130,6 +132,23 @@ public class WndGame extends Window {
 			};
 			addButton(saveEcho);
 			saveEcho.icon(Icons.get(Icons.ENTER));
+
+			addButton(curBtn = new RedButton(markSaveStateLabel()) {
+				@Override
+				protected void onClick() {
+					boolean marked = markSaveState();
+					hide();
+					if (marked) {
+						GLog.p(Messages.get(WndGame.class, "save_state_marked"));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "save_state_mark_failed"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.WARNING));
+			if (SaveIntegrity.isModified()) {
+				curBtn.textColor(Window.TITLE_COLOR);
+			}
 
 			addButton(curBtn = new RedButton(Messages.get(this, "view_echoes")) {
 				@Override
@@ -222,6 +241,34 @@ public class WndGame extends Window {
 			curBtn.enable(false);
 
 		resize(WIDTH, pos);
+	}
+
+	/**
+	 * Button text for the debug save-marking action, doubling as the only place in the
+	 * game that tells you whether the current run is marked. Package-visible for tests.
+	 */
+	static String markSaveStateLabel() {
+		return Messages.get(WndGame.class,
+				SaveIntegrity.isModified() ? "save_state_is_marked" : "mark_save_state");
+	}
+
+	/**
+	 * Puts the current run into the state a modified save would leave it in, and writes
+	 * that state to disk so it survives a reload. Debug builds only; package-visible for
+	 * tests. Returns false when there is no run, so the caller can say so rather than
+	 * claim a success that did not happen.
+	 */
+	static boolean markSaveState() {
+		if (!Dungeon.markSaveModified(IntegrityReport.REASON_DEBUG)) {
+			return false;
+		}
+		try {
+			Dungeon.saveAll();
+		} catch (IOException e) {
+			ShatteredPixelDungeon.reportException(e);
+			return false;
+		}
+		return true;
 	}
 
 	/** Save echo / view echoes / leaderboard — debug builds only. */

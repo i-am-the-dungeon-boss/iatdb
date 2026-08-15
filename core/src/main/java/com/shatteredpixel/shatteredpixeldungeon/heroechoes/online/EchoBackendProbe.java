@@ -47,23 +47,28 @@ public final class EchoBackendProbe {
 		lastReachable = null;
 		new Thread(() -> {
 			EchoClient client = EchoClient.createDefault();
-			boolean healthy = checkHealthWithRetry(client);
-			lastReachable = healthy;
-			if (healthy) {
+			boolean reachable = checkReachableWithRetry(client);
+			lastReachable = reachable;
+			if (reachable) {
 				EchoPlayerAuth.validateOrRefreshOnLaunch(client);
 			}
 			runOnRenderThread(onComplete);
 		}, "echo-backend-probe").start();
 	}
 
-	/** Runs health check with one automatic retry after a short delay. */
-	static boolean checkHealthWithRetry(EchoClient client) {
+	/**
+	 * Runs the reachability check with one automatic retry after a short delay.
+	 * A backend that serves its game version is reachable; the client no longer
+	 * calls {@code /health}, which stays for the web frontend and platform
+	 * healthchecks.
+	 */
+	static boolean checkReachableWithRetry(EchoClient client) {
 		for (int attempt = 0; attempt < PROBE_ATTEMPTS; attempt++) {
 			if (attempt > 0) {
 				sleepRetryDelay();
 			}
 			try {
-				if (client.checkHealth()) {
+				if (client.fetchGameVersion() != null) {
 					return true;
 				}
 			} catch (Exception ignored) {

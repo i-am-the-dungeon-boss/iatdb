@@ -23,7 +23,7 @@ class EchoPlayerAuthLaunchTest {
 	void launchValidationKeepsValidSession() {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		EchoPlayerSession.applyAuthResponse("old-jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("old-jwt", "Hero", false, null, 0L);
 
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(200, "{\"username\":\"Hero\",\"has_credentials\":false}");
@@ -39,7 +39,7 @@ class EchoPlayerAuthLaunchTest {
 	void launchValidationRefreshesWhenTokenExpired() {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		EchoPlayerSession.applyAuthResponse("expired-jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("expired-jwt", "Hero", false, null, 0L);
 
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(401, "{\"detail\":\"Unauthorized\"}");
@@ -62,7 +62,7 @@ class EchoPlayerAuthLaunchTest {
 	void launchValidationClearsWhenPlayerGone() {
 		EchoOnlineSettings.setBackendUrl("https://echo.test");
 		EchoOnlineSettings.setApiKey("secret");
-		EchoPlayerSession.applyAuthResponse("stale-jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("stale-jwt", "Hero", false, null, 0L);
 
 		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
 		transport.enqueue(401, "{\"detail\":\"Unauthorized\"}");

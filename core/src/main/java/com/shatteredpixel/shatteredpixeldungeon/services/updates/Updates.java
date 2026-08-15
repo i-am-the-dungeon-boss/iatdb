@@ -50,8 +50,14 @@ public class Updates {
 		return supportsUpdates() && service.supportsBetaChannel();
 	}
 
+	/**
+	 * The version check is mandatory: it gates outdated clients out of echo boss
+	 * floors, so neither the updates preference nor a metered connection may
+	 * suppress it. Only a missing service (no update backend on this platform)
+	 * and the hourly cache can skip a request.
+	 */
 	public static void checkForUpdate() {
-		if (!supportsUpdatePrompts())
+		if (!supportsUpdates())
 			return;
 		if (lastCheck != null && (new Date().getTime() - lastCheck.getTime()) < CHECK_DELAY)
 			return;
@@ -62,7 +68,7 @@ public class Updates {
 			SPDSettings.betas(true);
 		}
 
-		service.checkForUpdate(!SPDSettings.WiFi(), SPDSettings.betas(), new UpdateService.UpdateResultCallback() {
+		service.checkForUpdate(true, SPDSettings.betas(), new UpdateService.UpdateResultCallback() {
 			@Override
 			public void onUpdateAvailable(AvailableUpdateData update) {
 				lastCheck = new Date();
@@ -87,7 +93,7 @@ public class Updates {
 	 * update payload when required, otherwise null (including connection failure).
 	 */
 	public static AvailableUpdateData checkForUpdateImmediate() {
-		if (!supportsUpdatePrompts())
+		if (!supportsUpdates())
 			return null;
 
 		if (SPDSettings.betas()) {

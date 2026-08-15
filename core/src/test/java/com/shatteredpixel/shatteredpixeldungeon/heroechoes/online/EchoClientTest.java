@@ -49,26 +49,26 @@ public class EchoClientTest {
 	}
 
 	@Test
-	@DisplayName("checkHealth returns true when health endpoint responds ok")
-	void checkHealthReturnsTrueOnOk() throws Exception {
+	@DisplayName("fetchGameVersion returns the backend version name and never calls /health")
+	void fetchGameVersionReturnsVersionName() throws Exception {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
-		transport.enqueue(200, "{\"status\":\"ok\"}");
+		transport.enqueue(200, "{\"version_name\":\"1.4.2\"}");
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Assertions.assertThat(client.checkHealth()).isTrue();
-		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/health");
+		Assertions.assertThat(client.fetchGameVersion()).isEqualTo("1.4.2");
+		Assertions.assertThat(transport.requests.get(0).url).isEqualTo("https://echo.test/v1/game-version");
 	}
 
 	@Test
-	@DisplayName("checkHealth returns false when health endpoint is down")
-	void checkHealthReturnsFalseOnFailure() throws Exception {
+	@DisplayName("fetchGameVersion returns null when the backend is down")
+	void fetchGameVersionReturnsNullOnFailure() throws Exception {
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
-		transport.enqueue(503, "{\"status\":\"down\"}");
+		transport.enqueue(503, "{\"error\":\"down\"}");
 
 		EchoClient client = new EchoClient("https://echo.test", "secret", transport);
 
-		Assertions.assertThat(client.checkHealth()).isFalse();
+		Assertions.assertThat(client.fetchGameVersion()).isNull();
 	}
 
 	@Test
@@ -212,7 +212,7 @@ public class EchoClientTest {
 	@Test
 	@DisplayName("fetchEchoPolicy posts policy_input and returns decoded policy")
 	void fetchEchoPolicyReturnsPolicy() {
-		EchoPlayerSession.applyAuthResponse("policy-jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("policy-jwt", "Hero", false, null, 0L);
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(200, "{"
 				+ "\"echo_policy\":{"
@@ -288,7 +288,7 @@ public class EchoClientTest {
 	@Test
 	@DisplayName("uploadEcho includes Bearer token when session present")
 	void uploadEchoIncludesBearerWhenSessionPresent() throws Exception {
-		EchoPlayerSession.applyAuthResponse("player-jwt", "Hero", false, null);
+		EchoPlayerSession.applyAuthResponse("player-jwt", "Hero", false, null, 0L);
 		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
 		transport.enqueue(201, "{}");
 		Echo echo = EchoTestSupport.warriorEchoWithData(5);
@@ -319,6 +319,74 @@ public class EchoClientTest {
 		Assertions.assertThat(EchoPlayerSession.username()).isEqualTo("Named");
 		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/auth/device");
 		Assertions.assertThat(transport.requests.get(0).headers.get("Authorization")).isNull();
+	}
+
+	@Test
+	@DisplayName("authenticateDevice stores the mute the server reported")
+	void authenticateDeviceStoresMute() throws Exception {
+		long until = System.currentTimeMillis() + 3_600_000L;
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{"
+				+ "\"token\":\"new-jwt\","
+				+ "\"username\":\"Named\","
+				+ "\"has_credentials\":false,"
+				+ "\"muted_until\":" + until
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		client.authenticateDevice("device-0123456789ab", "Named");
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isEqualTo(until);
+	}
+
+	@Test
+	@DisplayName("authenticateDevice leaves no mute behind when the server reports none")
+	void authenticateDeviceClearsMuteWhenAbsent() throws Exception {
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(201, "{"
+				+ "\"token\":\"new-jwt\","
+				+ "\"username\":\"Named\","
+				+ "\"has_credentials\":false"
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		client.authenticateDevice("device-0123456789ab", "Named");
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isZero();
+	}
+
+	@Test
+	@DisplayName("fetchMe refreshes the mute without disturbing the stored token")
+	void fetchMeRefreshesMute() throws Exception {
+		long until = System.currentTimeMillis() + 3_600_000L;
+		EchoPlayerSession.applyAuthResponse("player-jwt", "Named", false, null, 0L);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "{"
+				+ "\"username\":\"Named\","
+				+ "\"has_credentials\":false,"
+				+ "\"muted_until\":" + until
+				+ "}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		boolean ok = client.fetchMe();
+
+		Assertions.assertThat(ok).isTrue();
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isEqualTo(until);
+		Assertions.assertThat(EchoPlayerSession.jwt()).isEqualTo("player-jwt");
+	}
+
+	@Test
+	@DisplayName("fetchMe lifts a stored mute the server no longer reports")
+	void fetchMeLiftsMute() throws Exception {
+		EchoPlayerSession.applyAuthResponse(
+				"player-jwt", "Named", false, null, System.currentTimeMillis() + 3_600_000L);
+		FakeEchoHttpTransport transport = new FakeEchoHttpTransport();
+		transport.enqueue(200, "{\"username\":\"Named\",\"has_credentials\":false}");
+
+		EchoClient client = new EchoClient("https://echo.test", "secret-key", transport);
+		client.fetchMe();
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isZero();
 	}
 
 	@Test

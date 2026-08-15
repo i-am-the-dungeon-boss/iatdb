@@ -74,6 +74,8 @@ public class Assets {
 	public static class Interfaces {
 		public static final String ARCS_BG = "interfaces/arcs1.png";
 		public static final String ARCS_FG = "interfaces/arcs2.png";
+		/** Title-screen Village button icon. */
+		public static final String VILLAGE = "interfaces/village.png";
 
 		public static final String BANNERS = "interfaces/banners.png";
 		public static final String BADGES = "interfaces/badges.png";

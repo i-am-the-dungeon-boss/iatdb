@@ -28,7 +28,7 @@ class EchoPlayerSessionTest {
 	@Test
 	@DisplayName("persists jwt username and credentials flag")
 	void persistsSessionFields() {
-		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", false, null);
+		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", false, null, 0L);
 
 		Assertions.assertThat(EchoPlayerSession.jwt()).isEqualTo("jwt-token");
 		Assertions.assertThat(EchoPlayerSession.username()).isEqualTo("HeroName");
@@ -41,10 +41,41 @@ class EchoPlayerSessionTest {
 	}
 
 	@Test
+	@DisplayName("holds the mute the server sent, across a reload, so it need not be asked for again")
+	void persistsMuteAcrossReload() {
+		long until = System.currentTimeMillis() + 3_600_000L;
+		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", false, null, until);
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isEqualTo(until);
+
+		EchoPlayerSession.reloadForTests();
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isEqualTo(until);
+	}
+
+	@Test
+	@DisplayName("treats an absent mute as not muted")
+	void absentMuteIsNotMuted() {
+		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", false, null, 0L);
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isZero();
+	}
+
+	@Test
+	@DisplayName("drops the mute along with the session it came with")
+	void clearSessionDropsMute() {
+		EchoPlayerSession.applyAuthResponse(
+				"jwt-token", "HeroName", false, null, System.currentTimeMillis() + 60_000L);
+
+		EchoPlayerSession.clearSession();
+
+		Assertions.assertThat(EchoPlayerSession.mutedUntil()).isZero();
+	}
+
+	@Test
 	@DisplayName("clearSession keeps device id")
 	void clearSessionKeepsDeviceId() {
 		String deviceId = EchoPlayerSession.deviceId();
-		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", true, "a@b.c");
+		EchoPlayerSession.applyAuthResponse("jwt-token", "HeroName", true, "a@b.c", 0L);
 		EchoPlayerSession.clearSession();
 
 		Assertions.assertThat(EchoPlayerSession.hasSession()).isFalse();

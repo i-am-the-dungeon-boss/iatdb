@@ -29,21 +29,24 @@ class TitleSupportLayoutTest {
 	@Test
 	@DisplayName("phone landscape with Support budgets three button rows")
 	void phoneLandscapeWithSupportBudgetsThreeRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(true, true, false, true))
+		int playRows = TitleSupportLayout.playRows(true, false, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, true, true, false, true))
 				.isEqualTo(3);
 	}
 
 	@Test
-	@DisplayName("desktop landscape with Support keeps four button rows")
-	void desktopLandscapeWithSupportKeepsFourRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(true, true, false, false))
-				.isEqualTo(4);
+	@DisplayName("desktop landscape with Support budgets five button rows")
+	void desktopLandscapeWithSupportBudgetsFiveRows() {
+		int playRows = TitleSupportLayout.playRows(true, true, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, true, true, false, false))
+				.isEqualTo(5);
 	}
 
 	@Test
 	@DisplayName("phone landscape without Support budgets two button rows")
 	void phoneLandscapeWithoutSupportBudgetsTwoRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(true, false, false, true))
+		int playRows = TitleSupportLayout.playRows(true, false, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, true, false, false, true))
 				.isEqualTo(2);
 	}
 
@@ -63,24 +66,50 @@ class TitleSupportLayoutTest {
 	}
 
 	@Test
-	@DisplayName("portrait with Support and no feed budgets four button rows")
-	void portraitWithSupportNoFeedBudgetsFourRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(false, true, false, false))
+	@DisplayName("phone landscape keeps the play buttons on one row")
+	void phoneLandscapeKeepsOnePlayRow() {
+		// 234px of landscape width holds Village, Solo, Ranked and Debug side by side
+		Assertions.assertThat(TitleSupportLayout.playRows(true, false, false)).isEqualTo(1);
+		Assertions.assertThat(TitleSupportLayout.playRows(true, false, true)).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("desktop gives Village, the shortcuts and Debug a row each")
+	void desktopStacksThePlayRows() {
+		Assertions.assertThat(TitleSupportLayout.playRows(true, true, false)).isEqualTo(2);
+		Assertions.assertThat(TitleSupportLayout.playRows(true, true, true)).isEqualTo(3);
+	}
+
+	@Test
+	@DisplayName("portrait splits the play buttons over two rows, Debug sharing the second")
+	void portraitSplitsThePlayRow() {
+		// 133px of portrait width will not hold Village, Solo and Ranked side by side
+		Assertions.assertThat(TitleSupportLayout.playRows(false, false, false)).isEqualTo(2);
+		Assertions.assertThat(TitleSupportLayout.playRows(false, false, true)).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("portrait with Support and no feed budgets five button rows")
+	void portraitWithSupportNoFeedBudgetsFiveRows() {
+		int playRows = TitleSupportLayout.playRows(false, false, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, false, true, false, false))
+				.isEqualTo(5);
+	}
+
+	@Test
+	@DisplayName("portrait without Support or feed budgets four button rows")
+	void portraitWithoutSupportOrFeedBudgetsFourRows() {
+		int playRows = TitleSupportLayout.playRows(false, false, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, false, false, false, false))
 				.isEqualTo(4);
 	}
 
 	@Test
-	@DisplayName("portrait without Support or feed budgets three button rows")
-	void portraitWithoutSupportOrFeedBudgetsThreeRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(false, false, false, false))
-				.isEqualTo(3);
-	}
-
-	@Test
-	@DisplayName("portrait with Support and feed budgets five button rows")
-	void portraitWithSupportAndFeedBudgetsFiveRows() {
-		Assertions.assertThat(TitleSupportLayout.buttonRows(false, true, true, false))
-				.isEqualTo(5);
+	@DisplayName("portrait with Support and feed budgets six button rows")
+	void portraitWithSupportAndFeedBudgetsSixRows() {
+		int playRows = TitleSupportLayout.playRows(false, false, false);
+		Assertions.assertThat(TitleSupportLayout.buttonRows(playRows, false, true, true, false))
+				.isEqualTo(6);
 	}
 
 	@Test
@@ -158,5 +187,52 @@ class TitleSupportLayoutTest {
 		float menuTop = characterBottom + brandTitleHeight;
 		Assertions.assertThat(menuTop + TitleSupportLayout.menuStackHeight(buttonRows, btnHeight, 0))
 				.isLessThanOrEqualTo(contentHeight);
+	}
+
+	@Test
+	@DisplayName("a row of buttons ends exactly where the button area does")
+	void gutteredSlotsFillTheAreaExactly() {
+		float area = 234f;
+		int slots = 4;
+		float width = TitleSupportLayout.slotWidth(area, slots);
+
+		Assertions.assertThat(width * slots + 2 * (slots - 1)).isEqualTo(area);
+	}
+
+	@Test
+	@DisplayName("a lone button on a row takes the whole width, gutters and all")
+	void oneSlotTakesEverything() {
+		Assertions.assertThat(TitleSupportLayout.slotWidth(234f, 1)).isEqualTo(234f);
+	}
+
+	@Test
+	@DisplayName("desktop pairs Solo and Ranked, whether or not Debug is shown")
+	void desktopAlwaysPairsTheShortcuts() {
+		// Village and Debug get rows of their own there, so neither joins the pair.
+		Assertions.assertThat(TitleSupportLayout.playSlots(true, true, false)).isEqualTo(2);
+		Assertions.assertThat(TitleSupportLayout.playSlots(true, true, true)).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("phone landscape puts every play button on the one row it has")
+	void phoneLandscapeSharesTheRowBetweenAllOfThem() {
+		Assertions.assertThat(TitleSupportLayout.playSlots(true, false, false)).isEqualTo(3);
+		Assertions.assertThat(TitleSupportLayout.playSlots(true, false, true)).isEqualTo(4);
+	}
+
+	@Test
+	@DisplayName("portrait shares the shortcut row, Village having taken its own")
+	void portraitSplitsOnlyTheShortcutRow() {
+		Assertions.assertThat(TitleSupportLayout.playSlots(false, false, false)).isEqualTo(2);
+		Assertions.assertThat(TitleSupportLayout.playSlots(false, false, true)).isEqualTo(3);
+	}
+
+	@Test
+	@DisplayName("portrait shortcut buttons stay wide enough to label on the narrowest phone")
+	void portraitShortcutsStayLegible() {
+		// 133px is the narrowest button area the title screen lays out into.
+		float withDebug = TitleSupportLayout.slotWidth(133f, TitleSupportLayout.playSlots(false, false, true));
+
+		Assertions.assertThat(withDebug).isGreaterThan(40f);
 	}
 }

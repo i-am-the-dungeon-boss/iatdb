@@ -107,7 +107,7 @@ class EchoOnlineSettingsEnvTest {
 	@DisplayName("uses build defaults when env and dotenv are unset")
 	void usesBuildDefaultsWhenUnset() {
 		EchoOnlineSettings.setEnvForTests(Collections.emptyMap());
-		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key", "");
 
 		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("https://echo.example.com");
 		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("build-key");
@@ -120,7 +120,7 @@ class EchoOnlineSettingsEnvTest {
 		env.put(EchoOnlineSettings.BACKEND_URL, "http://localhost:3000");
 		env.put(EchoOnlineSettings.API_KEY, "env-key");
 		EchoOnlineSettings.setEnvForTests(env);
-		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key", "");
 
 		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://localhost:3000");
 		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("env-key");
@@ -136,7 +136,7 @@ class EchoOnlineSettingsEnvTest {
 				"ECHO_BACKEND_URL=http://dotenv.local:3000\nECHO_API_KEY=dotenv-key\n",
 				StandardCharsets.UTF_8);
 		EchoOnlineSettings.loadDotEnv(envFile.toFile());
-		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key");
+		EchoOnlineSettings.setBuildDefaults("https://echo.example.com", "build-key", "");
 
 		Assertions.assertThat(EchoOnlineSettings.backendUrl()).isEqualTo("http://dotenv.local:3000");
 		Assertions.assertThat(EchoOnlineSettings.apiKey()).isEqualTo("dotenv-key");
