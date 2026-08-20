@@ -1,38 +1,37 @@
 ---
-description: Echo/shared UseContext paths — gate world VFX with canWorldFx (not heroFX alone); Hero vs Echo attack/jump/zap/missile parity
+description: Echo/shared paths — gate world VFX with Char.canWorldFx (sprite has a parent); Hero vs Echo attack/jump/zap/missile parity
 globs: **/heroechoes/**/*.java,**/actors/**/*.java,**/items/**/*.java,**/effects/**/*.java,**/sprites/**/*.java,**/mechanics/**/*.java,**/scenes/**/*.java
 alwaysApply: false
 ---
 
 # World VFX (Echo and Shared Paths)
 
-**`main`-mod** concern (`UseContext` / EchoBoss; not in base `master`). Any combat, ability, spell, item, or move that shows world VFX must work for **Hero and on-stage Echo**. Do not gate attack / jump / zap / MagicMissile / MissileSprite / operate / emitters on `ctx.heroFX` alone.
+**`main`-mod** concern (`EchoBoss` / adapters; not in base `master`). Any combat, ability, spell, item, or move that shows world VFX must work for **Hero and on-stage Echo**. Gate on sprite-attached-to-scene, not “is this the player”. There is no `UseContext` / `heroFX` flag.
 
 ## Gate correctly
 
-| Concern                                                                       | Gate                                                                                                                                    |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Attack, jump, zap, missiles, operate, emitters, hit sounds for those          | `UseContext.canWorldFx(ch)` / `ctx.canWorldFx()` (`sprite != null && parent != null`) — often **body**; use **kit** after sprite borrow |
-| QuickSlot, GLog, identify, talent UI, `spendAndNext`, camera-only Hero riders | `ctx.heroFX`                                                                                                                            |
+| Concern                                                                       | Gate                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attack, jump, zap, missiles, operate, emitters, hit sounds for those          | [`Char.canWorldFx`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java)`(ch)` / [`EchoActionContext.canWorldFx()`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/action/EchoActionContext.java) (`sprite != null && parent != null`) — often **body**; use **kit** after sprite borrow |
+| QuickSlot, GLog, identify, talent UI, `spendAndNext`, camera-only Hero riders | Hero entry points only. Echo adapters skip these.                                                                                                                                                                                                                                                                                         |
 
 ```java
 // ❌ BAD — Echo never swings / never bolts
-if (ctx.heroFX && kit.sprite != null) {
-	kit.sprite.attack(enemy.pos, doHit);
+if (ch == Dungeon.hero && ch.sprite != null) {
+	ch.sprite.attack(enemy.pos, doHit);
 } else {
 	doHit.call();
 }
 
-// ✅ GOOD — Hero: anim then hit; on-stage Echo: visual + sync hit (borrow-safe); headless: sync only
-if (ctx.heroFX && UseContext.canWorldFx(kit)) {
-	kit.sprite.attack(enemy.pos, doHit);
+// ✅ GOOD — on-stage char: visual then hit; headless: sync only
+if (Char.canWorldFx(ch)) {
+	ch.sprite.attack(enemy.pos, doHit);
 } else {
-	if (UseContext.canWorldFx(kit)) {
-		kit.sprite.attack(enemy.pos); // visual only
-	}
 	doHit.call();
 }
 ```
+
+Echo adapters: `EchoActionContext.of(boss)` then `ctx.canWorldFx()` (body) or `Char.canWorldFx(kit)` after sprite borrow.
 
 Relocates: `Char.move(cell, false)` or `ScrollOfTeleportation.appear` — not `pos` alone.
 
@@ -45,6 +44,6 @@ Headless (no parent) must still apply gameplay synchronously.
 
 ## Before finishing
 
-- [ ] No new `heroFX && sprite…` world-VFX gates
+- [ ] No new world-VFX gates on `Dungeon.hero` / player identity / `sprite != null` alone
 - [ ] On-stage Echo shows the same class of VFX as Hero
 - [ ] Test asserts VFX when practical; otherwise note the gap

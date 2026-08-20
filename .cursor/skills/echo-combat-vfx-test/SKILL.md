@@ -4,7 +4,7 @@ description: >-
   Sets up EchoBoss combat and world-VFX unit tests with EchoTestSupport fixtures
   (linked sprites, Actor registration, FOV, InstantProjectileGroup). Use when
   writing or fixing Echo/Hero combat, role executor, wand/missile, attack/jump/zap,
-  or UseContext canWorldFx tests.
+  or Char.canWorldFx / EchoActionContext.canWorldFx tests.
 ---
 
 # Echo combat / world VFX tests
@@ -34,7 +34,7 @@ When the path can show attack / jump / zap / missiles:
 ```java
 EchoTestSupport.InstantProjectileGroup fx =
 		EchoTestSupport.attachInstantProjectileParent(boss);
-// … invoke the production path with UseContext.echo(…) …
+// … invoke the production path (EchoActionContext.of(boss) / Char.canWorldFx) …
 Assertions.assertThat(fx.magicMissileRecycles).isGreaterThan(0);
 // or: stubSpriteAttackCalls / Jump / Operate / Zap / stubSpritePlacedCell
 ```
@@ -44,7 +44,7 @@ Headless (no parent) must still apply gameplay synchronously.
 ## Do not
 
 - Gate the test on “spent turn” alone while `enemy.sprite == null` (skips crashing VFX).
-- Assert only Hero/`heroFX` paths when Echo is in scope — see project rule `echo-world-vfx`.
+- Assert only Hero-on-stage paths when Echo is in scope — see project rule `echo-world-vfx`.
 
 ## Run
 

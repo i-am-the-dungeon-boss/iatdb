@@ -59,6 +59,8 @@ required by GPLv3.
 
 Guides in `/docs`:
 
+- [Game architecture](docs/architecture.md) — layers, turn clock, scenes, Echo pipeline
+
 - [Compiling for Android](docs/getting-started-android.md)
   - **[If you plan to distribute on Google Play, read the end of that guide.](docs/getting-started-android.md#distributing-your-app)**
 - [Compiling for desktop](docs/getting-started-desktop.md)

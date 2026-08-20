@@ -23,19 +23,21 @@ import java.util.List;
 /**
  * The whole contract a world-channel transport must satisfy.
  *
- * <p>This interface is the swap point. The shipped implementation is a raw
+ * <p>
+ * This interface is the swap point. The shipped implementation is a raw
  * WebSocket, hand-rolled because desktop, Android <em>and</em> RoboVM have to
- * agree — see {@code docs/village/world-net-engine-comparison.md} for why every
- * off-the-shelf realtime SDK was rejected. Another engine implements this same
+ * agree. Another engine implements this same
  * interface and nothing above it changes.
  *
- * <p><b>Chat and presence must stay separable.</b> The socket engine happens to
+ * <p>
+ * <b>Chat and presence must stay separable.</b> The socket engine happens to
  * carry both over one connection, but that is an implementation detail and must
  * never leak above this interface: an engine that sourced the two differently
  * can only be dropped in if callers treat {@link Listener#onChatMessages} and
  * {@link Listener#onPresenceSnapshot} as independent streams.
  *
- * <p>Callbacks fire from {@link #tick(float)}, which callers invoke on the
+ * <p>
+ * Callbacks fire from {@link #tick(float)}, which callers invoke on the
  * render thread. Implementations therefore never need
  * {@code Game.runOnRenderThread} — they queue work and hand it over on tick.
  */
@@ -47,7 +49,10 @@ public interface WorldNetEngine {
 
 	boolean isConnected();
 
-	/** @param local the village avatar, or null while in a run (chat only, no roster entry) */
+	/**
+	 * @param local the village avatar, or null while in a run (chat only, no roster
+	 *              entry)
+	 */
 	void setPresence(WorldPresence local);
 
 	void sendChat(String text);
@@ -57,7 +62,8 @@ public interface WorldNetEngine {
 	/**
 	 * Hints that the player is actively reading or writing chat.
 	 *
-	 * <p>Part of the contract rather than one engine's private knob: it is the
+	 * <p>
+	 * Part of the contract rather than one engine's private knob: it is the
 	 * game telling the transport how much the player cares right now. The socket
 	 * engine, already immediate, spends it on keeping the connection warm; an
 	 * engine that had to ask for updates would spend it on a tighter interval.
@@ -93,7 +99,8 @@ public interface WorldNetEngine {
 		/**
 		 * The answer to {@link WorldNetEngine#isServerMuted()} changed.
 		 *
-		 * <p>Separate from {@link #onStatus} because a mute is not a connection
+		 * <p>
+		 * Separate from {@link #onStatus} because a mute is not a connection
 		 * state: a muted player is connected, sees chat and is seen in the village,
 		 * and is only barred from speaking. Folding the two together made
 		 * {@code MUTED} and {@code CONNECTED} mutually exclusive and left callers
@@ -104,7 +111,8 @@ public interface WorldNetEngine {
 		/**
 		 * The game build the server expects, as stated when the connection opened.
 		 *
-		 * <p>Reported as a fact rather than a verdict: the transport has no opinion
+		 * <p>
+		 * Reported as a fact rather than a verdict: the transport has no opinion
 		 * on what should happen to a client that does not match, and a server too
 		 * old to send a version says nothing at all rather than claiming one.
 		 */
@@ -114,7 +122,8 @@ public interface WorldNetEngine {
 	/**
 	 * Whether the server will refuse anything this client says right now.
 	 *
-	 * <p>Answered locally: the deadline arrives on {@link WorldIdentity} from the
+	 * <p>
+	 * Answered locally: the deadline arrives on {@link WorldIdentity} from the
 	 * authentication response, so this costs nothing and needs no polling.
 	 */
 	boolean isServerMuted();
@@ -122,7 +131,8 @@ public interface WorldNetEngine {
 	/**
 	 * Replaces the deadline given at connect with a freshly read one.
 	 *
-	 * <p>The deadline reaching zero does not mean the mute is over — an admin may
+	 * <p>
+	 * The deadline reaching zero does not mean the mute is over — an admin may
 	 * have extended it — so it is re-read at that moment and handed back here
 	 * rather than waiting for the next connect. Also clears a refusal the server
 	 * gave without a deadline, since this value supersedes it.

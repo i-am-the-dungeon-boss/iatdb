@@ -40,7 +40,7 @@ tasks.register('debug', JavaExec) {
     // (no title Debug button). Default keeps INDEV for local debug tools.
     def debugVersionName = project.hasProperty('noDebug')
             ? appVersionName
-            : appVersionName
+            : appVersionName + "-INDEV"
 
     mainClass = appMainClass
     systemProperty 'Specification-Title', appName

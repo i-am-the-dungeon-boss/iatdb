@@ -23,14 +23,14 @@ Compile target is Java 11, but the **language level actually in use on `master` 
 
 `master` is consistent about this; every row below is a portability or determinism bug, not a style preference.
 
-| Never                                     | Always                                                                                    | Why                                                                                    |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Math.random()`, `new java.util.Random()` | `com.watabou.utils.Random`                                                                | Seeded runs, reproducible levels, save-compat (`master`: 402 imports, 0 `Math.random`) |
-| `Class.forName`, `cls.newInstance()`      | `Reflection.newInstance/forName`                                                          | Wraps libGDX reflection; direct JDK reflection breaks RoboVM AOT                       |
-| `printStackTrace()`, `System.out.println` | `Game.reportException(tr)`                                                                | Sole funnel to Sentry + logcat; `master` uses it in 17 files                           |
-| `new FileOutputStream("save.dat")`        | `FileUtils.bundleToFile(...)`                                                             | Android/iOS have no writable cwd                                                       |
-| Hardcoded English in UI/log               | `Messages.get(this, "key", args)`                                                         | i18n; keys under `core/src/main/assets/messages/`                                      |
-| `java.util.function.*`                    | `com.watabou.utils.Callback` or a local nested interface (see `UseContext.HostileEffect`) | Missing from `robovm-rt`                                                               |
+| Never                                     | Always                                                                                           | Why                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `Math.random()`, `new java.util.Random()` | `com.watabou.utils.Random`                                                                       | Seeded runs, reproducible levels, save-compat (`master`: 402 imports, 0 `Math.random`) |
+| `Class.forName`, `cls.newInstance()`      | `Reflection.newInstance/forName`                                                                 | Wraps libGDX reflection; direct JDK reflection breaks RoboVM AOT                       |
+| `printStackTrace()`, `System.out.println` | `Game.reportException(tr)`                                                                       | Sole funnel to Sentry + logcat; `master` uses it in 17 files                           |
+| `new FileOutputStream("save.dat")`        | `FileUtils.bundleToFile(...)`                                                                    | Android/iOS have no writable cwd                                                       |
+| Hardcoded English in UI/log               | `Messages.get(this, "key", args)`                                                                | i18n; keys under `core/src/main/assets/messages/`                                      |
+| `java.util.function.*`                    | `com.watabou.utils.Callback` or a local nested interface (see `EchoActionContext.HostileEffect`) | Missing from `robovm-rt`                                                               |
 
 ## Threading
 

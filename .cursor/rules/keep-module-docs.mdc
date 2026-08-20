@@ -1,0 +1,27 @@
+---
+description: When editing a Java package, keep docs/<Parent>.md in that directory — every subdirectory is its own module. Update if present; create via explain-game-module if missing.
+globs: "**/*.java"
+alwaysApply: false
+---
+
+# Keep module docs in sync
+
+A **module is one directory**. Subdirectories are **not** covered by the ancestor’s explainer. Each dir you touch gets its own `docs/<Parent>.md`.
+
+Examples: [`buffs/docs/Buff.md`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/docs/Buff.md); `hero/docs/Hero.md`; `hero/abilities/docs/ArmorAbility.md`; `hero/abilities/warrior/docs/<Parent>.md` — four dirs, four docs.
+
+**Parent** = the base/hub class **defined in that directory**. If the directory only holds subclasses, Parent is the type they extend (kinds table lists only children in _this_ dir).
+
+When you **touch files in a directory**:
+
+1. Look in **that directory’s** `docs/<Parent>.md` (create `docs/` if needed). Do not substitute an ancestor’s file.
+2. **Exists** → read it. If this change can stale verbs, kinds, integrations, player-vs-code, or change-safety, **update those sections**. Do not spec a child.
+3. **Missing** → create it with [`explain-game-module`](../skills/explain-game-module/SKILL.md) before finishing.
+4. Skip launchers (`desktop/` `android/` `ios/`), tests, generated code, and `docs/` itself. Skip if the edit cannot affect the parent contract (typo, local comment).
+
+Links you add or touch in a `docs/<Parent>.md` are **relative to that file's own
+location** (`../Buff.java`, `../../Char.java`), never repo-root paths — see
+[Link paths](../skills/explain-game-module/SKILL.md#link-paths). Existing docs predate
+this and still carry repo-root links; fix only the lines you edit.
+
+Do not leave a directory you edited without a current parent explainer.

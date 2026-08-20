@@ -30,6 +30,7 @@ local.properties
 .project
 .factorypath
 .settings/
+bin/
 
 # Runtime game data (generated locally)
 desktop/leaderboard.json

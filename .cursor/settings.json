@@ -5,9 +5,6 @@
     },
     "sentry": {
       "enabled": true
-    },
-    "mongodb": {
-      "enabled": true
     }
   }
 }

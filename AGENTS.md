@@ -42,14 +42,15 @@ Do **not** mass-fix repo-wide findings. Prefer issues in code you changed (espec
 
 ## Modules
 
-| Path                         | Role                                                 |
-| ---------------------------- | ---------------------------------------------------- |
-| `core/`                      | Game logic, assets, tests under `core/src/test/java` |
-| `SPD-classes/`               | Engine (noosa, `Bundle`, `FileUtils`, utils)         |
-| `desktop/` `android/` `ios/` | Platform launchers                                   |
-| `services/`                  | Optional update/news backends                        |
-| `.cursor/rules/`             | Agent rules                                          |
-| `.cursor/skills/`            | Workflows (e.g. `echo-combat-vfx-test`)              |
+| Path                                           | Role                                                 |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md) | Whole-game architecture diagrams                     |
+| `core/`                                        | Game logic, assets, tests under `core/src/test/java` |
+| `SPD-classes/`                                 | Engine (noosa, `Bundle`, `FileUtils`, utils)         |
+| `desktop/` `android/` `ios/`                   | Platform launchers                                   |
+| `services/`                                    | Optional update/news backends                        |
+| `.cursor/rules/`                               | Agent rules                                          |
+| `.cursor/skills/`                              | Workflows (e.g. `echo-combat-vfx-test`)              |
 
 ## Package map (`…shatteredpixeldungeon`)
 
@@ -61,7 +62,7 @@ Do **not** mass-fix repo-wide findings. Prefer issues in code you changed (espec
 | `heroechoes/policy/`       | Offline fight brain: policy match/execute, inventory, targeting |
 | `heroechoes/online/`       | HTTP client, auth, lookup, sync, wire codec                     |
 | `heroechoes/debug/`        | Debug arena kits / arsenal / snapshot weaken                    |
-| `items/`                   | Weapons, potions, `UseContext`, …                               |
+| `items/`                   | Weapons, potions, wands, …                                      |
 | `levels/`                  | Generation, terrain, `EchoBossLevel`                            |
 | `scenes/` `ui/` `windows/` | Screens and widgets                                             |
 | `messages/`                | i18n (`Messages.get`)                                           |
@@ -76,5 +77,20 @@ Engine: `com.watabou.utils`, `com.watabou.noosa` in `SPD-classes`.
 
 - **TDD** for production behavior (AssertJ + `@DisplayName`)
 - **Three platforms** — RoboVM-safe JDK subset; Android-safe `org.json`
-- **Echo world VFX** — `canWorldFx`, not `heroFX` alone
+- **Echo world VFX** — `Char.canWorldFx` (sprite has a parent); Echo adapters use `EchoActionContext.canWorldFx`
 - Match **`master`** style for base-game code; build features on **`main`**; fail clearly on required restore/wire data
+
+## Rules
+
+Source of truth: [`.cursor/rules/`](.cursor/rules). Imported here so they load in every
+session regardless of client (`CLAUDE.md` is `@AGENTS.md` only). Edit the `.mdc` files,
+not this list, to change rule content.
+
+@.cursor/rules/cross-platform.mdc
+@.cursor/rules/test-driven-development.mdc
+@.cursor/rules/echo-world-vfx.mdc
+@.cursor/rules/java-best-practices.mdc
+@.cursor/rules/java-quality-checks.mdc
+@.cursor/rules/gradle-worktree.mdc
+@.cursor/rules/no-pass-through-wrappers.mdc
+@.cursor/rules/keep-module-docs.mdc
