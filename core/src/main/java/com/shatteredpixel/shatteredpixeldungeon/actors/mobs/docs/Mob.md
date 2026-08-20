@@ -103,6 +103,7 @@ What the player sees versus the parent method that produces it:
 ## Change without surprises
 
 - [ ] Do **not** put echo-fight evasion on [`Mob.defenseSkill`](../Mob.java) — rats/bosses stay surprise-0 / stunned-0; [`EchoBoss`](../EchoBoss.java) already left this method
+- [ ] [`EchoBoss`](../EchoBoss.java) copies `paralysed` **and** the guaranteed-hit tracker onto the kit, then moves a new tracker back to the body
 - [ ] `surprisedBy` is **hero-only** (`enemy == Dungeon.hero`) — an EchoBoss attacking a mob does not get this surprise
 - [ ] Illuminated here keys off `Dungeon.hero.heroClass`, not the attacker’s kit class
 - [ ] `paralysed == 0` is the only non-zero evasion gate besides surprise / ally

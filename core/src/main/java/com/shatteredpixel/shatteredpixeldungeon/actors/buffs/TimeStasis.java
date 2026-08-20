@@ -26,7 +26,9 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.watabou.utils.Bundle;
 
 //this is largely a copy-paste from timekeeper's hourglass with the artifact-specific code removed
 public class TimeStasis extends FlavourBuff {
@@ -34,6 +36,12 @@ public class TimeStasis extends FlavourBuff {
 	{
 		type = Buff.buffType.POSITIVE;
 		actPriority = BUFF_PRIO-3; //acts after all other buffs, so they are prevented
+	}
+
+	private float echoLandedTurns;
+
+	public void recordEchoLandedTurns() {
+		echoLandedTurns = cooldown();
 	}
 
 	@Override
@@ -71,6 +79,7 @@ public class TimeStasis extends FlavourBuff {
 		if (target.invisible > 0) target.invisible--;
 		if (target.paralysed > 0) target.paralysed--;
 		super.detach();
+		EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 		Dungeon.observe();
 	}
 
@@ -81,6 +90,18 @@ public class TimeStasis extends FlavourBuff {
 			if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );
 			if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
 		}
+	}
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		EchoHardStun.storeLandedTurns(bundle, echoLandedTurns);
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		echoLandedTurns = EchoHardStun.restoreLandedTurns(bundle);
 	}
 
 }

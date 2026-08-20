@@ -73,11 +73,15 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
-	@DisplayName("SETUP_CC stays ready under paralysis lockout when a non-gas item is available")
+	@DisplayName("SETUP_CC stays ready under paralysis lockout when a non-stun item is available")
 	void paralysisImmunityKeepsNonGasSetupCc() {
 		Hero hero = EchoTestSupport.warriorHero();
-		EchoPolicy policy = blobPolicy();
-		EchoBoss boss = bossWithBlobKit(hero, policy);
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("SETUP_CC", EchoTestSupport.capability("StoneOfShock"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock());
 		Buff.affect(hero, Paralysis.Immunity.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
@@ -264,23 +268,41 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
-	@DisplayName("SETUP_CC pick walks past ParalyticGas under the paralysis lockout")
+	@DisplayName("SETUP_CC is not ready under paralysis lockout when Frost is the only item")
+	void paralysisImmunityUnreadiesFrostOnlySetupCc() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("SETUP_CC", EchoTestSupport.capability("PotionOfFrost"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost());
+		Buff.affect(hero, Paralysis.Immunity.class, 3f);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+
+		Assertions.assertThat(status.isRoleReady("SETUP_CC")).isFalse();
+	}
+
+	@Test
+	@DisplayName("SETUP_CC pick walks past stun items under the paralysis lockout")
 	void setupCcSkipsParalyticGasUnderLockout() {
 		JSONObject cap = new JSONObject()
 				.put("pick", "FIRST_LEGAL")
 				.put("items", new org.json.JSONArray()
 						.put("PotionOfParalyticGas")
-						.put("PotionOfSnapFreeze"));
+						.put("PotionOfSnapFreeze")
+						.put("StoneOfShock"));
 		EchoPolicyStatus lockedOut = new EchoPolicyStatus.Builder()
 				.enemyStatuses(java.util.Set.of("paralysis_immunity"))
 				.build();
 		java.util.Set<String> available =
-				java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze");
+				java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze", "StoneOfShock");
 
 		JSONObject narrowed = EchoRoleExecutor.capForEnemy("SETUP_CC", cap, lockedOut);
 
 		Assertions.assertThat(EchoRoleResolver.resolveItemId(narrowed, available))
-				.isEqualTo("PotionOfSnapFreeze");
+				.isEqualTo("StoneOfShock");
 	}
 
 	@Test

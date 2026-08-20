@@ -154,25 +154,28 @@ class EchoBossSurpriseAttackTest {
 	}
 
 	@Test
-	@DisplayName("body paralysis halves EchoBoss defenseSkill via kit")
+	@DisplayName("body paralysis first hit is 0 then later hits half via kit")
 	void bodyParalysisHalvesDefenseSkillViaKit() {
 		Hero kit = boss.getEchoHero();
 		int kitPos = kit.pos;
 
-		kit.paralysed = 1;
-		kit.pos = boss.pos;
-		int expected = kit.defenseSkill(hero);
-		kit.paralysed = 0;
-		kit.pos = kitPos;
-
 		boss.paralysed = 1;
 		Assertions.assertThat(kit.paralysed).isZero();
 
-		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(expected);
+		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(0);
+		int half = boss.defenseSkill(hero);
+		Assertions.assertThat(half).isGreaterThan(0);
 		Assertions.assertThat(kit.paralysed)
 				.as("kit paralysed must not leak after combat query")
 				.isZero();
 		Assertions.assertThat(kit.pos).isEqualTo(kitPos);
+		Assertions.assertThat(kit.buff(
+				com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun.GuaranteedHitTracker.class))
+				.as("tracker must live on the body, not the kit")
+				.isNull();
+		Assertions.assertThat(boss.buff(
+				com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun.GuaranteedHitTracker.class))
+				.isNotNull();
 	}
 
 	@Test

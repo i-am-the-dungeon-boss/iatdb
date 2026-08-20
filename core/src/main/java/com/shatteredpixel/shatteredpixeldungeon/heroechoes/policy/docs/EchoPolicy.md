@@ -35,7 +35,7 @@ How other code starts, extends, or strips this parent:
 | [`isSupported`](../EchoPolicy.java)                                                                                                              | n/a                | `root` has `capabilities`                                                                                                                          |
 | [`EchoPolicyMatcher.choose`](../EchoPolicyMatcher.java)                                                                                          | n/a                | walk `selection.order` → [`EchoPolicyChoice`](../EchoPolicyChoice.java) |
 | [`EchoRoleExecutor.execute`](../EchoRoleExecutor.java)                                                                                           | n/a                | resolve item, run adapter / virtual tag                                                                                                            |
-| [`capForEnemy`](../EchoRoleExecutor.java)                                                                                                        | n/a                | `SETUP_CC` + sensed `paralysis_immunity` → drop Paralytic Gas only                                                                                 |
+| [`capForEnemy`](../EchoRoleExecutor.java)                                                                                                        | n/a                | `SETUP_CC` + sensed `paralysis_immunity` → drop stun items (gas, frost, flashbang, snap freeze)                                    |
 | [`EchoPolicyStatusBuilder`](../EchoPolicyStatusBuilder.java)                                                                                     | n/a                | per-turn sense; `Paralysis.Immunity` → alias `paralysis_immunity`                                                                                  |
 
 ## Kinds
@@ -93,12 +93,12 @@ What the player sees versus the parent method that produces it:
 | Player                                     | Parent API                                                                                                                                     |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Echo drinks / throws / swings              | [`EchoRoleExecutor.execute`](../EchoRoleExecutor.java)              |
-| Echo skips gas while “immune to paralysis” | [`capForEnemy`](../EchoRoleExecutor.java) (Frost still legal today) |
+| Echo skips stun items while “immune to paralysis” | [`capForEnemy`](../EchoRoleExecutor.java) (gas, frost, flashbang, snap freeze) |
 | Echo fights at all                         | [`Dungeon.isEchoBossActive`](../../../Dungeon.java) (`pendingEcho` + this policy)           |
 
 ## Change without surprises
 
 - [ ] Wire alias stays `paralysis_immunity` even if the buff later blocks Frost / Magical Sleep
-- [ ] [`capForEnemy`](../EchoRoleExecutor.java) currently strips **gas only** — expanding shared immunity without updating this still throws frost/flashbang into a blocked target
+- [ ] [`capForEnemy`](../EchoRoleExecutor.java) strips **SETUP_CC stun items** (gas, frost, flashbang, snap freeze) — a leftover legal item can still keep the role ready
 - [ ] [`fromBundle`](../EchoPolicy.java) throws if `policy_json` is missing — do not invent a hollow playbook
 - [ ] Status names are aliases in [`EchoPolicyHazards`](../EchoPolicyHazards.java); `Paralysis.Immunity` must not be sensed as `"immunity"`

@@ -36,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
@@ -291,6 +292,8 @@ public class TimekeepersHourglass extends Artifact {
 			actPriority = BUFF_PRIO-3; //acts after all other buffs, so they are prevented
 		}
 
+		private float echoLandedTurns;
+
 		@Override
 		public boolean attachTo(Char target) {
 
@@ -300,7 +303,12 @@ public class TimekeepersHourglass extends Artifact {
 
 				int usedCharge = Math.min(charge, 2);
 				//buffs always act last, so the stasis buff should end a turn early.
-				spend(5*usedCharge);
+				float duration = 5*usedCharge;
+				if (EchoHardStun.appliesTo(target)) {
+					duration = Math.min(duration, EchoHardStun.MAX_DURATION);
+				}
+				spend(duration);
+				echoLandedTurns = cooldown();
 
 				//shouldn't punish the player for going into stasis frequently
 				Hunger hunger = Buff.affect(target, Hunger.class);
@@ -337,6 +345,7 @@ public class TimekeepersHourglass extends Artifact {
 			if (target.invisible > 0) target.invisible--;
 			if (target.paralysed > 0) target.paralysed--;
 			super.detach();
+			EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 			activeBuff = null;
 			Dungeon.observe();
 		}
@@ -348,6 +357,18 @@ public class TimekeepersHourglass extends Artifact {
 				if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );
 				if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
 			}
+		}
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			EchoHardStun.storeLandedTurns(bundle, echoLandedTurns);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			echoLandedTurns = EchoHardStun.restoreLandedTurns(bundle);
 		}
 	}
 

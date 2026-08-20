@@ -26,9 +26,10 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Freezing;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ParalyticGas;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -39,9 +40,15 @@ public class Paralysis extends FlavourBuff {
 
 	public static final float DURATION = 10f;
 
+	private float echoLandedTurns;
+
 	{
 		type = buffType.NEGATIVE;
 		announced = true;
+	}
+
+	public void recordEchoLandedTurns() {
+		echoLandedTurns = cooldown();
 	}
 
 	@Override
@@ -73,13 +80,13 @@ public class Paralysis extends FlavourBuff {
 	@Override
 	public void detach() {
 		Char ch = target;
+		float landed = echoLandedTurns;
 		super.detach();
 		if (ch != null && ch.paralysed > 0) {
 			ch.paralysed--;
 		}
-		if (ch instanceof Hero || ch instanceof EchoBoss) {
-			Buff.prolong(ch, Immunity.class, Immunity.DURATION);
-		}
+		EchoHardStun.grantImmunityOnDetach(ch, landed);
+		EchoHardStun.clearGuaranteedHitIfUnstunned(ch);
 	}
 
 	@Override
@@ -100,9 +107,21 @@ public class Paralysis extends FlavourBuff {
 			target.sprite.remove(CharSprite.State.PARALYSED);
 	}
 
+	@Override
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		EchoHardStun.storeLandedTurns(bundle, echoLandedTurns);
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		echoLandedTurns = EchoHardStun.restoreLandedTurns(bundle);
+	}
+
 	/**
-	 * Brief lockout after paralysis so Hero / EchoBoss are not immediately
-	 * re-stunned.
+	 * Brief lockout after a hard stun so Hero / EchoBoss are not immediately
+	 * re-stunned. Granted only during an echo fight.
 	 */
 	public static class Immunity extends FlavourBuff {
 
@@ -112,6 +131,12 @@ public class Paralysis extends FlavourBuff {
 			type = buffType.POSITIVE;
 			immunities.add(Paralysis.class);
 			immunities.add(ParalyticGas.class);
+			immunities.add(Frost.class);
+			immunities.add(Freezing.class);
+			immunities.add(MagicalSleep.class);
+			immunities.add(Sleep.class);
+			immunities.add(TimeStasis.class);
+			immunities.add(TimekeepersHourglass.timeStasis.class);
 		}
 
 		@Override

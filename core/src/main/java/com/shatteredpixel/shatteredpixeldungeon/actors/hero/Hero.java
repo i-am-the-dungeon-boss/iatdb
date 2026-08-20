@@ -90,6 +90,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
@@ -467,7 +468,8 @@ public class Hero extends Char {
 	/**
 	 * Builds this hero's sprite.
 	 *
-	 * <p>A hook rather than a {@code new HeroSprite()} at the call site, so a
+	 * <p>
+	 * A hook rather than a {@code new HeroSprite()} at the call site, so a
 	 * subclass can supply its own without {@code GameScene} having to know which
 	 * kind of hero it is looking at.
 	 */
@@ -620,13 +622,28 @@ public class Hero extends Char {
 			evasion *= 3;
 		}
 
-		// mirrors Mob#defenseSkill: an Illuminated (Guiding Light) target is easier
-		// to hit, as long as the attacker is the Cleric who cast it
+		// mirrors Mob#defenseSkill: an Illuminated (Guiding Light) target is a
+		// guaranteed hit, as long as the attacker is the Cleric who cast it
 		if (buff(GuidingLight.Illuminated.class) != null && attackerIsCleric(enemy)) {
-			evasion /= 2;
+			return 0;
+		}
+
+		EchoHardStun.GuaranteedHitTracker hitTracker = buff(EchoHardStun.GuaranteedHitTracker.class);
+		if (paralysed <= 0 && hitTracker != null) {
+			hitTracker.detach();
+			hitTracker = null;
+		}
+		if (EchoHardStun.appliesTo(this) && paralysed > 0 && hitTracker == null) {
+			Buff.affect(this, EchoHardStun.GuaranteedHitTracker.class);
+			return 0;
 		}
 
 		if (paralysed > 0) {
+			evasion /= 2;
+		}
+
+		if (EchoHardStun.appliesTo(this)
+				&& EchoHardStun.unseenAdjacentDoor(this, enemy)) {
 			evasion /= 2;
 		}
 
@@ -642,7 +659,8 @@ public class Hero extends Char {
 		return Math.max(1, Math.round(evasion));
 	}
 
-	//true if the attacker is the Cleric hero/echo who could have cast Guiding Light
+	// true if the attacker is the Cleric hero/echo who could have cast Guiding
+	// Light
 	private static boolean attackerIsCleric(Char enemy) {
 		if (enemy instanceof Hero) {
 			return ((Hero) enemy).heroClass == HeroClass.CLERIC;

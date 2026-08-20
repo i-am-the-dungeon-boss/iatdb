@@ -56,9 +56,9 @@ public final class EchoRoleExecutor {
 
 	/**
 	 * Narrows a capability to the items that can still affect this hero. Under
-	 * the 3-turn {@code Paralysis.Immunity} lockout the rest of {@code SETUP_CC}
-	 * is fine, but Paralytic Gas would be thrown away — so it is dropped from the
-	 * pick list rather than the whole role being disabled.
+	 * the shared stun lockout the rest of {@code SETUP_CC} is fine, but stun
+	 * items would be thrown away — so they are dropped from the pick list
+	 * rather than the whole role being disabled.
 	 */
 	static JSONObject capForEnemy(String role, JSONObject cap, EchoPolicyStatus status) {
 		if (cap == null || status == null) {

@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Thief;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.FrozenCarpaccio;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.MysteryMeat;
@@ -37,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
@@ -45,9 +47,15 @@ public class Frost extends FlavourBuff {
 
 	public static final float DURATION	= 10f;
 
+	private float echoLandedTurns;
+
 	{
 		type = buffType.NEGATIVE;
 		announced = true;
+	}
+
+	public void recordEchoLandedTurns() {
+		echoLandedTurns = cooldown();
 	}
 	
 	@Override
@@ -109,6 +117,8 @@ public class Frost extends FlavourBuff {
 		super.detach();
 		if (target.paralysed > 0)
 			target.paralysed--;
+		EchoHardStun.grantImmunityOnDetach(target, echoLandedTurns);
+		EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 		if (Dungeon.level.water[target.pos])
 			Buff.prolong(target, Chill.class, Chill.DURATION/2f);
 	}
@@ -137,6 +147,18 @@ public class Frost extends FlavourBuff {
 			target.sprite.remove(CharSprite.State.FROZEN);
 			if (target.paralysed <= 1) target.sprite.remove(CharSprite.State.PARALYSED);
 		}
+	}
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		EchoHardStun.storeLandedTurns(bundle, echoLandedTurns);
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		echoLandedTurns = EchoHardStun.restoreLandedTurns(bundle);
 	}
 
 	{

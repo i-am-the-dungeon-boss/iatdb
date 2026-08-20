@@ -246,7 +246,7 @@ public final class EchoPolicyStatusBuilder {
 				&& EchoPolicyHazards.isBlobRole(role)) {
 			return false;
 		}
-		// 3-turn paralysis lockout only invalidates ParalyticGas, not the role.
+		// Shared stun lockout invalidates SETUP_CC stun items, not the role.
 		if (enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)
 				&& EchoPolicyHazards.SETUP_CC.equals(role)
 				&& !EchoRoleResolver.roleHasReadyItem(

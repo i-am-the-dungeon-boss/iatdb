@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuffTransfer;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
@@ -688,6 +689,7 @@ public class EchoBoss extends Mob {
         Alignment savedAlignment = echoHero.alignment;
         int savedHp = echoHero.HP;
         int savedHt = echoHero.HT;
+        boolean[] savedFov = echoHero.fieldOfView;
 
         echoHero.pos = pos;
         echoHero.paralysed = paralysed;
@@ -695,6 +697,8 @@ public class EchoBoss extends Mob {
         echoHero.alignment = alignment;
         echoHero.HP = HP;
         echoHero.HT = HT;
+        echoHero.fieldOfView = fieldOfView;
+        copyGuaranteedHitTrackerToKit();
         HashSet<Buff> buffsBefore = EchoCombatBuffTransfer.snapshot(echoHero);
         try {
             return action.get();
@@ -702,12 +706,33 @@ public class EchoBoss extends Mob {
             // Kit heals/damage during procs must land on the on-stage body.
             HP = Math.max(0, Math.min(HT, echoHero.HP));
             EchoCombatBuffTransfer.moveNewCombatBuffs(echoHero, this, buffsBefore);
+            moveGuaranteedHitTrackerFromKit();
             echoHero.pos = savedPos;
             echoHero.paralysed = savedParalysed;
             echoHero.sprite = savedSprite;
             echoHero.alignment = savedAlignment;
             echoHero.HP = savedHp;
             echoHero.HT = savedHt;
+            echoHero.fieldOfView = savedFov;
+        }
+    }
+
+    private void copyGuaranteedHitTrackerToKit() {
+        if (buff(EchoHardStun.GuaranteedHitTracker.class) != null
+                && echoHero.buff(EchoHardStun.GuaranteedHitTracker.class) == null) {
+            Buff.affect(echoHero, EchoHardStun.GuaranteedHitTracker.class);
+        }
+    }
+
+    private void moveGuaranteedHitTrackerFromKit() {
+        EchoHardStun.GuaranteedHitTracker kitTracker =
+                echoHero.buff(EchoHardStun.GuaranteedHitTracker.class);
+        if (kitTracker == null) {
+            return;
+        }
+        kitTracker.detach();
+        if (buff(EchoHardStun.GuaranteedHitTracker.class) == null) {
+            Buff.affect(this, EchoHardStun.GuaranteedHitTracker.class);
         }
     }
 

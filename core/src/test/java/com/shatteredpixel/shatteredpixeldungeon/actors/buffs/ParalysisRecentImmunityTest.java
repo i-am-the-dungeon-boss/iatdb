@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class ParalysisRecentImmunityTest {
 
 	@Test
-	@DisplayName("Hero gains 3-turn paralysis immunity after paralysis ends")
+	@DisplayName("Hero gains paralysis immunity for landed turns after paralysis ends")
 	void heroGainsImmunityAfterParalysis() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -29,13 +29,13 @@ class ParalysisRecentImmunityTest {
 
 		Paralysis.Immunity immunity = hero.buff(Paralysis.Immunity.class);
 		Assertions.assertThat(immunity).isNotNull();
-		Assertions.assertThat(immunity.cooldown()).isEqualTo(3f);
+		Assertions.assertThat(immunity.cooldown()).isEqualTo(1f);
 		Assertions.assertThat(hero.isImmune(Paralysis.class)).isTrue();
 		Assertions.assertThat(hero.isImmune(ParalyticGas.class)).isTrue();
 	}
 
 	@Test
-	@DisplayName("EchoBoss gains 3-turn paralysis immunity after paralysis ends")
+	@DisplayName("EchoBoss gains paralysis immunity for landed turns after paralysis ends")
 	void echoBossGainsImmunityAfterParalysis() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -46,7 +46,7 @@ class ParalysisRecentImmunityTest {
 
 		Paralysis.Immunity immunity = boss.buff(Paralysis.Immunity.class);
 		Assertions.assertThat(immunity).isNotNull();
-		Assertions.assertThat(immunity.cooldown()).isEqualTo(3f);
+		Assertions.assertThat(immunity.cooldown()).isEqualTo(1f);
 		Assertions.assertThat(boss.isImmune(Paralysis.class)).isTrue();
 		Assertions.assertThat(boss.isImmune(ParalyticGas.class)).isTrue();
 	}

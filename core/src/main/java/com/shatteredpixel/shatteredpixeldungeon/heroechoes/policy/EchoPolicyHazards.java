@@ -15,7 +15,7 @@ public final class EchoPolicyHazards {
 	// Enemy status aliases.
 	/** Potion of Purity / Mageroyal {@code BlobImmunity} — blocks every blob. */
 	public static final String PURITY = "purity";
-	/** 3-turn {@code Paralysis.Immunity} — blocks Paralysis + ParalyticGas only. */
+	/** 3-turn {@code Paralysis.Immunity} — shared hard-stun lockout in the echo fight. */
 	public static final String PARALYSIS_IMMUNITY = "paralysis_immunity";
 	public static final String INVULNERABLE = "invulnerable";
 	/** A shield that will run out on its own; excludes permanent recharging ones. */
@@ -60,7 +60,12 @@ public final class EchoPolicyHazards {
 	/** Barrier-granting kit the echo turns on itself; distinct from ARCANE_ARMOR. */
 	public static final String SHIELD_SELF = EchoRole.SHIELD_SELF.id();
 
-	private static final String PARALYTIC_GAS = "PotionOfParalyticGas";
+	private static final String[] SETUP_CC_STUN_ITEMS = {
+			"PotionOfParalyticGas",
+			"PotionOfFrost",
+			"PotionOfSnapFreeze",
+			"FlashBangBomb",
+	};
 
 	private EchoPolicyHazards() {
 	}
@@ -91,9 +96,8 @@ public final class EchoPolicyHazards {
 	}
 
 	/**
-	 * Copy of {@code cap} without Potion of Paralytic Gas, used to ask whether
-	 * {@code SETUP_CC} still has a legal item while the hero sits under the
-	 * 3-turn paralysis lockout.
+	 * Copy of {@code cap} without SETUP_CC stun items (gas, frost, flashbang,
+	 * snap freeze), used while the hero sits under the shared stun lockout.
 	 */
 	public static JSONObject withoutParalyticGas(JSONObject cap) {
 		if (cap == null) {
@@ -106,7 +110,7 @@ public final class EchoPolicyHazards {
 		JSONArray kept = new JSONArray();
 		for (int i = 0; i < items.length(); i++) {
 			String id = items.optString(i, "");
-			if (!PARALYTIC_GAS.equals(id)) {
+			if (!isSetupCcStunItem(id)) {
 				kept.put(id);
 			}
 		}
@@ -118,5 +122,14 @@ public final class EchoPolicyHazards {
 			copy.put("hazard", hazard);
 		}
 		return copy;
+	}
+
+	private static boolean isSetupCcStunItem(String id) {
+		for (int i = 0; i < SETUP_CC_STUN_ITEMS.length; i++) {
+			if (SETUP_CC_STUN_ITEMS[i].equals(id)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

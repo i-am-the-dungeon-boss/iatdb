@@ -29,8 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -59,7 +58,7 @@ public class ParalyticGas extends Blob {
 					if (ch.isImmune(this.getClass())) {
 						continue;
 					}
-					if (ch instanceof Hero || ch instanceof EchoBoss) {
+					if (EchoHardStun.isCombatant(ch)) {
 						// One-shot apply — do not prolong each gas tick.
 						if (ch.buff(Paralysis.class) == null) {
 							Buff.affect(ch, Paralysis.class, HERO_ECHO_DURATION);
