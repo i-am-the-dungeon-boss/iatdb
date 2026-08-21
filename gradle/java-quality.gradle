@@ -10,6 +10,7 @@ apply plugin: 'com.github.spotbugs'
 
 dependencies {
 	errorprone 'com.google.errorprone:error_prone_core:2.50.0'
+	errorprone 'com.uber.nullaway:nullaway:0.13.8'
 }
 
 // --- Spotless ----------------------------------------------------------------
@@ -39,6 +40,29 @@ spotless {
 // Full SPD sources trip many ERROR-severity checks. Default: warnings only so
 // compile stays green. Fail the build with: ./gradlew … -PerrorProneErrors
 // Day-to-day / agent test runs: ./gradlew … -PerrorProneOff (skips EP entirely).
+//
+// NullAway only checks code inside the annotated packages below, so turning it
+// on does not light up the unannotated base-game sources.
+//
+// AcknowledgeRestrictiveAnnotations lets NullAway honour @Nullable on otherwise
+// unannotated code, but that support covers method parameters and return types,
+// NOT fields. So @Nullable on Char.sprite is only enforced at deref sites once
+// Char's own package (actors) is annotated — hence actors is listed here while
+// its heavy subpackages stay unannotated. Dropping actors from this list silently
+// disables every sprite-nullability check.
+//
+// Widen one package at a time; items is the large one still outstanding.
+def nullAwayPackages = [
+		'com.shatteredpixel.shatteredpixeldungeon.heroechoes',
+		'com.shatteredpixel.shatteredpixeldungeon.effects',
+		'com.shatteredpixel.shatteredpixeldungeon.actors'
+].join(',')
+def nullAwayUnannotatedSubPackages = [
+		'com.shatteredpixel.shatteredpixeldungeon.actors.mobs',
+		'com.shatteredpixel.shatteredpixeldungeon.actors.hero',
+		'com.shatteredpixel.shatteredpixeldungeon.actors.buffs',
+		'com.shatteredpixel.shatteredpixeldungeon.actors.blobs'
+].join(',')
 tasks.withType(JavaCompile).configureEach { compile ->
 	if (project.hasProperty('errorProneOff')) {
 		options.errorprone.enabled = false
@@ -51,6 +75,15 @@ tasks.withType(JavaCompile).configureEach { compile ->
 		if (!project.hasProperty('errorProneErrors')) {
 			allErrorsAsWarnings = true
 		}
+		// Explicit severity wins over allErrorsAsWarnings, so pick it here rather
+		// than letting NullAway fail the default compile.
+		def nullAwaySeverity = project.hasProperty('errorProneErrors') ? 'ERROR' : 'WARN'
+		errorproneArgs.addAll([
+				"-Xep:NullAway:${nullAwaySeverity}".toString(),
+				"-XepOpt:NullAway:AnnotatedPackages=${nullAwayPackages}".toString(),
+				"-XepOpt:NullAway:UnannotatedSubPackages=${nullAwayUnannotatedSubPackages}".toString(),
+				'-XepOpt:NullAway:AcknowledgeRestrictiveAnnotations=true'
+		])
 	}
 }
 

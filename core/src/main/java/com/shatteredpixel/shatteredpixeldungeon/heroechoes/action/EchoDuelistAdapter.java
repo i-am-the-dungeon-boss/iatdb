@@ -73,7 +73,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (!weapon.isEquipped(kit)) {
 			return false;
 		}
@@ -251,7 +251,7 @@ public final class EchoDuelistAdapter {
 	}
 
 	private static boolean chargedShot(EchoActionContext ctx, Crossbow wep) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (kit.buff(Crossbow.ChargedShot.class) != null) {
 			return false;
 		}
@@ -265,7 +265,7 @@ public final class EchoDuelistAdapter {
 	}
 
 	private static boolean spin(EchoActionContext ctx, Flail wep) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Flail.SpinAbilityTracker spin = kit.buff(Flail.SpinAbilityTracker.class);
 		if (spin != null && spin.spins >= 3) {
 			return false;
@@ -289,7 +289,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		// duelist can lunge out of FOV, but this wastes the ability instead of
 		// cancelling if there is no target
@@ -379,7 +379,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -426,7 +426,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -470,7 +470,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -521,7 +521,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -568,7 +568,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -681,7 +681,7 @@ public final class EchoDuelistAdapter {
 			return false;
 		}
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -728,7 +728,7 @@ public final class EchoDuelistAdapter {
 		if (target == null) {
 			return false;
 		}
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char enemy = Actor.findChar(target);
 		if (enemy == null || enemy == body || kit.isCharmedBy(enemy) || !inFov(ctx, target)) {
 			return false;
@@ -769,7 +769,7 @@ public final class EchoDuelistAdapter {
 			EchoKitBorrow.run(ctx, new Runnable() {
 				@Override
 				public void run() {
-					action.run(ctx.kit, ctx.body);
+					action.run(ctx.stats(), ctx.body);
 				}
 			});
 			return true;
@@ -785,7 +785,7 @@ public final class EchoDuelistAdapter {
 	 */
 	private static void echoAttackFxThenHit(EchoActionContext ctx, int cell, Callback doHit) {
 		if (ctx.canWorldFx()) {
-			ctx.kit.sprite.attack(cell);
+			ctx.body.sprite.attack(cell);
 		}
 		doHit.call();
 	}

@@ -109,7 +109,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean recharging(EchoActionContext ctx, ScrollOfRecharging scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 		Buff.affect(ctx.body, Recharging.class, Recharging.DURATION);
 		ScrollOfRecharging.charge(ctx.body);
 
@@ -124,7 +124,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean teleportation(EchoActionContext ctx, ScrollOfTeleportation scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		boolean teleported = echoTeleport(ctx);
 
@@ -178,7 +178,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean lullaby(EchoActionContext ctx, ScrollOfLullaby scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		if (ctx.canWorldFx()) {
 			ctx.body.sprite.centerEmitter().start(Speck.factory(Speck.NOTE), 0.3f, 5);
@@ -214,7 +214,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean retribution(EchoActionContext ctx, ScrollOfRetribution scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		if (ctx.canWorldFx()) {
 			GameScene.flash(0x80FFFFFF);
@@ -243,7 +243,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean magicMapping(EchoActionContext ctx, ScrollOfMagicMapping scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 		int length = Dungeon.level.length();
 		int[] map = Dungeon.level.map;
 		boolean[] mapped = Dungeon.level.mapped;
@@ -283,11 +283,11 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean mirrorImage(EchoActionContext ctx, ScrollOfMirrorImage scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 		if (ctx.canWorldFx() && GameSceneEchoBridge.hasScene()) {
-			ScrollOfMirrorImage.spawnImages(ctx.kit, ctx.body.pos, 2);
+			ScrollOfMirrorImage.spawnImages(ctx.stats(), ctx.body.pos, 2);
 		} else {
-			echoSpawnImagesHeadless(ctx.kit, ctx.body.pos, 2);
+			echoSpawnImagesHeadless(ctx.stats(), ctx.body.pos, 2);
 		}
 
 		if (ctx.canWorldFx()) {
@@ -327,7 +327,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean rage(EchoActionContext ctx, ScrollOfRage scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			mob.beckon(ctx.body.pos);
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
@@ -347,7 +347,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean terror(EchoActionContext ctx, ScrollOfTerror scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		if (ctx.canWorldFx()) {
 			new Flare(5, 32).color(0xFF0000, true).show(ctx.body.sprite, 2f);
@@ -369,7 +369,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean psionicBlast(EchoActionContext ctx, ScrollOfPsionicBlast scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		if (ctx.canWorldFx()) {
 			GameScene.flash(0x80FFFFFF);
@@ -397,7 +397,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean dread(EchoActionContext ctx, ScrollOfDread scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 
 		if (ctx.canWorldFx()) {
 			new Flare(5, 32).color(0xFF0000, true).show(ctx.body.sprite, 2f);
@@ -419,7 +419,7 @@ public final class EchoScrollHandlers {
 	}
 
 	private static boolean antiMagic(EchoActionContext ctx, ScrollOfAntiMagic scroll) {
-		scroll.detach(ctx.kit.belongings.backpack);
+		scroll.detach(ctx.gear().backpack);
 		Buff.affect(ctx.body, MagicImmune.class, MagicImmune.DURATION);
 
 		if (ctx.canWorldFx()) {

@@ -366,7 +366,7 @@ class EchoRoleExecutorTest {
 
 		Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		boolean spent = EchoRoleExecutor.execute(
 				boss,
@@ -483,7 +483,7 @@ class EchoRoleExecutorTest {
 	}
 
 	@Test
-	@DisplayName("RANGED MissileWeapon spends turn, damages player, and leaves kit sprite-less")
+	@DisplayName("RANGED MissileWeapon spends turn, damages player, and leaves the kit mirroring the body")
 	void rangedMissileWeaponHitsAndLeavesKitSpriteNull() {
 		Hero hero = EchoTestSupport.warriorHero();
 		ThrowingKnife knives = new ThrowingKnife();
@@ -496,7 +496,7 @@ class EchoRoleExecutorTest {
 		Hero kit = boss.getEchoHero();
 		ThrowingKnife kitKnives = kit.belongings.getItem(ThrowingKnife.class);
 		Assertions.assertThat(kitKnives).isNotNull();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
 
@@ -512,7 +512,7 @@ class EchoRoleExecutorTest {
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		ThrowingKnife after = kit.belongings.getItem(ThrowingKnife.class);
 		Assertions.assertThat(after == null ? 0 : after.quantity()).isLessThan(qtyBefore);
 	}
@@ -530,7 +530,7 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(hero.sprite.ch).isSameAs(hero);
 		Assertions.assertThat(boss.sprite).isNotNull();
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(SpiritBow.class)).isNotNull();
 
 		int hpBefore = hero.HP;
@@ -545,7 +545,7 @@ class EchoRoleExecutorTest {
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
 		// Borrowed boss sprite must not stick on the phantom hero.
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

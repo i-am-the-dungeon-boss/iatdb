@@ -27,7 +27,7 @@ class HealingTest {
 	}
 
 	@Test
-	@DisplayName("Healing.act on sprite-less Echo kit still heals without NPE")
+	@DisplayName("Healing.act on an off-stage Echo kit still heals without NPE")
 	void actOnSpriteLessEchoKitHealsWithoutNpe() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -35,7 +35,7 @@ class HealingTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		kit.HP = Math.max(1, kit.HT / 4);
 		int hpBefore = kit.HP;

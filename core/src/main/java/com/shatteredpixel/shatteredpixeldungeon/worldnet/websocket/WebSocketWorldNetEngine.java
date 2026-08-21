@@ -240,6 +240,18 @@ public final class WebSocketWorldNetEngine implements WorldNetEngine {
 	}
 
 	@Override
+	public void requestEchoBundle(String echoId) {
+		if (!connected || !socketOpen) {
+			return;
+		}
+		try {
+			write(WorldFrameCodec.encodeEchoReq(echoId));
+		} catch (JSONException impossible) {
+			setStatus(Status.DEGRADED, impossible.getMessage());
+		}
+	}
+
+	@Override
 	public void report(String messageId, String reason) {
 		if (!connected || !socketOpen) {
 			return;
@@ -502,6 +514,12 @@ public final class WebSocketWorldNetEngine implements WorldNetEngine {
 				break;
 			case ROSTER:
 				listener.onPresenceSnapshot(Collections.unmodifiableList(withoutSelf(frame.occupants)));
+				break;
+			case FIGURES:
+				listener.onWorldFigures(Collections.unmodifiableList(frame.figures));
+				break;
+			case ECHO:
+				listener.onEchoBundle(frame.echoId, frame.echoData);
 				break;
 			case ERROR:
 				// A refused message says nothing about the link, so the socket stays up.

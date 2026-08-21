@@ -157,6 +157,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.BArray;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.Nullable;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
@@ -169,7 +170,9 @@ public abstract class Char extends Actor {
 
 	public int pos = 0;
 
-	public CharSprite sprite;
+	// Null whenever the Char is not on stage: headless tests, mobs before
+	// GameScene adds them, and the Echo boss's phantom kit hero.
+	public @Nullable CharSprite sprite;
 
 	public int HT;
 	public int HP;

@@ -238,7 +238,7 @@ public final class EchoArmorHandlers {
 		}
 		Buff.prolong(body, Endure.EndureTracker.class, 12f);
 
-		Combo combo = ctx.kit.buff(Combo.class);
+		Combo combo = ctx.stats().buff(Combo.class);
 		if (combo != null) {
 			combo.addTime(3f);
 		}
@@ -246,7 +246,7 @@ public final class EchoArmorHandlers {
 			body.sprite.operate(body.pos);
 		}
 
-		armor.charge -= ability.chargeUse(ctx.kit);
+		armor.charge -= ability.chargeUse(ctx.stats());
 		armor.updateQuickslot();
 		Invisibility.dispel(body);
 		ctx.complete(3f);
@@ -266,7 +266,7 @@ public final class EchoArmorHandlers {
 			}
 		}
 
-		armor.charge -= ability.chargeUse(ctx.kit);
+		armor.charge -= ability.chargeUse(ctx.stats());
 		armor.updateQuickslot();
 		Invisibility.dispel(body);
 		ctx.complete(Actor.TICK);
@@ -283,7 +283,7 @@ public final class EchoArmorHandlers {
 			new Flare(6, 48).color(0xFFFF00, true).show(body.sprite, 2f);
 		}
 
-		armor.charge -= ability.chargeUse(ctx.kit);
+		armor.charge -= ability.chargeUse(ctx.stats());
 		armor.updateQuickslot();
 		Invisibility.dispel(body);
 		ctx.complete(Actor.TICK);
@@ -292,7 +292,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean shockwave(EchoActionContext ctx, ClassArmor armor, Shockwave ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -386,7 +386,7 @@ public final class EchoArmorHandlers {
 	}
 
 	private static boolean deathMark(EchoActionContext ctx, ClassArmor armor, DeathMark ability, Integer target) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -422,7 +422,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean challenge(EchoActionContext ctx, ClassArmor armor, Challenge ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -541,7 +541,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean heroicLeap(EchoActionContext ctx, ClassArmor armor, HeroicLeap ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target != null) {
 
 			if (body.rooted) {
@@ -620,7 +620,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean smokeBomb(EchoActionContext ctx, ClassArmor armor, SmokeBomb ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target != null) {
 
 			if (target != body.pos && body.rooted) {
@@ -692,7 +692,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean shadowClone(EchoActionContext ctx, ClassArmor armor, ShadowClone ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		ShadowClone.ShadowAlly ally = ShadowClone.getShadowAlly();
 
 		if (ally != null) {
@@ -735,7 +735,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean spiritHawk(EchoActionContext ctx, ClassArmor armor, SpiritHawk ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		SpiritHawk.HawkAlly ally = SpiritHawk.getHawk();
 
 		if (ally != null) {
@@ -779,7 +779,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean powerOfMany(EchoActionContext ctx, ClassArmor armor, PowerOfMany ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 
 		Char ally = PowerOfMany.getPoweredAlly();
 
@@ -865,7 +865,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean ratmogrify(EchoActionContext ctx, ClassArmor armor, Ratmogrify ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 
 		if (target == null) {
 			ctx.cancel();
@@ -993,7 +993,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean feint(EchoActionContext ctx, ClassArmor armor, Feint ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -1080,7 +1080,7 @@ public final class EchoArmorHandlers {
 	private static boolean spectralBlades(EchoActionContext ctx, ClassArmor armor, SpectralBlades ability,
 			Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -1090,12 +1090,10 @@ public final class EchoArmorHandlers {
 			return false;
 		}
 		int savedPos = kit.pos;
-		CharSprite savedSprite = kit.sprite;
 		boolean borrow = body != kit;
 		final boolean[] restored = { !borrow };
 		if (borrow) {
 			kit.pos = body.pos;
-			kit.sprite = body.sprite;
 		}
 		boolean keepBorrowed = false;
 		try {
@@ -1147,7 +1145,6 @@ public final class EchoArmorHandlers {
 					if (restored[0]) {
 						return;
 					}
-					kit.sprite = savedSprite;
 					kit.pos = savedPos;
 					restored[0] = true;
 				}
@@ -1200,7 +1197,6 @@ public final class EchoArmorHandlers {
 		} finally {
 			if (!keepBorrowed) {
 				if (!restored[0] && borrow) {
-					kit.sprite = savedSprite;
 					kit.pos = savedPos;
 					restored[0] = true;
 				}
@@ -1232,7 +1228,7 @@ public final class EchoArmorHandlers {
 	private static boolean elementalStrike(EchoActionContext ctx, ClassArmor armor, ElementalStrike ability,
 			Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			return false;
 		}
@@ -1241,11 +1237,9 @@ public final class EchoArmorHandlers {
 		armor.updateQuickslot();
 
 		int savedPos = kit.pos;
-		com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite savedSprite = kit.sprite;
 		boolean borrow = body != kit;
 		if (borrow) {
 			kit.pos = body.pos;
-			kit.sprite = body.sprite;
 		}
 		try {
 			Ballistica aim = new Ballistica(body.pos, target, Ballistica.WONT_STOP);
@@ -1325,7 +1319,6 @@ public final class EchoArmorHandlers {
 		} finally {
 			if (borrow) {
 				kit.pos = savedPos;
-				kit.sprite = savedSprite;
 			}
 		}
 		return true;
@@ -1334,7 +1327,7 @@ public final class EchoArmorHandlers {
 	/** Shared Hero-window "teleport" / Echo auto-recall. */
 	private static boolean recallToBeacon(EchoActionContext ctx, ClassArmor armor, WarpBeacon ability,
 			WarpBeacon.WarpBeaconTracker tracker) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char body = ctx.body;
 
 		// Echo: same-floor only (no interfloor scene switch)
@@ -1408,7 +1401,7 @@ public final class EchoArmorHandlers {
 	}
 
 	private static boolean warpBeacon(EchoActionContext ctx, ClassArmor armor, WarpBeacon ability, Integer target) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char body = ctx.body;
 		if (target == null) {
 			ctx.cancel();
@@ -1454,7 +1447,7 @@ public final class EchoArmorHandlers {
 	}
 
 	private static void zapWand(WildMagic ability, ArrayList<Wand> wands, EchoActionContext ctx, int cell) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Char body = ctx.body;
 		Wand cur = wands.remove(0);
 
@@ -1473,8 +1466,8 @@ public final class EchoArmorHandlers {
 		});
 
 		cur.setCurrent(kit);
-		if (EchoActionContext.canWorldFx(kit)) {
-			kit.sprite.zap(cell);
+		if (ctx.canWorldFx()) {
+			ctx.body.sprite.zap(cell);
 		}
 
 		if (cur.tryToZap(kit, cell)) {
@@ -1503,7 +1496,7 @@ public final class EchoArmorHandlers {
 
 	private static void afterZap(WildMagic ability, Wand cur, ArrayList<Wand> wands, EchoActionContext ctx,
 			int target) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		cur.partialCharge -= 0.5f * (float) Math.pow(0.67f, kit.pointsInTalent(Talent.CONSERVED_MAGIC));
 		if (cur.partialCharge < 0) {
 			cur.partialCharge++;
@@ -1525,7 +1518,7 @@ public final class EchoArmorHandlers {
 
 	private static boolean wildMagic(EchoActionContext ctx, ClassArmor armor, WildMagic ability, Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (target == null) {
 			ctx.cancel();
 			return false;
@@ -1597,7 +1590,7 @@ public final class EchoArmorHandlers {
 	private static boolean elementalBlast(EchoActionContext ctx, ClassArmor armor, ElementalBlast ability,
 			Integer target) {
 		Char body = ctx.body;
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Ballistica aim;
 		// The direction of the aim only matters if it goes outside the map
 		// So we try to aim in the cardinal direction that has the most space
@@ -1941,7 +1934,7 @@ public final class EchoArmorHandlers {
 			return false;
 		}
 		// Do not use trinityChargeUsePerEffect — it reads Dungeon.hero.armorAbility
-		float cost = ability.chargeUse(ctx.kit);
+		float cost = ability.chargeUse(ctx.stats());
 		Class<?> cls = bodyForm.getClass();
 		if (Weapon.Enchantment.class.isAssignableFrom(cls) || Armor.Glyph.class.isAssignableFrom(cls)) {
 			for (Class<?> ench : Weapon.Enchantment.rare) {

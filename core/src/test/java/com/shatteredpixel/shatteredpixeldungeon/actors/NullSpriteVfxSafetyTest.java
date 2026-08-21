@@ -212,7 +212,8 @@ class NullSpriteVfxSafetyTest {
 		boss.HP = boss.HT = 500;
 
 		Hero attacker = boss.getEchoHero();
-		Assertions.assertThat(attacker.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		attacker.sprite = null;
 		player.sprite = null;
 
 		WornShortsword weapon = new WornShortsword();
@@ -233,7 +234,8 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero attacker = boss.getEchoHero();
-		Assertions.assertThat(attacker.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		attacker.sprite = null;
 
 		Assertions.assertThatCode(() -> {
 			for (int i = 0; i < 400; i++) {
@@ -250,7 +252,8 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero attacker = boss.getEchoHero();
-		Assertions.assertThat(attacker.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		attacker.sprite = null;
 
 		Explosive curse = new Explosive();
 		Bundle state = new Bundle();
@@ -273,7 +276,8 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero attacker = boss.getEchoHero();
-		Assertions.assertThat(attacker.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		attacker.sprite = null;
 		player.sprite = null;
 
 		Assertions.assertThatCode(() -> {
@@ -292,7 +296,8 @@ class NullSpriteVfxSafetyTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero defender = boss.getEchoHero();
 		defender.pos = boss.pos;
-		Assertions.assertThat(defender.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		defender.sprite = null;
 		// Neighbour Freezing VFX needs CellEmitter (GameScene); keep FOV false.
 		Arrays.fill(Dungeon.level.heroFOV, false);
 
@@ -323,7 +328,8 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero attacker = boss.getEchoHero();
-		Assertions.assertThat(attacker.sprite).isNull();
+		// The kit mirrors its body's sprite; drop it to exercise the headless path.
+		attacker.sprite = null;
 
 		ClothArmor armor = new ClothArmor();
 		Assertions.assertThatCode(() -> {
@@ -438,7 +444,7 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		WandOfLivingEarth wand = new WandOfLivingEarth();
 		MagesStaff staff = new MagesStaff(wand);
@@ -455,7 +461,7 @@ class NullSpriteVfxSafetyTest {
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		Buff.affect(player, Charm.class, Charm.DURATION).object = kit.id();
 
 		WandOfTransfusion wand = new WandOfTransfusion();

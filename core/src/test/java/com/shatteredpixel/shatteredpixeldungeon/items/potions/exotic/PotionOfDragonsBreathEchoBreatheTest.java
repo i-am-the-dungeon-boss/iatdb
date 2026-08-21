@@ -69,7 +69,7 @@ class PotionOfDragonsBreathEchoBreatheTest {
 		Assertions.assertThat(potion).isNotNull();
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		float kitBefore = kit.cooldown();
 
 		boolean spent = EchoPotionAdapter.breathe(boss, potion, player.pos);

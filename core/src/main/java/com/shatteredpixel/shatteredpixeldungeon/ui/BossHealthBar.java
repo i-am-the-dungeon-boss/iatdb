@@ -34,7 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoMob;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoBossInfo;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.particles.Emitter;
@@ -112,7 +112,7 @@ public class BossHealthBar extends Component {
 			protected void onClick() {
 				super.onClick();
 				if (boss != null) {
-					GameScene.show(new WndInfoMob(boss));
+					GameScene.show(WndEchoBossInfo.windowFor(boss));
 				}
 			}
 

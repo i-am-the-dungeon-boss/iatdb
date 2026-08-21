@@ -149,7 +149,12 @@ public class FloatingText extends RenderedTextBlock {
 	private static final SparseArray<ArrayList<FloatingText>> stacks = new SparseArray<>();
 	
 	public FloatingText() {
-		super(9*PixelScene.defaultZoom);
+		this(9*PixelScene.defaultZoom);
+	}
+
+	//for text that has to sit alongside labels drawn at another size
+	protected FloatingText( int size ) {
+		super(size);
 		setHightlighting(false);
 	}
 	

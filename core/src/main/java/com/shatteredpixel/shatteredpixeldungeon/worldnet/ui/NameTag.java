@@ -33,7 +33,8 @@ import com.watabou.noosa.Visual;
  */
 public class NameTag extends RenderedTextBlock {
 
-	private static final int SIZE = 7;
+	/** Point size of a floating label. Public so a village title can match it. */
+	public static final int SIZE = 7;
 	/** Pixels above the sprite's head. */
 	private static final float GAP = 2f;
 

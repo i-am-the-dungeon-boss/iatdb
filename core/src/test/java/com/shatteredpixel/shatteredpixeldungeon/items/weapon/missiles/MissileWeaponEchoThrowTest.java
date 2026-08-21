@@ -66,7 +66,7 @@ class MissileWeaponEchoThrowTest {
 		Hero kit = boss.getEchoHero();
 		ThrowingKnife kitKnives = kit.belongings.getItem(ThrowingKnife.class);
 		Assertions.assertThat(kitKnives).isNotNull();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		float kitBefore = kit.cooldown();
 		int hpBefore = player.HP;
 		int qtyBefore = kitKnives.quantity();
@@ -78,7 +78,7 @@ class MissileWeaponEchoThrowTest {
 		Assertions.assertThat(kit.cooldown()).isEqualTo(kitBefore);
 		Assertions.assertThat(kitKnives.quantity()).isLessThan(qtyBefore);
 		Assertions.assertThat(player.HP).isLessThanOrEqualTo(hpBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

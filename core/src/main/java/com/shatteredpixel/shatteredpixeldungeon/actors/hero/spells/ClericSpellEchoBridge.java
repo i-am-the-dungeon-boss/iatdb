@@ -22,7 +22,7 @@ public final class ClericSpellEchoBridge {
 	}
 
 	public static void onSpellCast(ClericSpell spell, EchoActionContext ctx, HolyTome tome) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Invisibility.dispel(ctx.body);
 		if (kit.hasTalent(Talent.SATIATED_SPELLS) && kit.buff(Talent.SatiatedSpellsTracker.class) != null) {
 			int amount = 1 + 2 * kit.pointsInTalent(Talent.SATIATED_SPELLS);

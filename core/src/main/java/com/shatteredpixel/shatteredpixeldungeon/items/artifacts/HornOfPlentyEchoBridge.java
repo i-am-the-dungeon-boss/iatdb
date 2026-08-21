@@ -29,7 +29,7 @@ public final class HornOfPlentyEchoBridge {
 		if (ctx.body.buff(MagicImmune.class) != null) {
 			return false;
 		}
-		if (!horn.isEquipped(ctx.kit)) {
+		if (!horn.isEquipped(ctx.stats())) {
 			return false;
 		}
 		if (horn.charge <= 0 || chargesToUse <= 0) {

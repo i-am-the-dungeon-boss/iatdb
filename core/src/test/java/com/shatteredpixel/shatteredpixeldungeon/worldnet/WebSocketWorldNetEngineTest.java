@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.worldnet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.websocket.WebSocketWorldNetEngine;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.websocket.WorldSocket;
 
@@ -61,6 +62,8 @@ class WebSocketWorldNetEngineTest {
 		final List<WorldNetEngine.Status> statuses = new ArrayList<>();
 		final List<Boolean> mutes = new ArrayList<>();
 		final List<String> serverVersions = new ArrayList<>();
+		final List<List<VillageFigure>> figureSets = new ArrayList<>();
+		final List<String> bundles = new ArrayList<>();
 
 		@Override
 		public void onServerMute(boolean muted) {
@@ -80,6 +83,16 @@ class WebSocketWorldNetEngineTest {
 		@Override
 		public void onPresenceSnapshot(List<WorldPresence> others) {
 			rosters.add(others);
+		}
+
+		@Override
+		public void onWorldFigures(List<VillageFigure> figures) {
+			figureSets.add(figures);
+		}
+
+		@Override
+		public void onEchoBundle(String echoId, String echoData) {
+			bundles.add(echoId + ':' + echoData);
 		}
 
 		@Override
@@ -826,5 +839,61 @@ class WebSocketWorldNetEngineTest {
 		engine.report("m1", "spam");
 
 		assertThat(current().sentAny("\"t\":\"report\"")).isTrue();
+	}
+	@Test
+	@DisplayName("hands a figures frame to the listener as a whole set")
+	void deliversFigures() {
+		connectAndOpen();
+
+		current().listener.onText(
+				"{\"t\":\"figures\",\"figures\":[{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-1\"}]}");
+		engine.tick(0.01f);
+
+		assertThat(listener.figureSets).hasSize(1);
+		assertThat(listener.figureSets.get(0)).hasSize(1);
+		assertThat(listener.figureSets.get(0).get(0).echoId).isEqualTo("5-1");
+	}
+
+	@Test
+	@DisplayName("keeps figures independent of presence, so neither implies the other")
+	void figuresDoNotImplyRoster() {
+		connectAndOpen();
+
+		current().listener.onText("{\"t\":\"figures\",\"figures\":[]}");
+		engine.tick(0.01f);
+
+		assertThat(listener.rosters).isEmpty();
+		assertThat(listener.figureSets).hasSize(1);
+	}
+
+	@Test
+	@DisplayName("asks for one figure's bundle over the open socket")
+	void requestsAnEchoBundle() {
+		connectAndOpen();
+
+		engine.requestEchoBundle("5-1");
+
+		assertThat(current().sentAny("\"t\":\"echo_req\"")).isTrue();
+		assertThat(current().sentAny("5-1")).isTrue();
+	}
+
+	@Test
+	@DisplayName("stays quiet rather than throwing when asked for a bundle with no socket")
+	void ignoresABundleRequestWhileClosed() {
+		engine.requestEchoBundle("5-1");
+
+		assertThat(sockets).isEmpty();
+	}
+
+	@Test
+	@DisplayName("delivers the bundle that comes back, tagged with the figure it belongs to")
+	void deliversAnEchoBundle() {
+		connectAndOpen();
+
+		current().listener.onText(
+				"{\"t\":\"echo\",\"echo_id\":\"5-1\",\"echo_data_base64\":\"BUNDLE\"}");
+		engine.tick(0.01f);
+
+		assertThat(listener.bundles).containsExactly("5-1:BUNDLE");
 	}
 }

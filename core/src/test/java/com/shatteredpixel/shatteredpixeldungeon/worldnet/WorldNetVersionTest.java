@@ -33,4 +33,17 @@ class WorldNetVersionTest {
 		assertThat(WorldNet.versionsDiffer("2.4.0", "")).isFalse();
 		assertThat(WorldNet.versionsDiffer("2.4.0", null)).isFalse();
 	}
+
+	@Test
+	@DisplayName("gates nobody out over a build suffix on the same version")
+	void aBuildSuffixIsNotADifferentBuild() {
+		assertThat(WorldNet.versionsDiffer("0.0.13", "0.0.13-INDEV")).isFalse();
+		assertThat(WorldNet.versionsDiffer("0.0.13-INDEV", "0.0.13")).isFalse();
+	}
+
+	@Test
+	@DisplayName("still gates a suffixed build whose version differs")
+	void aSuffixDoesNotExcuseAnOldBuild() {
+		assertThat(WorldNet.versionsDiffer("0.0.14", "0.0.13-INDEV")).isTrue();
+	}
 }

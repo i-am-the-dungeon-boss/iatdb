@@ -164,6 +164,29 @@ public class EchoBossSprite extends MobSprite {
     }
 
     /**
+     * The phantom kit mirrors this sprite for its whole life rather than
+     * borrowing it per call, so link and teardown must move both slots
+     * together — a mirror that outlived its sprite would be worse than the
+     * borrow it replaces.
+     */
+    @Override
+    public void link(Char ch) {
+        super.link(ch);
+        if (ch instanceof EchoBoss) {
+            ((EchoBoss) ch).mirrorKitSprite();
+        }
+    }
+
+    @Override
+    public void destroy() {
+        Char linked = ch;
+        super.destroy();
+        if (linked instanceof EchoBoss) {
+            ((EchoBoss) linked).clearKitSprite();
+        }
+    }
+
+    /**
      * Hero sees themselves at 0.4α while invisible; Echo is an enemy, so from the
      * player's camera it must fully disappear — not leave a translucent silhouette.
      * Same for every source that sets {@code ch.invisible} /

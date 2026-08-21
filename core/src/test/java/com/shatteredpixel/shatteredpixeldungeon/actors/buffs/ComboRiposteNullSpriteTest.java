@@ -39,7 +39,7 @@ class ComboRiposteNullSpriteTest {
 		kit.heroClass = HeroClass.WARRIOR;
 		kit.subClass = HeroSubClass.GLADIATOR;
 		kit.pos = boss.pos;
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		Combo combo = Buff.affect(kit, Combo.class);
 		combo.hit(player);

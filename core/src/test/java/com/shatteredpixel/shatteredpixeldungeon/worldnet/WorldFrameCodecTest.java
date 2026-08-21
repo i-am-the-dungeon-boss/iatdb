@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.worldnet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.wire.WorldFrame;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.wire.WorldFrameCodec;
 
@@ -157,5 +158,107 @@ class WorldFrameCodecTest {
 
 		assertThat(frame.messages).hasSize(1);
 		assertThat(frame.messages.get(0).text).isEqualTo("kept");
+	}
+	private static final String FULL_FIGURE =
+			"{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-177\",\"user_name\":\"Somebody\","
+					+ "\"hero_class\":\"WARRIOR\",\"armor_tier\":3,\"lvl\":14,\"hp\":30,\"ht\":40,"
+					+ "\"kill_count\":7,\"timestamp\":1771000000000,"
+					+ "\"badges\":[{\"kind\":\"first-depth-5\"},{\"kind\":\"hero-slayer\",\"count\":42}]}";
+
+	private static WorldFrame figures(String... entries) {
+		StringBuilder json = new StringBuilder("{\"t\":\"figures\",\"figures\":[");
+		for (int i = 0; i < entries.length; i++) {
+			if (i > 0) {
+				json.append(',');
+			}
+			json.append(entries[i]);
+		}
+		return WorldFrameCodec.decode(json.append("]}").toString());
+	}
+
+	@Test
+	@DisplayName("decodes a figures frame into standing bodies")
+	void decodesFigures() {
+		WorldFrame frame = figures(FULL_FIGURE);
+
+		assertThat(frame.kind).isEqualTo(WorldFrame.Kind.FIGURES);
+		assertThat(frame.figures).hasSize(1);
+		VillageFigure body = frame.figures.get(0);
+		assertThat(body.post).isEqualTo(VillageFigure.Post.DEPTH);
+		assertThat(body.depth).isEqualTo(5);
+		assertThat(body.echoId).isEqualTo("5-177");
+		assertThat(body.userName).isEqualTo("Somebody");
+		assertThat(body.heroClass).isEqualTo("WARRIOR");
+		assertThat(body.armorTier).isEqualTo(3);
+		assertThat(body.lvl).isEqualTo(14);
+		assertThat(body.hp).isEqualTo(30);
+		assertThat(body.ht).isEqualTo(40);
+		assertThat(body.killCount).isEqualTo(7);
+		assertThat(body.timestamp).isEqualTo(1771000000000L);
+	}
+
+	@Test
+	@DisplayName("reads a badge without a count as carrying none")
+	void decodesBadgeCounts() {
+		VillageFigure body = figures(FULL_FIGURE).figures.get(0);
+
+		assertThat(body.badges).hasSize(2);
+		assertThat(body.badges.get(0).kind).isEqualTo("first-depth-5");
+		assertThat(body.badges.get(0).hasCount()).isFalse();
+		assertThat(body.badges.get(1).kind).isEqualTo("hero-slayer");
+		assertThat(body.badges.get(1).count).isEqualTo(42);
+	}
+
+	@Test
+	@DisplayName("keeps an unheld depth as an empty post so the regional boss can stand there")
+	void keepsAnEmptyDepthPost() {
+		WorldFrame frame = figures("{\"post\":\"depth\",\"depth\":15}");
+
+		assertThat(frame.figures).hasSize(1);
+		assertThat(frame.figures.get(0).isEmptyPost()).isTrue();
+		assertThat(frame.figures.get(0).depth).isEqualTo(15);
+	}
+
+	@Test
+	@DisplayName("reports an unknown armour tier rather than guessing at one")
+	void leavesAnAbsentArmourTierUnknown() {
+		VillageFigure body = figures("{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-1\"}").figures.get(0);
+
+		assertThat(body.armorTier).isEqualTo(VillageFigure.UNKNOWN_TIER);
+	}
+
+	@Test
+	@DisplayName("drops a mention with no echo, since identity is the only way to inspect it")
+	void dropsAnIdentitylessMention() {
+		assertThat(figures("{\"post\":\"mention\",\"depth\":5}").figures).isEmpty();
+	}
+
+	@Test
+	@DisplayName("drops a body whose post it does not recognise, keeping the rest of the frame")
+	void dropsAnUnknownPost() {
+		WorldFrame frame = figures("{\"post\":\"statue\",\"depth\":5,\"echo_id\":\"x\"}", FULL_FIGURE);
+
+		assertThat(frame.figures).hasSize(1);
+		assertThat(frame.figures.get(0).echoId).isEqualTo("5-177");
+	}
+
+	@Test
+	@DisplayName("decodes an inspect bundle frame")
+	void decodesEchoBundle() {
+		WorldFrame frame = WorldFrameCodec.decode(
+				"{\"t\":\"echo\",\"echo_id\":\"5-1\",\"echo_data_base64\":\"BUNDLE\"}");
+
+		assertThat(frame.kind).isEqualTo(WorldFrame.Kind.ECHO);
+		assertThat(frame.echoId).isEqualTo("5-1");
+		assertThat(frame.echoData).isEqualTo("BUNDLE");
+	}
+
+	@Test
+	@DisplayName("encodes a request for one figure's bundle")
+	void encodesEchoRequest() throws Exception {
+		JSONObject request = new JSONObject(WorldFrameCodec.encodeEchoReq("5-1"));
+
+		assertThat(request.getString("t")).isEqualTo("echo_req");
+		assertThat(request.getString("echo_id")).isEqualTo("5-1");
 	}
 }

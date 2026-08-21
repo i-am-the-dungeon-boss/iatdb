@@ -29,13 +29,13 @@ public final class EchoClericAdapter {
 		if (ctx.body.buff(MagicImmune.class) != null) {
 			return EchoActionSupport.refuse(ctx);
 		}
-		if (!tome.isEquipped(ctx.kit) && !ctx.kit.hasTalent(Talent.LIGHT_READING)) {
+		if (!tome.isEquipped(ctx.stats()) && !ctx.stats().hasTalent(Talent.LIGHT_READING)) {
 			return EchoActionSupport.refuse(ctx);
 		}
 		if (tome.cursed) {
 			return EchoActionSupport.refuse(ctx);
 		}
-		if (!tome.canCast(ctx.kit, spell)) {
+		if (!tome.canCast(ctx.stats(), spell)) {
 			return EchoActionSupport.refuse(ctx);
 		}
 		if (spell.targetingFlags() != -1 && (target == null || target < 0)) {

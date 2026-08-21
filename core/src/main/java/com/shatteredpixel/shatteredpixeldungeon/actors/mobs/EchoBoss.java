@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuff
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoInspectable;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoAoeDots;
@@ -51,7 +52,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EchoBoss extends Mob {
+public class EchoBoss extends Mob implements EchoInspectable {
 
     public static final float BOSS_HP_MULTIPLIER = 1.3f;
 
@@ -134,6 +135,7 @@ public class EchoBoss extends Mob {
      */
     private final Set<String> preppedThisWindow = new HashSet<>();
 
+    @Override
     public Echo getEcho() {
         return echo;
     }
@@ -151,8 +153,36 @@ public class EchoBoss extends Mob {
         recipeSteps.clear();
     }
 
+    /**
+     * The single door to the phantom kit — {@code EchoActionContext.of} and
+     * every UI reader come through here. Re-asserting the sprite mirror on the
+     * way out is what makes it impossible to hand out a kit that has gone stale
+     * against a body whose sprite was re-linked.
+     */
+    @Override
     public Hero getEchoHero() {
+        mirrorKitSprite();
         return echoHero;
+    }
+
+    /**
+     * The phantom kit is owned by exactly one body for its whole life, so it
+     * mirrors that body's sprite rather than borrowing it per call — a borrow
+     * any caller could forget was the source of ANDROID-20 / ANDROID-21.
+     * Cleared together with the body's own slot by
+     * {@link com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite#destroy()}.
+     */
+    public void mirrorKitSprite() {
+        if (echoHero != null) {
+            echoHero.sprite = sprite;
+        }
+    }
+
+    /** Drops the mirror when the sprite it points at is destroyed. */
+    public void clearKitSprite() {
+        if (echoHero != null) {
+            echoHero.sprite = null;
+        }
     }
 
     /**
@@ -685,7 +715,6 @@ public class EchoBoss extends Mob {
     private <T> T withEchoHeroCombat(ValueAction<T> action) {
         int savedPos = echoHero.pos;
         int savedParalysed = echoHero.paralysed;
-        CharSprite savedSprite = echoHero.sprite;
         Alignment savedAlignment = echoHero.alignment;
         int savedHp = echoHero.HP;
         int savedHt = echoHero.HT;
@@ -693,7 +722,9 @@ public class EchoBoss extends Mob {
 
         echoHero.pos = pos;
         echoHero.paralysed = paralysed;
-        echoHero.sprite = sprite;
+        // Sprite is mirrored, not lent — re-assert in case combat runs before
+        // this body's first turn.
+        mirrorKitSprite();
         echoHero.alignment = alignment;
         echoHero.HP = HP;
         echoHero.HT = HT;
@@ -709,7 +740,6 @@ public class EchoBoss extends Mob {
             moveGuaranteedHitTrackerFromKit();
             echoHero.pos = savedPos;
             echoHero.paralysed = savedParalysed;
-            echoHero.sprite = savedSprite;
             echoHero.alignment = savedAlignment;
             echoHero.HP = savedHp;
             echoHero.HT = savedHt;
@@ -886,6 +916,10 @@ public class EchoBoss extends Mob {
 
     @Override
     protected boolean act() {
+        // Re-assert the kit's sprite mirror in case the body's sprite was
+        // replaced (level change, re-link) since the last turn.
+        mirrorKitSprite();
+
         // Pick up kit buffs attached after onAdd (e.g. MeleeWeapon.Charger).
         scheduleEchoKitBuffs();
 

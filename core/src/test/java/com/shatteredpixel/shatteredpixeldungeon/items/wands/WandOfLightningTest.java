@@ -47,7 +47,7 @@ class WandOfLightningTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 1);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		MagesStaff staff = new MagesStaff(new WandOfLightning());
 		WandOfLightning wand = (WandOfLightning) staff.wand();
@@ -104,7 +104,7 @@ class WandOfLightningTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		WandOfLightning wand = new WandOfLightning();
 		wand.setCurrent(kit);
@@ -117,7 +117,7 @@ class WandOfLightningTest {
 	}
 
 	@Test
-	@DisplayName("Echo zapAs damages the player without NPE on headless kit")
+	@DisplayName("Echo zapAs damages the player without NPE when the body is off stage")
 	void echoZapAsDamagesPlayerWithoutNpe() {
 		Hero player = mageHero();
 		WandOfLightning seed = new WandOfLightning();
@@ -126,7 +126,7 @@ class WandOfLightningTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, lightningPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		Wand wand = boss.getEchoHero().belongings.getItem(WandOfLightning.class);
 		Assertions.assertThat(wand).isNotNull();
@@ -137,7 +137,7 @@ class WandOfLightningTest {
 		Assertions.assertThatCode(() -> EchoWandAdapter.zap(boss, wand, player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

@@ -54,9 +54,9 @@ public final class InventoryStoneEchoBridge {
 
 	private static boolean applyEnchantment(EchoActionContext ctx, StoneOfEnchantment stone, Item item) {
 		if (!stone.anonymous) {
-			stone.detach(ctx.kit.belongings.backpack);
+			stone.detach(ctx.gear().backpack);
 			Catalog.countUse(stone.getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, stone.getClass());
+			Talent.onRunestoneUsed(ctx.stats(), ctx.body.pos, stone.getClass());
 		}
 
 		if (item instanceof Weapon) {
@@ -67,7 +67,7 @@ public final class InventoryStoneEchoBridge {
 
 		if (ctx.canWorldFx()) {
 			ctx.body.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.1f, 5);
-			Enchanting.show(ctx.kit, item);
+			Enchanting.show(ctx.body, item);
 		}
 		return true;
 	}
@@ -82,9 +82,9 @@ public final class InventoryStoneEchoBridge {
 			return false;
 		}
 		if (!stone.anonymous) {
-			stone.detach(ctx.kit.belongings.backpack);
+			stone.detach(ctx.gear().backpack);
 			Catalog.countUse(stone.getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, stone.getClass());
+			Talent.onRunestoneUsed(ctx.stats(), ctx.body.pos, stone.getClass());
 		}
 		return true;
 	}
@@ -92,9 +92,9 @@ public final class InventoryStoneEchoBridge {
 	private static boolean applyDetectMagic(EchoActionContext ctx, StoneOfDetectMagic stone, Item item) {
 		item.cursedKnown = true;
 		if (!stone.anonymous) {
-			stone.detach(ctx.kit.belongings.backpack);
+			stone.detach(ctx.gear().backpack);
 			Catalog.countUse(stone.getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, stone.getClass());
+			Talent.onRunestoneUsed(ctx.stats(), ctx.body.pos, stone.getClass());
 		}
 		return true;
 	}
@@ -103,9 +103,9 @@ public final class InventoryStoneEchoBridge {
 		// Echo: skip guess UI — identify the unknown item
 		item.identify();
 		if (!stone.anonymous) {
-			stone.detach(ctx.kit.belongings.backpack);
+			stone.detach(ctx.gear().backpack);
 			Catalog.countUse(stone.getClass());
-			Talent.onRunestoneUsed(ctx.kit, ctx.body.pos, stone.getClass());
+			Talent.onRunestoneUsed(ctx.stats(), ctx.body.pos, stone.getClass());
 		}
 		return true;
 	}

@@ -37,18 +37,18 @@ public final class SpiritBowEchoBridge {
 		if (found == null && enemy != null && cell == enemy.pos) {
 			found = enemy;
 		}
-		if (found == null || found == ctx.kit || found == ctx.body) {
+		if (found == null || found == ctx.stats() || found == ctx.body) {
 			return false;
 		}
 
 		ctx.busy();
 
-		final float delay = arrow.castDelay(ctx.kit, cell);
+		final float delay = arrow.castDelay(ctx.stats(), cell);
 		final Char target = found;
 		Callback onArrive = () -> {
 			EchoKitBorrow.run(ctx, () -> {
-				AiItemActions.withUser(ctx.kit, arrow, () -> {
-					Item i = arrow.detach(ctx.kit.belongings.backpack);
+				AiItemActions.withUser(ctx.stats(), arrow, () -> {
+					Item i = arrow.detach(ctx.gear().backpack);
 					if (i != null) {
 						AiItemActions.onThrow(i, cell);
 					}

@@ -53,6 +53,16 @@ class WndGameDebugToolsTest {
 	}
 
 	@Test
+	@DisplayName("pause menu includes give-echo-tome-spells action in debug builds")
+	void pauseMenuIncludesGiveEchoTomeSpellsInDebugBuilds() throws Exception {
+		String source = java.nio.file.Files.readString(
+				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
+		Assertions.assertThat(source).contains("give_echo_tome_spells");
+		Assertions.assertThat(source).contains("DebugClericSpells.grantTomeSpellsAll()");
+		Assertions.assertThat(source).contains("showsEchoDebugTools()");
+	}
+
+	@Test
 	@DisplayName("pause menu includes restock-ground-items action in debug builds")
 	void pauseMenuIncludesRestockGroundItemsInDebugBuilds() throws Exception {
 		String source = java.nio.file.Files.readString(

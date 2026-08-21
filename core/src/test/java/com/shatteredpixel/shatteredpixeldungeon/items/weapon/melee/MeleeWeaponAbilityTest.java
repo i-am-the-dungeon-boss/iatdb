@@ -301,7 +301,7 @@ class MeleeWeaponAbilityTest {
 		boolean ok = EchoDuelistAdapter.useAbility(boss, rapier, player.pos);
 
 		Assertions.assertThat(ok).isTrue();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 		Assertions.assertThatCode(EchoTestSupport::flushDeferredAttackCallbacks)
 				.doesNotThrowAnyException();

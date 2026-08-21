@@ -34,7 +34,7 @@ class EchoArmorAbilityShockwaveTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, bossOffset);
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		return new Fight(player, boss);
 	}
 

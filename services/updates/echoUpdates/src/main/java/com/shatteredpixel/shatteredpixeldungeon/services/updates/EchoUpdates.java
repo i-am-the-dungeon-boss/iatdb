@@ -149,7 +149,7 @@ public class EchoUpdates extends UpdateService {
 			return false;
 		}
 		String local = localVersion == null ? "" : localVersion;
-		return compareVersionNames(remoteName, local) != 0;
+		return VersionNames.differ(remoteName, local);
 	}
 
 	static String resolveUpdateUrl(String fromBackend) {
@@ -157,40 +157,6 @@ public class EchoUpdates extends UpdateService {
 			return fromBackend.trim();
 		}
 		return DEFAULT_UPDATE_URL;
-	}
-
-	static int compareVersionNames(String left, String right) {
-		int[] a = parseVersionParts(left);
-		int[] b = parseVersionParts(right);
-		int len = Math.max(a.length, b.length);
-		for (int i = 0; i < len; i++) {
-			int va = i < a.length ? a[i] : 0;
-			int vb = i < b.length ? b[i] : 0;
-			if (va != vb) {
-				return Integer.compare(va, vb);
-			}
-		}
-		return 0;
-	}
-
-	private static int[] parseVersionParts(String raw) {
-		if (raw == null || raw.isEmpty()) {
-			return new int[0];
-		}
-		String core = raw.split("-", 2)[0].trim();
-		if (core.isEmpty()) {
-			return new int[0];
-		}
-		String[] bits = core.split("\\.");
-		int[] parts = new int[bits.length];
-		for (int i = 0; i < bits.length; i++) {
-			try {
-				parts[i] = Integer.parseInt(bits[i]);
-			} catch (NumberFormatException e) {
-				parts[i] = 0;
-			}
-		}
-		return parts;
 	}
 
 	private static String trimTrailingSlash(String url) {

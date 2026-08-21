@@ -34,6 +34,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugArenaItems;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugClericSpells;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugEchoArsenal;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
@@ -203,6 +205,21 @@ public class WndGame extends Window {
 						GLog.p(Messages.get(WndGame.class, "echo_arsenal_granted", updated));
 					} else {
 						GLog.w(Messages.get(WndGame.class, "echo_arsenal_none"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.TALENT));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "give_echo_tome_spells")) {
+				@Override
+				protected void onClick() {
+					HeroSubClass used = DebugClericSpells.pendingSubClass();
+					int updated = DebugClericSpells.grantTomeSpellsAll();
+					hide();
+					if (updated > 0) {
+						GLog.p(Messages.get(WndGame.class, "echo_tome_spells_granted", used.title(), updated));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "echo_tome_spells_none"));
 					}
 				}
 			});

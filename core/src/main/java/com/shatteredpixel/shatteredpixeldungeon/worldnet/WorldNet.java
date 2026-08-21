@@ -22,6 +22,8 @@ import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerAuth;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerSession;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.ServerMuteRefresh;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.VersionNames;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.websocket.WebSocketWorldNetEngine;
 import com.watabou.noosa.Game;
 
@@ -82,6 +84,25 @@ public final class WorldNet {
 
 		void onWorldRoster(List<WorldPresence> occupants);
 
+		/**
+		 * The whole set of village bodies.
+		 *
+		 * <p>Defaulted to nothing: an observer that only cares about chat — a chat
+		 * window — has no say in what is standing in the town square.
+		 *
+		 * @see WorldNetEngine.Listener#onWorldFigures(List)
+		 */
+		default void onWorldFigures(List<VillageFigure> figures) {
+		}
+
+		/**
+		 * The bundle behind a figure somebody asked to inspect.
+		 *
+		 * @see WorldNetEngine.Listener#onEchoBundle(String, String)
+		 */
+		default void onEchoBundle(String echoId, String echoData) {
+		}
+
 		void onWorldStatus(WorldNetEngine.Status status);
 
 		/** @see WorldNetEngine.Listener#onServerMute(boolean) */
@@ -111,6 +132,14 @@ public final class WorldNet {
 	 */
 	private static final List<WorldChatMessage> unshown = new ArrayList<>();
 	private static List<WorldPresence> roster = Collections.emptyList();
+	/**
+	 * The last set of bodies the server pushed.
+	 *
+	 * <p>Kept so a village built after the greeting still fills — the figures
+	 * arrive with {@code hello}, several frames before the scene exists to stand
+	 * them in.
+	 */
+	private static List<VillageFigure> figures = Collections.emptyList();
 	private static WorldNetEngine.Status status = WorldNetEngine.Status.DISCONNECTED;
 	private static String heroClass = "";
 	/** The deadline the engine was last given, so an unchanged one is not re-pushed. */
@@ -154,6 +183,21 @@ public final class WorldNet {
 		}
 
 		@Override
+		public void onWorldFigures(List<VillageFigure> pushed) {
+			figures = pushed;
+			for (Observer observer : new ArrayList<>(observers)) {
+				observer.onWorldFigures(pushed);
+			}
+		}
+
+		@Override
+		public void onEchoBundle(String echoId, String echoData) {
+			for (Observer observer : new ArrayList<>(observers)) {
+				observer.onEchoBundle(echoId, echoData);
+			}
+		}
+
+		@Override
 		public void onStatus(WorldNetEngine.Status newStatus, String detail) {
 			status = newStatus;
 			for (Observer observer : new ArrayList<>(observers)) {
@@ -193,13 +237,17 @@ public final class WorldNet {
 	/**
 	 * Empty on either side means "not known", never "mismatched": a server too old
 	 * to state its version, or a build without one, must not gate anybody out.
+	 *
+	 * <p>Build suffixes are not versions — {@link VersionNames} compares the
+	 * numeric core, so a {@code -INDEV} desktop run is not gated out of its own
+	 * dev server's village.
 	 */
 	static boolean versionsDiffer(String server, String installed) {
 		return server != null
 				&& !server.isEmpty()
 				&& installed != null
 				&& !installed.isEmpty()
-				&& !server.equals(installed);
+				&& VersionNames.differ(server, installed);
 	}
 
 	public static WorldNetEngine engine() {
@@ -372,6 +420,29 @@ public final class WorldNet {
 
 	public static List<WorldPresence> roster() {
 		return Collections.unmodifiableList(roster);
+	}
+
+	/**
+	 * The bodies the server last said are standing in town.
+	 *
+	 * <p>Read by a village that finishes building after the greeting arrived, so
+	 * it fills from what is already known rather than waiting for the next push.
+	 */
+	public static List<VillageFigure> figures() {
+		return Collections.unmodifiableList(figures);
+	}
+
+	/**
+	 * Asks for the hero behind one standing figure.
+	 *
+	 * <p>Silently does nothing without an engine, which is the same answer as a
+	 * request that goes out and is never answered — and the window that asked is
+	 * built to keep showing the broadcast facts either way.
+	 */
+	public static void requestEchoBundle(String echoId) {
+		if (engine != null) {
+			engine.requestEchoBundle(echoId);
+		}
 	}
 
 	public static WorldNetEngine.Status status() {

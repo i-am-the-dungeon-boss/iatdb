@@ -129,7 +129,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoCell;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoMob;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoBossInfo;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoPlant;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoTrap;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
@@ -909,7 +909,8 @@ public class GameScene extends PixelScene {
 	/**
 	 * Repaints the item displays, which all read the hero's belongings.
 	 *
-	 * <p>Returns false and does nothing when there is no hero: the scene stays
+	 * <p>
+	 * Returns false and does nothing when there is no hero: the scene stays
 	 * live for a frame or two after {@code Dungeon.hero} is cleared — leaving
 	 * town for a run does exactly that — and a pending refresh would otherwise
 	 * dereference the hero that just went away. The request stays pending so the
@@ -1199,7 +1200,10 @@ public class GameScene extends PixelScene {
 		}
 	}
 
-	/** Called after the world chat setting changes, so the bar appears or leaves at once. */
+	/**
+	 * Called after the world chat setting changes, so the bar appears or leaves at
+	 * once.
+	 */
 	public static void updateWorldChannel() {
 		if (scene != null) {
 			scene.syncWorldChannelUi();
@@ -1294,7 +1298,9 @@ public class GameScene extends PixelScene {
 	}
 
 	public static void addSprite(Mob mob) {
-		scene.addMobSprite(mob);
+		if (scene != null) {
+			scene.addMobSprite(mob);
+		}
 	}
 
 	public static void add(Mob mob, float delay) {
@@ -1313,13 +1319,15 @@ public class GameScene extends PixelScene {
 	}
 
 	/**
-	 * Adds a remote player's ghost to the mob layer.
+	 * Adds a loose visual — a remote player's ghost, a floating tag — to the mob
+	 * layer.
 	 *
-	 * <p>It has to live in {@code mobs} rather than {@code effects} so that
+	 * <p>
+	 * It has to live in {@code mobs} rather than {@code effects} so that
 	 * {@link #sortMobSprites()} depth-sorts it with everyone else and the walls
 	 * layer still occludes it — {@code effects} draws over walls.
 	 */
-	public static void addRemotePlayer(Gizmo sprite) {
+	public static void addToMobLayer(Gizmo sprite) {
 		if (scene == null) {
 			return;
 		}
@@ -1327,7 +1335,7 @@ public class GameScene extends PixelScene {
 		sortMobSprites();
 	}
 
-	public static void removeRemotePlayer(Gizmo sprite) {
+	public static void removeFromMobLayer(Gizmo sprite) {
 		if (scene == null) {
 			return;
 		}
@@ -1995,7 +2003,7 @@ public class GameScene extends PixelScene {
 		if (o == Dungeon.hero) {
 			GameScene.show(new WndHero());
 		} else if (o instanceof Mob && ((Mob) o).isActive()) {
-			GameScene.show(new WndInfoMob((Mob) o));
+			GameScene.show(WndEchoBossInfo.windowFor((Mob) o));
 			if (o instanceof Snake && !Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_SURPRISE_ATKS)) {
 				GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_SURPRISE_ATKS);
 			}

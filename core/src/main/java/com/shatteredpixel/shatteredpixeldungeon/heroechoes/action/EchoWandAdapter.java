@@ -29,7 +29,7 @@ public final class EchoWandAdapter {
 			return false;
 		}
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 
 		final Ballistica shot = new Ballistica(ctx.body.pos, target, wand.collisionProperties(target));
 		int cell = shot.collisionPos;
@@ -54,7 +54,7 @@ public final class EchoWandAdapter {
 		wand.setCurrent(kit);
 
 		if (ctx.canWorldFx()) {
-			kit.sprite.zap(cell);
+			ctx.body.sprite.zap(cell);
 			if (wand.cursed) {
 				CursedWand.cursedZap(wand, kit,
 						new Ballistica(kit.pos, target, Ballistica.MAGIC_BOLT),

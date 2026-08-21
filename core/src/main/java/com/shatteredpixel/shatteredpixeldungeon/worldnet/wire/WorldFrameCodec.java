@@ -68,6 +68,14 @@ public final class WorldFrameCodec {
 		return typeOnly("ping");
 	}
 
+	/** Asks for the inspect-tier bundle behind one standing figure. */
+	public static String encodeEchoReq(String echoId) throws JSONException {
+		JSONObject frame = new JSONObject();
+		frame.put("t", "echo_req");
+		frame.put("echo_id", echoId != null ? echoId : "");
+		return frame.toString();
+	}
+
 	public static String encodeReport(String messageId, String reason) throws JSONException {
 		JSONObject frame = new JSONObject();
 		frame.put("t", "report");
@@ -94,6 +102,13 @@ public final class WorldFrameCodec {
 		}
 		if ("roster".equals(type)) {
 			return WorldFrame.roster(WorldWireCodec.decodeOccupants(json.optJSONArray("occupants")));
+		}
+		if ("figures".equals(type)) {
+			return WorldFrame.figures(WorldWireCodec.decodeFigures(json.optJSONArray("figures")));
+		}
+		if ("echo".equals(type)) {
+			return WorldFrame.echo(
+					json.optString("echo_id", ""), json.optString("echo_data_base64", ""));
 		}
 		if ("error".equals(type)) {
 			return WorldFrame.error(json.optString("code", ""), json.optString("detail", ""));

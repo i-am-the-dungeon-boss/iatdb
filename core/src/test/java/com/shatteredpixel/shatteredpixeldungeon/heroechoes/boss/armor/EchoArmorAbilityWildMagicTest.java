@@ -38,7 +38,7 @@ class EchoArmorAbilityWildMagicTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, bossOffset);
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		return new Fight(player, boss);
 	}
 
@@ -145,7 +145,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic adapter activate fires frost wand VFX without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires frost wand VFX without NPE when the body is off stage")
 	void wildMagicFrostWandDoesNotNpeWhenKitHeadless() {
 		Hero player = magePlayer();
 		WandOfFrost seed = new WandOfFrost();
@@ -156,7 +156,7 @@ class EchoArmorAbilityWildMagicTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(boss);
 
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		WandOfFrost wand = boss.getEchoHero().belongings.getItem(WandOfFrost.class);
 		Assertions.assertThat(wand).isNotNull();
 		wand.cursed = false;
@@ -173,7 +173,7 @@ class EchoArmorAbilityWildMagicTest {
 	}
 
 	@Test
-	@DisplayName("Echo WildMagic adapter activate fires disintegration DeathRay without NPE when kit is headless")
+	@DisplayName("Echo WildMagic adapter activate fires disintegration DeathRay without NPE when the body is off stage")
 	void wildMagicDisintegrationDoesNotNpeWhenKitHeadless() {
 		Hero player = magePlayer();
 		WandOfDisintegration seed = new WandOfDisintegration();
@@ -184,7 +184,7 @@ class EchoArmorAbilityWildMagicTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		EchoTestSupport.attachInstantProjectileParent(boss);
 
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		WandOfDisintegration wand = boss.getEchoHero().belongings.getItem(WandOfDisintegration.class);
 		Assertions.assertThat(wand).isNotNull();
 		wand.cursed = false;

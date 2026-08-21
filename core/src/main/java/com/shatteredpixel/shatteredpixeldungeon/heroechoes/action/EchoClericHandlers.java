@@ -196,9 +196,9 @@ public final class EchoClericHandlers {
 				Dungeon.level.pressCell(aim.collisionPos);
 			}
 			ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
-			if (ctx.kit.subClass == HeroSubClass.PRIEST
-					&& ctx.kit.buff(GuidingLight.GuidingLightPriestCooldown.class) == null) {
-				Buff.prolong(ctx.kit, GuidingLight.GuidingLightPriestCooldown.class, 50f);
+			if (ctx.stats().subClass == HeroSubClass.PRIEST
+					&& ctx.stats().buff(GuidingLight.GuidingLightPriestCooldown.class) == null) {
+				Buff.prolong(ctx.stats(), GuidingLight.GuidingLightPriestCooldown.class, 50f);
 			}
 		};
 		if (ctx.canWorldFx()) {
@@ -216,7 +216,7 @@ public final class EchoClericHandlers {
 		if (!EchoActionSupport.hasTarget(ctx, target) || Dungeon.level == null) {
 			return false;
 		}
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		Ballistica aim = new Ballistica(ctx.body.pos, target, spell.targetingFlags());
 		if (Actor.findChar(aim.collisionPos) == ctx.body) {
 			return false;
@@ -277,29 +277,29 @@ public final class EchoClericHandlers {
 		if (enemy == null || enemy == ctx.body) {
 			return false;
 		}
-		Smite.SmiteTracker tracker = Buff.affect(ctx.kit, Smite.SmiteTracker.class);
+		Smite.SmiteTracker tracker = Buff.affect(ctx.stats(), Smite.SmiteTracker.class);
 		final boolean[] ok = { false };
 		EchoKitBorrow.run(ctx, () -> {
 			boolean inFov = ctx.body.fieldOfView != null && target < ctx.body.fieldOfView.length
 					? ctx.body.fieldOfView[target]
 					: Dungeon.level.heroFOV[target];
-			if (ctx.kit.isCharmedBy(enemy) || !inFov || !ctx.kit.canAttack(enemy)) {
+			if (ctx.stats().isCharmedBy(enemy) || !inFov || !ctx.stats().canAttack(enemy)) {
 				tracker.detach();
 				return;
 			}
 			ok[0] = true;
 			float accMult = 1;
-			if (!(ctx.kit.belongings.attackingWeapon() instanceof Weapon)
-					|| ((Weapon) ctx.kit.belongings.attackingWeapon()).STRReq() <= ctx.kit.STR()) {
+			if (!(ctx.gear().attackingWeapon() instanceof Weapon)
+					|| ((Weapon) ctx.gear().attackingWeapon()).STRReq() <= ctx.stats().STR()) {
 				accMult = Char.INFINITE_ACCURACY;
 			}
 			final float accuracy = accMult;
 			// Visual swing only — hit while still borrowed (do not wait on attack
 			// callback).
 			if (ctx.canWorldFx()) {
-				ctx.kit.sprite.attack(enemy.pos);
+				ctx.body.sprite.attack(enemy.pos);
 			}
-			if (ctx.kit.attack(enemy, 1, 0, accuracy)) {
+			if (ctx.stats().attack(enemy, 1, 0, accuracy)) {
 				if (ctx.canWorldFx()) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
@@ -325,8 +325,8 @@ public final class EchoClericHandlers {
 		Runnable applyHit = () -> {
 			Char enemy = Actor.findChar(aim.collisionPos);
 			if (enemy != null) {
-				int min = 15 + 15 * ctx.kit.pointsInTalent(Talent.HOLY_LANCE);
-				int max = Math.round(27.5f + 27.5f * ctx.kit.pointsInTalent(Talent.HOLY_LANCE));
+				int min = 15 + 15 * ctx.stats().pointsInTalent(Talent.HOLY_LANCE);
+				int max = Math.round(27.5f + 27.5f * ctx.stats().pointsInTalent(Talent.HOLY_LANCE));
 				if (Char.hasProp(enemy, Char.Property.UNDEAD) || Char.hasProp(enemy, Char.Property.DEMONIC)) {
 					min = max;
 				}
@@ -342,7 +342,7 @@ public final class EchoClericHandlers {
 			} else {
 				Dungeon.level.pressCell(aim.collisionPos);
 			}
-			FlavourBuff.affect(ctx.kit, HolyLance.LanceCooldown.class, 30f);
+			FlavourBuff.affect(ctx.stats(), HolyLance.LanceCooldown.class, 30f);
 			ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
 		};
 		if (ctx.canWorldFx()) {
@@ -374,7 +374,7 @@ public final class EchoClericHandlers {
 		}
 		ArrayList<Char> affected = new ArrayList<>();
 		PathFinder.buildDistanceMap(target, BArray.not(Dungeon.level.solid, null),
-				ctx.kit.pointsInTalent(Talent.HALLOWED_GROUND));
+				ctx.stats().pointsInTalent(Talent.HALLOWED_GROUND));
 		for (int i = 0; i < Dungeon.level.length(); i++) {
 			if (PathFinder.distance[i] != Integer.MAX_VALUE) {
 				int c = Dungeon.level.map[i];
@@ -439,7 +439,7 @@ public final class EchoClericHandlers {
 		if (!EchoActionSupport.hasTarget(ctx, target) || Dungeon.level == null) {
 			return false;
 		}
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		if (Dungeon.level.solid[target] || (!Dungeon.level.mapped[target] && !Dungeon.level.visited[target])
 				|| Dungeon.level.distance(ctx.body.pos, target) > 2 + kit.pointsInTalent(Talent.FLASH)) {
 			return false;
@@ -466,13 +466,13 @@ public final class EchoClericHandlers {
 		if (ch == null) {
 			return false;
 		}
-		layOnHandsAffect(ctx.kit, ch, ctx.body);
+		layOnHandsAffect(ctx.stats(), ch, ctx.body);
 		Char ally = PowerOfMany.getPoweredAlly();
 		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
 			if (ch == ctx.body) {
-				layOnHandsAffect(ctx.kit, ally, ctx.body);
+				layOnHandsAffect(ctx.stats(), ally, ctx.body);
 			} else if (ally == ch) {
-				layOnHandsAffect(ctx.kit, ctx.body, ctx.body);
+				layOnHandsAffect(ctx.stats(), ctx.body, ctx.body);
 			}
 		}
 		ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
@@ -535,13 +535,13 @@ public final class EchoClericHandlers {
 		if (ch == null || !inFov) {
 			return false;
 		}
-		blessAffect(spell, ctx.kit, ch, ctx.body);
+		blessAffect(spell, ctx.stats(), ch, ctx.body);
 		Char ally = PowerOfMany.getPoweredAlly();
 		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
 			if (ch == ctx.body) {
-				blessAffect(spell, ctx.kit, ally, ctx.body);
+				blessAffect(spell, ctx.stats(), ally, ctx.body);
 			} else if (ally == ch) {
-				blessAffect(spell, ctx.kit, ctx.body, ctx.body);
+				blessAffect(spell, ctx.stats(), ctx.body, ctx.body);
 			}
 		}
 		ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
@@ -604,7 +604,7 @@ public final class EchoClericHandlers {
 			return false;
 		}
 		Buff.prolong(ctx.body, ShieldOfLight.ShieldOfLightTracker.class, 4f).object = ch.id();
-		if (ctx.kit.subClass == HeroSubClass.PRIEST) {
+		if (ctx.stats().subClass == HeroSubClass.PRIEST) {
 			Buff.affect(ch, GuidingLight.Illuminated.class);
 		}
 		Char ally = PowerOfMany.getPoweredAlly();
@@ -615,7 +615,6 @@ public final class EchoClericHandlers {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static boolean mnemonicPrayer(EchoActionContext ctx, HolyTome tome, MnemonicPrayer spell, Integer target) {
 		if (!EchoActionSupport.hasTarget(ctx, target) || Dungeon.level == null) {
 			return false;
@@ -627,7 +626,7 @@ public final class EchoClericHandlers {
 		if (ch == null || !inFov) {
 			return false;
 		}
-		float extension = 2 + ctx.kit.pointsInTalent(Talent.MNEMONIC_PRAYER);
+		float extension = 2 + ctx.stats().pointsInTalent(Talent.MNEMONIC_PRAYER);
 		mnemonicAffect(ch, extension, ch.alignment == ctx.body.alignment);
 		Char ally = PowerOfMany.getPoweredAlly();
 		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
@@ -735,8 +734,8 @@ public final class EchoClericHandlers {
 		if (ctx.canWorldFx()) {
 			Sample.INSTANCE.play(Assets.Sounds.READ);
 			ctx.body.sprite.operate(ctx.body.pos);
-			if (ctx.kit.belongings.weapon() != null) {
-				Enchanting.show(ctx.kit, ctx.kit.belongings.weapon());
+			if (ctx.gear().weapon() != null) {
+				Enchanting.show(ctx.body, ctx.gear().weapon());
 			}
 		}
 		ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
@@ -748,8 +747,8 @@ public final class EchoClericHandlers {
 		if (ctx.canWorldFx()) {
 			Sample.INSTANCE.play(Assets.Sounds.READ);
 			ctx.body.sprite.operate(ctx.body.pos);
-			if (ctx.kit.belongings.armor() != null) {
-				Enchanting.show(ctx.kit, ctx.kit.belongings.armor());
+			if (ctx.gear().armor() != null) {
+				Enchanting.show(ctx.body, ctx.gear().armor());
 			}
 		}
 		ClericSpellEchoBridge.onSpellCast(spell, ctx, tome);
@@ -757,7 +756,7 @@ public final class EchoClericHandlers {
 	}
 
 	private static boolean cleanse(EchoActionContext ctx, HolyTome tome, Cleanse spell) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		ArrayList<Char> affected = new ArrayList<>();
 		affected.add(ctx.body);
 		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
@@ -805,7 +804,7 @@ public final class EchoClericHandlers {
 		}
 		ctx.forEachVisibleHostile(ch -> {
 			if (ch.buff(GuidingLight.Illuminated.class) != null) {
-				ch.damage(ctx.kit.lvl + 5, GuidingLight.class);
+				ch.damage(ctx.stats().lvl + 5, GuidingLight.class);
 			} else {
 				Buff.affect(ch, GuidingLight.Illuminated.class);
 				Buff.affect(ch, GuidingLight.WasIlluminatedTracker.class);
@@ -848,11 +847,11 @@ public final class EchoClericHandlers {
 	}
 
 	private static boolean judgement(EchoActionContext ctx, HolyTome tome, Judgement spell) {
-		if (!spell.canCast(ctx.kit)) {
+		if (!spell.canCast(ctx.stats())) {
 			return false;
 		}
-		AscendedForm.AscendBuff ascend = ctx.kit.buff(AscendedForm.AscendBuff.class);
-		int damageBase = 5 + 5 * ctx.kit.pointsInTalent(Talent.JUDGEMENT);
+		AscendedForm.AscendBuff ascend = ctx.stats().buff(AscendedForm.AscendBuff.class);
+		int damageBase = 5 + 5 * ctx.stats().pointsInTalent(Talent.JUDGEMENT);
 		if (ascend != null) {
 			damageBase += Math.round(damageBase * ascend.spellCasts / 3f);
 		}
@@ -861,7 +860,7 @@ public final class EchoClericHandlers {
 			if (ch.alignment != ctx.body.alignment
 					&& ch.pos >= 0 && ch.pos < inFov.length && inFov[ch.pos]) {
 				ch.damage(Hero.heroDamageIntRange(damageBase, 2 * damageBase), spell);
-				if (ctx.kit.subClass == HeroSubClass.PRIEST) {
+				if (ctx.stats().subClass == HeroSubClass.PRIEST) {
 					Buff.affect(ch, GuidingLight.Illuminated.class);
 				}
 			}
@@ -878,7 +877,7 @@ public final class EchoClericHandlers {
 	 * with Hero-only VFX/spend should override.
 	 */
 	private static boolean holyIntuition(EchoActionContext ctx, HolyTome tome, HolyIntuition spell) {
-		Item pick = ClericSpellEchoBridge.firstUsableItem(spell, ctx.kit);
+		Item pick = ClericSpellEchoBridge.firstUsableItem(spell, ctx.stats());
 		if (pick == null) {
 			return false;
 		}
@@ -894,14 +893,14 @@ public final class EchoClericHandlers {
 	 */
 	private static boolean bodyForm(EchoActionContext ctx, HolyTome tome, BodyForm spell) {
 		Bundlable effect = null;
-		if (ctx.kit.belongings.weapon() instanceof Weapon) {
-			Weapon.Enchantment ench = ((Weapon) ctx.kit.belongings.weapon()).enchantment;
+		if (ctx.gear().weapon() instanceof Weapon) {
+			Weapon.Enchantment ench = ((Weapon) ctx.gear().weapon()).enchantment;
 			if (ench != null) {
 				effect = ench;
 			}
 		}
-		if (effect == null && ctx.kit.belongings.armor() != null) {
-			Armor.Glyph glyph = ctx.kit.belongings.armor().glyph;
+		if (effect == null && ctx.gear().armor() != null) {
+			Armor.Glyph glyph = ctx.gear().armor().glyph;
 			if (glyph != null) {
 				effect = glyph;
 			}

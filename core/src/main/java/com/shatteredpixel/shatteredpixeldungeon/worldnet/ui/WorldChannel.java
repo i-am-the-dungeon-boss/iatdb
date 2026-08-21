@@ -19,14 +19,19 @@
 package com.shatteredpixel.shatteredpixeldungeon.worldnet.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageEchoBundles;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigures;
 import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldChatMessage;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNet;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNetEngine;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldPresence;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,11 +57,17 @@ public final class WorldChannel implements WorldNet.Observer {
 
 	public void attach() {
 		WorldNet.observe(this);
+		// The figures land with the greeting, several frames before this scene
+		// exists to stand them in, so the village fills from what is already known
+		// rather than waiting for whatever changes next.
+		onWorldFigures(WorldNet.figures());
 	}
 
 	public void detach() {
 		WorldNet.unobserve(this);
 		remotePlayers.clear();
+		VillageFigures.clear();
+		VillageEchoBundles.clear();
 	}
 
 	public RemotePlayers remotePlayers() {
@@ -104,6 +115,32 @@ public final class WorldChannel implements WorldNet.Observer {
 			return;
 		}
 		remotePlayers.apply(occupants);
+	}
+
+	/**
+	 * Stands the pushed bodies in the town square.
+	 *
+	 * <p>Dropped rather than queued when the player is not in town, for the same
+	 * reason ghosts are: a run must not inherit the village, and the whole set is
+	 * re-sent on the next greeting anyway.
+	 */
+	@Override
+	public void onWorldFigures(List<VillageFigure> figures) {
+		if (!VillageSession.inVillage()) {
+			VillageFigures.clear();
+			VillageEchoBundles.clear();
+			return;
+		}
+		VillageFigures.apply(villageLevel(), new ArrayList<>(figures));
+	}
+
+	private VillageLevel villageLevel() {
+		return Dungeon.level instanceof VillageLevel ? (VillageLevel) Dungeon.level : null;
+	}
+
+	@Override
+	public void onEchoBundle(String echoId, String echoData) {
+		VillageEchoBundles.deliver(echoId, echoData);
 	}
 
 	@Override

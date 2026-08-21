@@ -18,6 +18,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.worldnet.wire;
 
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldChatMessage;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldPresence;
 
@@ -49,6 +50,10 @@ public final class WorldFrame {
 		HELLO,
 		CHAT,
 		ROSTER,
+		/** The whole set of village bodies, appearance and facts only. */
+		FIGURES,
+		/** The inspect-tier bundle for the one body that was asked about. */
+		ECHO,
 		ERROR,
 		PONG,
 		UNKNOWN
@@ -77,6 +82,17 @@ public final class WorldFrame {
 	 * waiting for its next visit to the title screen.
 	 */
 	public final String versionName;
+	/**
+	 * On {@link Kind#FIGURES}, every body the village stands; empty elsewhere.
+	 *
+	 * <p>Broadcast tier: the hero behind a body is not in here. It is asked for
+	 * one figure at a time and comes back as {@link Kind#ECHO}.
+	 */
+	public final List<VillageFigure> figures;
+	/** On {@link Kind#ECHO}, which body the bundle belongs to; empty elsewhere. */
+	public final String echoId;
+	/** On {@link Kind#ECHO}, the gzipped hero bundle, base64; empty elsewhere. */
+	public final String echoData;
 
 	private WorldFrame(
 			Kind kind,
@@ -86,6 +102,30 @@ public final class WorldFrame {
 			String detail,
 			String playerId,
 			String versionName) {
+		this(
+				kind,
+				messages,
+				occupants,
+				errorCode,
+				detail,
+				playerId,
+				versionName,
+				Collections.<VillageFigure>emptyList(),
+				"",
+				"");
+	}
+
+	private WorldFrame(
+			Kind kind,
+			List<WorldChatMessage> messages,
+			List<WorldPresence> occupants,
+			String errorCode,
+			String detail,
+			String playerId,
+			String versionName,
+			List<VillageFigure> figures,
+			String echoId,
+			String echoData) {
 		this.kind = kind;
 		this.messages = messages;
 		this.occupants = occupants;
@@ -93,6 +133,9 @@ public final class WorldFrame {
 		this.detail = detail;
 		this.playerId = playerId;
 		this.versionName = versionName;
+		this.figures = figures;
+		this.echoId = echoId;
+		this.echoData = echoData;
 	}
 
 	static WorldFrame hello(String playerId, String versionName) {
@@ -120,6 +163,34 @@ public final class WorldFrame {
 
 	static WorldFrame roster(List<WorldPresence> occupants) {
 		return new WorldFrame(Kind.ROSTER, Collections.emptyList(), occupants, "", "", "", "");
+	}
+
+	static WorldFrame figures(List<VillageFigure> figures) {
+		return new WorldFrame(
+				Kind.FIGURES,
+				Collections.<WorldChatMessage>emptyList(),
+				Collections.<WorldPresence>emptyList(),
+				"",
+				"",
+				"",
+				"",
+				figures,
+				"",
+				"");
+	}
+
+	static WorldFrame echo(String echoId, String echoData) {
+		return new WorldFrame(
+				Kind.ECHO,
+				Collections.<WorldChatMessage>emptyList(),
+				Collections.<WorldPresence>emptyList(),
+				"",
+				"",
+				"",
+				"",
+				Collections.<VillageFigure>emptyList(),
+				echoId != null ? echoId : "",
+				echoData != null ? echoData : "");
 	}
 
 	static WorldFrame error(String code, String detail) {

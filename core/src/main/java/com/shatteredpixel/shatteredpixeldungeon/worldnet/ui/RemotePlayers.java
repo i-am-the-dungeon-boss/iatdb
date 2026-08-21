@@ -147,14 +147,14 @@ public final class RemotePlayers {
 			return;
 		}
 		TypingTag tag = new TypingTag(sprite);
-		GameScene.addRemotePlayer(tag);
+		GameScene.addToMobLayer(tag);
 		typing.put(playerId, tag);
 	}
 
 	private void stopTyping(String playerId) {
 		TypingTag tag = typing.remove(playerId);
 		if (tag != null) {
-			GameScene.removeRemotePlayer(tag);
+			GameScene.removeFromMobLayer(tag);
 			tag.killAndErase();
 		}
 	}
@@ -189,11 +189,11 @@ public final class RemotePlayers {
 		// playing a class this build has never heard of still shows up rather than
 		// silently vanishing from the village.
 		RemotePlayerSprite sprite = new RemotePlayerSprite();
-		GameScene.addRemotePlayer(sprite);
+		GameScene.addToMobLayer(sprite);
 		sprite.place(presence.cell);
 
 		NameTag tag = new NameTag(sprite, presence.displayName);
-		GameScene.addRemotePlayer(tag);
+		GameScene.addToMobLayer(tag);
 
 		sprites.put(presence.playerId, sprite);
 		tags.put(presence.playerId, tag);
@@ -204,12 +204,12 @@ public final class RemotePlayers {
 		stopTyping(playerId);
 		RemotePlayerSprite sprite = sprites.remove(playerId);
 		if (sprite != null) {
-			GameScene.removeRemotePlayer(sprite);
+			GameScene.removeFromMobLayer(sprite);
 			sprite.killAndErase();
 		}
 		NameTag tag = tags.remove(playerId);
 		if (tag != null) {
-			GameScene.removeRemotePlayer(tag);
+			GameScene.removeFromMobLayer(tag);
 			tag.killAndErase();
 		}
 		cells.remove(playerId);

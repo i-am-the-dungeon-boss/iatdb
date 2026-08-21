@@ -454,7 +454,7 @@ class EchoBossArsenalConsumableKindsTest {
 			EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
-			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(f.kit().sprite).isSameAs(f.boss.sprite);
 			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.buff(Terror.class)).isNotNull();
@@ -472,7 +472,7 @@ class EchoBossArsenalConsumableKindsTest {
 
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
-			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(f.kit().sprite).isSameAs(f.boss.sprite);
 			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
@@ -489,7 +489,7 @@ class EchoBossArsenalConsumableKindsTest {
 
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
-			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(f.kit().sprite).isSameAs(f.boss.sprite);
 			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, stone, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.player.buff(Paralysis.class)).isNotNull();
@@ -518,7 +518,7 @@ class EchoBossArsenalConsumableKindsTest {
 
 			Assertions.assertThat(f.player.sprite.ch).isSameAs(f.player);
 			Assertions.assertThat(f.boss.sprite.ch).isSameAs(f.boss);
-			Assertions.assertThat(f.kit().sprite).isNull();
+			Assertions.assertThat(f.kit().sprite).isSameAs(f.boss.sprite);
 			Assertions.assertThat(EchoThrowAdapter.throwItem(f.boss, dart, f.player.pos)).isTrue();
 			Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 			Assertions.assertThat(f.kit().cooldown()).isEqualTo(kitBefore);

@@ -28,6 +28,27 @@ Agents must not run tests without `-q -PerrorProneOff` unless the user wants EP 
 - SpotBugs HTML: `core/build/reports/spotbugs/main.html`. Error Prone: compile console only (no report folder).
 - Spotless is light hygiene (trailing whitespace + newline) with `ratchetFrom origin/main` — not google-java-format.
 
+## NullAway
+
+NullAway runs as part of Error Prone, **scoped by package** — it only checks code inside
+`AnnotatedPackages` (see [`gradle/java-quality.gradle`](gradle/java-quality.gradle)), so
+turning it on does not light up the unannotated base-game sources. Currently scoped to
+`heroechoes`, `effects`, and `actors` (with `actors.mobs` / `actors.hero` / `actors.buffs` /
+`actors.blobs` excluded via `UnannotatedSubPackages`); widen one package at a time.
+
+- Nullability is marked with the project-local
+  [`com.watabou.utils.Nullable`](SPD-classes/src/main/java/com/watabou/utils/Nullable.java)
+  (CLASS retention, so nothing reaches the Android or RoboVM runtime classpath).
+- `AcknowledgeRestrictiveAnnotations=true` is required for NullAway to honour `@Nullable`
+  on unannotated code at all. **It covers method parameters and return types, not fields** —
+  a `@Nullable` field is only enforced once its own package is annotated. That is why
+  `actors` is in the list: without it, `@Nullable` on
+  [`Char.sprite`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java)
+  is silently ignored and no sprite dereference is ever flagged.
+- Severity follows the existing convention: `WARN` by default, `ERROR` under
+  `-PerrorProneErrors`. Do not hard-code `-Xep:NullAway:ERROR`; an explicit severity
+  overrides `allErrorsAsWarnings` and breaks the green-compile default.
+
 ## Concurrent Gradle
 
 Same as other long runs: `./gradlew --status` first; use a worktree if another build is active (see `gradle-worktree` rule).

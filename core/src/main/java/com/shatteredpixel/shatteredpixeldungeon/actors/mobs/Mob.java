@@ -93,6 +93,7 @@ import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GuidingLightHit;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.PathFinder;
@@ -700,18 +701,12 @@ public abstract class Mob extends Char {
 
 	@Override
 	public int defenseSkill(Char enemy) {
-		if (buff(GuidingLight.Illuminated.class) != null && Dungeon.hero.heroClass == HeroClass.CLERIC) {
-			// if the attacker is the cleric, they must be using a weapon they have the str
-			// for
-			if (enemy instanceof Hero) {
-				Hero h = (Hero) enemy;
-				if (!(h.belongings.attackingWeapon() instanceof Weapon)
-						|| ((Weapon) h.belongings.attackingWeapon()).STRReq() <= h.STR()) {
-					return 0;
-				}
-			} else {
-				return 0;
-			}
+		// The cleric must be swinging a weapon they have the str for; their allies
+		// get the free hit unconditionally. Fork change: the cleric may be an
+		// Echo's phantom kit rather than Dungeon.hero, so ask the attacker.
+		if (buff(GuidingLight.Illuminated.class) != null
+				&& (GuidingLightHit.isClericFreeHit(enemy) || GuidingLightHit.isClericAlly(enemy))) {
+			return 0;
 		}
 
 		if (!surprisedBy(enemy)

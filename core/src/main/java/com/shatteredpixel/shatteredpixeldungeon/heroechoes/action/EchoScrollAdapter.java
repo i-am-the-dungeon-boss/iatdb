@@ -32,12 +32,12 @@ public final class EchoScrollAdapter {
 		if (ctx.body.buff(Blindness.class) != null) {
 			return false;
 		}
-		if (ctx.kit.buff(UnstableSpellbook.bookRecharge.class) != null
-				&& ctx.kit.buff(UnstableSpellbook.bookRecharge.class).isCursed()
+		if (ctx.stats().buff(UnstableSpellbook.bookRecharge.class) != null
+				&& ctx.stats().buff(UnstableSpellbook.bookRecharge.class).isCursed()
 				&& !(scroll instanceof ScrollOfRemoveCurse || scroll instanceof ScrollOfAntiMagic)) {
 			return false;
 		}
-		scroll.setCurrent(ctx.kit);
+		scroll.setCurrent(ctx.stats());
 		return EchoScrollHandlers.read(ctx, scroll);
 	}
 }

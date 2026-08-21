@@ -126,7 +126,7 @@ class EchoArmorAbilitySpectralBladesTest {
 	}
 
 	@Test
-	@DisplayName("Echo SpectralBlades leaves phantom kit sprite null after adapter activate")
+	@DisplayName("Echo SpectralBlades leaves the phantom kit mirroring the body sprite")
 	void leavesKitSpriteNull() {
 		Fight f = fight();
 		EchoTestSupport.attachInstantProjectileParent(f.boss);
@@ -135,12 +135,12 @@ class EchoArmorAbilitySpectralBladesTest {
 		f.player.belongings.armor = null;
 		f.boss.getEchoHero().invisible = 1;
 		f.boss.getEchoHero().STR = 20;
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 
 		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new SpectralBlades(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}
 }

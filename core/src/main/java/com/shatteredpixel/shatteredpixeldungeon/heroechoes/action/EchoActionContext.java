@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.action;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 
@@ -18,7 +19,16 @@ public final class EchoActionContext {
 	}
 
 	public final EchoBoss body;
-	public final Hero kit;
+
+	/**
+	 * The phantom kit: gear, talents, and stats, never on stage. It is a
+	 * {@code Hero} because base-game math demands one, which also makes it a
+	 * {@code Char} that world-facing code will happily draw on — the same defect
+	 * shipped three times (ANDROID-21 plus a third copy in the runestone
+	 * bridge). Private so every use has to name its intent through
+	 * {@link #gear()} or {@link #stats()}.
+	 */
+	private final Hero kit;
 
 	private EchoActionContext(EchoBoss body, Hero kit) {
 		this.body = body;
@@ -34,6 +44,25 @@ public final class EchoActionContext {
 			throw new IllegalArgumentException("EchoActionContext rejects a boss without a phantom kit");
 		}
 		return new EchoActionContext(boss, kit);
+	}
+
+	/** The kit's inventory — the overwhelmingly common reason to reach for it. */
+	public Belongings gear() {
+		return kit.belongings;
+	}
+
+	/**
+	 * The kit as a calculator, for base-game APIs that will not take anything
+	 * but a {@code Hero} — {@code chargeUse}, {@code canCast}, {@code tryToZap},
+	 * {@code isEquipped}, {@code reachFactor}.
+	 *
+	 * <p><b>Never pass this to world or VFX code.</b> It is off stage; its
+	 * sprite is mirrored from {@link #body}, so drawing on it puts the effect on
+	 * a char the player is not looking at. Pass {@code body} instead, or use the
+	 * {@code ...Fx} methods below. Guarded by {@code EchoKitEscapeTest}.
+	 */
+	public Hero stats() {
+		return kit;
 	}
 
 	public boolean canWorldFx() {

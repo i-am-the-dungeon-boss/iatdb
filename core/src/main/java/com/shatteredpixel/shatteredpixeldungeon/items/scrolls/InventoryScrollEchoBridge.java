@@ -21,7 +21,7 @@ public final class InventoryScrollEchoBridge {
 	 */
 	public static boolean read(InventoryScroll scroll, EchoActionContext ctx) {
 		Item pick = null;
-		for (Item item : ctx.kit.belongings) {
+		for (Item item : ctx.gear()) {
 			if (item != scroll && scroll.usableOnItem(item)) {
 				pick = item;
 				break;
@@ -32,14 +32,14 @@ public final class InventoryScrollEchoBridge {
 		}
 		InventoryScroll working = scroll;
 		if (!scroll.anonymous) {
-			Item detached = scroll.detach(ctx.kit.belongings.backpack);
+			Item detached = scroll.detach(ctx.gear().backpack);
 			if (detached instanceof InventoryScroll) {
 				working = (InventoryScroll) detached;
 			}
 		}
 		final InventoryScroll applied = working;
 		final Item target = pick;
-		AiItemActions.withUser(ctx.kit, applied, () -> applied.onItemSelected(target));
+		AiItemActions.withUser(ctx.stats(), applied, () -> applied.onItemSelected(target));
 		return true;
 	}
 
@@ -49,7 +49,7 @@ public final class InventoryScrollEchoBridge {
 	 */
 	public static boolean readUpgrade(ScrollOfUpgrade scroll, EchoActionContext ctx) {
 		Item pick = null;
-		for (Item item : ctx.kit.belongings) {
+		for (Item item : ctx.gear()) {
 			if (item != scroll && scroll.usableOnItem(item)) {
 				pick = item;
 				break;
@@ -60,14 +60,14 @@ public final class InventoryScrollEchoBridge {
 		}
 		ScrollOfUpgrade working = scroll;
 		if (!scroll.anonymous) {
-			Item detached = scroll.detach(ctx.kit.belongings.backpack);
+			Item detached = scroll.detach(ctx.gear().backpack);
 			if (detached instanceof ScrollOfUpgrade) {
 				working = (ScrollOfUpgrade) detached;
 			}
 		}
 		final ScrollOfUpgrade applied = working;
 		final Item target = pick;
-		AiItemActions.withUser(ctx.kit, applied, () -> applied.upgradeItem(target));
+		AiItemActions.withUser(ctx.stats(), applied, () -> applied.upgradeItem(target));
 		return true;
 	}
 }

@@ -22,7 +22,7 @@ class CharAttackNullSpriteTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(player.sprite).isNotNull();
 
 		kit.pos = boss.pos;

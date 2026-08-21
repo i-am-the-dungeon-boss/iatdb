@@ -33,7 +33,7 @@ public final class CloakOfShadowsEchoBridge {
 		clearStealthIfNotOn(cloak, body);
 
 		if (cloak.activeBuff == null) {
-			if (!cloak.isEquipped(ctx.kit) && !ctx.kit.hasTalent(Talent.LIGHT_CLOAK)) {
+			if (!cloak.isEquipped(ctx.stats()) && !ctx.stats().hasTalent(Talent.LIGHT_CLOAK)) {
 				return false;
 			}
 			if (cloak.cursed) {

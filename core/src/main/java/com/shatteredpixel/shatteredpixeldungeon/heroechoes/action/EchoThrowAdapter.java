@@ -38,7 +38,7 @@ public final class EchoThrowAdapter {
 		ctx.busy();
 
 		final int cell = item.throwPos(ctx.body.pos, dst);
-		final float delay = item.castDelay(ctx.kit, cell);
+		final float delay = item.castDelay(ctx.stats(), cell);
 		final Bomb bomb = item instanceof Bomb ? (Bomb) item : null;
 
 		Callback onArrive = () -> {
@@ -48,8 +48,8 @@ public final class EchoThrowAdapter {
 				BombEchoBridge.reassertLightFuse(bomb);
 			}
 			EchoKitBorrow.run(ctx, () -> {
-				AiItemActions.withUser(ctx.kit, item, () -> {
-					Item thrown = item.detach(ctx.kit.belongings.backpack);
+				AiItemActions.withUser(ctx.stats(), item, () -> {
+					Item thrown = item.detach(ctx.gear().backpack);
 					if (thrown != null) {
 						if (bomb != null) {
 							BombEchoBridge.markDetachedIgnite(bomb, thrown);
