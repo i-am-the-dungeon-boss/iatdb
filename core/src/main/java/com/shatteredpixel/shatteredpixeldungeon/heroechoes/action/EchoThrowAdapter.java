@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.action;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -57,6 +58,9 @@ public final class EchoThrowAdapter {
 						AiItemActions.onThrow(thrown, cell);
 					}
 				});
+				// Throwing is a reveal, and it is the body that threw — the
+				// phantom kit stands nowhere, so dispelling it exposes nobody.
+				Invisibility.dispelOnThrow(ctx.body);
 				ctx.complete(delay);
 			});
 		};

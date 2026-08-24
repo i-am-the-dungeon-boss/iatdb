@@ -1,6 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatusBuilder;
 
@@ -52,7 +52,7 @@ class EchoPolicyRuntimeTest {
 				.rolesReady(java.util.Set.of("HEAL", "MELEE", "HOLD"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, java.util.Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, java.util.Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("HEAL");

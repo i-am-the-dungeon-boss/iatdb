@@ -192,7 +192,7 @@ class EchoUntouchableTest {
 				.rolesReady(ready("HASTE", "SETUP_CC", "KNOCKBACK", "MELEE"))
 				.build();
 
-		EchoPolicyChoice first = EchoUntouchable.firstReadyPrep(status, new HashSet<String>());
+		EchoPlan first = EchoUntouchable.firstReadyPrep(status, new HashSet<String>());
 		Assertions.assertThat(first).isNotNull();
 		Assertions.assertThat(first.useRole).isEqualTo("KNOCKBACK");
 		Assertions.assertThat(first.layer).isEqualTo("java_untouchable");

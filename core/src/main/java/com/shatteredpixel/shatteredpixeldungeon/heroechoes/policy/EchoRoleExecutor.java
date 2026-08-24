@@ -58,7 +58,8 @@ public final class EchoRoleExecutor {
 	 * Narrows a capability to the items that can still affect this hero. Under
 	 * the shared stun lockout the rest of {@code SETUP_CC} is fine, but stun
 	 * items would be thrown away — so they are dropped from the pick list
-	 * rather than the whole role being disabled.
+	 * rather than the whole role being disabled. One of the client-owned rules
+	 * catalogued in {@link EchoPolicySafety}.
 	 */
 	static JSONObject capForEnemy(String role, JSONObject cap, EchoPolicyStatus status) {
 		if (cap == null || status == null) {
@@ -66,7 +67,7 @@ public final class EchoRoleExecutor {
 		}
 		if (EchoPolicyHazards.SETUP_CC.equals(role)
 				&& status.enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)) {
-			return EchoPolicyHazards.withoutParalyticGas(cap);
+			return EchoPolicySafety.withoutParalyticGas(cap);
 		}
 		return cap;
 	}
@@ -75,18 +76,18 @@ public final class EchoRoleExecutor {
 			EchoBoss boss,
 			EchoPolicy policy,
 			EchoPolicyStatus status,
-			EchoPolicyChoice choice) {
+			EchoPlan plan) {
 		JSONObject caps = policy.root().optJSONObject("capabilities");
-		JSONObject cap = capForEnemy(choice.useRole, caps != null ? caps.optJSONObject(choice.useRole) : null, status);
+		JSONObject cap = capForEnemy(plan.useRole, caps != null ? caps.optJSONObject(plan.useRole) : null, status);
 		java.util.Set<String> available = EchoInventory.availableIds(boss.getEchoHero());
-		String itemId = choice.itemId != null
-				? choice.itemId
+		String itemId = plan.itemId != null
+				? plan.itemId
 				: EchoRoleResolver.resolveItemId(cap, available);
-		if (itemId == null || (choice.itemId != null && !EchoRoleResolver.isAvailable(itemId, available))) {
-			debugExec("resolve miss role=" + choice.useRole + " available=" + available);
+		if (itemId == null || (plan.itemId != null && !EchoRoleResolver.isAvailable(itemId, available))) {
+			debugExec("resolve miss role=" + plan.useRole + " available=" + available);
 			return false;
 		}
-		debugExec("resolve role=" + choice.useRole + " → item=" + itemId);
+		debugExec("resolve role=" + plan.useRole + " → item=" + itemId);
 
 		if (itemId.startsWith("*")) {
 			boolean ok = executeVirtual(boss, policy, status, itemId);
@@ -100,42 +101,36 @@ public final class EchoRoleExecutor {
 			return false;
 		}
 
-		boolean doorBreak = EchoRole.DOOR_BREAK.id().equals(choice.useRole)
-				|| "door_break".equals(choice.layer);
+		// The plan wins: only the sense phase knows a role's own geometry (the
+		// blocking plant, the bush on the line). Aim is re-derived only for roles
+		// that carry none.
 		int cell;
-		if (doorBreak) {
-			cell = boss.doorStallCell();
-			debugExec("door_break aim cell=" + cell);
+		if (plan.targetCell >= 0) {
+			cell = plan.targetCell;
+			debugExec("plan aim role=" + plan.useRole + " cell=" + cell);
 		} else {
 			cell = EchoTargetPicker.pick(boss, status, itemId, isSplashAimHazard(cap));
 		}
 
 		boolean spent;
 		if (item instanceof Potion) {
-			spent = executePotion(boss, (Potion) item, choice.useRole, cell);
+			spent = executePotion(boss, (Potion) item, plan.useRole, cell);
 			debugExec("potion " + itemId + " cell=" + cell + " → " + (spent ? "spent" : "fail"));
 		} else {
-			spent = executeNonPotion(boss, item, itemId, cell, choice, cap);
+			spent = executeNonPotion(boss, item, itemId, cell, cap);
 		}
-		if (spent && doorBreak) {
-			boss.clearDoorStall();
-		}
-		if (spent && !doorBreak && !status.enemyInLos) {
+		if (spent && !status.enemyInLos) {
 			boss.consumeBlindDefenseShot();
 		}
 		return spent;
 	}
 
-	/**
-	 * Shared non-potion branches; extracted so door_break can clear stall after
-	 * success.
-	 */
+	/** Shared non-potion branches. */
 	private static boolean executeNonPotion(
 			EchoBoss boss,
 			Item item,
 			String itemId,
 			int cell,
-			EchoPolicyChoice choice,
 			JSONObject cap) {
 		if (item instanceof Scroll) {
 			boolean ok = EchoScrollAdapter.read(boss, (Scroll) item);
@@ -310,7 +305,12 @@ public final class EchoRoleExecutor {
 			// A kiting echo wants a harmful plant between itself and the hero —
 			// Level.pressCell triggers it for the hero too, so it is real cover.
 			boolean kite = EchoPolicyMatcher.wantsKeepDistance(policy, status);
-			return enemy != null && boss.policyStepFurther(enemy.pos, kite);
+			// The playbook only arms kite_step when RANGED is ready, so the step
+			// is being spent to buy a shot. Refuse one that lands where no shot
+			// exists: that is the door-dance loop, and standing to fight beats it.
+			boolean requireLineOfFire = status.isRoleReady(EchoPolicyHazards.RANGED);
+			return enemy != null
+					&& boss.policyStepFurther(enemy.pos, kite, requireLineOfFire);
 		}
 		if ("*move_closer".equals(tag)) {
 			return enemy != null && boss.policyStepCloser(enemy.pos);

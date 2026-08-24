@@ -33,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -695,6 +696,9 @@ public class Item implements Bundlable {
 			Item i = Item.this.detach(user.belongings.backpack);
 			if (i != null)
 				i.onThrow(cell);
+			// Throwing is a reveal — after the throw resolves, so the shot itself
+			// still gets its from-stealth accuracy.
+			Invisibility.dispelOnThrow(user);
 			if (enemy != null
 					&& curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
 					&& !(Item.this instanceof MissileWeapon)
@@ -735,6 +739,7 @@ public class Item implements Bundlable {
 							Item i = Item.this.detach(user.belongings.backpack);
 							if (i != null)
 								i.onThrow(cell);
+							Invisibility.dispelOnThrow(user);
 							if (curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
 									&& !(Item.this instanceof MissileWeapon)
 									&& curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null) {
@@ -765,6 +770,7 @@ public class Item implements Bundlable {
 							user.spend(delay);
 							if (i != null)
 								i.onThrow(cell);
+							Invisibility.dispelOnThrow(user);
 							user.next();
 						}
 					});

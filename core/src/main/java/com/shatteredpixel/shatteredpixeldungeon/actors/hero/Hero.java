@@ -1759,11 +1759,9 @@ public class Hero extends Char {
 
 		// Hits reveal the hero (cloak / potion invis). Always dispel on damage —
 		// do not gate on invisible>0 in case the counter and buffs ever desync.
+		// Invisibility.dispel clears the sprite state itself.
 		if (dmg > 0) {
 			Invisibility.dispel(this);
-			if (invisible <= 0 && sprite != null) {
-				sprite.remove(CharSprite.State.INVISIBLE);
-			}
 		}
 
 		int preHP = HP + shielding();

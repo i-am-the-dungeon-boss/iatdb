@@ -81,7 +81,7 @@ class EchoLeaveAoeTest {
 				.rolesReady(Set.of("LEAVE_AOE", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("LEAVE_AOE");
@@ -103,7 +103,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyLeave(),
-				new EchoPolicyChoice("LEAVE_AOE", "reactions", null));
+				new EchoPlan("LEAVE_AOE", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Blob.volumeAt(boss.pos, Fire.class)).isEqualTo(0);
@@ -126,7 +126,7 @@ class EchoLeaveAoeTest {
 				boss,
 				kiteLeavePolicy(),
 				status,
-				new EchoPolicyChoice("LEAVE_AOE", "reactions", null));
+				new EchoPlan("LEAVE_AOE", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Blob.volumeAt(boss.pos, Fire.class)).isEqualTo(0);
@@ -153,7 +153,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyCloseIn(),
-				new EchoPolicyChoice("CLOSE_IN", "positioning", null));
+				new EchoPlan("CLOSE_IN", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Blob.volumeAt(boss.pos, Fire.class)).isEqualTo(0);
@@ -183,7 +183,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyCloseIn(),
-				new EchoPolicyChoice("CLOSE_IN", "positioning", null));
+				new EchoPlan("CLOSE_IN", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(EchoAoeDots.isAoeDotAt(boss, boss.pos)).isFalse();
@@ -210,7 +210,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyCloseIn(),
-				new EchoPolicyChoice("CLOSE_IN", "positioning", null));
+				new EchoPlan("CLOSE_IN", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Blob.volumeAt(boss.pos, Freezing.class)).isEqualTo(0);
@@ -234,7 +234,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyLeave(),
-				new EchoPolicyChoice("LEAVE_AOE", "reactions", null));
+				new EchoPlan("LEAVE_AOE", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Blob.volumeAt(boss.pos, Freezing.class)).isEqualTo(0);
@@ -260,7 +260,7 @@ class EchoLeaveAoeTest {
 				boss,
 				leavePolicy(),
 				readyKeepDistance(),
-				new EchoPolicyChoice("KEEP_DISTANCE", "positioning", null));
+				new EchoPlan("KEEP_DISTANCE", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.pos).isNotEqualTo(start);

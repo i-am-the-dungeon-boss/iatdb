@@ -354,7 +354,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("BLINK")).isTrue();
@@ -374,7 +374,7 @@ class EchoPolicyGatesTest {
 		// No FOV filled: enemy_in_los reads false, same as an occluded hero.
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
@@ -415,7 +415,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
@@ -437,7 +437,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);

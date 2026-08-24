@@ -15,7 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoPotionAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
@@ -56,7 +56,7 @@ class EchoBossMovementTest {
 				boss,
 				boss.getEchoPolicy(),
 				ready("CLOSE_IN"),
-				new EchoPolicyChoice("CLOSE_IN", "positioning", null));
+				new EchoPlan("CLOSE_IN", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isEqualTo(distBefore - 1);
@@ -83,7 +83,7 @@ class EchoBossMovementTest {
 				boss,
 				boss.getEchoPolicy(),
 				ready("KEEP_DISTANCE"),
-				new EchoPolicyChoice("KEEP_DISTANCE", "positioning", null));
+				new EchoPlan("KEEP_DISTANCE", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isGreaterThan(distBefore);
@@ -117,7 +117,7 @@ class EchoBossMovementTest {
 						.rolesReady(Set.of("MOVE_TO_WATER"))
 						.terrainNearCell("water", waterCell)
 						.build(),
-				new EchoPolicyChoice("MOVE_TO_WATER", "reactions", null));
+				new EchoPlan("MOVE_TO_WATER", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, waterCell)).isLessThan(distBefore);
@@ -149,7 +149,7 @@ class EchoBossMovementTest {
 						.rolesReady(Set.of("MOVE_TO_GRASS"))
 						.terrainNearCell("grass", grassCell)
 						.build(),
-				new EchoPolicyChoice("MOVE_TO_GRASS", "reactions", null));
+				new EchoPlan("MOVE_TO_GRASS", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, grassCell)).isLessThan(distBefore);
@@ -306,8 +306,8 @@ class EchoBossMovementTest {
 	}
 
 	@Test
-	@DisplayName("Hunting KEEP_DISTANCE at base speed spends one turn tick")
-	void huntingKeepDistanceAtBaseSpeedSpendsOneTick() {
+	@DisplayName("Hunting KEEP_DISTANCE at base speed still spends only a kite step")
+	void huntingKeepDistanceAtBaseSpeedSpendsKiteStep() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = keepDistanceDefaultPolicy();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
@@ -323,11 +323,11 @@ class EchoBossMovementTest {
 		Assertions.assertThat(boss.pos).isNotEqualTo(start);
 		Assertions.assertThat(sprite.lastPlace).isEqualTo(boss.pos);
 		Assertions.assertThat(boss.speed()).isEqualTo(1f);
-		Assertions.assertThat(boss.cooldown()).isEqualTo(1f);
+		Assertions.assertThat(boss.cooldown()).isEqualTo(boss.kiteStepDelay());
 	}
 
 	@Test
-	@DisplayName("Kiting when closer than ideal steps away with sprite and 1/speed spend")
+	@DisplayName("Kiting when closer than ideal steps away with sprite and kite-speed spend")
 	void kitingWhenTooCloseStepsAway() {
 		Hero hero = huntressHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, kitePolicy(), 5);
@@ -345,7 +345,7 @@ class EchoBossMovementTest {
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isGreaterThan(distBefore);
 		Assertions.assertThat(Dungeon.level.adjacent(start, boss.pos)).isTrue();
 		Assertions.assertThat(sprite.lastPlace).isEqualTo(boss.pos);
-		Assertions.assertThat(boss.cooldown()).isEqualTo(1f / boss.speed());
+		Assertions.assertThat(boss.cooldown()).isEqualTo(boss.kiteStepDelay());
 	}
 
 	@Test
@@ -433,7 +433,7 @@ class EchoBossMovementTest {
 				boss,
 				boss.getEchoPolicy(),
 				ready("CLOSE_IN"),
-				new EchoPolicyChoice("CLOSE_IN", "positioning", null));
+				new EchoPlan("CLOSE_IN", "positioning", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.pos).isEqualTo(start);
@@ -452,7 +452,7 @@ class EchoBossMovementTest {
 				boss,
 				boss.getEchoPolicy(),
 				ready("HOLD"),
-				new EchoPolicyChoice("HOLD", "default", null));
+				new EchoPlan("HOLD", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.pos).isEqualTo(start);
@@ -508,7 +508,7 @@ class EchoBossMovementTest {
 
 		Assertions.assertThat(acted).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos)).isGreaterThan(distBefore);
-		Assertions.assertThat(boss.cooldown()).isEqualTo(1f / boss.speed());
+		Assertions.assertThat(boss.cooldown()).isEqualTo(boss.kiteStepDelay());
 	}
 
 	@Test

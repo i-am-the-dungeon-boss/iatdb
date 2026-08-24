@@ -48,7 +48,7 @@ class EchoInvisibleSurpriseTest {
 		Buff.affect(boss, Invisibility.class, 20f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("RANGED")).isTrue();
 		Assertions.assertThat(choice).isNotNull();
@@ -64,7 +64,7 @@ class EchoInvisibleSurpriseTest {
 		giveEchoItem(boss, new WandOfMagicMissile());
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.selfStatuses).doesNotContain("invisible");
 		Assertions.assertThat(choice).isNotNull();
@@ -86,7 +86,7 @@ class EchoInvisibleSurpriseTest {
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
 		boolean spent = EchoRoleExecutor.execute(boss, policy, status,
-				new EchoPolicyChoice("SURPRISE_SHOT", "reactions", null));
+				new EchoPlan("SURPRISE_SHOT", "reactions", null));
 
 		Assertions.assertThat(status.isRoleReady("SURPRISE_SHOT")).isTrue();
 		Assertions.assertThat(spent).isTrue();

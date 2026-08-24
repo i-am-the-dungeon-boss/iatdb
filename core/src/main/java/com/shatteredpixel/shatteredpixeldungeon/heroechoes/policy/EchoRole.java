@@ -85,6 +85,11 @@ public enum EchoRole {
 	// --- Obstacle clearing -----------------------------------------------------
 	CLEAR_LOS(Kind.PLAIN, null),
 	CLEAR_PLANT(Kind.PLAIN, null),
+	/**
+	 * Destroys a door the hero keeps dancing behind. Not reachable from a
+	 * playbook reaction: {@code EchoBoss.forceStalledDoor} decides when, and
+	 * the capability only says with what.
+	 */
 	DOOR_BREAK(Kind.PLAIN, null),
 
 	// --- Cleric spells ---------------------------------------------------------
@@ -158,6 +163,21 @@ public enum EchoRole {
 	/** Roles whose whole point is seeding a blob on the hero. */
 	public boolean isBlob() {
 		return kind == Kind.BLOB || kind == Kind.DAMAGE_BLOB;
+	}
+
+	/**
+	 * Roles that spend the turn sending something at the hero's cell, so they
+	 * are useless without a line to aim down. Virtual-tag roles are exempt:
+	 * {@code *melee} resolves its own contact target.
+	 * <p>
+	 * Readiness has to agree with {@link EchoTargetPicker}, or the matcher picks
+	 * a role the executor cannot aim, the turn is forfeited to the hunting AI,
+	 * and the echo walks back into melee range it had just left.
+	 */
+	public boolean needsAimAtEnemy() {
+		return virtualTag == null
+				&& (kind == Kind.DAMAGE || kind == Kind.DAMAGE_BLOB
+						|| kind == Kind.BLOB || kind == Kind.THROW);
 	}
 
 	/** Roles whose whole point is putting distance between echo and hero. */

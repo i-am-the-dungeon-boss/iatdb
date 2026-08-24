@@ -46,8 +46,8 @@ class InvisibilityDodgeDispelTest {
 	}
 
 	@Test
-	@DisplayName("Hero missile miss does not dispel hero invisibility")
-	void heroMissileMissKeepsInvisibility() {
+	@DisplayName("Hero missile miss resolves the shot from stealth before revealing")
+	void heroMissileMissResolvesFromStealth() {
 		Hero hero = rogueHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				hero, EchoTestSupport.healCapabilityPolicy(), 5);
@@ -62,8 +62,10 @@ class InvisibilityDodgeDispelTest {
 		boolean hit = hero.shoot(boss, knife);
 
 		Assertions.assertThat(hit).isFalse();
+		// Attack resolution never reveals on a miss; the throw itself does, and
+		// only afterwards — see InvisibilityThrowDispelTest.
 		Assertions.assertThat(hero.buff(Invisibility.class))
-				.as("hero dodge-miss must keep invisibility")
+				.as("attack resolution must not reveal before the shot lands")
 				.isNotNull();
 		Assertions.assertThat(hero.invisible).isGreaterThan(0);
 	}

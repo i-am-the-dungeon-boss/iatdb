@@ -56,7 +56,7 @@ class EchoShieldResponseTest {
 		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
 
 		boolean spent = EchoRoleExecutor.execute(boss, policy, status,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(EchoUntouchable.temporaryShielding(boss)).isGreaterThan(0);
@@ -93,7 +93,7 @@ class EchoShieldResponseTest {
 
 		EchoPolicyStatus first = EchoPolicyStatusBuilder.build(boss, policy);
 		EchoRoleExecutor.execute(boss, policy, first,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 
 		EchoPolicyStatus next = EchoPolicyStatusBuilder.build(boss, policy);
 
@@ -114,7 +114,7 @@ class EchoShieldResponseTest {
 
 		EchoPolicyStatus first = EchoPolicyStatusBuilder.build(boss, policy);
 		EchoRoleExecutor.execute(boss, policy, first,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 		// The peak is recorded by the next sense, as it is in a real fight.
 		EchoPolicyStatusBuilder.build(boss, policy);
 		int peak = EchoUntouchable.temporaryShielding(boss);
@@ -125,7 +125,7 @@ class EchoShieldResponseTest {
 		Assertions.assertThat(next.isRoleReady(EchoPolicyHazards.SHIELD_SELF)).isTrue();
 
 		EchoRoleExecutor.execute(boss, policy, next,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 		Assertions.assertThat(countItem(boss, PotionOfShielding.class)).isZero();
 	}
 

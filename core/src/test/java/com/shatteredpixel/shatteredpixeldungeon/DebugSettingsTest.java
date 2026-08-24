@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
@@ -149,6 +150,37 @@ class DebugSettingsTest {
 		Assertions.assertThat(Dungeon.depth).isEqualTo(14);
 		Assertions.assertThat(hero.lvl).isEqualTo(DebugSettings.START_LEVEL);
 		Assertions.assertThat(hero.STR).isEqualTo(DebugSettings.START_STR);
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives the hero a stack of firebloom seeds")
+	void applyDebugStartGivesFirebloomSeeds() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(true);
+		DebugSettings.applyDebugStart();
+
+		Firebloom.Seed seeds = hero.belongings.getItem(Firebloom.Seed.class);
+		Assertions.assertThat(seeds).isNotNull();
+		Assertions.assertThat(seeds.quantity()).isEqualTo(DebugSettings.DEBUG_SEED_STACK);
+		Assertions.assertThat(DebugSettings.DEBUG_SEED_STACK).isEqualTo(10);
+	}
+
+	@Test
+	@DisplayName("applyDebugStart gives no firebloom seeds when debug start is off")
+	void applyDebugStartGivesNoSeedsWhenDisabled() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+
+		DebugSettings.setDebugBuildOverride(true);
+		DebugSettings.setDebugStart(false);
+		DebugSettings.applyDebugStart();
+
+		Assertions.assertThat(hero.belongings.getItem(Firebloom.Seed.class)).isNull();
 	}
 
 	@ParameterizedTest(name = "{0} gets {1}")

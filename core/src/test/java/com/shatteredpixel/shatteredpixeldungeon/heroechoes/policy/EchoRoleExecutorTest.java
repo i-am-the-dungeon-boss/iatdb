@@ -70,7 +70,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HOLD")).build(),
-				new EchoPolicyChoice("HOLD", "default", null));
+				new EchoPlan("HOLD", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 	}
@@ -86,7 +86,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("MELEE")).build(),
-				new EchoPolicyChoice("MELEE", "default", null));
+				new EchoPlan("MELEE", "default", null));
 
 		Assertions.assertThat(spent).isFalse();
 	}
@@ -103,7 +103,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("KEEP_DISTANCE")).build(),
-				new EchoPolicyChoice("KEEP_DISTANCE", "positioning", null));
+				new EchoPlan("KEEP_DISTANCE", "positioning", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(Dungeon.level.distance(boss.pos, hero.pos))
@@ -125,12 +125,12 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HEAL")).build(),
-				new EchoPolicyChoice("HEAL", "reactions", null));
+				new EchoPlan("HEAL", "reactions", null));
 		boolean second = EchoRoleExecutor.execute(
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HEAL")).build(),
-				new EchoPolicyChoice("HEAL", "reactions", null));
+				new EchoPlan("HEAL", "reactions", null));
 
 		Assertions.assertThat(first).isTrue();
 		Assertions.assertThat(second).isTrue();
@@ -151,7 +151,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HASTE")).build(),
-				new EchoPolicyChoice("HASTE", "reactions", null));
+				new EchoPlan("HASTE", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Haste.class)).isNotNull();
@@ -172,7 +172,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("INVIS")).build(),
-				new EchoPolicyChoice("INVIS", "reactions", null));
+				new EchoPlan("INVIS", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Invisibility.class)).isNotNull();
@@ -195,7 +195,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("CLEANSE")).build(),
-				new EchoPolicyChoice("CLEANSE", "reactions", null));
+				new EchoPlan("CLEANSE", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Poison.class)).isNull();
@@ -216,7 +216,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HEAL")).build(),
-				new EchoPolicyChoice("HEAL", "reactions", null));
+				new EchoPlan("HEAL", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Barrier.class)).isNotNull();
@@ -240,7 +240,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STAMINA")).build(),
-				new EchoPolicyChoice("STAMINA", "reactions", null));
+				new EchoPlan("STAMINA", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Stamina.class)).isNotNull();
@@ -261,7 +261,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARCANE_ARMOR")).build(),
-				new EchoPolicyChoice("ARCANE_ARMOR", "reactions", null));
+				new EchoPlan("ARCANE_ARMOR", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(ArcaneArmor.class)).isNotNull();
@@ -283,7 +283,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("EARTHEN_ARMOR")).build(),
-				new EchoPolicyChoice("EARTHEN_ARMOR", "reactions", null));
+				new EchoPlan("EARTHEN_ARMOR", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Barkskin.class)).isNotNull();
@@ -305,7 +305,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STRENGTH")).build(),
-				new EchoPolicyChoice("STRENGTH", "reactions", null));
+				new EchoPlan("STRENGTH", "reactions", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfStrength.class)).isNotNull();
@@ -325,7 +325,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("PURITY")).build(),
-				new EchoPolicyChoice("PURITY", "reactions", null));
+				new EchoPlan("PURITY", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(BlobImmunity.class)).isNotNull();
@@ -347,7 +347,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("CLEANSE_BURN")).build(),
-				new EchoPolicyChoice("CLEANSE_BURN", "reactions", null));
+				new EchoPlan("CLEANSE_BURN", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		// Same as Hero drink: apply → shatter. No Echo-only Burning.detach.
@@ -372,7 +372,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("DRAGONS_BREATH")).build(),
-				new EchoPolicyChoice("DRAGONS_BREATH", "reactions", null));
+				new EchoPlan("DRAGONS_BREATH", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.buff(Burning.class)).isNotNull();
@@ -398,7 +398,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("SETUP_CC", "reactions", null));
+				new EchoPlan("SETUP_CC", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfParalyticGas.class)).isNull();
@@ -427,7 +427,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("SETUP_CC", "reactions", null));
+				new EchoPlan("SETUP_CC", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(stage.lastMissile)
@@ -467,7 +467,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+				new EchoPlan("PAYOFF_AOE", "recipes", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(stage.lastMissile).isNotNull();
@@ -508,7 +508,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
@@ -540,7 +540,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().distance(2).rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
@@ -561,7 +561,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().distance(1).rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(SpiritBow.class)).isNotNull();
@@ -589,7 +589,7 @@ class EchoRoleExecutorTest {
 						.enemyStatuses(java.util.Set.of("invisible"))
 						.rolesReady(java.util.Set.of("RANGED"))
 						.build(),
-				new EchoPolicyChoice("RANGED", "reactions", null));
+				new EchoPlan("RANGED", "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
@@ -615,7 +615,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().distance(2).rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(stage.lastMissile)
@@ -651,7 +651,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+				new EchoPlan("PAYOFF_AOE", "recipes", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfLiquidFlame.class)).isNotNull();
@@ -674,7 +674,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+				new EchoPlan("PAYOFF_AOE", "recipes", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(Bomb.class)).isNull();
@@ -711,7 +711,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				status,
-				new EchoPolicyChoice("PAYOFF_AOE", "recipes", null));
+				new EchoPlan("PAYOFF_AOE", "recipes", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(StoneOfBlast.class)).isNull();
@@ -743,7 +743,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("THROW")).build(),
-				new EchoPolicyChoice("THROW", "default", null));
+				new EchoPlan("THROW", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
@@ -763,7 +763,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SCROLL")).build(),
-				new EchoPolicyChoice("SCROLL", "default", null));
+				new EchoPlan("SCROLL", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Recharging.class)).isNotNull();
@@ -790,7 +790,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SCROLL")).build(),
-				new EchoPolicyChoice("SCROLL", "default", null));
+				new EchoPlan("SCROLL", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(sword.level()).isEqualTo(levelBefore + 1);
@@ -816,7 +816,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
-				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+				new EchoPlan("ARMOR_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNotNull();
@@ -840,7 +840,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("STEALTH")).build(),
-				new EchoPolicyChoice("STEALTH", "default", null));
+				new EchoPlan("STEALTH", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(CloakOfShadows.cloakStealth.class)).isNotNull();
@@ -863,7 +863,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("HOLY_WARD")).build(),
-				new EchoPolicyChoice("HOLY_WARD", "default", null));
+				new EchoPlan("HOLY_WARD", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions
@@ -893,7 +893,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
-				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+				new EchoPlan("ARMOR_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.buff(Endure.EndureTracker.class)).isNull();
@@ -917,7 +917,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ARMOR_ABILITY")).build(),
-				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+				new EchoPlan("ARMOR_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(armor.charge).isLessThan(100);
@@ -1014,7 +1014,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("WEAPON_ABILITY")).build(),
-				new EchoPolicyChoice("WEAPON_ABILITY", "default", null));
+				new EchoPlan("WEAPON_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.buff(Scimitar.SwordDance.class)).isNotNull();
@@ -1045,7 +1045,7 @@ class EchoRoleExecutorTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("WEAPON_ABILITY")).build(),
-				new EchoPolicyChoice("WEAPON_ABILITY", "default", null));
+				new EchoPlan("WEAPON_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isFalse();
 		Assertions.assertThat(boss.buff(Scimitar.SwordDance.class)).isNull();

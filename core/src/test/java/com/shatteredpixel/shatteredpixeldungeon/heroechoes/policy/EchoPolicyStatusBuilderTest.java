@@ -170,7 +170,7 @@ class EchoPolicyStatusBuilderTest {
 		drainRangedCharges(boss.getEchoHero());
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, java.util.Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, java.util.Collections.emptyMap());
 
 		Assertions.assertThat(status.isRoleReady("RANGED")).isFalse();
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();

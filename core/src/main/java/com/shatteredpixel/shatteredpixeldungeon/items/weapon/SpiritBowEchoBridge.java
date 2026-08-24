@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoActionContext;
@@ -54,6 +55,9 @@ public final class SpiritBowEchoBridge {
 					}
 				});
 			});
+			// Throwing is a reveal, and it is the body that loosed the arrow —
+			// the phantom kit stands nowhere, so dispelling it exposes nobody.
+			Invisibility.dispelOnThrow(ctx.body);
 			ctx.complete(delay);
 		};
 

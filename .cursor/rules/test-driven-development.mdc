@@ -37,29 +37,109 @@ Before changing behavior, check for coverage of the logic you will touch.
 
 **Agent test runs:** always pass `-q -PerrorProneOff`. Do not dump EP / lifecycle noise into the session. Drop those flags only when the user asks for Error Prone output or a PR quality gate.
 
-## Test quality
+## Test quality — assert behavior, not execution
+
+A test earns its place by failing when the **game is wrong**, not when the code path is
+merely absent. Most weak tests here pass because something happened at all.
+
+### Assert the value, not the direction
+
+Exact numbers are the point for anything the player feels: charge cost, cooldown, damage,
+HP scaling per depth, spawn charges, durations, drop counts.
+
+```java
+// ❌ WEAK — passes if the cost changes from 35 to 1
+Assertions.assertThat(armor.charge).isLessThan(chargeBefore);
+// ✅ STRONG — a balance change must update this test deliberately
+Assertions.assertThat(armor.charge).isEqualTo(chargeBefore - 35);
+```
+
+Use `isLessThan` / `isGreaterThan` only when the exact value is genuinely
+non-deterministic (RNG rolls), and then bound both ends.
+
+### Assert the magnitude, not the existence
+
+`buff(Drowsy.class) != null` says a buff attached. Assert the buff's duration, stacks, or
+resulting HP/state — the thing that decides the fight.
+
+### Prefer one invariant over N copies
+
+Before writing the 12th near-identical `Echo*KindsTest`, ask whether the property holds for
+*every* member of the family, and write that instead:
+
+- "every arsenal item an Echo can use produces the same observable effect as the Hero using it"
+- "no armor-ability adapter call leaves the boss unable to act"
+- "every `Bundlable` mod class round-trips through save/load unchanged"
+
+Parameterized (`@ParameterizedTest` + `@MethodSource` over the real registry) beats a
+hand-maintained file per case: it covers the members nobody remembered to write, and it
+fails when someone adds a new one.
+
+Corollary: **crash-safety belongs in a fixture, not in every test.** Sprite-less NPE guards
+and "can still take its next turn" checks go in shared `@AfterEach` / `EchoTestSupport`
+assertions once, not copy-pasted per ability. Matches
+[no-pass-through-wrappers.mdc](iatdb/.cursor/rules/no-pass-through-wrappers.mdc)'s bias:
+enforce structurally, don't repeat per site.
+
+### Test our logic, not upstream's
+
+Running a vanilla scroll through an adapter and asserting the vanilla effect re-tests
+Shattered Pixel Dungeon. The mod's contract is the *equivalence*: an Echo using item X gets
+the same outcome the Hero would. Assert that equivalence, not the effect itself.
+
+### Cover the contract, not the surface
+
+For Hero Echoes the contract is "another player's hero fights as a boss, faithfully, fairly,
+reproducibly". So the tests that matter most:
+
+- **Fidelity** — hydrated boss has the same effective stats/kit as the source hero (stronger than a bundle round-trip).
+- **Hostile input** — malformed or tampered snapshots from the backend are *rejected*, never clamped into a playable boss (see [fail-dont-fake.mdc](workspace-rules/.cursor/rules/fail-dont-fake.mdc)).
+- **Decision quality** — the AI *chooses* correctly (drinks the healing potion at low HP), not merely that it *may* act.
+- **Persistence** — save/load across a rename or field addition still yields the same fight.
+
+### Mechanics
 
 - One behavior per test; split if the name needs "and".
-- Prefer **real fixtures** over mocking the game (`GdxTestExtension`, `EchoTestSupport`). Test seams (`set…ForTests`) are fine.
+- Prefer **real fixtures** over mocking the game (`GdxTestExtension`, `EchoTestSupport`). Test seams (`set...ForTests`) are fine.
 - Mirror production packages under `core/src/test/java/`.
 - Never fix a bug without a failing reproduction test first.
 - EchoBoss / world-VFX combat: use skill `echo-combat-vfx-test` / `EchoTestSupport.installEchoBossLevel` — hollow sprite-less fights hide NPEs.
 
+## Mutation check (the RED gate)
+
+Before accepting a green test, confirm it would catch a real regression: change the
+production constant or flip the branch, and the test must fail. If tweaking a number leaves
+it green, the assertion is too loose — tighten it. This is what "Verify RED" means for
+characterization tests, which have no natural red phase.
+
 ## Good vs Bad
 
 ```java
-// ✅ GOOD
+// GOOD — exact, one behavior, fails on a balance change
 @Test
-@DisplayName("rejects snapshot when depth is invalid")
-void rejectsInvalidDepth() {
-	Assertions.assertThatThrownBy(() -> Echo.create(-1, ...))
-		.isInstanceOf(IllegalArgumentException.class);
+@DisplayName("HeroicLeap costs 35 armor charge for an Echo")
+void leapCostsThirtyFive() {
+	WarriorArmor armor = chargedArmor(100);
+	EchoArmorAbilityAdapter.activate(boss, armor, new HeroicLeap(), dest);
+	Assertions.assertThat(armor.charge).isEqualTo(65f);
 }
 
-// ❌ BAD — vague, asserts almost nothing
+// GOOD — invariant over the whole family
+@ParameterizedTest
+@MethodSource("everyArmorAbility")
+@DisplayName("every armor ability leaves the Echo boss able to act")
+void abilitiesLeaveBossActionable(ArmorAbility ability) { ... }
+
+// BAD — vague, asserts almost nothing
 @Test
 void testSnapshot() {
 	Assertions.assertThat(Echo.create(5, ...)).isNotNull();
+}
+
+// BAD — directional; survives cost dropping to zero
+@Test
+void spendsCharge() {
+	Assertions.assertThat(armor.charge).isLessThan(before);
 }
 ```
 
@@ -68,6 +148,9 @@ void testSnapshot() {
 - [ ] Untested current logic was characterized with passing tests before changes
 - [ ] New/changed behavior had a failing test before implementation
 - [ ] Minimal green; `./gradlew :core:test -q -PerrorProneOff` clean
+- [ ] Assertions are exact (not merely directional) for every player-facing number
+- [ ] Mutation check: perturbing the production value/branch makes the new tests fail
+- [ ] A family-wide invariant was considered before adding another per-case test file
 - [ ] Feature work: report **tests created**, **gaps**, **redundant** (`@DisplayName` titles); ask before filling/removing
 
 ## Exceptions (ask if unsure)

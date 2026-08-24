@@ -1,13 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
-import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDragonsBreath;
-import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
-import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
-import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.IncendiaryDart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -26,25 +18,11 @@ public final class EchoPolicyMatcher {
 	private EchoPolicyMatcher() {
 	}
 
-	/** Items policy generation arms under {@code DOOR_BREAK}. */
-	public static boolean isDoorBreakItem(Item item) {
-		if (item == null) {
-			return false;
-		}
-		return item instanceof WandOfFireblast
-				|| item instanceof WandOfDisintegration
-				|| item instanceof Bomb
-				|| item instanceof StoneOfBlast
-				|| item instanceof PotionOfLiquidFlame
-				|| item instanceof PotionOfDragonsBreath
-				|| item instanceof IncendiaryDart;
-	}
-
 	/**
 	 * @param recipeSteps current step index per recipe id (mutated by caller after
 	 *                    successful execute)
 	 */
-	public static EchoPolicyChoice choose(
+	public static EchoPlan choose(
 			EchoPolicy policy,
 			EchoPolicyStatus status,
 			Map<String, Integer> recipeSteps) {
@@ -59,42 +37,42 @@ public final class EchoPolicyMatcher {
 
 		for (int i = 0; i < order.length(); i++) {
 			String layer = order.optString(i, "");
-			EchoPolicyChoice choice = null;
+			EchoPlan plan = null;
 			switch (layer) {
 				case "reactions":
-					choice = matchReactions(root.optJSONArray("reactions"), status);
+					plan = matchReactions(root.optJSONArray("reactions"), status);
 					break;
 				case "recipes":
-					choice = matchRecipes(root.optJSONArray("recipes"), status, recipeSteps);
+					plan = matchRecipes(root.optJSONArray("recipes"), status, recipeSteps);
 					break;
 				case "positioning":
-					choice = matchPositioning(root.optJSONObject("positioning"), status);
+					plan = matchPositioning(root.optJSONObject("positioning"), status);
 					break;
 				case "matchups":
-					choice = matchMatchups(root.optJSONObject("matchups"), status);
+					plan = matchMatchups(root.optJSONObject("matchups"), status);
 					break;
 				case "default":
-					choice = matchDefaultRoles(
+					plan = matchDefaultRoles(
 							selection != null ? selection.optJSONArray("default_roles") : null,
 							status);
 					break;
 				default:
 					break;
 			}
-			if (choice != null) {
-				return choice;
+			if (plan != null) {
+				return plan;
 			}
 		}
 
 		// Optional escape-hatch rules[] after selection order.
-		EchoPolicyChoice rules = matchReactions(root.optJSONArray("rules"), status);
+		EchoPlan rules = matchReactions(root.optJSONArray("rules"), status);
 		if (rules != null) {
-			return new EchoPolicyChoice(rules.useRole, "rules", null);
+			return EchoPlan.resolve(rules.useRole, "rules", null, status);
 		}
 		return null;
 	}
 
-	private static EchoPolicyChoice matchReactions(JSONArray reactions, EchoPolicyStatus status) {
+	private static EchoPlan matchReactions(JSONArray reactions, EchoPolicyStatus status) {
 		if (reactions == null || reactions.length() == 0)
 			return null;
 		List<JSONObject> sorted = new ArrayList<>();
@@ -115,12 +93,12 @@ public final class EchoPolicyMatcher {
 				continue;
 			if (!EchoPolicyWhen.matches(when, status))
 				continue;
-			return new EchoPolicyChoice(role, "reactions", null);
+			return EchoPlan.resolve(role, "reactions", null, status);
 		}
 		return null;
 	}
 
-	private static EchoPolicyChoice matchRecipes(
+	private static EchoPlan matchRecipes(
 			JSONArray recipes,
 			EchoPolicyStatus status,
 			Map<String, Integer> recipeSteps) {
@@ -155,7 +133,7 @@ public final class EchoPolicyMatcher {
 				continue;
 			if (!EchoPolicyWhen.matches(step.optJSONObject("when"), status))
 				continue;
-			return new EchoPolicyChoice(role, "recipes", id);
+			return EchoPlan.resolve(role, "recipes", id, status);
 		}
 		return null;
 	}
@@ -170,8 +148,8 @@ public final class EchoPolicyMatcher {
 			return false;
 		}
 		JSONObject positioning = policy.root().optJSONObject("positioning");
-		EchoPolicyChoice choice = matchPositioning(positioning, status);
-		if (choice != null && "KEEP_DISTANCE".equals(choice.useRole)) {
+		EchoPlan plan = matchPositioning(positioning, status);
+		if (plan != null && "KEEP_DISTANCE".equals(plan.useRole)) {
 			return true;
 		}
 		JSONObject stance = stanceFor(positioning, status);
@@ -192,7 +170,7 @@ public final class EchoPolicyMatcher {
 		return stance;
 	}
 
-	private static EchoPolicyChoice matchPositioning(JSONObject positioning, EchoPolicyStatus status) {
+	private static EchoPlan matchPositioning(JSONObject positioning, EchoPolicyStatus status) {
 		JSONObject stance = stanceFor(positioning, status);
 		if (stance == null)
 			return null;
@@ -214,10 +192,10 @@ public final class EchoPolicyMatcher {
 		if (role == null || role.isEmpty() || !status.isRoleReady(role)) {
 			return null;
 		}
-		return new EchoPolicyChoice(role, "positioning", null);
+		return EchoPlan.resolve(role, "positioning", null, status);
 	}
 
-	private static EchoPolicyChoice matchMatchups(JSONObject matchups, EchoPolicyStatus status) {
+	private static EchoPlan matchMatchups(JSONObject matchups, EchoPolicyStatus status) {
 		if (matchups == null)
 			return null;
 		JSONObject entry = matchups.optJSONObject(status.enemyClass);
@@ -234,19 +212,19 @@ public final class EchoPolicyMatcher {
 		for (int i = 0; i < prefer.length(); i++) {
 			String role = prefer.optString(i, "");
 			if (!role.isEmpty() && status.isRoleReady(role)) {
-				return new EchoPolicyChoice(role, "matchups", null);
+				return EchoPlan.resolve(role, "matchups", null, status);
 			}
 		}
 		return null;
 	}
 
-	private static EchoPolicyChoice matchDefaultRoles(JSONArray defaults, EchoPolicyStatus status) {
+	private static EchoPlan matchDefaultRoles(JSONArray defaults, EchoPolicyStatus status) {
 		if (defaults == null)
 			return null;
 		for (int i = 0; i < defaults.length(); i++) {
 			String role = defaults.optString(i, "");
 			if (!role.isEmpty() && status.isRoleReady(role)) {
-				return new EchoPolicyChoice(role, "default", null);
+				return EchoPlan.resolve(role, "default", null, status);
 			}
 		}
 		return null;

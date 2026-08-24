@@ -1,7 +1,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat;
@@ -80,6 +82,25 @@ class GuidingLightHitTest {
 		Assertions.assertThat(GuidingLightHit.isClericAlly(new Rat())).isFalse();
 		// A cleric attacker is never "an ally" — it is the cleric.
 		Assertions.assertThat(GuidingLightHit.isClericAlly(boss)).isFalse();
+	}
+
+	@Test
+	@DisplayName("an Illuminated echo body is a guaranteed hit for the cleric player")
+	void illuminatedEchoBodyCannotEvadeTheCleric() {
+		EchoBoss boss = clericEcho();
+		boss.getEchoHero().heroClass = HeroClass.WARRIOR;
+		Hero player = Dungeon.hero;
+		player.heroClass = HeroClass.CLERIC;
+
+		Assertions.assertThat(boss.defenseSkill(player))
+				.as("without Guiding Light the echo still evades")
+				.isGreaterThan(0);
+
+		Buff.affect(boss, GuidingLight.Illuminated.class);
+
+		Assertions.assertThat(boss.defenseSkill(player))
+				.as("Illuminated lands on the body, so the body must answer 0")
+				.isZero();
 	}
 
 	@Test

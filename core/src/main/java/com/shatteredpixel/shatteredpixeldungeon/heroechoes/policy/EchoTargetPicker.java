@@ -45,21 +45,28 @@ public final class EchoTargetPicker {
 			return -1;
 		}
 
-		if (!aoeHazard) {
-			return focus;
+		boolean blastMitigated = status.isSafeFor(EchoPolicyHazards.FIRE_AOE)
+				|| status.isSafeFor(EchoPolicyHazards.PAYOFF_AOE);
+
+		// Aim is on the enemy itself unless a splash the echo cannot shrug off would
+		// catch the echo too. A shot a wall stops short of never reaches the enemy,
+		// so it is no aim at all.
+		if (!aoeHazard || blastMitigated || !splashCovers(level, focus, boss.pos)) {
+			return reachesUnobstructed(boss.pos, focus) ? focus : -1;
 		}
 
-		// Prefer a neighbour of the focus whose blast does not include the echo.
+		// Echo stands in the blast: the only shot worth firing is one that bursts
+		// where the splash still covers the enemy but no longer covers the echo.
 		int best = -1;
 		int bestScore = Integer.MIN_VALUE;
 		for (int i = 0; i < PathFinder.NEIGHBOURS9.length; i++) {
 			int cell = focus + PathFinder.NEIGHBOURS9[i];
 			if (cell < 0 || cell >= level.length() || level.solid[cell])
 				continue;
-			boolean harmsEcho = level.distance(cell, boss.pos) <= 1
-					&& !status.isSafeFor(EchoPolicyHazards.FIRE_AOE)
-					&& !status.isSafeFor(EchoPolicyHazards.PAYOFF_AOE);
-			if (harmsEcho)
+			// Where the throw/zap actually bursts, which is short of the aim cell
+			// when a wall or another body intercepts it.
+			int burst = new Ballistica(boss.pos, cell, Ballistica.PROJECTILE).collisionPos;
+			if (!splashCovers(level, burst, focus) || splashCovers(level, burst, boss.pos))
 				continue;
 			int score = level.distance(cell, boss.pos);
 			if (score > bestScore) {
@@ -67,15 +74,22 @@ public final class EchoTargetPicker {
 				best = cell;
 			}
 		}
-		if (best >= 0)
-			return best;
+		return best;
+	}
 
-		// Allow focus cell only when already mitigated.
-		if (status.isSafeFor(EchoPolicyHazards.FIRE_AOE)
-				|| status.isSafeFor(EchoPolicyHazards.PAYOFF_AOE)) {
-			return focus;
-		}
-		return -1;
+	/** Whether a splash centred on {@code blast} reaches {@code cell}. */
+	private static boolean splashCovers(Level level, int blast, int cell) {
+		return level.distance(blast, cell) <= 1;
+	}
+
+	/**
+	 * Whether a throw/zap aimed at {@code to} gets there at all: only terrain is
+	 * checked, since a body in the line is the thing being shot at (or worth
+	 * hitting on the way).
+	 */
+	private static boolean reachesUnobstructed(int from, int to) {
+		Ballistica path = new Ballistica(from, to, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID);
+		return path.collisionPos == to;
 	}
 
 	/**

@@ -1,8 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 /**
  * Shared hazard, status and role id strings used by status building, target
  * picking and the generated playbook. Keeping them here stops Java and the
@@ -60,13 +57,6 @@ public final class EchoPolicyHazards {
 	/** Barrier-granting kit the echo turns on itself; distinct from ARCANE_ARMOR. */
 	public static final String SHIELD_SELF = EchoRole.SHIELD_SELF.id();
 
-	private static final String[] SETUP_CC_STUN_ITEMS = {
-			"PotionOfParalyticGas",
-			"PotionOfFrost",
-			"PotionOfSnapFreeze",
-			"FlashBangBomb",
-	};
-
 	private EchoPolicyHazards() {
 	}
 
@@ -93,43 +83,5 @@ public final class EchoPolicyHazards {
 	/** Roles the echo can usefully spend a wasted window on — see EchoUntouchable.PREP_ORDER. */
 	public static boolean isPrepRole(String role) {
 		return EchoRole.isPrepRole(role);
-	}
-
-	/**
-	 * Copy of {@code cap} without SETUP_CC stun items (gas, frost, flashbang,
-	 * snap freeze), used while the hero sits under the shared stun lockout.
-	 */
-	public static JSONObject withoutParalyticGas(JSONObject cap) {
-		if (cap == null) {
-			return null;
-		}
-		JSONArray items = cap.optJSONArray("items");
-		if (items == null) {
-			return cap;
-		}
-		JSONArray kept = new JSONArray();
-		for (int i = 0; i < items.length(); i++) {
-			String id = items.optString(i, "");
-			if (!isSetupCcStunItem(id)) {
-				kept.put(id);
-			}
-		}
-		JSONObject copy = new JSONObject();
-		copy.put("pick", cap.optString("pick", "FIRST_LEGAL"));
-		copy.put("items", kept);
-		String hazard = cap.optString("hazard", "");
-		if (!hazard.isEmpty()) {
-			copy.put("hazard", hazard);
-		}
-		return copy;
-	}
-
-	private static boolean isSetupCcStunItem(String id) {
-		for (int i = 0; i < SETUP_CC_STUN_ITEMS.length; i++) {
-			if (SETUP_CC_STUN_ITEMS[i].equals(id)) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

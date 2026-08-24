@@ -52,7 +52,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
@@ -164,7 +164,7 @@ class EchoBossArsenalConsumableKindsTest {
 					.put("PURITY", EchoTestSupport.capability("PotionOfPurity")));
 			boolean spent = EchoRoleExecutor.execute(
 					f.boss, policy, status("PURITY"),
-					new EchoPolicyChoice("PURITY", "default", null));
+					new EchoPlan("PURITY", "default", null));
 
 			Assertions.assertThat(spent).isTrue();
 			Assertions.assertThat(f.kit().cooldown()).isEqualTo(kitBefore);
@@ -183,7 +183,7 @@ class EchoBossArsenalConsumableKindsTest {
 					.put("HEAL", EchoTestSupport.capability("PotionOfMindVision")));
 			boolean spent = EchoRoleExecutor.execute(
 					f.boss, policy, status("HEAL"),
-					new EchoPolicyChoice("HEAL", "default", null));
+					new EchoPlan("HEAL", "default", null));
 
 			Assertions.assertThat(spent).isFalse();
 			Assertions.assertThat(f.kit().belongings.getItem(PotionOfMindVision.class)).isNotNull();
@@ -201,7 +201,7 @@ class EchoBossArsenalConsumableKindsTest {
 					.put("HEAL", EchoTestSupport.capability("PotionOfStrength")));
 			boolean spent = EchoRoleExecutor.execute(
 					f.boss, policy, status("HEAL"),
-					new EchoPolicyChoice("HEAL", "default", null));
+					new EchoPlan("HEAL", "default", null));
 
 			Assertions.assertThat(spent).isFalse();
 			Assertions.assertThat(f.kit().belongings.getItem(PotionOfStrength.class)).isNotNull();
@@ -379,7 +379,7 @@ class EchoBossArsenalConsumableKindsTest {
 					.put("HEAL", EchoTestSupport.capability("ElixirOfMight")));
 			boolean spent = EchoRoleExecutor.execute(
 					f.boss, policy, status("HEAL"),
-					new EchoPolicyChoice("HEAL", "default", null));
+					new EchoPlan("HEAL", "default", null));
 
 			Assertions.assertThat(spent).isFalse();
 			Assertions.assertThat(f.kit().belongings.getItem(ElixirOfMight.class)).isNotNull();

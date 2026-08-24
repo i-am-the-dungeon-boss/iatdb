@@ -23,8 +23,6 @@ public final class EchoPolicyStatus {
 	public final float enemyShieldRatio;
 	public final int distance;
 	public final boolean enemyInLos;
-	/** Hero is door-dancing; policy may blast the stalling door. */
-	public final boolean doorStalling;
 	public final String selfClass;
 	public final String enemyClass;
 	public final String onTerrain;
@@ -38,6 +36,13 @@ public final class EchoPolicyStatus {
 	public final Map<String, Integer> terrainNearDistance;
 	/** terrain type → cell for MOVE_TO_*. */
 	public final Map<String, Integer> terrainNearCell;
+	/**
+	 * role id → the cell the sense phase resolved for it. Only the sense phase
+	 * knows the geometry behind a role like {@code CLEAR_PLANT} or
+	 * {@code CLEAR_LOS}, so it hands the cell to the plan here rather than
+	 * leaving execute to re-derive an aim it cannot reconstruct.
+	 */
+	private final Map<String, Integer> roleTargetCells;
 	public final Set<String> safeHazards;
 	public final Set<String> unsafeHazards;
 	public final int terrainNearTiles;
@@ -60,7 +65,6 @@ public final class EchoPolicyStatus {
 		this.enemyShieldRatio = b.enemyShieldRatio;
 		this.distance = b.distance;
 		this.enemyInLos = b.enemyInLos;
-		this.doorStalling = b.doorStalling;
 		this.selfClass = b.selfClass != null ? b.selfClass : "";
 		this.enemyClass = b.enemyClass != null ? b.enemyClass : "";
 		this.onTerrain = b.onTerrain != null ? b.onTerrain : "empty";
@@ -69,6 +73,7 @@ public final class EchoPolicyStatus {
 		this.rolesReady = Collections.unmodifiableSet(new HashSet<>(b.rolesReady));
 		this.terrainNearDistance = Collections.unmodifiableMap(new HashMap<>(b.terrainNearDistance));
 		this.terrainNearCell = Collections.unmodifiableMap(new HashMap<>(b.terrainNearCell));
+		this.roleTargetCells = Collections.unmodifiableMap(new HashMap<>(b.roleTargetCells));
 		this.safeHazards = Collections.unmodifiableSet(new HashSet<>(b.safeHazards));
 		this.unsafeHazards = Collections.unmodifiableSet(new HashSet<>(b.unsafeHazards));
 		this.terrainNearTiles = b.terrainNearTiles;
@@ -79,6 +84,15 @@ public final class EchoPolicyStatus {
 	public boolean isTerrainNear(String type) {
 		Integer d = terrainNearDistance.get(type);
 		return d != null && d <= terrainNearTiles;
+	}
+
+	/**
+	 * @return the cell the sense phase resolved for this role, or -1 when the
+	 *         role has no geometry of its own and execute should aim normally.
+	 */
+	public int targetCellFor(String role) {
+		Integer cell = roleTargetCells.get(role);
+		return cell != null ? cell : -1;
 	}
 
 	public boolean isRoleReady(String role) {
@@ -99,7 +113,6 @@ public final class EchoPolicyStatus {
 		private float enemyShieldRatio = 0f;
 		private int distance = 1;
 		private boolean enemyInLos = true;
-		private boolean doorStalling = false;
 		private String selfClass = "";
 		private String enemyClass = "";
 		private String onTerrain = "empty";
@@ -108,6 +121,7 @@ public final class EchoPolicyStatus {
 		private Set<String> rolesReady = new HashSet<>();
 		private Map<String, Integer> terrainNearDistance = new HashMap<>();
 		private Map<String, Integer> terrainNearCell = new HashMap<>();
+		private Map<String, Integer> roleTargetCells = new HashMap<>();
 		private Set<String> safeHazards = new HashSet<>();
 		private Set<String> unsafeHazards = new HashSet<>();
 		private int terrainNearTiles = 3;
@@ -136,11 +150,6 @@ public final class EchoPolicyStatus {
 
 		public Builder enemyInLos(boolean v) {
 			enemyInLos = v;
-			return this;
-		}
-
-		public Builder doorStalling(boolean v) {
-			doorStalling = v;
 			return this;
 		}
 
@@ -196,6 +205,19 @@ public final class EchoPolicyStatus {
 
 		public Builder terrainNearCell(String type, int cell) {
 			terrainNearCell.put(type, cell);
+			return this;
+		}
+
+		/** Records the sensed aim cell for a role; -1 clears it. */
+		public Builder roleTargetCell(String role, int cell) {
+			if (role == null) {
+				return this;
+			}
+			if (cell < 0) {
+				roleTargetCells.remove(role);
+			} else {
+				roleTargetCells.put(role, cell);
+			}
 			return this;
 		}
 

@@ -268,11 +268,11 @@ public final class EchoUntouchable {
 
 	/**
 	 * First {@link #PREP_ORDER} entry that is ready and not already spent in
-	 * this untouchable window, as a Java-layer choice.
+	 * this untouchable window, as a Java-layer plan.
 	 *
 	 * @return null when the echo has no unused prep left
 	 */
-	public static EchoPolicyChoice firstReadyPrep(EchoPolicyStatus status, Set<String> alreadyUsed) {
+	public static EchoPlan firstReadyPrep(EchoPolicyStatus status, Set<String> alreadyUsed) {
 		if (status == null) {
 			return null;
 		}
@@ -282,7 +282,7 @@ public final class EchoUntouchable {
 				continue;
 			}
 			if (status.isRoleReady(role)) {
-				return new EchoPolicyChoice(role, "java_untouchable", null);
+				return EchoPlan.resolve(role, "java_untouchable", null, status);
 			}
 		}
 		return null;

@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.GameMath;
@@ -30,6 +31,8 @@ public final class DebugSettings {
 	public static final int START_STR = 100;
 	/** Debug consumables come as a small stack so one fight can spend several. */
 	public static final int DEBUG_POTION_STACK = DebugStrategyKit.POTION_STACK;
+	/** Firebloom seeds handed out with the debug start, for quick fire testing. */
+	public static final int DEBUG_SEED_STACK = 10;
 	/**
 	 * Passed to {@link Dungeon#switchLevel} to place the hero on the down stairs.
 	 */
@@ -211,6 +214,10 @@ public final class DebugSettings {
 		Ankh blessed = new Ankh();
 		blessed.bless();
 		blessed.collect();
+
+		Firebloom.Seed seeds = new Firebloom.Seed();
+		seeds.quantity(DEBUG_SEED_STACK);
+		forceCollect(seeds);
 
 		if (debugStrategyKit()) {
 			new PotionBandolier().collect();

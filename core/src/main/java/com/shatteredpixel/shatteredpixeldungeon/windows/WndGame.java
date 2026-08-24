@@ -41,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.EchoSnapshotDebug;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.IntegrityReport;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -62,6 +63,8 @@ public class WndGame extends Window {
 	private static final int WIDTH = 120;
 	private static final int BTN_HEIGHT = 20;
 	private static final int GAP = 2;
+
+	private static final int REPORT_MAX_LENGTH = 500;
 
 	private int pos;
 
@@ -115,6 +118,31 @@ public class WndGame extends Window {
 			});
 			curBtn.icon(Icons.get(Icons.RANKINGS));
 		}
+
+		// Report an error — available in a run and in release builds.
+		addButton(curBtn = new RedButton(Messages.get(this, "report_error")) {
+			@Override
+			protected void onClick() {
+				hide();
+				GameScene.show(new WndTextInput(
+						Messages.get(WndGame.class, "report_error_title"),
+						Messages.get(WndGame.class, "report_error_body"),
+						"",
+						REPORT_MAX_LENGTH,
+						true,
+						Messages.get(WndGame.class, "report_error_send"),
+						Messages.get(WndGame.class, "report_error_cancel")) {
+					@Override
+					public void onSelect(boolean positive, String text) {
+						if (positive) {
+							SentryCrashReporting.reportUserMessage(text);
+							GLog.p(Messages.get(WndGame.class, "report_error_sent"));
+						}
+					}
+				});
+			}
+		});
+		curBtn.icon(Icons.get(Icons.WARNING));
 
 		if (showsEchoDebugTools()) {
 			RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
