@@ -19,6 +19,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Javelin;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
@@ -218,6 +219,39 @@ class EchoInventoryTest {
 		knives.quantity(0);
 
 		Assertions.assertThat(EchoInventory.availableIds(hero)).doesNotContain("ThrowingKnife");
+	}
+
+	/**
+	 * The reason RANGED needs no per-item ammo reserve: the finite missiles sit behind
+	 * every charge-based tool in the capability array, and an unusable wand simply
+	 * disappears from {@link EchoInventory#availableIds}, so the resolver walks onto
+	 * the ammo only once the free options are actually spent.
+	 */
+	@Test
+	@DisplayName("RANGED resolves to the Javelin only once the wand ahead of it is uncharged")
+	void rangedFallsThroughUnchargedWandToJavelin() {
+		Hero hero = EchoTestSupport.warriorHero();
+		WandOfMagicMissile wand = new WandOfMagicMissile();
+		wand.identify();
+		wand.collect(hero.belongings.backpack);
+		Javelin javelins = new Javelin();
+		javelins.identify();
+		javelins.quantity(3);
+		javelins.collect(hero.belongings.backpack);
+
+		org.json.JSONObject ranged = new org.json.JSONObject()
+				.put("pick", "MAX_DAMAGE")
+				.put("items", new JSONArray().put("WandOfMagicMissile").put("Javelin"));
+
+		Assertions.assertThat(
+						EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
+				.isEqualTo("WandOfMagicMissile");
+
+		wand.curCharges = 0;
+
+		Assertions.assertThat(
+						EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
+				.isEqualTo("Javelin");
 	}
 
 	@Test
