@@ -54,11 +54,11 @@ class EchoUntouchableTest {
 	}
 
 	@Test
-	@DisplayName("an echo already carrying a Barrier does not drink a second one")
+	@DisplayName("an echo already carrying a Barrier does not drink a second one, and stands its ground")
 	void shieldedEchoDoesNotStack() {
 		Assertions.assertThat(EchoUntouchable.stanceFor(
 				false, true, ready("SHIELD_SELF", "BLINK"), true, 0, true, 0.5f))
-				.isEqualTo(Stance.RUN);
+				.isEqualTo(Stance.FIGHT);
 	}
 
 	@Test
@@ -66,7 +66,7 @@ class EchoUntouchableTest {
 	void healthyEchoDoesNotShield() {
 		Assertions.assertThat(EchoUntouchable.stanceFor(
 				false, true, ready("SHIELD_SELF", "BLINK"), true, 0, false, 0.9f))
-				.isEqualTo(Stance.RUN);
+				.isEqualTo(Stance.FIGHT);
 	}
 
 	@Test
@@ -74,7 +74,7 @@ class EchoUntouchableTest {
 	void dyingEchoDoesNotShield() {
 		Assertions.assertThat(EchoUntouchable.stanceFor(
 				false, true, ready("SHIELD_SELF", "BLINK"), true, 0, false, 0.2f))
-				.isEqualTo(Stance.RUN);
+				.isEqualTo(Stance.FIGHT);
 	}
 
 	@Test
@@ -98,6 +98,15 @@ class EchoUntouchableTest {
 		Assertions.assertThat(EchoUntouchable.stanceFor(
 				false, true, ready("SHIELD_SELF", "SETUP_CC"), false, 0, true, 0.5f))
 				.isEqualTo(Stance.PREP);
+	}
+
+	@Test
+	@DisplayName("a shielded hero never makes the echo run, however much room it has")
+	void bigShieldNeverRuns() {
+		for (int turns = 0; turns < EchoUntouchable.MAX_DISENGAGE_TURNS; turns++) {
+			Assertions.assertThat(stance(false, true, ready("BLINK", "KEEP_DISTANCE"), true, turns))
+					.as("disengage turns " + turns).isNotEqualTo(Stance.RUN);
+		}
 	}
 
 	@Test

@@ -223,7 +223,14 @@ public final class EchoUntouchable {
 			return Stance.SHIELD_UP;
 		}
 		boolean canRun = canStepAway || hasAnyDisengage(ready);
-		if (disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
+		// Backing off from a shielded / Barrier'd hero is disabled: a Barrier is a
+		// ShieldBuff, so hitting it drains it, and retreating only stalls the fight
+		// while the hero re-stacks. Invulnerability still gets the timed disengage,
+		// since hits there are genuinely wasted.
+		// To restore the old behaviour, drop the `invulnerable &&` guard and use the
+		// original condition:
+		// if (disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
+		if (invulnerable && disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
 			return Stance.RUN;
 		}
 		if (hasAny(ready, PREP_ORDER)) {

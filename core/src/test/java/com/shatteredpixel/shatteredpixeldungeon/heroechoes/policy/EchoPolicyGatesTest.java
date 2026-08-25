@@ -134,7 +134,9 @@ class EchoPolicyGatesTest {
 		Assertions.assertThat(status.enemyStatuses).contains("temp_shield", "damage_immune");
 		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
-		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
+		// Retreating from a shielded hero is disabled (EchoUntouchable.stanceFor),
+		// so the shield window is spent on prep rather than on backing off.
+		Assertions.assertThat(status.untouchableStance).isNotEqualTo(EchoUntouchable.Stance.RUN);
 	}
 
 	@Test
