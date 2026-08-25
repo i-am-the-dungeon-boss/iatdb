@@ -6,7 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatusBuilder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
@@ -102,7 +102,7 @@ class BombKindsLightThrowTest {
 				boss,
 				policy,
 				EchoPolicyStatusBuilder.build(boss, policy),
-				new EchoPolicyChoice("BOMB", "default", null, id));
+				new EchoPlan("BOMB", "default", null, id));
 
 		Assertions.assertThat(spent).isTrue();
 		Bomb landed = findBombAt(player.pos, bombClass);

@@ -20,6 +20,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
 import com.watabou.noosa.Game;
 import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,9 +43,22 @@ public final class SentryCrashReporting {
 		void report(Throwable throwable);
 	}
 
+	/** Sent when the player files a report without typing anything. */
+	public static final String DEFAULT_USER_REPORT = "Player-reported error (no description)";
+
+	@FunctionalInterface
+	public interface MessageReporter {
+		void report(String message);
+	}
+
 	private static final Reporter DEFAULT = Sentry::captureException;
 
+	private static final MessageReporter DEFAULT_MESSAGE =
+			message -> Sentry.captureMessage(message, SentryLevel.ERROR);
+
 	private static Reporter reporter = DEFAULT;
+
+	private static MessageReporter messageReporter = DEFAULT_MESSAGE;
 
 	private SentryCrashReporting() {
 	}
@@ -55,6 +69,28 @@ public final class SentryCrashReporting {
 
 	public static void resetReporter() {
 		reporter = DEFAULT;
+	}
+
+	public static void setMessageReporter(MessageReporter next) {
+		messageReporter = next != null ? next : DEFAULT_MESSAGE;
+	}
+
+	public static void resetMessageReporter() {
+		messageReporter = DEFAULT_MESSAGE;
+	}
+
+	/**
+	 * Files a player-initiated error report as a Sentry event at ERROR level. The
+	 * description is optional: blank or null reports still go out, tagged with
+	 * {@link #DEFAULT_USER_REPORT}, since the surrounding scope (version, run state)
+	 * is the useful part. INDEV builds never report.
+	 */
+	public static void reportUserMessage(String message) {
+		if (isDevBuild()) {
+			return;
+		}
+		String trimmed = message != null ? message.trim() : "";
+		messageReporter.report(trimmed.isEmpty() ? DEFAULT_USER_REPORT : trimmed);
 	}
 
 	public static void report(Throwable throwable) {

@@ -40,7 +40,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "CLOSE_IN", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
@@ -68,7 +68,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
@@ -98,7 +98,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "CLOSE_IN"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
@@ -128,7 +128,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("FINISHER", "SETUP_CC", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("FINISHER");
@@ -159,7 +159,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("FINISHER", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("default");
@@ -180,7 +180,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "HOLD", "HOLD"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
@@ -202,7 +202,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE", "RANGED", "HOLD", "HOLD"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
@@ -231,7 +231,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("KEEP_DISTANCE", "MELEE", "RANGED"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
 		Assertions.assertThat(choice.layer).isEqualTo("positioning");
@@ -262,7 +262,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("KEEP_DISTANCE", "MELEE", "CLOSE_IN"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("default");
@@ -288,7 +288,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("KEEP_DISTANCE", "CLOSE_IN", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
 		Assertions.assertThat(choice.layer).isEqualTo("positioning");
@@ -356,7 +356,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
 		Assertions.assertThat(choice.layer).isEqualTo("default");
@@ -386,12 +386,12 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("SETUP_CC", "PAYOFF_AOE", "MELEE"))
 				.build();
 
-		EchoPolicyChoice first = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan first = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 		Assertions.assertThat(first.useRole).isEqualTo("SETUP_CC");
 
 		java.util.Map<String, Integer> steps = new java.util.HashMap<>();
 		steps.put("gas_then_ignite", 1);
-		EchoPolicyChoice second = EchoPolicyMatcher.choose(policy, status, steps);
+		EchoPlan second = EchoPolicyMatcher.choose(policy, status, steps);
 		Assertions.assertThat(second.useRole).isEqualTo("PAYOFF_AOE");
 	}
 
@@ -412,7 +412,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("CLOSE_IN", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("CLOSE_IN");
 		Assertions.assertThat(choice.layer).isEqualTo("positioning");
@@ -435,7 +435,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
 		Assertions.assertThat(choice.layer).isEqualTo("matchups");
@@ -459,7 +459,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("default");
@@ -487,7 +487,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("HOLD"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
 		Assertions.assertThat(choice.useRole).isEqualTo("HOLD");
@@ -527,7 +527,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE", "KEEP_DISTANCE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("MELEE");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
@@ -557,7 +557,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("RANGED");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
@@ -589,7 +589,7 @@ class EchoPolicyMatcherTest {
 				.rolesReady(set("RANGED", "MELEE", "KEEP_DISTANCE"))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, Collections.emptyMap());
 
 		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
 		Assertions.assertThat(choice.layer).isEqualTo("reactions");
@@ -602,7 +602,7 @@ class EchoPolicyMatcherTest {
 				+ "\"policy_schema_version\":\"0.0.1\""
 				+ "}");
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(
+		EchoPlan choice = EchoPolicyMatcher.choose(
 				policy,
 				new EchoPolicyStatus.Builder().rolesReady(set("MELEE")).build(),
 				Collections.emptyMap());

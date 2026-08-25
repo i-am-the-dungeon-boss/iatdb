@@ -18,6 +18,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.worldnet.wire;
 
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldChatMessage;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldPresence;
 import com.watabou.utils.Strings;
@@ -98,5 +99,80 @@ public final class WorldWireCodec {
 					entry.optBoolean("typing", false)));
 		}
 		return occupants;
+	}
+	/**
+	 * Village bodies. Skipped-not-thrown for the same reason as the rows above,
+	 * and with one extra rule: a body has to be identifiable to be inspectable,
+	 * so a mention with no {@code echo_id} is dropped. A <em>depth</em> post with
+	 * no id is kept — that is how the server says the depth is unheld and the
+	 * regional boss should stand there instead.
+	 *
+	 * @see #decodeMessages(JSONArray) for why this is shared rather than private
+	 */
+	static List<VillageFigure> decodeFigures(JSONArray array) {
+		List<VillageFigure> figures = new ArrayList<>();
+		if (array == null) {
+			return figures;
+		}
+		for (int i = 0; i < array.length(); i++) {
+			JSONObject entry = array.optJSONObject(i);
+			if (entry == null) {
+				continue;
+			}
+			VillageFigure.Post post = postOf(entry.optString("post", ""));
+			if (post == null) {
+				continue;
+			}
+			String echoId = entry.optString("echo_id", "");
+			if (Strings.isBlank(echoId)) {
+				if (post != VillageFigure.Post.DEPTH) {
+					continue;
+				}
+				echoId = null;
+			}
+			VillageFigure figure = new VillageFigure();
+			figure.post = post;
+			figure.depth = entry.optInt("depth", 0);
+			figure.echoId = echoId;
+			figure.userName = entry.optString("user_name", "");
+			figure.heroClass = entry.optString("hero_class", "");
+			figure.armorTier = entry.optInt("armor_tier", VillageFigure.UNKNOWN_TIER);
+			figure.lvl = entry.optInt("lvl", 0);
+			figure.hp = entry.optInt("hp", 0);
+			figure.ht = entry.optInt("ht", 0);
+			figure.killCount = entry.optInt("kill_count", 0);
+			figure.timestamp = entry.optLong("timestamp", 0L);
+			decodeBadges(entry.optJSONArray("badges"), figure.badges);
+			figures.add(figure);
+		}
+		return figures;
+	}
+
+	private static VillageFigure.Post postOf(String raw) {
+		if ("depth".equals(raw)) {
+			return VillageFigure.Post.DEPTH;
+		}
+		if ("mention".equals(raw)) {
+			return VillageFigure.Post.MENTION;
+		}
+		return null;
+	}
+
+	private static void decodeBadges(JSONArray array, List<VillageFigure.Badge> into) {
+		if (array == null) {
+			return;
+		}
+		for (int i = 0; i < array.length(); i++) {
+			JSONObject entry = array.optJSONObject(i);
+			if (entry == null) {
+				continue;
+			}
+			String kind = entry.optString("kind", "");
+			if (Strings.isBlank(kind)) {
+				continue;
+			}
+			into.add(new VillageFigure.Badge(
+					kind, entry.optInt("count", VillageFigure.Badge.NO_COUNT)));
+		}
 	}
 }

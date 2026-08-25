@@ -100,7 +100,7 @@ class EchoPolicyTest {
 				.rolesReady(new HashSet<>(Arrays.asList("INVIS", "MELEE")))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(
+		EchoPlan choice = EchoPolicyMatcher.choose(
 				EchoPolicy.fallback(), status, Collections.<String, Integer>emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();
@@ -117,7 +117,7 @@ class EchoPolicyTest {
 				.rolesReady(new HashSet<>(Arrays.asList("INVIS", "MELEE")))
 				.build();
 
-		EchoPolicyChoice choice = EchoPolicyMatcher.choose(
+		EchoPlan choice = EchoPolicyMatcher.choose(
 				EchoPolicy.fallback(), status, Collections.<String, Integer>emptyMap());
 
 		Assertions.assertThat(choice).isNotNull();

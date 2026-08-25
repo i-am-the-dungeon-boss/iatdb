@@ -19,7 +19,7 @@ sequenceDiagram
   participant Boss as EchoBoss
   Src->>P: fromJson / fallback / fromBundle
   Boss->>P: EchoPolicyMatcher.choose(status)
-  P->>Boss: EchoPolicyChoice
+  P->>Boss: EchoPlan
   Boss->>P: EchoRoleExecutor.execute
   Note over P,Boss: capForEnemy may drop items from the pick list
 ```
@@ -33,7 +33,7 @@ How other code starts, extends, or strips this parent:
 | [`fromJson`](../EchoPolicy.java) / [`fromBundle`](../EchoPolicy.java) | n/a                | wrap JSON; missing bundle key **throws**                                                                                                           |
 | [`fallback`](../EchoPolicy.java)                                                                                                                 | n/a                | documented local playbook (MELEE + INVIS escape)                                                                                                   |
 | [`isSupported`](../EchoPolicy.java)                                                                                                              | n/a                | `root` has `capabilities`                                                                                                                          |
-| [`EchoPolicyMatcher.choose`](../EchoPolicyMatcher.java)                                                                                          | n/a                | walk `selection.order` → [`EchoPolicyChoice`](../EchoPolicyChoice.java) |
+| [`EchoPolicyMatcher.choose`](../EchoPolicyMatcher.java)                                                                                          | n/a                | walk `selection.order` → [`EchoPlan`](../EchoPlan.java) |
 | [`EchoRoleExecutor.execute`](../EchoRoleExecutor.java)                                                                                           | n/a                | resolve item, run adapter / virtual tag                                                                                                            |
 | [`capForEnemy`](../EchoRoleExecutor.java)                                                                                                        | n/a                | `SETUP_CC` + sensed `paralysis_immunity` → drop stun items (gas, frost, flashbang, snap freeze)                                    |
 | [`EchoPolicyStatusBuilder`](../EchoPolicyStatusBuilder.java)                                                                                     | n/a                | per-turn sense; `Paralysis.Immunity` → alias `paralysis_immunity`                                                                                  |
@@ -46,7 +46,7 @@ How children specialize the parent (name one child; do not spec it):
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | Named playbook action | [`EchoRole`](../EchoRole.java)                 | `SETUP_CC`      |
 | Per-turn facts        | [`EchoPolicyStatus`](../EchoPolicyStatus.java) | `enemyStatuses` |
-| This turn’s pick      | [`EchoPolicyChoice`](../EchoPolicyChoice.java) | `use_role`      |
+| This turn’s pick      | [`EchoPlan`](../EchoPlan.java) | `use_role` + `target_cell` |
 
 Role kinds on [`EchoRole.Kind`](../EchoRole.java): damage, blob (`SETUP_CC`), self-drink, throw, disengage.
 
@@ -78,7 +78,7 @@ flowchart LR
     Bundle
   end
   EchoPolicy -->|"choose"| Matcher
-  Matcher -->|"choice"| Executor
+  Matcher -->|"plan"| Executor
   StatusBuilder -->|"paralysis_immunity"| Executor
   Executor -->|"capForEnemy"| Action
   Action -->|"seed / affect"| Buff

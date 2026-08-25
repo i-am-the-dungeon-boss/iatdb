@@ -37,7 +37,7 @@ class EchoBossHeadlessKitCombatTest {
 	}
 
 	@Test
-	@DisplayName("attackProc with Vampiric does not NPE when kit is headless")
+	@DisplayName("attackProc with Vampiric does not NPE when the body is off stage")
 	void attackProcWithVampiricDoesNotNpeWhenKitHeadless() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -45,7 +45,7 @@ class EchoBossHeadlessKitCombatTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 1);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		// Kit defaults to ALLY; Vampiric requires opposed alignment (boss is ENEMY).
 		kit.alignment = Char.Alignment.ENEMY;
 
@@ -63,8 +63,8 @@ class EchoBossHeadlessKitCombatTest {
 			}
 		}).doesNotThrowAnyException();
 		Assertions.assertThat(kit.sprite)
-				.as("combat borrow must restore headless kit")
-				.isNull();
+				.as("the kit mirrors its body's sprite, before and after combat")
+				.isSameAs(boss.sprite);
 	}
 
 	@Test
@@ -99,11 +99,11 @@ class EchoBossHeadlessKitCombatTest {
 		Assertions.assertThat(bodyHealed)
 				.as("Vampiric heal during EchoBoss attackProc must raise body HP")
 				.isTrue();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test
-	@DisplayName("defenseProc with Metabolism does not NPE when kit is headless")
+	@DisplayName("defenseProc with Metabolism does not NPE when the body is off stage")
 	void defenseProcWithMetabolismDoesNotNpeWhenKitHeadless() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
@@ -111,7 +111,7 @@ class EchoBossHeadlessKitCombatTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 1);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		ClothArmor armor = new ClothArmor();
 		armor.inscribe(new Metabolism());
@@ -127,7 +127,7 @@ class EchoBossHeadlessKitCombatTest {
 				boss.defenseProc(player, 8);
 			}
 		}).doesNotThrowAnyException();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test
@@ -160,6 +160,6 @@ class EchoBossHeadlessKitCombatTest {
 		Assertions.assertThat(bodyHealed)
 				.as("Metabolism heal during EchoBoss defenseProc must raise body HP")
 				.isTrue();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 }

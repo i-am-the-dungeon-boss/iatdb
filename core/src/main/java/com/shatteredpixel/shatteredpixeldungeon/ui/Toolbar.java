@@ -307,13 +307,15 @@ public class Toolbar extends Component {
 		add(btnSearch = new Tool(44, 0, 20, 26) {
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready) {
+				if (examineAllowed() && Dungeon.hero.ready) {
 					if (!examining && !GameScene.cancel()) {
 						GameScene.selectCell(informer);
 						examining = true;
 					} else if (examining) {
 						informer.onSelect(null);
-						Dungeon.hero.search(true);
+						if (searchAllowed()) {
+							Dungeon.hero.search(true);
+						}
 					}
 				}
 			}
@@ -330,7 +332,13 @@ public class Toolbar extends Component {
 
 			@Override
 			protected boolean onLongClick() {
-				Dungeon.hero.search(true);
+				if (searchAllowed()) {
+					Dungeon.hero.search(true);
+					return true;
+				}
+				// in town the whole button is examine, so a long press repeats
+				// it rather than falling through to a search that does nothing
+				onClick();
 				return true;
 			}
 
@@ -538,7 +546,7 @@ public class Toolbar extends Component {
 	protected void layout() {
 
 		if (VillageSession.inVillage()) {
-			emptyBarForVillage();
+			villageBar();
 			return;
 		}
 
@@ -717,27 +725,55 @@ public class Toolbar extends Component {
 	}
 
 	/**
-	 * Empties the bar in the village, instead of laying it out and undoing it.
+	 * Lays out the one-button bar the village needs, instead of laying out the
+	 * whole bar and undoing it.
 	 *
-	 * <p>Nothing on the bar applies there: no search, because nothing is hidden
-	 * for it to find; no waiting out a turn; no gear, and so no quickslots. The
-	 * whole of the layout below this exists to arrange buttons the village has
-	 * none of, which is why it is skipped rather than run and then reversed —
-	 * that reversal is what put a village special case into the width arithmetic
-	 * of every branch.
+	 * <p>Almost nothing on the bar applies in town: no waiting out a turn, no
+	 * gear, and so no quickslots. The whole of the layout below this exists to
+	 * arrange buttons the village has none of, which is why it is skipped rather
+	 * than run and then reversed — that reversal is what put a village special
+	 * case into the width arithmetic of every branch.
 	 *
-	 * <p>Buttons are deactivated as well as hidden, because {@code active} is what
-	 * gates their keyboard shortcuts — invisible buttons would still answer their
-	 * keys. Moved off-screen for the same reason, so nothing can be hit.
+	 * <p>Examine is the exception, and it is why this is not simply an empty bar.
+	 * The button carries two actions: examining a cell, and searching it. Only
+	 * searching is meaningless in town ({@link com.shatteredpixel.shatteredpixeldungeon.village.VillageHero#search}, since the map
+	 * arrives fully revealed) — examining is how the villagers and the standing
+	 * figures are read, and {@link #informer} is the only path to
+	 * {@code GameScene.examineCell} anywhere in the game. Hiding the button took
+	 * the keyboard and right-click routes with it, because {@code active} is what
+	 * gates a tool's shortcut.
+	 *
+	 * <p>The rest are deactivated as well as hidden, for that same reason:
+	 * invisible buttons would still answer their keys. Moved off-screen too, so
+	 * nothing can be hit.
 	 */
-	private void emptyBarForVillage() {
+	private void villageBar() {
 		hideTool(btnWait);
-		hideTool(btnSearch);
 		hideTool(btnInventory);
 		hideTool(btnSwap);
 		for (QuickslotTool slot : btnQuick) {
 			hideTool(slot);
 		}
+
+		// visible before enable: Tool.enable re-applies visible, so a hidden
+		// tool cannot be enabled and the order is load-bearing
+		btnSearch.visible = true;
+		btnSearch.enable(lastEnabled);
+		btnSearch.setPos(SPDSettings.flipToolbar() ? 0 : width - btnSearch.width(), y);
+	}
+
+	/** True when the examine half of the search button has something to do. */
+	public static boolean examineAllowed() {
+		return Dungeon.hero != null;
+	}
+
+	/**
+	 * True when the search half does. Never in town: the village map arrives
+	 * fully revealed, so {@link com.shatteredpixel.shatteredpixeldungeon.village.VillageHero#search} is a no-op and calling it
+	 * would read to the player as the button doing nothing at all.
+	 */
+	public static boolean searchAllowed() {
+		return Dungeon.hero != null && !VillageSession.inVillage();
 	}
 
 	private static void hideTool(Button button) {

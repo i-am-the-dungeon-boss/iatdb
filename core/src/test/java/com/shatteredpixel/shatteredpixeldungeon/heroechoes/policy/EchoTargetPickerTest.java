@@ -7,6 +7,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,77 @@ class EchoTargetPickerTest {
 		int cell = EchoTargetPicker.pick(boss, status, "WandOfFireblast", false);
 
 		Assertions.assertThat(cell).isEqualTo(hero.pos);
+	}
+
+	@Test
+	@DisplayName("non-AOE pick refuses a shot a wall would stop short of the hero")
+	void nonAoeRefusesWhenWallBlocksTheShot() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		wall(hero.pos + 1);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder().enemyInLos(true).build();
+		int cell = EchoTargetPicker.pick(boss, status, "WandOfFireblast", false);
+
+		Assertions.assertThat(cell).isEqualTo(-1);
+	}
+
+	@Test
+	@DisplayName("AOE pick aims straight at the hero when the blast cannot reach the echo")
+	void aoeAimsAtHeroWhenBlastSparesEcho() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(true)
+				.unsafeHazards(Collections.singleton(EchoPolicyHazards.FIRE_AOE))
+				.build();
+		int cell = EchoTargetPicker.pick(boss, status, "PotionOfLiquidFlame", true);
+
+		Assertions.assertThat(cell).isEqualTo(hero.pos);
+	}
+
+	@Test
+	@DisplayName("AOE pick offsets to a cell whose splash still covers the hero but spares the echo")
+	void aoeOffsetsToCellSplashingHeroOnly() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 0);
+		boss.pos = hero.pos + Dungeon.level.width() + 1;
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(true)
+				.unsafeHazards(Collections.singleton(EchoPolicyHazards.FIRE_AOE))
+				.build();
+		int cell = EchoTargetPicker.pick(boss, status, "PotionOfLiquidFlame", true);
+
+		Assertions.assertThat(cell).isGreaterThanOrEqualTo(0);
+		Assertions.assertThat(Dungeon.level.distance(cell, hero.pos)).isLessThanOrEqualTo(1);
+		Assertions.assertThat(Dungeon.level.distance(cell, boss.pos)).isGreaterThan(1);
+		Assertions.assertThat(new Ballistica(boss.pos, cell, Ballistica.PROJECTILE).collisionPos)
+				.isEqualTo(cell);
+	}
+
+	@Test
+	@DisplayName("AOE pick refuses when no reachable splash cell spares the echo")
+	void aoeRefusesWhenNoSplashCellSparesEcho() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		int w = Dungeon.level.width();
+		wall(hero.pos - 1 - w);
+		wall(hero.pos - 1);
+		wall(hero.pos - 1 + w);
+
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.enemyInLos(true)
+				.unsafeHazards(Collections.singleton(EchoPolicyHazards.FIRE_AOE))
+				.build();
+		int cell = EchoTargetPicker.pick(boss, status, "PotionOfLiquidFlame", true);
+
+		Assertions.assertThat(cell).isEqualTo(-1);
 	}
 
 	@Test
@@ -234,6 +307,11 @@ class EchoTargetPickerTest {
 		boss.rearmBlindDefense();
 
 		Assertions.assertThat(boss.blindDefenseShotsLeft()).isEqualTo(2);
+	}
+
+	private static void wall(int cell) {
+		Dungeon.level.map[cell] = Terrain.WALL;
+		Dungeon.level.buildFlagMaps();
 	}
 
 	private static EchoPolicyStatus invisibleOutOfLosStatus() {

@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoActionContext;
@@ -37,23 +38,26 @@ public final class SpiritBowEchoBridge {
 		if (found == null && enemy != null && cell == enemy.pos) {
 			found = enemy;
 		}
-		if (found == null || found == ctx.kit || found == ctx.body) {
+		if (found == null || found == ctx.stats() || found == ctx.body) {
 			return false;
 		}
 
 		ctx.busy();
 
-		final float delay = arrow.castDelay(ctx.kit, cell);
+		final float delay = arrow.castDelay(ctx.stats(), cell);
 		final Char target = found;
 		Callback onArrive = () -> {
 			EchoKitBorrow.run(ctx, () -> {
-				AiItemActions.withUser(ctx.kit, arrow, () -> {
-					Item i = arrow.detach(ctx.kit.belongings.backpack);
+				AiItemActions.withUser(ctx.stats(), arrow, () -> {
+					Item i = arrow.detach(ctx.gear().backpack);
 					if (i != null) {
 						AiItemActions.onThrow(i, cell);
 					}
 				});
 			});
+			// Throwing is a reveal, and it is the body that loosed the arrow —
+			// the phantom kit stands nowhere, so dispelling it exposes nobody.
+			Invisibility.dispelOnThrow(ctx.body);
 			ctx.complete(delay);
 		};
 

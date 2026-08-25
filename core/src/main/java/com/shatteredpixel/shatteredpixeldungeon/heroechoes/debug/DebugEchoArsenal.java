@@ -216,14 +216,6 @@ public final class DebugEchoArsenal {
 			}
 		}
 
-		// Temporarily disabled — door-break spam while tuning invis / fight flow.
-		// JSONArray doorBreakIds = new JSONArray();
-		// for (Item item : items) {
-		// if (EchoPolicyMatcher.isDoorBreakItem(item)) {
-		// doorBreakIds.put(item.getClass().getSimpleName());
-		// }
-		// }
-
 		JSONObject caps = new JSONObject();
 		if (bombIds.length() > 0) {
 			// Point aim at hero — lit bombs land on the target cell (LIGHTTHROW).
@@ -238,8 +230,9 @@ public final class DebugEchoArsenal {
 		}
 		if (throwIds.length() > 0) {
 			// No AOE hazard: point throwables (stones, hammers, darts) must aim at
-			// the hero. A role-wide hazard makes EchoTargetPicker pick a neighbour
-			// cell (often SW of the hero) and miss.
+			// the hero. A role-wide hazard lets EchoTargetPicker step the aim off
+			// the hero whenever the echo stands in the blast, and a point throw
+			// aimed off the hero simply misses.
 			caps.put(ROLE_THROW, new JSONObject()
 					.put("pick", "FIRST_LEGAL")
 					.put("items", throwIds));
@@ -249,11 +242,6 @@ public final class DebugEchoArsenal {
 					.put("pick", "FIRST_LEGAL")
 					.put("items", otherIds));
 		}
-		// if (doorBreakIds.length() > 0) {
-		// caps.put("DOOR_BREAK", new JSONObject()
-		// .put("pick", "FIRST_LEGAL")
-		// .put("items", doorBreakIds));
-		// }
 
 		JSONArray defaults = new JSONArray();
 		if (bombIds.length() > 0) {
@@ -270,10 +258,6 @@ public final class DebugEchoArsenal {
 		}
 
 		JSONArray reactions = new JSONArray();
-		// Temporarily disabled — door-break spam while tuning invis / fight flow.
-		// if (doorBreakIds.length() > 0) {
-		// reactions.put(doorBreakReaction());
-		// }
 		if (bombIds.length() > 0) {
 			reactions.put(blindDefenseReaction(ROLE_BOMB, 101));
 		}
@@ -296,16 +280,6 @@ public final class DebugEchoArsenal {
 				.put("default_roles", defaults));
 		root.put("tuning", new JSONObject());
 		return new EchoPolicy(root);
-	}
-
-	private static JSONObject doorBreakReaction() {
-		return new JSONObject()
-				.put("id", "door_break")
-				.put("priority", 101)
-				.put("when", new JSONObject().put("all", new JSONArray()
-						.put(new JSONObject().put("door_stalling", true))
-						.put(new JSONObject().put("role_ready", "DOOR_BREAK"))))
-				.put("do", new JSONObject().put("use_role", "DOOR_BREAK").put("target", "door_cell"));
 	}
 
 	private static JSONObject blindDefenseReaction(String role, int priority) {

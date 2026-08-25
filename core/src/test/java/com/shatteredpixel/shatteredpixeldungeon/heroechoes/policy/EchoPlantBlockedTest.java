@@ -21,8 +21,8 @@ import java.util.Arrays;
 
 /**
  * Characterizes {@code plant_blocked} sensing: a harmful plant sitting on the
- * only reasonably short route to the hero is flagged and remembered as a
- * blocker cell; a bypassable one, or a beneficial plant, is not.
+ * only reasonably short route to the hero is flagged and handed to
+ * {@code CLEAR_PLANT} as its target cell; a bypassable one, or a beneficial plant, is not.
  */
 @ExtendWith(GdxTestExtension.class)
 class EchoPlantBlockedTest {
@@ -40,7 +40,7 @@ class EchoPlantBlockedTest {
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, plantPolicy());
 
 		Assertions.assertThat(status.selfStatuses).contains("plant_blocked");
-		Assertions.assertThat(boss.plantBlockerCell()).isEqualTo(corridor);
+		Assertions.assertThat(status.targetCellFor("CLEAR_PLANT")).isEqualTo(corridor);
 		Assertions.assertThat(status.isRoleReady("CLEAR_PLANT")).isTrue();
 	}
 
@@ -92,7 +92,7 @@ class EchoPlantBlockedTest {
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, plantPolicy());
 
 		Assertions.assertThat(status.selfStatuses).doesNotContain("plant_blocked");
-		Assertions.assertThat(boss.plantBlockerCell()).isEqualTo(-1);
+		Assertions.assertThat(status.targetCellFor("CLEAR_PLANT")).isEqualTo(-1);
 	}
 
 	/**

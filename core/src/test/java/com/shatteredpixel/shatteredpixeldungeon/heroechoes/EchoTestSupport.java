@@ -192,6 +192,11 @@ public final class EchoTestSupport {
 		boss.pos = center + bossOffset;
 		// Unit tests have no GameScene / CellSelector.
 		hero.damageInterrupt = false;
+		// An open 7x7 room: the boss can see all of it. Without this the sense
+		// phase reads "hero out of line of sight" in every fixture, which is
+		// not what the geometry says. Occlusion cases overwrite it themselves.
+		boss.fieldOfView = new boolean[level.length()];
+		Arrays.fill(boss.fieldOfView, true);
 		linkStubSprite(hero);
 		linkStubSprite(boss);
 
@@ -466,14 +471,23 @@ public final class EchoTestSupport {
 	}
 
 	/** FIRST_LEGAL capability with a single item id (or virtual tag). */
-	public static JSONObject capability(String itemId) {
+	public static JSONObject capability(String... itemIds) {
+		JSONArray items = new JSONArray();
+		for (String itemId : itemIds) {
+			items.put(itemId);
+		}
 		return new JSONObject()
 				.put("pick", "FIRST_LEGAL")
-				.put("items", new JSONArray().put(itemId));
+				.put("items", items);
 	}
 
 	/** Minimal supported policy with the given role → item capability map. */
 	public static EchoPolicy policyWithCapabilities(JSONObject capabilities) {
+		return policyWithCapabilities(capabilities, new JSONObject());
+	}
+
+	/** Same, with backend tuning knobs the client reads (e.g. door_force_turns). */
+	public static EchoPolicy policyWithCapabilities(JSONObject capabilities, JSONObject tuning) {
 		return EchoPolicy.fromJson(new JSONObject()
 				.put("policy_schema_version", TEST_GAME_VERSION)
 				.put("capabilities", capabilities)
@@ -484,7 +498,7 @@ public final class EchoTestSupport {
 				.put("selection", new JSONObject()
 						.put("order", new JSONArray().put("default"))
 						.put("default_roles", new JSONArray().put("MELEE")))
-				.put("tuning", new JSONObject()));
+				.put("tuning", tuning));
 	}
 
 	public static EchoPolicy healCapabilityPolicy() {

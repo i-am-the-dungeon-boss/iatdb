@@ -43,12 +43,38 @@ class WndGameDebugToolsTest {
 	}
 
 	@Test
+	@DisplayName("pause menu offers error reporting during a run, outside the debug gate")
+	void pauseMenuOffersErrorReportingInRun() throws Exception {
+		String source = java.nio.file.Files.readString(
+				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
+		Assertions.assertThat(source).contains("report_error");
+		Assertions.assertThat(source).contains("SentryCrashReporting.reportUserMessage");
+
+		int reportAt = source.indexOf("report_error");
+		int debugGateAt = source.indexOf("if (showsEchoDebugTools()) {");
+		Assertions.assertThat(reportAt).isGreaterThan(0);
+		Assertions.assertThat(debugGateAt).isGreaterThan(0);
+		// The report button must sit before the debug-only block, so release builds get it too.
+		Assertions.assertThat(reportAt).isLessThan(debugGateAt);
+	}
+
+	@Test
 	@DisplayName("pause menu includes stop-echo-hunting action in debug builds")
 	void pauseMenuIncludesStopEchoHuntingInDebugBuilds() throws Exception {
 		String source = java.nio.file.Files.readString(
 				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
 		Assertions.assertThat(source).contains("stop_echo_hunting");
 		Assertions.assertThat(source).contains("EchoBoss.stopAllHunting");
+		Assertions.assertThat(source).contains("showsEchoDebugTools()");
+	}
+
+	@Test
+	@DisplayName("pause menu includes give-echo-tome-spells action in debug builds")
+	void pauseMenuIncludesGiveEchoTomeSpellsInDebugBuilds() throws Exception {
+		String source = java.nio.file.Files.readString(
+				findSource("core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java"));
+		Assertions.assertThat(source).contains("give_echo_tome_spells");
+		Assertions.assertThat(source).contains("DebugClericSpells.grantTomeSpellsAll()");
 		Assertions.assertThat(source).contains("showsEchoDebugTools()");
 	}
 

@@ -62,7 +62,7 @@ class SpiritBowEchoThrowTest {
 		Hero kit = boss.getEchoHero();
 		SpiritBow bow = kit.belongings.getItem(SpiritBow.class);
 		Assertions.assertThat(bow).isNotNull();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		float kitCooldownBefore = kit.cooldown();
 		int hpBefore = player.HP;
@@ -74,7 +74,7 @@ class SpiritBowEchoThrowTest {
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(kit.cooldown()).isEqualTo(kitCooldownBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(kit.belongings.getItem(SpiritBow.class)).isSameAs(bow);
 	}
 

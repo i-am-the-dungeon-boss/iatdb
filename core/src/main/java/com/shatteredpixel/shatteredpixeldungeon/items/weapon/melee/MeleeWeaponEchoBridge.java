@@ -23,7 +23,7 @@ public final class MeleeWeaponEchoBridge {
 	}
 
 	public static void beforeAbilityUsed(MeleeWeapon wep, EchoActionContext ctx, Char target) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		kit.belongings.abilityWeapon = wep;
 		MeleeWeapon.Charger charger = Buff.affect(kit, MeleeWeapon.Charger.class);
 
@@ -46,7 +46,7 @@ public final class MeleeWeaponEchoBridge {
 	}
 
 	public static void afterAbilityUsed(MeleeWeapon wep, EchoActionContext ctx) {
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		kit.belongings.abilityWeapon = null;
 		if (kit.hasTalent(Talent.PRECISE_ASSAULT)) {
 			Buff.prolong(kit, Talent.PreciseAssaultTracker.class, kit.cooldown() + 4f);

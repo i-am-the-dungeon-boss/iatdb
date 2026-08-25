@@ -56,7 +56,7 @@ class EchoShieldResponseTest {
 		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
 
 		boolean spent = EchoRoleExecutor.execute(boss, policy, status,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(EchoUntouchable.temporaryShielding(boss)).isGreaterThan(0);
@@ -93,7 +93,7 @@ class EchoShieldResponseTest {
 
 		EchoPolicyStatus first = EchoPolicyStatusBuilder.build(boss, policy);
 		EchoRoleExecutor.execute(boss, policy, first,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 
 		EchoPolicyStatus next = EchoPolicyStatusBuilder.build(boss, policy);
 
@@ -114,7 +114,7 @@ class EchoShieldResponseTest {
 
 		EchoPolicyStatus first = EchoPolicyStatusBuilder.build(boss, policy);
 		EchoRoleExecutor.execute(boss, policy, first,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 		// The peak is recorded by the next sense, as it is in a real fight.
 		EchoPolicyStatusBuilder.build(boss, policy);
 		int peak = EchoUntouchable.temporaryShielding(boss);
@@ -125,7 +125,7 @@ class EchoShieldResponseTest {
 		Assertions.assertThat(next.isRoleReady(EchoPolicyHazards.SHIELD_SELF)).isTrue();
 
 		EchoRoleExecutor.execute(boss, policy, next,
-				new EchoPolicyChoice(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+				new EchoPlan(EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
 		Assertions.assertThat(countItem(boss, PotionOfShielding.class)).isZero();
 	}
 
@@ -148,8 +148,8 @@ class EchoShieldResponseTest {
 	}
 
 	@Test
-	@DisplayName("a big shield with no shield kit: the echo runs instead")
-	void bigShieldWithoutShieldKitRuns() {
+	@DisplayName("a big shield with no shield kit: the echo fights through it instead of running")
+	void bigShieldWithoutShieldKitFights() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = shieldPolicy();
 		EchoBoss boss = shieldBoss(hero, policy, false);
@@ -157,19 +157,20 @@ class EchoShieldResponseTest {
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
 
-		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
-		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
+		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);
+		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
 	}
 
 	@Test
-	@DisplayName("running stops after seven turns even when the shield never decays")
+	@DisplayName("running stops after seven turns even when the window never closes")
 	void runStopsAfterSevenTurns() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = shieldPolicy();
 		EchoBoss boss = shieldBoss(hero, policy, false);
-		// Stands in for HoldFast at 3 talent points, where buffDecayFactor is 0 and
-		// the Barrier never shrinks: without the cap this would loop forever.
-		Buff.affect(hero, Barrier.class).setShield(20);
+		// Invulnerability, not a Barrier: retreating from a shielded hero is
+		// disabled (see EchoUntouchable.stanceFor), so only the invulnerable rung
+		// still exercises the disengage cap.
+		Buff.affect(hero, Invulnerability.class, 100f);
 
 		for (int turn = 0; turn < EchoUntouchable.MAX_DISENGAGE_TURNS; turn++) {
 			EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
@@ -189,7 +190,7 @@ class EchoShieldResponseTest {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = shieldPolicy();
 		EchoBoss boss = shieldBoss(hero, policy, false);
-		Buff.affect(hero, Barrier.class).setShield(20);
+		Buff.affect(hero, Invulnerability.class, 100f);
 		for (int turn = 0; turn < 4; turn++) {
 			runTurn(boss);
 		}

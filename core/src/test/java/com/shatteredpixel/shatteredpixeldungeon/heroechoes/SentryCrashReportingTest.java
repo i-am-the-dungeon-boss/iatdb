@@ -25,6 +25,7 @@ class SentryCrashReportingTest {
 	@AfterEach
 	void resetReporter() {
 		SentryCrashReporting.resetReporter();
+		SentryCrashReporting.resetMessageReporter();
 	}
 
 	@Test
@@ -147,6 +148,48 @@ class SentryCrashReportingTest {
 				StandardCharsets.UTF_8);
 
 		Assertions.assertThat(extractDsn(desktop)).contains("/4511778269691984");
+	}
+
+	@Test
+	@DisplayName("user report forwards the typed message to the installed message reporter")
+	void userReportForwardsTypedMessage() {
+		List<String> captured = new ArrayList<>();
+		SentryCrashReporting.setMessageReporter(captured::add);
+
+		SentryCrashReporting.reportUserMessage("  the boss walked into lava  ");
+
+		Assertions.assertThat(captured).containsExactly("the boss walked into lava");
+	}
+
+	@Test
+	@DisplayName("user report with no message still sends a default description")
+	void userReportWithoutMessageSendsDefault() {
+		List<String> captured = new ArrayList<>();
+		SentryCrashReporting.setMessageReporter(captured::add);
+
+		SentryCrashReporting.reportUserMessage("   ");
+		SentryCrashReporting.reportUserMessage(null);
+
+		Assertions.assertThat(captured).containsExactly(
+				SentryCrashReporting.DEFAULT_USER_REPORT,
+				SentryCrashReporting.DEFAULT_USER_REPORT);
+	}
+
+	@Test
+	@DisplayName("user report does not send to Sentry on INDEV builds")
+	void userReportSkippedOnIndevBuilds() {
+		String previous = Game.version;
+		Game.version = "1.0.0-INDEV";
+		try {
+			List<String> captured = new ArrayList<>();
+			SentryCrashReporting.setMessageReporter(captured::add);
+
+			SentryCrashReporting.reportUserMessage("nope");
+
+			Assertions.assertThat(captured).isEmpty();
+		} finally {
+			Game.version = previous;
+		}
 	}
 
 	private static String extractDsn(String properties) {

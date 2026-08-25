@@ -42,8 +42,8 @@ public final class EchoPotionAdapter {
 			return false;
 		}
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		potion.detach(ctx.kit.belongings.backpack);
-		potion.setCurrent(ctx.kit);
+		potion.detach(ctx.gear().backpack);
+		potion.setCurrent(ctx.stats());
 		potion.apply(ctx.body);
 		if (ctx.canWorldFx()) {
 			Sample.INSTANCE.play(Assets.Sounds.DRINK);
@@ -65,10 +65,10 @@ public final class EchoPotionAdapter {
 			return false;
 		}
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		if (ctx.kit.belongings.backpack.contains(potion)) {
-			potion.detach(ctx.kit.belongings.backpack);
+		if (ctx.gear().backpack.contains(potion)) {
+			potion.detach(ctx.gear().backpack);
 		}
-		potion.setCurrent(ctx.kit);
+		potion.setCurrent(ctx.stats());
 
 		DragonsBreathEchoBridge.applyCone(ctx.body.pos, cell);
 		if (ctx.canWorldFx()) {

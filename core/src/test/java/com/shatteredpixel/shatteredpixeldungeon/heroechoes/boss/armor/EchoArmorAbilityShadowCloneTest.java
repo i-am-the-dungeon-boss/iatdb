@@ -28,7 +28,7 @@ class EchoArmorAbilityShadowCloneTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, bossOffset);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		return new Fight(player, boss);
 	}
 
@@ -95,11 +95,11 @@ class EchoArmorAbilityShadowCloneTest {
 	}
 
 	@Test
-	@DisplayName("Echo ShadowClone adapter activate appear does not NPE when kit is headless")
+	@DisplayName("Echo ShadowClone adapter activate appear does not NPE when the body is off stage")
 	void shadowCloneAppearDoesNotNpeWhenHeadless() {
 		Fight f = fight(2);
 
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 
 		RogueArmor armor = new RogueArmor();
 		armor.charge = 100;

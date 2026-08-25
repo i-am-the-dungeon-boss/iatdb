@@ -91,6 +91,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GuidingLightHit;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
@@ -623,8 +624,9 @@ public class Hero extends Char {
 		}
 
 		// mirrors Mob#defenseSkill: an Illuminated (Guiding Light) target is a
-		// guaranteed hit, as long as the attacker is the Cleric who cast it
-		if (buff(GuidingLight.Illuminated.class) != null && attackerIsCleric(enemy)) {
+		// guaranteed hit for the Cleric who lit it — an Echo's phantom kit
+		// counts, which is why the question goes to GuidingLightHit
+		if (buff(GuidingLight.Illuminated.class) != null && GuidingLightHit.isClericFreeHit(enemy)) {
 			return 0;
 		}
 
@@ -661,16 +663,6 @@ public class Hero extends Char {
 
 	// true if the attacker is the Cleric hero/echo who could have cast Guiding
 	// Light
-	private static boolean attackerIsCleric(Char enemy) {
-		if (enemy instanceof Hero) {
-			return ((Hero) enemy).heroClass == HeroClass.CLERIC;
-		}
-		if (enemy instanceof EchoBoss) {
-			Hero echoHero = ((EchoBoss) enemy).getEchoHero();
-			return echoHero != null && echoHero.heroClass == HeroClass.CLERIC;
-		}
-		return false;
-	}
 
 	@Override
 	public String defenseVerb() {
@@ -1767,11 +1759,9 @@ public class Hero extends Char {
 
 		// Hits reveal the hero (cloak / potion invis). Always dispel on damage —
 		// do not gate on invisible>0 in case the counter and buffs ever desync.
+		// Invisibility.dispel clears the sprite state itself.
 		if (dmg > 0) {
 			Invisibility.dispel(this);
-			if (invisible <= 0 && sprite != null) {
-				sprite.remove(CharSprite.State.INVISIBLE);
-			}
 		}
 
 		int preHP = HP + shielding();

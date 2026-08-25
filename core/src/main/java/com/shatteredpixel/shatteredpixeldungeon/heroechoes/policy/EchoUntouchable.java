@@ -223,7 +223,14 @@ public final class EchoUntouchable {
 			return Stance.SHIELD_UP;
 		}
 		boolean canRun = canStepAway || hasAnyDisengage(ready);
-		if (disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
+		// Backing off from a shielded / Barrier'd hero is disabled: a Barrier is a
+		// ShieldBuff, so hitting it drains it, and retreating only stalls the fight
+		// while the hero re-stacks. Invulnerability still gets the timed disengage,
+		// since hits there are genuinely wasted.
+		// To restore the old behaviour, drop the `invulnerable &&` guard and use the
+		// original condition:
+		// if (disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
+		if (invulnerable && disengageTurns < MAX_DISENGAGE_TURNS && canRun) {
 			return Stance.RUN;
 		}
 		if (hasAny(ready, PREP_ORDER)) {
@@ -268,11 +275,11 @@ public final class EchoUntouchable {
 
 	/**
 	 * First {@link #PREP_ORDER} entry that is ready and not already spent in
-	 * this untouchable window, as a Java-layer choice.
+	 * this untouchable window, as a Java-layer plan.
 	 *
 	 * @return null when the echo has no unused prep left
 	 */
-	public static EchoPolicyChoice firstReadyPrep(EchoPolicyStatus status, Set<String> alreadyUsed) {
+	public static EchoPlan firstReadyPrep(EchoPolicyStatus status, Set<String> alreadyUsed) {
 		if (status == null) {
 			return null;
 		}
@@ -282,7 +289,7 @@ public final class EchoUntouchable {
 				continue;
 			}
 			if (status.isRoleReady(role)) {
-				return new EchoPolicyChoice(role, "java_untouchable", null);
+				return EchoPlan.resolve(role, "java_untouchable", null, status);
 			}
 		}
 		return null;

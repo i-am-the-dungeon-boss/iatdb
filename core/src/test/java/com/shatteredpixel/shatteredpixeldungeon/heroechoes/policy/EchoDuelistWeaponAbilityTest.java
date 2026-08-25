@@ -96,7 +96,7 @@ class EchoDuelistWeaponAbilityTest {
 		Fixture f = fixture(new Rapier(), 10, true, false, 2);
 
 		boolean spent = EchoRoleExecutor.execute(f.boss, f.policy, status(f),
-				new EchoPolicyChoice(EchoPolicyHazards.WEAPON_ABILITY, "reactions", null));
+				new EchoPlan(EchoPolicyHazards.WEAPON_ABILITY, "reactions", null));
 
 		Assertions.assertThat(spent).isFalse();
 	}
@@ -108,7 +108,7 @@ class EchoDuelistWeaponAbilityTest {
 		float chargeBefore = charge(f.kit);
 
 		boolean spent = EchoRoleExecutor.execute(f.boss, f.policy, status,
-				new EchoPolicyChoice(EchoPolicyHazards.WEAPON_ABILITY, "reactions", null));
+				new EchoPlan(EchoPolicyHazards.WEAPON_ABILITY, "reactions", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(charge(f.kit)).isLessThan(chargeBefore);

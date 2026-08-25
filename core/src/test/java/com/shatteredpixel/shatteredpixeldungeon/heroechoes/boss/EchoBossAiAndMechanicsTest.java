@@ -123,7 +123,7 @@ class EchoBossAiAndMechanicsTest {
         Hero target = new Hero();
         HeroClass.WARRIOR.initHero(target);
 
-        Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+        Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
         Assertions.assertThat(boss.speed()).isEqualTo(hero.combatSpeed());
         Assertions.assertThat(boss.attackSkill(target)).isEqualTo(hero.attackSkill(target));

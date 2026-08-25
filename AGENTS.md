@@ -30,6 +30,10 @@ Concurrent Gradle: check `./gradlew --status` first; use a **git worktree** for 
 
 Shared config: [`gradle/java-quality.gradle`](gradle/java-quality.gradle). Details: [`.cursor/rules/java-quality-checks.mdc`](.cursor/rules/java-quality-checks.mdc).
 
+Error Prone also runs **NullAway**, scoped to `heroechoes`, `effects`, and `actors`. It warns by
+default and fails under `-PerrorProneErrors`. Mark nullable members with
+[`com.watabou.utils.Nullable`](SPD-classes/src/main/java/com/watabou/utils/Nullable.java).
+
 | When                 | Run                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Day-to-day           | Nothing special — match **master** style                                                                                       |

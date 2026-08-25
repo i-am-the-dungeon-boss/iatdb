@@ -134,7 +134,9 @@ class EchoPolicyGatesTest {
 		Assertions.assertThat(status.enemyStatuses).contains("temp_shield", "damage_immune");
 		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
-		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
+		// Retreating from a shielded hero is disabled (EchoUntouchable.stanceFor),
+		// so the shield window is spent on prep rather than on backing off.
+		Assertions.assertThat(status.untouchableStance).isNotEqualTo(EchoUntouchable.Stance.RUN);
 	}
 
 	@Test
@@ -354,7 +356,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("BLINK")).isTrue();
@@ -374,7 +376,7 @@ class EchoPolicyGatesTest {
 		// No FOV filled: enemy_in_los reads false, same as an occluded hero.
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
@@ -415,7 +417,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
@@ -437,7 +439,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPolicyChoice choice =
+		EchoPlan choice =
 				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);

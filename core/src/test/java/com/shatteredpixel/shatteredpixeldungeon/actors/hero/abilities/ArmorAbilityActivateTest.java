@@ -117,7 +117,7 @@ class ArmorAbilityActivateTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
@@ -131,7 +131,7 @@ class ArmorAbilityActivateTest {
 		Assertions.assertThat(
 				player.buff(Paralysis.class) != null || player.buff(Cripple.class) != null)
 				.isTrue();
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		EchoBossTurnAssert.assertCanTakeNextTurn(boss);
 	}
@@ -334,7 +334,7 @@ class ArmorAbilityActivateTest {
 		Arrays.fill(boss.fieldOfView, true);
 		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(boss);
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		HuntressArmor armor = new HuntressArmor();
 		armor.charge = 100;
@@ -350,7 +350,7 @@ class ArmorAbilityActivateTest {
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		Assertions.assertThat(boss.getEchoHero().pos).isNotEqualTo(boss.pos);
 
 		EchoBossTurnAssert.assertCanTakeNextTurn(boss);

@@ -1,16 +1,17 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.action;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.utils.Callback;
 
 /**
- * Maps the phantom kit's {@code pos}/{@code sprite} onto the EchoBoss body for
- * legacy item hooks, then restores them. Deferred wrappers keep the borrow
- * until
- * VFX completion callbacks run.
- * Keep borrowed sprite/pos until deferred onZap finishes (ANDROID-1N /
- * ANDROID-1K).
+ * Maps the phantom kit's {@code pos} onto the EchoBoss body for legacy item
+ * hooks, then restores it. Deferred wrappers keep the borrow until VFX
+ * completion callbacks run.
+ *
+ * <p>The sprite is <em>not</em> borrowed: it is mirrored for the kit's whole
+ * life by {@code EchoBoss.mirrorKitSprite}. {@code pos} still is, because it
+ * goes stale mid-turn whenever the body leaps or blinks, so an effect fired
+ * after the move must read the tile the body is standing on now.
  */
 public final class EchoKitBorrow {
 
@@ -21,15 +22,12 @@ public final class EchoKitBorrow {
 		if (ctx == null || action == null) {
 			throw new IllegalArgumentException("EchoKitBorrow requires context and action");
 		}
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		int savedPos = kit.pos;
-		CharSprite savedSprite = kit.sprite;
 		kit.pos = ctx.body.pos;
-		kit.sprite = ctx.body.sprite;
 		try {
 			action.run();
 		} finally {
-			kit.sprite = savedSprite;
 			kit.pos = savedPos;
 		}
 	}
@@ -37,25 +35,20 @@ public final class EchoKitBorrow {
 	/**
 	 * Borrows immediately; restores after {@code onComplete} runs (even on throw).
 	 * Returns a callback the caller must invoke when deferred work finishes.
-	 * Keep borrowed sprite/pos until deferred onZap finishes (ANDROID-1N /
-	 * ANDROID-1K).
 	 */
 	public static Callback defer(EchoActionContext ctx, Callback onComplete) {
 		if (ctx == null) {
 			throw new IllegalArgumentException("EchoKitBorrow.defer requires context");
 		}
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		int savedPos = kit.pos;
-		CharSprite savedSprite = kit.sprite;
 		kit.pos = ctx.body.pos;
-		kit.sprite = ctx.body.sprite;
 		return () -> {
 			try {
 				if (onComplete != null) {
 					onComplete.call();
 				}
 			} finally {
-				kit.sprite = savedSprite;
 				kit.pos = savedPos;
 			}
 		};

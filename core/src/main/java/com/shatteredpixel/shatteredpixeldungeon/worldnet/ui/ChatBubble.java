@@ -88,6 +88,6 @@ public class ChatBubble extends RenderedTextBlock {
 		if (owner == null || text == null || text.trim().isEmpty()) {
 			return;
 		}
-		GameScene.addRemotePlayer(new ChatBubble(owner, text.trim()));
+		GameScene.addToMobLayer(new ChatBubble(owner, text.trim()));
 	}
 }

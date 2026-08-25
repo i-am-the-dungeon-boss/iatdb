@@ -12,7 +12,7 @@ alwaysApply: false
 
 | Concern                                                                       | Gate                                                                                                                                                                                                                                                                                                                                      |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Attack, jump, zap, missiles, operate, emitters, hit sounds for those          | [`Char.canWorldFx`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java)`(ch)` / [`EchoActionContext.canWorldFx()`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/action/EchoActionContext.java) (`sprite != null && parent != null`) — often **body**; use **kit** after sprite borrow |
+| Attack, jump, zap, missiles, operate, emitters, hit sounds for those          | [`Char.canWorldFx`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java)`(ch)` / [`EchoActionContext.canWorldFx()`](core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/action/EchoActionContext.java) (`sprite != null && parent != null`) — pass the **body**; the kit mirrors the body's sprite, so either works, but the body is the char that is actually on stage |
 | QuickSlot, GLog, identify, talent UI, `spendAndNext`, camera-only Hero riders | Hero entry points only. Echo adapters skip these.                                                                                                                                                                                                                                                                                         |
 
 ```java
@@ -31,7 +31,9 @@ if (Char.canWorldFx(ch)) {
 }
 ```
 
-Echo adapters: `EchoActionContext.of(boss)` then `ctx.canWorldFx()` (body) or `Char.canWorldFx(kit)` after sprite borrow.
+Echo adapters: `EchoActionContext.of(boss)` then `ctx.canWorldFx()`. The kit's sprite is **mirrored** from the body for the kit's whole life, not borrowed per call, so it is never null while the body is on stage — but it can still be parentless, which is exactly why `canWorldFx` and not `sprite != null` is the gate. `EchoKitBorrow` now lends only `pos`.
+
+The kit itself is **private** on `EchoActionContext`. Reach it through `ctx.gear()` (inventory) or `ctx.stats()` (base-game math that will only take a `Hero`). Never pass `ctx.stats()` to world or VFX code — use `ctx.showEnchant(item)`, `ctx.attackFx(cell)`, or `ctx.zapFx(cell)`, which always target the body. `EchoKitEscapeTest` fails the build on `stats().sprite` and on `Enchanting.show`/`MagicMissile.boltFromChar`/`Flare.show` given the kit.
 
 Relocates: `Char.move(cell, false)` or `ScrollOfTeleportation.appear` — not `pos` alone.
 

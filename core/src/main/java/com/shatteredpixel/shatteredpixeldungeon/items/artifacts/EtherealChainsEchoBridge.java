@@ -33,7 +33,7 @@ public final class EtherealChainsEchoBridge {
 		if (ctx.body.buff(MagicImmune.class) != null) {
 			return false;
 		}
-		if (!chains.isEquipped(ctx.kit)) {
+		if (!chains.isEquipped(ctx.stats())) {
 			return false;
 		}
 		if (chains.charge < 1) {

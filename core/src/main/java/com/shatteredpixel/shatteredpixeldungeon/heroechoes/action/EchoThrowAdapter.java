@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.action;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -38,7 +39,7 @@ public final class EchoThrowAdapter {
 		ctx.busy();
 
 		final int cell = item.throwPos(ctx.body.pos, dst);
-		final float delay = item.castDelay(ctx.kit, cell);
+		final float delay = item.castDelay(ctx.stats(), cell);
 		final Bomb bomb = item instanceof Bomb ? (Bomb) item : null;
 
 		Callback onArrive = () -> {
@@ -48,8 +49,8 @@ public final class EchoThrowAdapter {
 				BombEchoBridge.reassertLightFuse(bomb);
 			}
 			EchoKitBorrow.run(ctx, () -> {
-				AiItemActions.withUser(ctx.kit, item, () -> {
-					Item thrown = item.detach(ctx.kit.belongings.backpack);
+				AiItemActions.withUser(ctx.stats(), item, () -> {
+					Item thrown = item.detach(ctx.gear().backpack);
 					if (thrown != null) {
 						if (bomb != null) {
 							BombEchoBridge.markDetachedIgnite(bomb, thrown);
@@ -57,6 +58,9 @@ public final class EchoThrowAdapter {
 						AiItemActions.onThrow(thrown, cell);
 					}
 				});
+				// Throwing is a reveal, and it is the body that threw — the
+				// phantom kit stands nowhere, so dispelling it exposes nobody.
+				Invisibility.dispelOnThrow(ctx.body);
 				ctx.complete(delay);
 			});
 		};

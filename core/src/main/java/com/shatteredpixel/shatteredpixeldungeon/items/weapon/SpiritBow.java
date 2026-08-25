@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -442,6 +443,10 @@ public class SpiritBow extends Weapon {
 											curUser = user;
 											onThrow(cell);
 										}
+										// The normal branch inherits this from Item.cast;
+										// the flurry never reaches super.cast, so each
+										// arrow reveals the archer here.
+										Invisibility.dispelOnThrow(user);
 
 										flurryCount--;
 										if (flurryCount > 0){

@@ -93,6 +93,27 @@ public class Invisibility extends FlavourBuff {
 		dispel(Dungeon.hero);
 	}
 
+	/**
+	 * Throwing is a reveal. The act of hurling something gives away where the
+	 * thrower is standing, so every throwable — missile weapon, spirit bow
+	 * arrow, potion, bomb — breaks invisibility whether or not it connects.
+	 *
+	 * <p>Every throw entry point routes through here once the throw has
+	 * resolved, never before it: the shot itself is still fired from stealth,
+	 * so surprise-attack accuracy and {@link Preparation} damage apply as
+	 * usual, and only then is the thrower exposed.
+	 *
+	 * <p>{@code thrower} is the char that actually stands on the level. For an
+	 * Echo that is the {@code EchoBoss} body, never its off-stage phantom kit —
+	 * dispelling the kit reveals nobody.
+	 */
+	public static void dispelOnThrow(Char thrower) {
+		if (thrower == null) {
+			return;
+		}
+		dispel(thrower);
+	}
+
 	public static void dispel(Char ch) {
 
 		for (Buff invis : ch.buffs(Invisibility.class)) {
@@ -125,6 +146,14 @@ public class Invisibility extends FlavourBuff {
 		RoundShield.GuardTracker guard = ch.buff(RoundShield.GuardTracker.class);
 		if (guard != null && guard.hasBlocked) {
 			guard.detach();
+		}
+
+		// Some sprites fully un-render while stealthed (EchoBossSprite sets
+		// visible=false and alpha 0), and the buff's own fx(false) is skipped
+		// whenever the reveal came from something other than an Invisibility
+		// detach. Force the state off here so no caller has to remember to.
+		if (ch.invisible <= 0 && ch.sprite != null) {
+			ch.sprite.remove(CharSprite.State.INVISIBLE);
 		}
 	}
 }

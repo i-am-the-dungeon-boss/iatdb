@@ -34,57 +34,57 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.watabou.noosa.ui.Component;
 
 public class WndInfoMob extends WndTitledMessage {
-	
-	public WndInfoMob( Mob mob ) {
 
-		super( new MobTitle( mob ), mob.info() );
-		
+	public WndInfoMob(Mob mob) {
+
+		super(new MobTitle(mob), mob.info());
+
 	}
-	
-	private static class MobTitle extends Component {
 
-		private static final int GAP	= 2;
-		
+	static class MobTitle extends Component {
+
+		private static final int GAP = 2;
+
 		private CharSprite image;
 		private RenderedTextBlock name;
 		private HealthBar health;
 		private BuffIndicator buffs;
-		
-		public MobTitle( Mob mob ) {
-			
-			name = PixelScene.renderTextBlock( Messages.titleCase( mob.name() ), 9 );
-			name.hardlight( TITLE_COLOR );
-			add( name );
-			
+
+		public MobTitle(Mob mob) {
+
+			name = PixelScene.renderTextBlock(Messages.titleCase(mob.name()), 9);
+			name.hardlight(TITLE_COLOR);
+			add(name);
+
 			image = mob.sprite();
-			add( image );
+			add(image);
 
 			health = new HealthBar();
 			health.level(mob);
-			add( health );
+			add(health);
 
-			buffs = new BuffIndicator( mob, false );
-			add( buffs );
+			buffs = new BuffIndicator(mob, false);
+			add(buffs);
 		}
-		
+
 		@Override
 		protected void layout() {
-			
+
 			image.x = 0;
-			image.y = Math.max( 0, name.height() + health.height() - image.height() );
+			image.y = Math.max(0, name.height() + health.height() - image.height());
 
 			float w = width - image.width() - GAP;
 
 			name.setPos(x + image.width() + GAP,
-					image.height() > name.height() ? y +(image.height() - name.height()) / 2 : y);
+					image.height() > name.height() ? y + (image.height() - name.height()) / 2 : y);
 
 			health.setRect(image.width() + GAP, name.bottom() + GAP, w, health.height());
 
-			buffs.maxBuffs = 50; //infinite, effectively
-			buffs.setRect(name.right(), name.bottom() - BuffIndicator.SIZE_SMALL-2, w - name.width(), 8);
+			buffs.maxBuffs = 50; // infinite, effectively
+			buffs.setRect(name.right(), name.bottom() - BuffIndicator.SIZE_SMALL - 2, w - name.width(), 8);
 
-			//If buff bar doesn't have enough room, move it below
-			if (!buffs.allBuffsVisible()){
+			// If buff bar doesn't have enough room, move it below
+			if (!buffs.allBuffsVisible()) {
 				buffs.setRect(0, health.bottom(), width, 8);
 				height = Math.max(image.y + image.height(), buffs.bottom());
 			} else {

@@ -194,7 +194,7 @@ class WandEchoZapTest {
 
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 
 		Wand wand = boss.getEchoHero().belongings.getItem(WandOfMagicMissile.class);
 		Assertions.assertThat(wand).isNotNull();
@@ -206,7 +206,7 @@ class WandEchoZapTest {
 
 		Assertions.assertThat(ok).isTrue();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 	}
 
 	@Test
@@ -234,7 +234,7 @@ class WandEchoZapTest {
 	}
 
 	@Test
-	@DisplayName("Echo LivingEarth zapAs applies deferred onZap after borrow restore without NPE")
+	@DisplayName("Echo LivingEarth zapAs applies deferred onZap after the position borrow ends")
 	void echoLivingEarthZapAsSurvivesDeferredCallbackAfterBorrowRestore() {
 		Hero player = mageHero();
 		WandOfLivingEarth seed = new WandOfLivingEarth();
@@ -265,8 +265,8 @@ class WandEchoZapTest {
 		Assertions.assertThatCode(fx::complete).doesNotThrowAnyException();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
 		Assertions.assertThat(kit.sprite)
-				.as("phantom kit sprite restored after deferred onZap")
-				.isNull();
+				.as("phantom kit still mirrors the body sprite after deferred onZap")
+				.isSameAs(boss.sprite);
 	}
 
 	@Test
@@ -295,7 +295,7 @@ class WandEchoZapTest {
 
 		Assertions.assertThatCode(fx::complete).doesNotThrowAnyException();
 		Assertions.assertThat(player.HP).isLessThan(hpBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test
@@ -366,7 +366,7 @@ class WandEchoZapTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, fireblastPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		WandOfFireblast wand = boss.getEchoHero().belongings.getItem(WandOfFireblast.class);
 		Assertions.assertThat(wand).isNotNull();
 		wand.curCharges = 3;
@@ -387,7 +387,7 @@ class WandEchoZapTest {
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(player, regrowthPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		WandOfRegrowth wand = boss.getEchoHero().belongings.getItem(WandOfRegrowth.class);
 		Assertions.assertThat(wand).isNotNull();
 		wand.curCharges = 3;
@@ -406,7 +406,7 @@ class WandEchoZapTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 
 		Hero kit = boss.getEchoHero();
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		WandOfDisintegration wand = new WandOfDisintegration();
 		wand.setCurrent(kit);

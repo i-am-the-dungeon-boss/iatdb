@@ -9,23 +9,30 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuffTransfer;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoInspectable;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoLeaderboardStorage;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoAoeDots;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoInventory;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyMatcher;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatusBuilder;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyHazards;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicySafety;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleResolver;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRole;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoUntouchable;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoBossRegionalDeath;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GuidingLightHit;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -46,12 +53,14 @@ import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Strings;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EchoBoss extends Mob {
+public class EchoBoss extends Mob implements EchoInspectable {
 
     public static final float BOSS_HP_MULTIPLIER = 1.3f;
 
@@ -72,11 +81,30 @@ public class EchoBoss extends Mob {
         properties.add(Property.BOSS);
     }
 
-    private static final int DOOR_STALL_BREAK_THRESHOLD = 2;
+    /**
+     * Default turns the same door may stay shut in the echo's face before it
+     * stops knocking and takes the door out of the level. Two: one for the
+     * approach that finds it closed, one for the return trip after it closed
+     * again. Overridden by {@code tuning.door_force_turns}.
+     */
+    private static final int DOOR_FORCE_TURNS = 2;
     /** Retreat-step scoring weight; see {@link #bestRetreatCell}. */
     private static final int PLANT_COVER_WEIGHT = 1000;
+    /**
+     * Outranks plant cover: cover the echo cannot shoot past is not cover, it
+     * is a blind spot the hunting AI then walks it back out of.
+     */
+    private static final int LINE_OF_FIRE_WEIGHT = 100000;
     /** Blind last-seen shots allowed after the hero cloaks. */
     private static final int BLIND_DEFENSE_SHOTS = 2;
+    /**
+     * How much faster than the hero a retreating echo moves. Kiting only works
+     * if the echo actually gains ground: at speed parity the hero walks after it
+     * and the retreat buys nothing but a lost turn. Sized just under
+     * {@link com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste}'s x3
+     * so a kite reads like the potion without beating it.
+     */
+    public static final float KITE_SPEED_ADVANTAGE = 2.5f;
 
     private Echo echo;
     private Hero echoHero;
@@ -84,19 +112,14 @@ public class EchoBoss extends Mob {
     private EchoPolicy echoPolicy;
     /** Recipe id → current step index (advanced when a recipe step executes). */
     private final Map<String, Integer> recipeSteps = new HashMap<>();
-    /** Door the hero is dancing through; -1 if none. */
+    /** Door standing between the echo and the hero; -1 if none. */
     private int doorStallCell = -1;
-    private int doorStallCount = 0;
-    private boolean doorStallPrevVisible = true;
-    private boolean doorStallPrevInitialized = false;
+    /** Turns that door has been found shut. */
+    private int doorStallTurns = 0;
     /** Remaining last-seen aims while the hero is invisible. */
     private int blindDefenseShotsLeft = BLIND_DEFENSE_SHOTS;
     /** Last cell the living hero attacked from (FOV / clear-bush focus). */
     private int lastAttackerPos = -1;
-    /** Harmful plant / sheep / grass blocker cells sensed this turn (−1 none). */
-    private int plantBlockerCell = -1;
-    private int pathBlockerCell = -1;
-    private int losBlockerCell = -1;
     /**
      * While true, pathing also refuses cells gas will spread onto next tick.
      * Off for ordinary CLOSE_IN / KEEP_DISTANCE steps: the growth ring around a
@@ -106,6 +129,12 @@ public class EchoBoss extends Mob {
      * can fall back when every growth-safe option is gone.
      */
     private boolean avoidPredictedGas = false;
+    /**
+     * Cleared for a turn when a harmful plant blocks the only route and the
+     * echo has neither the kit to burn it nor a shot to take instead. Set once
+     * per sense by {@code EchoPolicyStatusBuilder}.
+     */
+    private boolean avoidHarmfulPlants = true;
     /**
      * Master-style throw/zap gate: set by {@link #busy()}, cleared when
      * {@link #spendAndNext(float)} runs from the VFX callback. While busy,
@@ -134,6 +163,7 @@ public class EchoBoss extends Mob {
      */
     private final Set<String> preppedThisWindow = new HashSet<>();
 
+    @Override
     public Echo getEcho() {
         return echo;
     }
@@ -151,8 +181,36 @@ public class EchoBoss extends Mob {
         recipeSteps.clear();
     }
 
+    /**
+     * The single door to the phantom kit — {@code EchoActionContext.of} and
+     * every UI reader come through here. Re-asserting the sprite mirror on the
+     * way out is what makes it impossible to hand out a kit that has gone stale
+     * against a body whose sprite was re-linked.
+     */
+    @Override
     public Hero getEchoHero() {
+        mirrorKitSprite();
         return echoHero;
+    }
+
+    /**
+     * The phantom kit is owned by exactly one body for its whole life, so it
+     * mirrors that body's sprite rather than borrowing it per call — a borrow
+     * any caller could forget was the source of ANDROID-20 / ANDROID-21.
+     * Cleared together with the body's own slot by
+     * {@link com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite#destroy()}.
+     */
+    public void mirrorKitSprite() {
+        if (echoHero != null) {
+            echoHero.sprite = sprite;
+        }
+    }
+
+    /** Drops the mirror when the sprite it points at is destroyed. */
+    public void clearKitSprite() {
+        if (echoHero != null) {
+            echoHero.sprite = null;
+        }
     }
 
     /**
@@ -347,101 +405,157 @@ public class EchoBoss extends Mob {
         return EchoUntouchable.temporaryShielding(this) * 2 > selfShieldPeak;
     }
 
-    public int plantBlockerCell() {
-        return plantBlockerCell;
+    /**
+     * Whether harmful plants still count as walls for this echo's movement.
+     * Re-decided every sense; see {@link #avoidHarmfulPlants}.
+     */
+    public void setAvoidHarmfulPlants(boolean avoid) {
+        avoidHarmfulPlants = avoid;
     }
 
-    public int pathBlockerCell() {
-        return pathBlockerCell;
-    }
-
-    public int losBlockerCell() {
-        return losBlockerCell;
-    }
-
-    public void setPlantBlockerCell(int cell) {
-        plantBlockerCell = cell;
-    }
-
-    public void setPathBlockerCell(int cell) {
-        pathBlockerCell = cell;
-    }
-
-    public void setLosBlockerCell(int cell) {
-        losBlockerCell = cell;
+    public boolean avoidsHarmfulPlants() {
+        return avoidHarmfulPlants;
     }
 
     public int doorStallCell() {
         return doorStallCell;
     }
 
-    public int doorStallCount() {
-        return doorStallCount;
-    }
-
-    public boolean isDoorStalling() {
-        return doorStallCount >= DOOR_STALL_BREAK_THRESHOLD
-                && doorStallCell >= 0
-                && Dungeon.level != null
-                && doorStallCell < Dungeon.level.length()
-                && isDoorTerrain(Dungeon.level.map[doorStallCell]);
+    public int doorStallTurns() {
+        return doorStallTurns;
     }
 
     /**
-     * Call each turn with whether the hero is currently visible. Visibility
-     * flips near a door accumulate stall pressure for door-break reactions.
+     * Per-turn door bookkeeping. Counts the turns the door the echo is chasing
+     * the hero through has been shut in its face.
+     * <p>
+     * Deliberately not a visibility heuristic: the echo loses sight of the hero
+     * every time its own kite step drops it off the doorway, so "the hero keeps
+     * vanishing" cannot tell a door dance from ordinary kiting. Standing next
+     * to a shut door on the hero's side can.
      */
-    public void noteDoorStallVisibility(boolean heroVisible) {
-        if (!doorStallPrevInitialized) {
-            doorStallPrevVisible = heroVisible;
-            doorStallPrevInitialized = true;
+    public void noteDoorPursuit() {
+        Level level = Dungeon.level;
+        int door = pursuedDoor();
+        if (level == null || door < 0) {
+            // No door in reach this turn. The count is deliberately kept: the
+            // half of the dance that shuts the door is also the half that steps
+            // the echo away from it.
             return;
         }
-        if (heroVisible == doorStallPrevVisible) {
-            return;
-        }
-        doorStallPrevVisible = heroVisible;
-        int door = findRelevantDoor();
-        if (door < 0) {
-            return;
-        }
-        if (door == doorStallCell) {
-            doorStallCount++;
-        } else {
+        if (door != doorStallCell) {
             doorStallCell = door;
-            doorStallCount = 1;
+            doorStallTurns = 0;
         }
-        debugAct("door stall cell=" + doorStallCell + " count=" + doorStallCount);
+        if (level.map[door] == Terrain.DOOR) {
+            doorStallTurns++;
+            debugAct("door shut cell=" + door + " turns=" + doorStallTurns);
+        }
+    }
+
+    /**
+     * The whole answer to the door dance: after {@link #doorForceTurns()}
+     * knocks the echo puts the door through, so no policy step can ever hand
+     * the hero that line-of-sight flip again. A boss does not queue outside a
+     * door twice.
+     * <p>
+     * It is spent out of the kit: {@code capabilities.DOOR_BREAK} is where
+     * item-to-role mapping lives, and a fire tool leaves the doorway as embers.
+     * A kit that holds nothing for the job simply does not get the answer —
+     * the echo is a replay of a real hero's loadout, so it never destroys
+     * terrain for free. The pressure count is kept in that case, so the door
+     * comes down the moment a charge or a potion is there to do it with.
+     *
+     * @return true if the turn was spent on it
+     */
+    public boolean forceStalledDoor(EchoPolicyStatus status) {
+        Level level = Dungeon.level;
+        if (level == null
+                || doorStallTurns < doorForceTurns()
+                || doorStallCell < 0
+                || doorStallCell >= level.length()
+                || level.map[doorStallCell] != Terrain.DOOR
+                || level.distance(pos, doorStallCell) > 1) {
+            return false;
+        }
+        int door = doorStallCell;
+        // Aim is the door itself, so the plan carries the cell rather than
+        // leaving execute to guess at the hero. The item is resolved here, not
+        // in execute, because only this side knows how close the echo is
+        // standing to what it is about to set off — see EchoPolicySafety.
+        String itemId = EchoRoleResolver.resolveItemId(
+                EchoPolicySafety.withoutSelfBlast(
+                        doorBreakCapability(), getEchoHero(), level.distance(pos, door)),
+                EchoInventory.availableIds(getEchoHero()));
+        EchoPlan plan = new EchoPlan(
+                EchoRole.DOOR_BREAK.id(), "java_door_force", null, itemId, door);
+        if (itemId != null && runPlan(status, plan)) {
+            clearDoorStall();
+            debugAct("forced stalling door cell=" + door + " with kit");
+            return true;
+        }
+        debugAct("stalling door cell=" + door + " but kit has no DOOR_BREAK item");
+        return false;
+    }
+
+    /** The playbook's DOOR_BREAK pick list, or null when the kit card has none. */
+    private JSONObject doorBreakCapability() {
+        JSONObject caps = echoPolicy != null ? echoPolicy.root().optJSONObject("capabilities") : null;
+        return caps != null ? caps.optJSONObject(EchoRole.DOOR_BREAK.id()) : null;
+    }
+
+    /**
+     * How many knocks before the door comes down. The count is the backend's to
+     * tune ({@code tuning.door_force_turns}); {@link #DOOR_FORCE_TURNS} is only
+     * the default for a playbook that predates the knob. Never below one, or
+     * the echo would smash doors it has not been denied by.
+     */
+    private int doorForceTurns() {
+        JSONObject tuning = echoPolicy != null ? echoPolicy.root().optJSONObject("tuning") : null;
+        int turns = tuning != null
+                ? tuning.optInt("door_force_turns", DOOR_FORCE_TURNS)
+                : DOOR_FORCE_TURNS;
+        return Math.max(1, turns);
     }
 
     public void clearDoorStall() {
         doorStallCell = -1;
-        doorStallCount = 0;
+        doorStallTurns = 0;
     }
 
-    /** Door on/near last-seen (where door-dancing usually happens). */
-    public int findRelevantDoor() {
-        if (Dungeon.level == null) {
+    /**
+     * The door the echo is chasing the hero through: one it occupies or stands
+     * next to, no farther from the hero than the echo itself — a door leading
+     * away from the fight is not in the way of anything.
+     */
+    private int pursuedDoor() {
+        Level level = Dungeon.level;
+        if (level == null) {
             return -1;
         }
         int focus = lastSeenEnemyPos();
-        if (focus < 0 || focus >= Dungeon.level.length()) {
-            if (Dungeon.hero != null) {
-                focus = Dungeon.hero.pos;
-            } else {
+        if (focus < 0 || focus >= level.length()) {
+            if (Dungeon.hero == null) {
                 return -1;
             }
+            focus = Dungeon.hero.pos;
         }
-        if (isDoorTerrain(Dungeon.level.map[focus])) {
-            return focus;
-        }
-        for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
-            int cell = focus + PathFinder.NEIGHBOURS8[i];
-            if (Dungeon.level.insideMap(cell) && isDoorTerrain(Dungeon.level.map[cell])) {
-                return cell;
+        int selfDistance = level.distance(pos, focus);
+        int best = -1;
+        int bestDistance = Integer.MAX_VALUE;
+        for (int i = 0; i < PathFinder.NEIGHBOURS9.length; i++) {
+            int cell = pos + PathFinder.NEIGHBOURS9[i];
+            if (!level.insideMap(cell) || !isDoorTerrain(level.map[cell])) {
+                continue;
             }
+            int distance = level.distance(cell, focus);
+            if (distance > selfDistance || distance >= bestDistance) {
+                continue;
+            }
+            bestDistance = distance;
+            best = cell;
         }
-        return -1;
+        return best;
     }
 
     private static boolean isDoorTerrain(int terrain) {
@@ -452,6 +566,32 @@ public class EchoBoss extends Mob {
      * Policy movement: {@link Mob#getCloser} is protected; updates sprite like
      * hunting AI.
      */
+    /**
+     * True when {@link #policyStepCloser} could actually move this turn.
+     * <p>
+     * {@code *move_closer} always resolves, so without this {@code CLOSE_IN}
+     * reports ready on item resolution alone: the positioning layer wins the
+     * turn, {@link Mob#getCloser} finds no route, and the turn falls through
+     * having spent nothing. The mirror of {@code hasStepAwayFrom} for
+     * {@code KEEP_DISTANCE}.
+     * <p>
+     * Asks the same path question {@code getCloser} does rather than scanning
+     * neighbours, because a route around an obstacle is a legitimate way to
+     * close in and a neighbour scan would call it blocked. {@code findPath} is
+     * pure — unlike {@code getCloser}, which rewrites the cached {@code path}.
+     */
+    public boolean hasStepCloser(int cell) {
+        Level level = Dungeon.level;
+        if (rooted || level == null || cell == pos || !level.insideMap(cell)) {
+            return false;
+        }
+        if (level.adjacent(pos, cell)) {
+            return cellIsPathable(cell);
+        }
+        return fieldOfView != null
+                && Dungeon.findPath(this, cell, level.passable, fieldOfView, true) != null;
+    }
+
     public boolean policyStepCloser(int cell) {
         int oldPos = pos;
         if (!getCloser(cell)) {
@@ -474,9 +614,28 @@ public class EchoBoss extends Mob {
      * just because cover happens to be unavailable.
      */
     public boolean policyStepFurther(int enemyPos, boolean preferPlantCover) {
-        int retreat = bestRetreatCell(enemyPos, preferPlantCover);
+        return policyStepFurther(enemyPos, preferPlantCover, false);
+    }
+
+    /**
+     * @param requireLineOfFire refuse to move at all unless the echo can still
+     *                          shoot the hero from where it lands. A kite step
+     *                          exists to buy a shot; one that ends behind a
+     *                          door buys a wasted turn and a walk back instead.
+     *                          Disengaging from an untouchable hero passes
+     *                          {@code false} — there, losing the line is the
+     *                          point.
+     */
+    public boolean policyStepFurther(
+            int enemyPos, boolean preferPlantCover, boolean requireLineOfFire) {
+        int retreat = bestRetreatCell(enemyPos, preferPlantCover, requireLineOfFire);
         if (retreat >= 0 && policyStepTo(retreat)) {
             return true;
+        }
+        if (requireLineOfFire) {
+            // getFurther ignores the line entirely; standing and shooting beats
+            // any step it would pick here.
+            return false;
         }
         int oldPos = pos;
         if (!getFurther(enemyPos)) {
@@ -484,6 +643,21 @@ public class EchoBoss extends Mob {
         }
         moveSprite(oldPos, pos);
         return true;
+    }
+
+    /**
+     * Time one retreat step costs. The echo moves at
+     * {@link #KITE_SPEED_ADVANTAGE} times the hero's current speed — measured
+     * against the hero, so drinking Haste closes the gap in absolute terms but
+     * never in relative ones — or at its own speed when that is already higher.
+     */
+    public float kiteStepDelay() {
+        float own = speed();
+        Hero hero = Dungeon.hero;
+        if (hero == null) {
+            return 1f / own;
+        }
+        return 1f / Math.max(own, hero.combatSpeed() * KITE_SPEED_ADVANTAGE);
     }
 
     /**
@@ -496,6 +670,11 @@ public class EchoBoss extends Mob {
      * tiebreak.
      */
     private int bestRetreatCell(int enemyPos, boolean preferPlantCover) {
+        return bestRetreatCell(enemyPos, preferPlantCover, false);
+    }
+
+    private int bestRetreatCell(
+            int enemyPos, boolean preferPlantCover, boolean requireLineOfFire) {
         if (Dungeon.level == null || enemyPos < 0 || !Dungeon.level.insideMap(enemyPos)) {
             return -1;
         }
@@ -511,7 +690,14 @@ public class EchoBoss extends Mob {
             if (level.distance(cell, enemyPos) <= current) {
                 continue;
             }
+            boolean lineOfFire = hasLineOfFire(cell, enemyPos);
+            if (requireLineOfFire && !lineOfFire) {
+                continue;
+            }
             int score = 0;
+            if (preferPlantCover && lineOfFire) {
+                score += LINE_OF_FIRE_WEIGHT;
+            }
             if (preferPlantCover && plantCoversLine(cell, enemyPos)) {
                 score += PLANT_COVER_WEIGHT;
             }
@@ -524,7 +710,39 @@ public class EchoBoss extends Mob {
         return best;
     }
 
-    /** True when a harmful plant occupies any cell on the line from {@code from} to {@code to}. */
+    /**
+     * True when a projectile from {@code from} actually reaches {@code to}.
+     * A kiting echo that steps somewhere without one cannot shoot next turn,
+     * forfeits the turn, and gets marched back into melee by the hunting AI.
+     */
+    private static boolean hasLineOfFire(int from, int to) {
+        Level level = Dungeon.level;
+        if (level == null || from == to) {
+            return false;
+        }
+        // Terrain only, deliberately not PROJECTILE: the echo is asking about a
+        // cell it has not stepped to yet, and its own body still sits on the
+        // line back to the hero. STOP_CHARS would call every retreat blocked.
+        int terrainOnly = Ballistica.STOP_TARGET | Ballistica.STOP_SOLID;
+        Ballistica line = new Ballistica(from, to, terrainOnly);
+        if (line.collisionPos != to) {
+            return false;
+        }
+        // A closed door is passable, so it is not solid and Ballistica shoots
+        // straight through it — but nothing can be seen or shot past one. That
+        // is precisely the doorway the echo keeps stepping behind.
+        for (int cell : line.subPath(1, line.dist - 1)) {
+            if (level.losBlocking[cell]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * True when a harmful plant occupies any cell on the line from {@code from} to
+     * {@code to}.
+     */
     private static boolean plantCoversLine(int from, int to) {
         Ballistica line = new Ballistica(from, to, Ballistica.PROJECTILE);
         for (int cell : line.path) {
@@ -547,7 +765,8 @@ public class EchoBoss extends Mob {
         }
         for (int i = 0; i < passable.length; i++) {
             if (passable[i] && i != pos
-                    && EchoAoeDots.isAoeHazardForPath(this, i, avoidPredictedGas)) {
+                    && EchoAoeDots.isAoeHazardForPath(
+                            this, i, avoidPredictedGas, avoidHarmfulPlants)) {
                 passable[i] = false;
             }
         }
@@ -558,7 +777,8 @@ public class EchoBoss extends Mob {
     @Override
     protected boolean cellIsPathable(int cell) {
         return super.cellIsPathable(cell)
-                && !EchoAoeDots.isAoeHazardForPath(this, cell, avoidPredictedGas);
+                && !EchoAoeDots.isAoeHazardForPath(
+                        this, cell, avoidPredictedGas, avoidHarmfulPlants);
     }
 
     /** Exposes {@link Mob#cellIsPathable} for leave-AoE neighbour checks. */
@@ -566,7 +786,9 @@ public class EchoBoss extends Mob {
         return policyCellPathable(cell, avoidPredictedGas);
     }
 
-    /** As {@link #policyCellPathable(int)} with an explicit growth-ring strictness. */
+    /**
+     * As {@link #policyCellPathable(int)} with an explicit growth-ring strictness.
+     */
     public boolean policyCellPathable(int cell, boolean avoidGrowthRing) {
         boolean saved = avoidPredictedGas;
         avoidPredictedGas = avoidGrowthRing;
@@ -592,12 +814,66 @@ public class EchoBoss extends Mob {
     }
 
     /**
-     * Leave harmful AoE DoT if a safe neighbour exists. Prefers toward
-     * {@code enemyPos} unless {@code kite} (maximize distance).
+     * Terrain-only pathability: walls, size and occupancy, with the AoE hazard
+     * mask waived.
+     * <p>
+     * Only for the engulfed last resort in {@link EchoAoeDots#bestExit} — every
+     * other query must keep refusing hazard cells.
+     */
+    public boolean policyCellPathableIgnoringAoe(int cell) {
+        return Dungeon.level != null
+                && cell >= 0
+                && cell < Dungeon.level.length()
+                && super.cellIsPathable(cell);
+    }
+
+    /**
+     * Leave harmful AoE DoT. Prefers toward {@code enemyPos} unless
+     * {@code kite} (maximize distance).
+     * <p>
+     * When the blob covers every neighbour too — an Infernal Brew seeds the
+     * echo's whole 3x3 — the chosen step is itself hazardous and the ordinary
+     * step refuses it. Crossing it anyway is the point: the tile underfoot ticks
+     * every turn, so one more tick on the way out beats standing in it.
      */
     public boolean policyStepOutOfAoe(int enemyPos, boolean kite) {
         int step = EchoAoeDots.bestExit(this, enemyPos, kite);
         return step >= 0 && policyStepTo(step);
+    }
+
+    /**
+     * Last resort before the turn falls through to hunting AI: the echo is
+     * standing in a blob and nothing in the playbook could act on it.
+     * <p>
+     * Covers the case the policy layer cannot — engulfed, so every neighbour is
+     * hazardous and {@code LEAVE_AOE} is unready, or a reaction like
+     * {@code MOVE_TO_WATER} matched but had no legal step and spent nothing.
+     * Standing there is never the answer: the tile underfoot ticks every turn,
+     * so one crossed tile toward open ground pays for itself.
+     */
+    public boolean escapeAoeLastResort(int enemyPos, boolean kite) {
+        if (!EchoAoeDots.isAoeDotAt(this, pos)) {
+            return false;
+        }
+        int step = EchoAoeDots.bestEscape(this, enemyPos, kite);
+        if (step < 0) {
+            return false;
+        }
+        return policyStepTo(step) || policyStepThroughAoe(step);
+    }
+
+    /**
+     * One-cell step onto an adjacent hazard tile, for the engulfed case above.
+     * Terrain and occupancy still apply — only the AoE mask is waived.
+     */
+    private boolean policyStepThroughAoe(int cell) {
+        if (!Dungeon.level.adjacent(pos, cell) || !policyCellPathableIgnoringAoe(cell)) {
+            return false;
+        }
+        int oldPos = pos;
+        move(cell);
+        moveSprite(oldPos, pos);
+        return true;
     }
 
     @Override
@@ -612,6 +888,13 @@ public class EchoBoss extends Mob {
 
     @Override
     public int defenseSkill(Char enemy) {
+        // Guiding Light illuminates the body, but the defence roll is delegated
+        // to the kit — which never sees a buff attached over here. Same clause as
+        // Mob#defenseSkill, decided before delegating.
+        if (buff(GuidingLight.Illuminated.class) != null
+                && (GuidingLightHit.isClericFreeHit(enemy) || GuidingLightHit.isClericAlly(enemy))) {
+            return 0;
+        }
         return withEchoHeroPosInt(() -> echoHero.defenseSkill(enemy));
     }
 
@@ -685,7 +968,6 @@ public class EchoBoss extends Mob {
     private <T> T withEchoHeroCombat(ValueAction<T> action) {
         int savedPos = echoHero.pos;
         int savedParalysed = echoHero.paralysed;
-        CharSprite savedSprite = echoHero.sprite;
         Alignment savedAlignment = echoHero.alignment;
         int savedHp = echoHero.HP;
         int savedHt = echoHero.HT;
@@ -693,7 +975,9 @@ public class EchoBoss extends Mob {
 
         echoHero.pos = pos;
         echoHero.paralysed = paralysed;
-        echoHero.sprite = sprite;
+        // Sprite is mirrored, not lent — re-assert in case combat runs before
+        // this body's first turn.
+        mirrorKitSprite();
         echoHero.alignment = alignment;
         echoHero.HP = HP;
         echoHero.HT = HT;
@@ -709,7 +993,6 @@ public class EchoBoss extends Mob {
             moveGuaranteedHitTrackerFromKit();
             echoHero.pos = savedPos;
             echoHero.paralysed = savedParalysed;
-            echoHero.sprite = savedSprite;
             echoHero.alignment = savedAlignment;
             echoHero.HP = savedHp;
             echoHero.HT = savedHt;
@@ -725,8 +1008,7 @@ public class EchoBoss extends Mob {
     }
 
     private void moveGuaranteedHitTrackerFromKit() {
-        EchoHardStun.GuaranteedHitTracker kitTracker =
-                echoHero.buff(EchoHardStun.GuaranteedHitTracker.class);
+        EchoHardStun.GuaranteedHitTracker kitTracker = echoHero.buff(EchoHardStun.GuaranteedHitTracker.class);
         if (kitTracker == null) {
             return;
         }
@@ -742,7 +1024,6 @@ public class EchoBoss extends Mob {
         // do not gate on invisible>0 in case the counter and buffs ever desync.
         if (dmg > 0) {
             Invisibility.dispel(this);
-            revealSpriteAfterInvisibility();
         }
         if (dmg > 0 && src == Dungeon.hero) {
             fightRecorder.trackDamageTaken(dmg);
@@ -775,7 +1056,6 @@ public class EchoBoss extends Mob {
             boolean hit = attack(enemy);
             if (hit) {
                 Invisibility.dispel(this);
-                revealSpriteAfterInvisibility();
             }
             spend(attackDelay());
             return true;
@@ -789,23 +1069,9 @@ public class EchoBoss extends Mob {
         // (it always attacks again and always dispels).
         if (hit) {
             Invisibility.dispel(this);
-            revealSpriteAfterInvisibility();
         }
         spend(attackDelay());
         next();
-    }
-
-    /**
-     * EchoBossSprite fully un-renders while stealthed ({@code visible=false},
-     * alpha 0). After dispel, force the INVISIBLE state off so the next sprite
-     * update restores FOV visibility / alpha even if buff {@code fx(false)} was
-     * skipped.
-     */
-    private void revealSpriteAfterInvisibility() {
-        if (invisible > 0 || sprite == null) {
-            return;
-        }
-        sprite.remove(CharSprite.State.INVISIBLE);
     }
 
     @Override
@@ -886,6 +1152,10 @@ public class EchoBoss extends Mob {
 
     @Override
     protected boolean act() {
+        // Re-assert the kit's sprite mirror in case the body's sprite was
+        // replaced (level change, re-link) since the last turn.
+        mirrorKitSprite();
+
         // Pick up kit buffs attached after onAdd (e.g. MeleeWeapon.Charger).
         scheduleEchoKitBuffs();
 
@@ -894,13 +1164,18 @@ public class EchoBoss extends Mob {
             return false;
         }
 
+        // Fresh turn: no VFX owns it yet. Cleared here rather than in
+        // spendAndNext because a synchronous projectile calls that *inside*
+        // runPlan, and spendTurn still has to see the flag it set.
+        vfxOwnsTurn = false;
+
         // Match Mob.act: paralysis / frost / magical sleep skip the whole turn
         // (including policy CLOSE_IN). Roots are handled by getCloser.
         if (paralysed > 0) {
             enemySeen = false;
-            spend(TICK);
             debugAct("paralysed → skip turn");
-            return true;
+            return spendTurn(
+                    new EchoPlan(EchoRole.HOLD.id(), "java_paralysed", null), pos);
         }
 
         if (state != HUNTING) {
@@ -914,7 +1189,7 @@ public class EchoBoss extends Mob {
             fieldOfView = new boolean[Dungeon.level.length()];
         }
         Dungeon.level.updateFieldOfView(this, fieldOfView);
-        // Record last-seen for door-stall / blind defense; re-arm cloak shots
+        // Record last-seen for door pursuit / blind defense; re-arm cloak shots
         // when visible. Movement still uses the live hero cell.
         Hero hero = Dungeon.hero;
         boolean heroVisible = hero != null
@@ -927,15 +1202,34 @@ public class EchoBoss extends Mob {
             noteEnemySeenAt(hero.pos);
             rearmBlindDefense();
         }
-        noteDoorStallVisibility(heroVisible);
+        noteDoorPursuit();
 
         fightRecorder.trackTurn();
 
         EchoPolicyStatus status = EchoPolicyStatusBuilder.build(this, echoPolicy);
         noteStance(status.untouchableStance);
 
+        // Ahead of the match phase on purpose: the playbook is what keeps
+        // stepping back off the doorway, so it can never be the thing that ends
+        // the dance.
+        if (forceStalledDoor(status)) {
+            return true;
+        }
+
         if (tryPolicyAct(status)) {
             return true;
+        }
+        // Nothing in the playbook could act while the echo stands in a blob —
+        // getting out outranks everything left below, including making space
+        // against an untouchable hero. Burning to death is not a stance.
+        int posBeforeEscape = pos;
+        if (escapeAoeLastResort(
+                hero != null ? hero.pos : -1,
+                EchoPolicyMatcher.wantsKeepDistance(echoPolicy, status))) {
+            debugAct("aoe escape (last resort) from " + posBeforeEscape);
+            return spendTurn(
+                    new EchoPlan(EchoRole.LEAVE_AOE.id(), "java_aoe_escape", null),
+                    posBeforeEscape);
         }
         // The hero may be untouchable; the echo still never spends a turn idle.
         if (forcedUntouchableAct(status)) {
@@ -979,23 +1273,26 @@ public class EchoBoss extends Mob {
             case SHIELD_UP:
                 if (status.isRoleReady(EchoPolicyHazards.SHIELD_SELF)) {
                     debugAct("forced → SHIELD_SELF");
-                    return runChoice(status, new EchoPolicyChoice(
-                            EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null));
+                    return runPlan(status, EchoPlan.resolve(
+                            EchoPolicyHazards.SHIELD_SELF, "java_untouchable", null, status));
                 }
                 break;
             case RUN:
+                int posBeforeRun = pos;
                 if (hero != null && policyStepFurther(hero.pos, true)) {
                     debugAct("forced → step away (disengageTurns=" + disengageTurns + ")");
-                    spend(1f / speed());
-                    return true;
+                    return spendTurn(
+                            new EchoPlan(
+                                    EchoRole.KEEP_DISTANCE.id(), "java_untouchable", null),
+                            posBeforeRun);
                 }
                 break;
             case PREP:
-                EchoPolicyChoice prep = EchoUntouchable.firstReadyPrep(status, preppedThisWindow);
+                EchoPlan prep = EchoUntouchable.firstReadyPrep(status, preppedThisWindow);
                 if (prep != null) {
                     debugAct("forced → prep " + prep.useRole);
                     preppedThisWindow.add(prep.useRole);
-                    return runChoice(status, prep);
+                    return runPlan(status, prep);
                 }
                 break;
             default:
@@ -1005,8 +1302,8 @@ public class EchoBoss extends Mob {
         // walking into melee range of a ranged kit.
         if (status.isRoleReady(EchoPolicyHazards.RANGED) && status.enemyInLos) {
             debugAct("forced → last-resort RANGED");
-            return runChoice(status, new EchoPolicyChoice(
-                    EchoPolicyHazards.RANGED, "java_untouchable", null));
+            return runPlan(status, EchoPlan.resolve(
+                    EchoPolicyHazards.RANGED, "java_untouchable", null, status));
         }
         return false;
     }
@@ -1031,49 +1328,68 @@ public class EchoBoss extends Mob {
 
         // Door-break / blind-defense are policy reactions (door_break,
         // blind_defense_ranged).
-        EchoPolicyChoice choice = EchoPolicyMatcher.choose(echoPolicy, status, recipeSteps);
-        if (choice == null) {
-            debugAct("match → no choice");
+        EchoPlan plan = EchoPolicyMatcher.choose(echoPolicy, status, recipeSteps);
+        if (plan == null) {
+            debugAct("match → no plan");
             return false;
         }
-        debugAct("match → layer=" + choice.layer
-                + " role=" + choice.useRole
-                + (choice.recipeId != null ? " recipe=" + choice.recipeId : ""));
+        debugAct("match → layer=" + plan.layer
+                + " role=" + plan.useRole
+                + (plan.recipeId != null ? " recipe=" + plan.recipeId : ""));
 
-        return runChoice(status, choice);
+        return runPlan(status, plan);
     }
 
     /**
-     * Execute one resolved choice and account for the turn: recipe step advance,
+     * Execute one resolved plan and account for the turn: recipe step advance,
      * the VFX handshake, and movement-vs-tick spend. Shared by the policy path
      * and the Java untouchable floor so a forced prep cannot double-spend the
      * turn a potion already paid for.
      *
      * @return true if the turn was fully spent
      */
-    private boolean runChoice(EchoPolicyStatus status, EchoPolicyChoice choice) {
+    private boolean runPlan(EchoPolicyStatus status, EchoPlan plan) {
         int posBefore = pos;
-        vfxOwnsTurn = false;
-        boolean spent = EchoRoleExecutor.execute(this, echoPolicy, status, choice);
+        boolean spent = EchoRoleExecutor.execute(this, echoPolicy, status, plan);
         if (!spent) {
             // Melee / staff fallthrough — let mob AI attack this turn.
-            debugAct("execute → not spent (fallthrough), role=" + choice.useRole);
+            debugAct("execute → not spent (fallthrough), role=" + plan.useRole);
             return false;
         }
-        if ("recipes".equals(choice.layer) && choice.recipeId != null) {
-            Integer prev = recipeSteps.get(choice.recipeId);
-            recipeSteps.put(choice.recipeId, (prev != null ? prev : 0) + 1);
-            debugAct("recipe step advanced id=" + choice.recipeId
-                    + " nextStep=" + recipeSteps.get(choice.recipeId));
+        if ("recipes".equals(plan.layer) && plan.recipeId != null) {
+            Integer prev = recipeSteps.get(plan.recipeId);
+            recipeSteps.put(plan.recipeId, (prev != null ? prev : 0) + 1);
+            debugAct("recipe step advanced id=" + plan.recipeId
+                    + " nextStep=" + recipeSteps.get(plan.recipeId));
         }
-        debugAct("execute → spent turn, role=" + choice.useRole);
+        debugAct("execute → spent turn, role=" + plan.useRole);
+        return spendTurn(plan, posBefore);
+    }
+
+    /**
+     * The one place a policy turn is paid for. Every rung of {@link #act()}
+     * that claims a turn routes through here — the playbook, the door force,
+     * the paralysis skip, the AoE last resort and the untouchable floor — so
+     * "returned true" and "the clock moved" cannot come apart. The only
+     * exception is {@code super.act()}, which is stock hunting AI and does its
+     * own accounting.
+     * <p>
+     * Cost is read off the plan and the move that already happened: movement
+     * costs {@code 1/speed}, a retreat costs {@link #kiteStepDelay()}, and
+     * standing still costs one tick.
+     *
+     * @param posBefore the echo's cell before the plan executed
+     * @return always true, so callers can {@code return spendTurn(...)}
+     */
+    private boolean spendTurn(EchoPlan plan, int posBefore) {
         // Throw/zap VFX owns spend via spendAndNext (may already have run sync).
         if (vfxOwnsTurn) {
             return true;
         }
         // Match hunting AI: movement costs 1/speed; other roles cost one tick.
+        // A retreat is the exception — see kiteStepDelay.
         if (pos != posBefore) {
-            spend(1f / speed());
+            spend(plan.is(EchoRole.KEEP_DISTANCE) ? kiteStepDelay() : 1f / speed());
         } else {
             spend(TICK);
         }

@@ -32,7 +32,7 @@ class EchoArmorAbilityElementalStrikeTest {
 		EchoTestSupport.installEchoBossLevel(player, boss, bossOffset);
 		Assertions.assertThat(player.sprite.ch).isSameAs(player);
 		Assertions.assertThat(boss.sprite.ch).isSameAs(boss);
-		Assertions.assertThat(boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(boss.getEchoHero().sprite).isSameAs(boss.sprite);
 		return new Fight(player, boss);
 	}
 
@@ -177,7 +177,7 @@ class EchoArmorAbilityElementalStrikeTest {
 		boolean ok = EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalStrike(), f.player.pos);
 
 		Assertions.assertThat(ok).isTrue();
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 
 		EchoBossTurnAssert.assertCanTakeNextTurn(f.boss);
 	}

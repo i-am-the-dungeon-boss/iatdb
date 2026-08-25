@@ -57,13 +57,13 @@ public class Frost extends FlavourBuff {
 	public void recordEchoLandedTurns() {
 		echoLandedTurns = cooldown();
 	}
-	
+
 	@Override
 	public boolean attachTo( Char target ) {
 		Buff.detach( target, Burning.class );
 
 		if (super.attachTo( target )) {
-			
+
 			target.paralysed++;
 			Buff.detach( target, Chill.class );
 
@@ -79,7 +79,7 @@ public class Frost extends FlavourBuff {
 						}
 					}
 				}
-				
+
 				if (!freezable.isEmpty()){
 					Item toFreeze = Random.element(freezable).detach( hero.belongings.backpack );
 					GLog.w( Messages.capitalize(Messages.get(this, "freezes", toFreeze.title())) );
@@ -92,7 +92,7 @@ public class Frost extends FlavourBuff {
 						}
 					}
 				}
-				
+
 			} else if (target instanceof Thief) {
 
 				Item item = ((Thief) target).item;
@@ -111,7 +111,7 @@ public class Frost extends FlavourBuff {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public void detach() {
 		super.detach();
@@ -122,7 +122,7 @@ public class Frost extends FlavourBuff {
 		if (Dungeon.level.water[target.pos])
 			Buff.prolong(target, Chill.class, Chill.DURATION/2f);
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.FROST;

@@ -54,7 +54,7 @@ class EchoWandAdapterTest {
 		Assertions.assertThat(wand.curCharges).isEqualTo(2);
 		Assertions.assertThat(kit.cooldown()).isEqualTo(kitBefore);
 		Assertions.assertThat(player.HP).isLessThanOrEqualTo(hpBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

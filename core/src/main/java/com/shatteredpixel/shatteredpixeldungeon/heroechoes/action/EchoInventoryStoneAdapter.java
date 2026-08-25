@@ -19,10 +19,10 @@ public final class EchoInventoryStoneAdapter {
 			return false;
 		}
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		if (ctx.kit.buff(MagicImmune.class) != null) {
+		if (ctx.stats().buff(MagicImmune.class) != null) {
 			return false;
 		}
-		Item pick = InventoryStoneEchoBridge.firstUsable(stone, ctx.kit);
+		Item pick = InventoryStoneEchoBridge.firstUsable(stone, ctx.stats());
 		if (pick == null) {
 			return false;
 		}

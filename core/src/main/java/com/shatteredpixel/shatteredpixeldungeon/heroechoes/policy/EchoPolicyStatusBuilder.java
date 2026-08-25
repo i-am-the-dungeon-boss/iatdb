@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -55,7 +56,7 @@ public final class EchoPolicyStatusBuilder {
 				&& enemy.pos >= 0
 				&& enemy.pos < boss.fieldOfView.length
 				&& boss.fieldOfView[enemy.pos];
-		// Door-stall reactions still need a remembered door focus.
+		// Blind-defense aim still needs a remembered last-seen cell.
 		if (inLos) {
 			boss.noteEnemySeenAt(enemy.pos);
 		}
@@ -69,9 +70,12 @@ public final class EchoPolicyStatusBuilder {
 		Map<String, Integer> nearDist = new HashMap<>();
 		Map<String, Integer> nearCell = new HashMap<>();
 		if (level != null) {
-			recordTerrain(level, boss.pos, Terrain.WATER, "water", nearTiles, nearDist, nearCell);
-			recordTerrain(level, boss.pos, Terrain.GRASS, "grass", nearTiles, nearDist, nearCell);
-			recordTerrain(level, boss.pos, Terrain.HIGH_GRASS, "grass", nearTiles, nearDist, nearCell);
+			recordTerrain(
+					boss, level, boss.pos, Terrain.WATER, "water", nearTiles, nearDist, nearCell);
+			recordTerrain(
+					boss, level, boss.pos, Terrain.GRASS, "grass", nearTiles, nearDist, nearCell);
+			recordTerrain(
+					boss, level, boss.pos, Terrain.HIGH_GRASS, "grass", nearTiles, nearDist, nearCell);
 		}
 
 		boolean onWater = "water".equals(onTerrainName(level, boss.pos));
@@ -86,7 +90,12 @@ public final class EchoPolicyStatusBuilder {
 		if (EchoAoeDots.isAoeDotAt(boss, boss.pos)) {
 			selfStatuses.add(EchoAoeDots.STATUS);
 		}
-		sensePlantBlocked(boss, level, selfStatuses);
+		// Re-decided below, once readiness is known. Reset first so the sense
+		// itself runs against the normal "plants are walls" map.
+		boss.setAvoidHarmfulPlants(true);
+		int plantBlocker = sensePlantBlocked(boss, level, selfStatuses);
+		int losBlocker = senseLosBlocked(boss, level, selfStatuses, inLos);
+		sensePathBlocked(boss, level, selfStatuses);
 		// Enemy statuses drive hard gates below, so they must be sensed first.
 		Set<String> enemyStatuses = enemy != null ? statusNames(enemy) : new HashSet<String>();
 
@@ -103,7 +112,8 @@ public final class EchoPolicyStatusBuilder {
 		// the stance, so readiness is computed in two passes over one sense.
 		JSONObject caps = policy.root().optJSONObject("capabilities");
 		Set<String> preGateReady = readyRolesBeforeStanceGate(
-				caps, boss, enemy, level, echoHero, tuning, available, enemyStatuses);
+				caps, boss, enemy, level, echoHero, tuning, available, enemyStatuses,
+				hasAimAtEnemy(boss, inLos, enemyStatuses), plantBlocker, losBlocker);
 
 		boolean invulnerable = EchoUntouchable.isInvulnerable(enemy, boss.getClass());
 		boolean bigShield = EchoUntouchable.hasBigTemporaryShield(enemy);
@@ -127,6 +137,8 @@ public final class EchoPolicyStatusBuilder {
 			}
 		}
 		classifyHazards(caps, rolesReady, clearOfBlast, onWater, waterNear, safe, unsafe);
+		boss.setAvoidHarmfulPlants(
+				!isPlantWalledIn(selfStatuses, rolesReady));
 
 		EchoPolicyStatus.Builder b = new EchoPolicyStatus.Builder()
 				.untouchableStance(stance)
@@ -135,7 +147,6 @@ public final class EchoPolicyStatusBuilder {
 				.enemyShieldRatio(enemyShield)
 				.distance(distance)
 				.enemyInLos(inLos)
-				.doorStalling(boss.isDoorStalling())
 				.selfClass(boss.getEcho().heroClass)
 				.enemyClass(enemy != null && enemy.heroClass != null ? enemy.heroClass.name() : "")
 				.onTerrain(onTerrainName(level, boss.pos))
@@ -153,7 +164,25 @@ public final class EchoPolicyStatusBuilder {
 		for (Map.Entry<String, Integer> e : nearCell.entrySet()) {
 			b.terrainNearCell(e.getKey(), e.getValue());
 		}
+		recordRoleTargets(b, rolesReady, plantBlocker, losBlocker);
 		return b.build();
+	}
+
+	/**
+	 * Hands every role whose aim this phase resolved its cell, so the plan the
+	 * matcher builds carries the target instead of leaving
+	 * {@link EchoRoleExecutor} to guess at one it cannot reconstruct. Roles
+	 * absent here aim normally via {@link EchoTargetPicker}.
+	 */
+	private static void recordRoleTargets(
+			EchoPolicyStatus.Builder b, Set<String> rolesReady,
+			int plantBlocker, int losBlocker) {
+		if (rolesReady.contains(EchoPolicyHazards.CLEAR_PLANT)) {
+			b.roleTargetCell(EchoPolicyHazards.CLEAR_PLANT, plantBlocker);
+		}
+		if (rolesReady.contains(EchoRole.CLEAR_LOS.id())) {
+			b.roleTargetCell(EchoRole.CLEAR_LOS.id(), losBlocker);
+		}
 	}
 
 	/**
@@ -163,7 +192,8 @@ public final class EchoPolicyStatusBuilder {
 	 */
 	private static Set<String> readyRolesBeforeStanceGate(
 			JSONObject caps, EchoBoss boss, Hero enemy, Level level, Hero echoHero,
-			JSONObject tuning, Set<String> available, Set<String> enemyStatuses) {
+			JSONObject tuning, Set<String> available, Set<String> enemyStatuses,
+			boolean aimAvailable, int plantBlocker, int losBlocker) {
 		Set<String> ready = new HashSet<>();
 		if (caps == null) {
 			return ready;
@@ -176,15 +206,59 @@ public final class EchoPolicyStatusBuilder {
 				continue;
 			if (!EchoRoleResolver.roleHasReadyItem(cap, available))
 				continue;
-			if (!virtualRoleFeasible(role, boss, enemy, level))
+			if (!virtualRoleFeasible(role, boss, enemy, level, plantBlocker, losBlocker))
 				continue;
 			if (!respectsPotionReserve(role, cap, tuning, echoHero))
 				continue;
 			if (!allowedAgainstEnemy(role, cap, available, enemyStatuses))
 				continue;
+			if (!aimAvailable && needsAimAtEnemy(role))
+				continue;
 			ready.add(role);
 		}
 		return ready;
+	}
+
+	/**
+	 * A harmful plant blocks the only sensible route, and the echo can neither
+	 * burn it nor fight past it from where it stands. Walking through is the
+	 * only remaining way to have a fight at all, so movement stops treating
+	 * plants as walls for this turn.
+	 */
+	private static boolean isPlantWalledIn(Set<String> selfStatuses, Set<String> rolesReady) {
+		if (!selfStatuses.contains(EchoPolicyHazards.PLANT_BLOCKED)) {
+			return false;
+		}
+		if (rolesReady.contains(EchoPolicyHazards.CLEAR_PLANT)) {
+			return false;
+		}
+		for (String role : rolesReady) {
+			if (needsAimAtEnemy(role)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean needsAimAtEnemy(String role) {
+		EchoRole known = EchoRole.byId(role);
+		// An unrecognised role has no aim requirement this build can assert.
+		return known != null && known.needsAimAtEnemy();
+	}
+
+	/**
+	 * Whether {@link EchoTargetPicker} would find any cell to aim at this turn:
+	 * the hero is visible, or cloaked with blind-defence shots still budgeted
+	 * against the last cell it was seen in. Mirrors the picker's own opening
+	 * gate so readiness and execute cannot disagree.
+	 */
+	private static boolean hasAimAtEnemy(EchoBoss boss, boolean inLos, Set<String> enemyStatuses) {
+		if (inLos) {
+			return true;
+		}
+		return enemyStatuses.contains("invisible")
+				&& boss.blindDefenseShotsLeft() > 0
+				&& boss.lastSeenEnemyPos() >= 0;
 	}
 
 	/**
@@ -250,13 +324,15 @@ public final class EchoPolicyStatusBuilder {
 		if (enemyStatuses.contains(EchoPolicyHazards.PARALYSIS_IMMUNITY)
 				&& EchoPolicyHazards.SETUP_CC.equals(role)
 				&& !EchoRoleResolver.roleHasReadyItem(
-						EchoPolicyHazards.withoutParalyticGas(cap), available)) {
+						EchoPolicySafety.withoutParalyticGas(cap), available)) {
 			return false;
 		}
 		return true;
 	}
 
-	private static boolean virtualRoleFeasible(String role, EchoBoss boss, Hero enemy, Level level) {
+	private static boolean virtualRoleFeasible(
+			String role, EchoBoss boss, Hero enemy, Level level,
+			int plantBlocker, int losBlocker) {
 		EchoRole known = EchoRole.byId(role);
 		if (known == null) {
 			// A role this build does not recognise has no precondition to check.
@@ -270,30 +346,44 @@ public final class EchoPolicyStatusBuilder {
 				return !boss.hasMostlyIntactShield();
 			case MOVE_TO_WATER:
 				return level != null
-						&& nearestTerrainCell(level, boss.pos, Terrain.WATER, Integer.MAX_VALUE) != null;
+						&& nearestTerrainCell(
+								level, boss, boss.pos, Terrain.WATER, Integer.MAX_VALUE) != null;
 			case MOVE_TO_GRASS:
 				return level != null
-						&& (nearestTerrainCell(level, boss.pos, Terrain.GRASS, Integer.MAX_VALUE) != null
-								|| nearestTerrainCell(level, boss.pos, Terrain.HIGH_GRASS, Integer.MAX_VALUE) != null);
+						&& (nearestTerrainCell(
+								level, boss, boss.pos, Terrain.GRASS, Integer.MAX_VALUE) != null
+								|| nearestTerrainCell(
+										level, boss, boss.pos, Terrain.HIGH_GRASS,
+										Integer.MAX_VALUE) != null);
 			case LEAVE_AOE:
 				return EchoAoeDots.canLeave(boss);
 			case BLINK:
 				return EchoTargetPicker.pickBlinkAway(boss) >= 0;
 			case KEEP_DISTANCE:
 				return hasStepAwayFrom(boss, enemy, level);
+			case CLOSE_IN:
+				// Same reasoning as KEEP_DISTANCE above: a virtual movement role
+				// is only ready when the board actually offers the step. Nothing
+				// to close on leaves it usable, as with hasStepAwayFrom.
+				return enemy == null || boss.hasStepCloser(enemy.pos);
 			case CLEAR_PLANT:
-				return isPlantBlockerAimable(boss);
+				return isBlockerAimable(boss, plantBlocker);
+			case CLEAR_LOS:
+				// Falling through to the default reported the role permanently
+				// ready, so a playbook naming it burned kit on an aimless shot
+				// at the hero.
+				return isBlockerAimable(boss, losBlocker);
 			default:
 				return true;
 		}
 	}
 
 	/**
-	 * True when {@code plant_blocked} identified a cell and a straight throw/zap
-	 * from the echo actually reaches it (no wall or another plant short of it).
+	 * True when a blocked-route sense identified a cell and a straight throw/zap
+	 * from the echo actually reaches it (no wall or another blocker short of
+	 * it). A blocker the echo cannot hit is not one it can clear.
 	 */
-	private static boolean isPlantBlockerAimable(EchoBoss boss) {
-		int cell = boss.plantBlockerCell();
+	private static boolean isBlockerAimable(EchoBoss boss, int cell) {
 		if (cell < 0) {
 			return false;
 		}
@@ -305,8 +395,8 @@ public final class EchoPolicyStatusBuilder {
 	 * A harmful plant sits on the only reasonably short route to
 	 * {@link EchoBoss#policyFocusCell()}: the path that must avoid it is null or
 	 * much longer than one that may cross it. Marks self status
-	 * {@link EchoPolicyHazards#PLANT_BLOCKED} and remembers the first harmful
-	 * plant on the short route via {@link EchoBoss#setPlantBlockerCell}.
+	 * {@link EchoPolicyHazards#PLANT_BLOCKED} and returns the first harmful
+	 * plant on the short route.
 	 * <p>
 	 * Both searches share {@link EchoAoeDots#isAoeDotAt} for current fire/gas —
 	 * the only difference between them is the plant exclusion, so any gap in
@@ -314,14 +404,13 @@ public final class EchoPolicyStatusBuilder {
 	 * predicted-growth ring: that only matters for movement about to happen,
 	 * not for judging whether the general route is open.
 	 */
-	private static void sensePlantBlocked(EchoBoss boss, Level level, Set<String> selfStatuses) {
-		boss.setPlantBlockerCell(-1);
+	private static int sensePlantBlocked(EchoBoss boss, Level level, Set<String> selfStatuses) {
 		if (level == null) {
-			return;
+			return -1;
 		}
 		int focus = boss.policyFocusCell();
 		if (focus < 0 || focus >= level.length() || focus == boss.pos) {
-			return;
+			return -1;
 		}
 
 		boolean[] avoidingPlants = level.passable.clone();
@@ -336,20 +425,89 @@ public final class EchoPolicyStatusBuilder {
 		}
 		PathFinder.Path shortPath = PathFinder.find(boss.pos, focus, crossingPlants);
 		if (shortPath == null) {
-			return;
+			return -1;
 		}
 
 		boolean detour = directPath == null || directPath.size() > 2 * shortPath.size();
 		if (!detour) {
-			return;
+			return -1;
 		}
 
 		for (int cell : shortPath) {
 			if (EchoAoeDots.isHarmfulPlantAt(cell)) {
-				boss.setPlantBlockerCell(cell);
 				selfStatuses.add(EchoPolicyHazards.PLANT_BLOCKED);
-				return;
+				return cell;
 			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Burnable grass, not a wall, is what is eating the sightline to the hero:
+	 * the one blocked sightline the echo can do something about. Marks self
+	 * status {@link EchoPolicyHazards#LOS_BLOCKED} and returns the grass cell so
+	 * {@code CLEAR_LOS} aims at the grass rather than at a hero it cannot see.
+	 * <p>
+	 * The line is traced with {@link Ballistica#STOP_TARGET} alone so it runs
+	 * the whole way to the focus, and the <em>first</em> sight-blocking cell on
+	 * it decides: grass behind a wall is not the reason the hero is hidden, and
+	 * burning it opens nothing.
+	 */
+	private static int senseLosBlocked(
+			EchoBoss boss, Level level, Set<String> selfStatuses, boolean inLos) {
+		if (level == null || inLos) {
+			return -1;
+		}
+		int focus = boss.policyFocusCell();
+		if (focus < 0 || focus >= level.length() || focus == boss.pos) {
+			return -1;
+		}
+		Ballistica line = new Ballistica(boss.pos, focus, Ballistica.STOP_TARGET);
+		if (line.collisionPos == null) {
+			return -1;
+		}
+		// Only as far as the focus: the raw path runs on past it to the map edge.
+		for (int cell : line.subPath(1, line.path.indexOf(line.collisionPos))) {
+			if (cell < 0 || cell >= level.length() || !level.losBlocking[cell]) {
+				continue;
+			}
+			if (!isBurnableGrass(level, cell)) {
+				// A wall: nothing the echo carries opens this sightline.
+				return -1;
+			}
+			selfStatuses.add(EchoPolicyHazards.LOS_BLOCKED);
+			return cell;
+		}
+		return -1;
+	}
+
+	private static boolean isBurnableGrass(Level level, int cell) {
+		int terrain = level.map[cell];
+		return terrain == Terrain.HIGH_GRASS || terrain == Terrain.FURROWED_GRASS;
+	}
+
+	/**
+	 * A character that is not the hero stands in the shot, so an ordinary
+	 * ranged role would spend the turn hitting a sheep. Marks self status
+	 * {@link EchoPolicyHazards#PATH_BLOCKED}, which the playbook answers with
+	 * {@code PATH_THROUGH} — a role aimed at the hero's own cell precisely to
+	 * punch through the blocker, so it needs no target cell of its own.
+	 */
+	private static void sensePathBlocked(EchoBoss boss, Level level, Set<String> selfStatuses) {
+		if (level == null || Dungeon.hero == null) {
+			return;
+		}
+		int focus = Dungeon.hero.pos;
+		if (focus < 0 || focus >= level.length() || focus == boss.pos) {
+			return;
+		}
+		Ballistica shot = new Ballistica(boss.pos, focus, Ballistica.PROJECTILE);
+		if (shot.collisionPos == null || shot.collisionPos == focus) {
+			return;
+		}
+		Char blocker = Actor.findChar(shot.collisionPos);
+		if (blocker != null && blocker != boss && blocker != Dungeon.hero) {
+			selfStatuses.add(EchoPolicyHazards.PATH_BLOCKED);
 		}
 	}
 
@@ -381,9 +539,9 @@ public final class EchoPolicyStatusBuilder {
 	}
 
 	private static void recordTerrain(
-			Level level, int from, int terrain, String name, int maxDist,
+			Char ch, Level level, int from, int terrain, String name, int maxDist,
 			Map<String, Integer> nearDist, Map<String, Integer> nearCell) {
-		int[] found = nearestTerrainCell(level, from, terrain, maxDist);
+		int[] found = nearestTerrainCell(level, ch, from, terrain, maxDist);
 		if (found == null)
 			return;
 		Integer prev = nearDist.get(name);
@@ -393,22 +551,65 @@ public final class EchoPolicyStatusBuilder {
 		}
 	}
 
-	/** @return int[]{cell, distance} or null */
+	/** @return int[]{cell, distance} or null; no hazard filtering. */
 	static int[] nearestTerrainCell(Level level, int from, int terrain, int maxDist) {
+		return nearestTerrainCell(level, null, from, terrain, maxDist);
+	}
+
+	/**
+	 * Nearest {@code terrain} cell that is somewhere {@code ch} could actually
+	 * stand.
+	 * <p>
+	 * A terrain destination is only worth walking to if the tile is clear of
+	 * harm: water under a fire or a gas cloud puts the burning echo back in a
+	 * DoT for the sake of leaving one, and grass under a blaze is not cover.
+	 * Hazardous tiles are therefore skipped entirely rather than reported and
+	 * refused later — that keeps {@code terrain_near} honest, so a playbook that
+	 * asks for {@code terrain_near_none: water} before falling back to
+	 * {@code CLEANSE_BURN} takes the fallback instead of stalling on water it
+	 * must not use.
+	 * <p>
+	 * Two passes, mirroring {@link EchoAoeDots#bestExit}: a tile that is only
+	 * unsafe because gas is predicted to spread onto it is used when no strictly
+	 * clear tile of that terrain exists. Tiles harmful <em>now</em>, and harmful
+	 * plants, are never accepted.
+	 *
+	 * @param ch character the hazard is judged for; {@code null} disables
+	 *           filtering
+	 * @return int[]{cell, distance} or null
+	 */
+	static int[] nearestTerrainCell(Level level, Char ch, int from, int terrain, int maxDist) {
 		if (level == null)
 			return null;
 		int bestCell = -1;
 		int bestDist = Integer.MAX_VALUE;
+		int fallbackCell = -1;
+		int fallbackDist = Integer.MAX_VALUE;
 		for (int i = 0; i < level.length(); i++) {
 			if (level.map[i] != terrain)
 				continue;
 			int d = level.distance(from, i);
-			if (d <= maxDist && d < bestDist) {
-				bestDist = d;
-				bestCell = i;
+			if (d > maxDist)
+				continue;
+			if (ch != null && i != from && EchoAoeDots.isAoeHazardForPath(ch, i, false)) {
+				continue;
+			}
+			boolean strict = ch == null || i == from
+					|| !EchoAoeDots.isAoeHazardForPath(ch, i, true);
+			if (strict) {
+				if (d < bestDist) {
+					bestDist = d;
+					bestCell = i;
+				}
+			} else if (d < fallbackDist) {
+				fallbackDist = d;
+				fallbackCell = i;
 			}
 		}
-		return bestCell >= 0 ? new int[] { bestCell, bestDist } : null;
+		if (bestCell >= 0) {
+			return new int[] { bestCell, bestDist };
+		}
+		return fallbackCell >= 0 ? new int[] { fallbackCell, fallbackDist } : null;
 	}
 
 	private static String onTerrainName(Level level, int pos) {

@@ -38,7 +38,7 @@ public final class EchoArmorAbilityAdapter {
 				return false;
 			}
 		}
-		if (armor.charge < ability.chargeUse(ctx.kit)) {
+		if (armor.charge < ability.chargeUse(ctx.stats())) {
 			return false;
 		}
 		ctx.busy();

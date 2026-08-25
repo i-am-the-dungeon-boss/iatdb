@@ -18,6 +18,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.worldnet;
 
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigure;
+
 import java.util.List;
 
 /**
@@ -71,6 +73,18 @@ public interface WorldNetEngine {
 	void setChatFocused(boolean focused);
 
 	/**
+	 * Asks for the inspect-tier bundle behind one standing figure.
+	 *
+	 * <p>Lazy on purpose. The village broadcast carries appearance and facts for
+	 * every body; the hero behind one — stats, kit, talents — is an order of
+	 * magnitude larger and most visits open none of them. The answer arrives at
+	 * {@link Listener#onEchoBundle}, or not at all: an engine with nowhere to send
+	 * the question stays quiet rather than failing, and the window that asked
+	 * keeps showing what the broadcast already gave it.
+	 */
+	void requestEchoBundle(String echoId);
+
+	/**
 	 * Drives the engine. Called once per frame on the render thread; a
 	 * push-based engine may do nothing but drain its queue here.
 	 *
@@ -93,6 +107,23 @@ public interface WorldNetEngine {
 
 		/** The full village roster excluding the local player, not a delta. */
 		void onPresenceSnapshot(List<WorldPresence> others);
+
+		/**
+		 * Every body the village stands, as a whole set rather than a delta.
+		 *
+		 * <p>A third independent stream, for the same reason chat and presence are
+		 * two: these are global standings, sourced differently from either, and an
+		 * engine that fetched them another way must still be droppable in.
+		 */
+		void onWorldFigures(List<VillageFigure> figures);
+
+		/**
+		 * The answer to {@link WorldNetEngine#requestEchoBundle}.
+		 *
+		 * <p>Tagged with the id that was asked about, because a player can open one
+		 * figure, close it and open another before the first reply lands.
+		 */
+		void onEchoBundle(String echoId, String echoData);
 
 		void onStatus(Status status, String detail);
 

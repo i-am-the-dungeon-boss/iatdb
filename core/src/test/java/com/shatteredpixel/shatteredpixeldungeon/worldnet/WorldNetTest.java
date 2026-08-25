@@ -81,6 +81,11 @@ class WorldNetTest {
 			sent.add("report:" + messageId);
 		}
 
+		@Override
+		public void requestEchoBundle(String echoId) {
+			sent.add("echo_req:" + echoId);
+		}
+
 		boolean chatFocused;
 
 		@Override

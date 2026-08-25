@@ -59,7 +59,7 @@ class EchoRoleExecutorArtifactStoneWandTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(wand.curCharges).isEqualTo(2);
@@ -92,7 +92,7 @@ class EchoRoleExecutorArtifactStoneWandTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SNACK")).build(),
-				new EchoPolicyChoice("SNACK", "default", null));
+				new EchoPlan("SNACK", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hunger.hunger()).isLessThan(hungerBefore);
@@ -117,7 +117,7 @@ class EchoRoleExecutorArtifactStoneWandTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("PULL")).build(),
-				new EchoPolicyChoice("PULL", "default", null));
+				new EchoPlan("PULL", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(player.pos).isNotEqualTo(playerBefore);
@@ -143,7 +143,7 @@ class EchoRoleExecutorArtifactStoneWandTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("ENCHANT")).build(),
-				new EchoPolicyChoice("ENCHANT", "default", null));
+				new EchoPlan("ENCHANT", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(sword.enchantment).isNotNull();

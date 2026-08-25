@@ -12,7 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoArmorAbilityAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy;
-import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyChoice;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPlan;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicyStatus;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoRoleExecutor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
@@ -169,7 +169,7 @@ class EchoArmorAbilityPowerOfManyTest {
 						.enemyInLos(true)
 						.rolesReady(java.util.Set.of("ARMOR_ABILITY"))
 						.build(),
-				new EchoPolicyChoice("ARMOR_ABILITY", "default", null));
+				new EchoPlan("ARMOR_ABILITY", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(findMob(PowerOfMany.LightAlly.class)).isNull();

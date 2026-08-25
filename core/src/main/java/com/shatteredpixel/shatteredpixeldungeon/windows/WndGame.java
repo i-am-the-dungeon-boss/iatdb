@@ -34,11 +34,14 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugArenaItems;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugClericSpells;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.DebugEchoArsenal;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.debug.EchoSnapshotDebug;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoStorage;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.SentryCrashReporting;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoOnlineSync;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.IntegrityReport;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -60,6 +63,8 @@ public class WndGame extends Window {
 	private static final int WIDTH = 120;
 	private static final int BTN_HEIGHT = 20;
 	private static final int GAP = 2;
+
+	private static final int REPORT_MAX_LENGTH = 500;
 
 	private int pos;
 
@@ -113,6 +118,31 @@ public class WndGame extends Window {
 			});
 			curBtn.icon(Icons.get(Icons.RANKINGS));
 		}
+
+		// Report an error — available in a run and in release builds.
+		addButton(curBtn = new RedButton(Messages.get(this, "report_error")) {
+			@Override
+			protected void onClick() {
+				hide();
+				GameScene.show(new WndTextInput(
+						Messages.get(WndGame.class, "report_error_title"),
+						Messages.get(WndGame.class, "report_error_body"),
+						"",
+						REPORT_MAX_LENGTH,
+						true,
+						Messages.get(WndGame.class, "report_error_send"),
+						Messages.get(WndGame.class, "report_error_cancel")) {
+					@Override
+					public void onSelect(boolean positive, String text) {
+						if (positive) {
+							SentryCrashReporting.reportUserMessage(text);
+							GLog.p(Messages.get(WndGame.class, "report_error_sent"));
+						}
+					}
+				});
+			}
+		});
+		curBtn.icon(Icons.get(Icons.WARNING));
 
 		if (showsEchoDebugTools()) {
 			RedButton saveEcho = new RedButton(Messages.get(this, "save_echo")) {
@@ -203,6 +233,21 @@ public class WndGame extends Window {
 						GLog.p(Messages.get(WndGame.class, "echo_arsenal_granted", updated));
 					} else {
 						GLog.w(Messages.get(WndGame.class, "echo_arsenal_none"));
+					}
+				}
+			});
+			curBtn.icon(Icons.get(Icons.TALENT));
+
+			addButton(curBtn = new RedButton(Messages.get(this, "give_echo_tome_spells")) {
+				@Override
+				protected void onClick() {
+					HeroSubClass used = DebugClericSpells.pendingSubClass();
+					int updated = DebugClericSpells.grantTomeSpellsAll();
+					hide();
+					if (updated > 0) {
+						GLog.p(Messages.get(WndGame.class, "echo_tome_spells_granted", used.title(), updated));
+					} else {
+						GLog.w(Messages.get(WndGame.class, "echo_tome_spells_none"));
 					}
 				}
 			});

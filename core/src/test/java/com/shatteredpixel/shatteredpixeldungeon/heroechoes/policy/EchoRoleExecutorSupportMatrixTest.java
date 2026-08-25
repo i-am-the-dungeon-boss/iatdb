@@ -327,7 +327,7 @@ class EchoRoleExecutorSupportMatrixTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().distance(2).rolesReady(java.util.Set.of("RANGED")).build(),
-				new EchoPolicyChoice("RANGED", "default", null));
+				new EchoPlan("RANGED", "default", null));
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(hero.HP).isLessThan(hpBefore);
@@ -355,7 +355,7 @@ class EchoRoleExecutorSupportMatrixTest {
 				boss,
 				boss.getEchoPolicy(),
 				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of(role)).build(),
-				new EchoPolicyChoice(role, layer, null));
+				new EchoPlan(role, layer, null));
 	}
 
 	private static Hero mageHero() {

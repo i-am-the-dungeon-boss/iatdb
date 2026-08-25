@@ -53,7 +53,7 @@ class EchoThrowAdapterTest {
 		Assertions.assertThat(kit.cooldown()).isEqualTo(kitBefore);
 		Assertions.assertThat(kitKnives.quantity()).isLessThan(qtyBefore);
 		Assertions.assertThat(player.HP).isLessThanOrEqualTo(hpBefore);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

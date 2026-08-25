@@ -12,10 +12,12 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibili
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.InfernalBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import org.assertj.core.api.Assertions;
@@ -58,11 +60,13 @@ class DebugStrategyKitTest {
 				PotionOfLiquidFlame.class,
 				PotionOfCorrosiveGas.class,
 				PotionOfParalyticGas.class,
+				InfernalBrew.class,
 				StoneOfBlink.class,
 				StoneOfFear.class,
 				WandOfFireblast.class,
 				WandOfMagicMissile.class,
-				WandOfBlastWave.class);
+				WandOfBlastWave.class,
+				WandOfDisintegration.class);
 	}
 
 	@Test

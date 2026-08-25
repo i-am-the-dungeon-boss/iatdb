@@ -85,11 +85,11 @@ class EchoArmorAbilityElementalBlastTest {
 	}
 
 	@Test
-	@DisplayName("Echo ElementalBlast adapter activate does not NPE when kit is headless")
+	@DisplayName("Echo ElementalBlast adapter activate does not NPE when the body is off stage")
 	void doesNotNpeWhenKitHeadless() {
 		Fight f = fight();
 		f.imbueMagicMissileStaff();
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
@@ -110,7 +110,7 @@ class EchoArmorAbilityElementalBlastTest {
 	void appliesGameplayWithoutSceneParent() {
 		Fight f = fight();
 		f.imbueMagicMissileStaff();
-		Assertions.assertThat(f.boss.getEchoHero().sprite).isNull();
+		Assertions.assertThat(f.boss.getEchoHero().sprite).isSameAs(f.boss.sprite);
 		Assertions.assertThat(f.boss.sprite.parent).isNull();
 
 		MageArmor armor = new MageArmor();

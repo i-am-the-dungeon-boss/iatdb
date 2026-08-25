@@ -25,16 +25,16 @@ class EchoActionInfraTest {
 	}
 
 	@Test
-	@DisplayName("EchoKitBorrow restores kit position and sprite after synchronous failure")
+	@DisplayName("EchoKitBorrow restores kit position after synchronous failure")
 	void echoKitBorrowRestoresAfterSynchronousFailure() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		int kitPos = kit.pos;
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 
 		Assertions.assertThatThrownBy(() -> EchoKitBorrow.run(ctx, () -> {
 			Assertions.assertThat(kit.pos).isEqualTo(boss.pos);
@@ -43,18 +43,18 @@ class EchoActionInfraTest {
 		})).isInstanceOf(IllegalStateException.class);
 
 		Assertions.assertThat(kit.pos).isEqualTo(kitPos);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test
-	@DisplayName("EchoKitBorrow restores kit position and sprite after deferred completion")
+	@DisplayName("EchoKitBorrow restores kit position after deferred completion")
 	void echoKitBorrowRestoresAfterDeferredCompletion() {
 		Hero player = EchoTestSupport.warriorHero();
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
 				player, EchoTestSupport.healCapabilityPolicy(), 5);
 		EchoTestSupport.installEchoBossLevel(player, boss, 2);
 		EchoActionContext ctx = EchoActionContext.of(boss);
-		Hero kit = ctx.kit;
+		Hero kit = ctx.stats();
 		int kitPos = kit.pos;
 
 		Callback[] deferred = new Callback[1];
@@ -69,7 +69,7 @@ class EchoActionInfraTest {
 		deferred[0].call();
 
 		Assertions.assertThat(kit.pos).isEqualTo(kitPos);
-		Assertions.assertThat(kit.sprite).isNull();
+		Assertions.assertThat(kit.sprite).isSameAs(boss.sprite);
 	}
 
 	@Test

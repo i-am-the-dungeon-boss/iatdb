@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.InfernalBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCorrosiveGas;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStamina;
@@ -19,6 +20,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import org.json.JSONArray;
@@ -61,6 +63,9 @@ public final class DebugStrategyKit {
 			items.add(stackPotion(new PotionOfInvisibility()));
 			items.add(stackPotion(new PotionOfFrost()));
 			items.add(stackPotion(new PotionOfLiquidFlame()));
+			// Throw-only brew: Inferno rather than Fire, and it burns on water —
+			// the case the echo's terrain sensing has to refuse.
+			items.add(stackPotion(new InfernalBrew()));
 			items.add(stackPotion(new PotionOfCorrosiveGas()));
 			items.add(stackPotion(new PotionOfParalyticGas()));
 			items.add(prepare(new StoneOfBlink()));
@@ -69,6 +74,11 @@ public final class DebugStrategyKit {
 			items.add(charged(new WandOfFireblast()));
 			items.add(charged(new WandOfMagicMissile()));
 			items.add(charged(new WandOfBlastWave()));
+			// Beam destroys every flammable cell it crosses (grass, doors), so
+			// the arena has a free terrain-clearing tool. Note policy() below
+			// arms no PATH_THROUGH / DOOR_BREAK, so an echo running the debug
+			// policy cannot spend it on a stalling door.
+			items.add(charged(new WandOfDisintegration()));
 			return items;
 		} finally {
 			if (stubbed) {
