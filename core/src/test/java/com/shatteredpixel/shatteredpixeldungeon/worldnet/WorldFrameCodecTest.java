@@ -163,7 +163,7 @@ class WorldFrameCodecTest {
 			"{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-177\",\"user_name\":\"Somebody\","
 					+ "\"hero_class\":\"WARRIOR\",\"armor_tier\":3,\"lvl\":14,\"hp\":30,\"ht\":40,"
 					+ "\"kill_count\":7,\"timestamp\":1771000000000,"
-					+ "\"badges\":[{\"kind\":\"first-depth-5\"},{\"kind\":\"hero-slayer\",\"count\":42}]}";
+					+ "\"badges\":[{\"kind\":\"highest-kills\"},{\"kind\":\"hero-slayer\",\"count\":42}]}";
 
 	private static WorldFrame figures(String... entries) {
 		StringBuilder json = new StringBuilder("{\"t\":\"figures\",\"figures\":[");
@@ -203,7 +203,7 @@ class WorldFrameCodecTest {
 		VillageFigure body = figures(FULL_FIGURE).figures.get(0);
 
 		assertThat(body.badges).hasSize(2);
-		assertThat(body.badges.get(0).kind).isEqualTo("first-depth-5");
+		assertThat(body.badges.get(0).kind).isEqualTo("highest-kills");
 		assertThat(body.badges.get(0).hasCount()).isFalse();
 		assertThat(body.badges.get(1).kind).isEqualTo("hero-slayer");
 		assertThat(body.badges.get(1).count).isEqualTo(42);

@@ -19,12 +19,12 @@ Layout/sprites are web-only: [`pixel-styles.ts`](../../../hero-echoes/src/lib/fr
 
 Honorable mentions — **no game HTTP route**; Payload queries used only by the homepage.
 
-Kinds: Highest kills, Boss Slayer, Hero Slayer, 1st Halls Boss, 1st Sewers Boss.
+Kinds: Highest kills, Boss Slayer, Hero Slayer, Dungeon Overlord (most heroes killed by a player's depth-25 echoes), Rookie Reaper (most heroes killed by a player's depth-5 echoes).
 
 - [`honorable-mentions.ts`](../../../hero-echoes/src/lib/echo/honorable-mentions.ts) — shape, `toEchoMention`, standings, `fetchHonorableMentions`
 - [`honorable-mentions-data.ts`](../../../hero-echoes/src/lib/frontend/honorable-mentions-data.ts)
 - [`honorable-mentions-copy.ts`](../../../hero-echoes/src/lib/frontend/honorable-mentions-copy.ts) — web titles / extras / detail
-- [`echoes.queries.ts`](../../../hero-echoes/src/lib/echo/echoes.queries.ts) — `findHighestKillEcho`, `findFirstBossAtDepth`, `findDeepestEchoForPlayer`
+- [`echoes.queries.ts`](../../../hero-echoes/src/lib/echo/echoes.queries.ts) — `findHighestKillEcho`, `findDeepestEchoForPlayer` (optionally scoped to one depth)
 
 Fields: `echo_id`, `hero_class`, `depth`, `lvl`, `kill_count`, `echo_data_base64`, `timestamp`, `user_name` (+ `echo_count` / `total_kill_count` for the two player standings).
 
@@ -142,7 +142,7 @@ Worth doing before a second caller exists.
 
 **`kill_count` is not indexed.** [`Echoes.ts`](../../../hero-echoes/src/collections/Echoes.ts) indexes `echo_id`, `easy_mode`, `game_version`, `player` and `timestamp` — but `findHighestKillEcho` sorts on `kill_count`, so it sorts the whole collection in memory. One line, largest single win: `index: true`.
 
-**`playerStandingPipeline` is a full-collection double `$group`, run twice through `$facet`.** [`honorable-mentions.ts`](../../../hero-echoes/src/lib/echo/honorable-mentions.ts) groups every echo by `(player, depth)`, rolls up per player, then sorts — no index serving the leading `$match`, no pre-filter. O(all echoes) per call on Atlas M0. Caching hides it; it does not fix it.
+**`playerStandingPipeline` is a full-collection double `$group`, run four times through `$facet`.** [`honorable-mentions.ts`](../../../hero-echoes/src/lib/echo/honorable-mentions.ts) groups every echo by `(player, depth)`, rolls up per player, then sorts — no index serving the leading `$match`, no pre-filter. O(all echoes) per call on Atlas M0. Caching hides it; it does not fix it.
 
 Maintain the standings instead. `uploadEcho` already touches the player through `updatePlayerById`; add to [`Players.ts`](../../../hero-echoes/src/collections/Players.ts), all indexed:
 
@@ -152,12 +152,13 @@ Maintain the standings instead. `uploadEcho` already touches the player through 
 | `total_kill_count` | echo uploaded, and a ranked win bumps `kill_count` (Hero Slayer) |
 | `deepest_depth` | echo uploaded, if deeper |
 | `deepest_at` | set with `deepest_depth`, the tie-break key |
+| `dungeon_kill_count` / `sewer_kill_count` | a ranked win on a depth-25 / depth-5 echo (Dungeon Overlord, Rookie Reaper) |
 
 Boss Slayer and Hero Slayer become `sort + limit 1` over an indexed field on one-row-per-player, instead of an aggregate over one-row-per-echo. The tie-break (`score` → `maxDepth` → earliest at that depth) survives as a compound sort.
 
 Standings count soft-deleted echoes and prune soft-deletes, so pruning does not drift the counters; hard deletes from the admin do, so ship a `recomputeStandings` repair endpoint alongside rather than pretending drift is impossible.
 
-`firstDepth5Boss` / `firstDepth25Boss` never change once set and are already cheap (indexed `depth` + `timestamp`, `limit 1`).
+Dungeon Overlord and Rookie Reaper are the same aggregate narrowed by `depth`, so they collapse the same way — the depth-scoped counters above are maintained on the same upload path.
 
 ### 4. Delivery — hub memory, pushed down the socket
 
@@ -202,7 +203,7 @@ One flat list of bodies — the server merges so the game never has to:
       "kill_count": 7,
       "timestamp": 1771000000000,
       "badges": [
-        { "kind": "first-depth-5" },
+        { "kind": "rookie-reaper", "count": 12 },
         { "kind": "hero-slayer", "count": 42 }
       ]
     }
@@ -212,7 +213,7 @@ One flat list of bodies — the server merges so the game never has to:
 
 `post` is `"depth"` or `"mention"`. `armor_tier` is absent when unknown. `hp` / `ht` are the echo's recorded health: the inspect window reads health off the body itself, so the broadcast has to carry it or the Info tab would have nothing truthful to show before the bundle arrives. `kind` values reuse [`HonorableMentionKind`](../../../hero-echoes/src/lib/frontend/honorable-mentions-copy.ts) verbatim so the two surfaces cannot drift; `count` carries `echo_count` / `total_kill_count` where the kind has one. No `echo_data_base64`, `echo_policy`, `game_seed` or `policy_input` — those are the inspect tier.
 
-**Dedup.** One echo can be several things at once: the first Sewers boss may still hold depth 5, and `mostEchoesPlayer` / `highestKillsPlayer` both resolve through `findDeepestEchoForPlayer` onto possibly the same doc. One body per `echo_id`, badges concatenated, depth post wins placement.
+**Dedup.** One echo can be several things at once: the Rookie Reaper's echo may still hold depth 5, and every player standing resolves through `findDeepestEchoForPlayer` onto possibly the same doc. One body per `echo_id`, badges concatenated, depth post wins placement.
 
 **Empty depth.** `echo_id` absent, `post: "depth"`, `depth` set — the game draws the regional boss instead, mirroring `DEFAULT_BOSS_BY_DEPTH` in [`depths.ts`](../../../hero-echoes/src/lib/frontend/depths.ts) with the real sprites. The default name comes from the boss's own `Messages` entry, not from a string on the wire.
 
