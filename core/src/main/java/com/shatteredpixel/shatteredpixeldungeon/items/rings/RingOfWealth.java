@@ -65,14 +65,14 @@ public class RingOfWealth extends Ring {
 
 	private float triesToDrop = Float.MIN_VALUE;
 	private int dropsToRare = Integer.MIN_VALUE;
-	
+
 	public String statsInfo() {
 		if (isIdentified()){
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (Math.pow(1.20f, soloBuffedBonus()) - 1f)));
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						Messages.decimalFormat("#.##", 100f * (Math.pow(1.20f, combinedBuffedBonus(Dungeon.hero)) - 1f)));
+						Messages.decimalFormat("#.##", 100f * (Math.pow(1.20f, combinedBuffedBonus(owner())) - 1f)));
 			}
 			return info;
 		} else {
@@ -106,11 +106,11 @@ public class RingOfWealth extends Ring {
 	protected RingBuff buff( ) {
 		return new Wealth();
 	}
-	
+
 	public static float dropChanceMultiplier( Char target ){
 		return (float)Math.pow(1.20, getBuffedBonus(target, Wealth.class));
 	}
-	
+
 	public static ArrayList<Item> tryForBonusDrop(Char target, int tries ){
 		int bonus = getBuffedBonus(target, Wealth.class);
 
@@ -163,7 +163,7 @@ public class RingOfWealth extends Ring {
 			}
 			triesToDrop.countUp( Random.NormalIntRange(0, 20) );
 		}
-		
+
 		return drops;
 	}
 
@@ -192,7 +192,7 @@ public class RingOfWealth extends Ring {
 		}
 		latestDropTier = 0;
 	}
-	
+
 	public static Item genConsumableDrop(int level) {
 		float roll = Random.Float();
 		//60% chance - 4% per level. Starting from +15: 0%

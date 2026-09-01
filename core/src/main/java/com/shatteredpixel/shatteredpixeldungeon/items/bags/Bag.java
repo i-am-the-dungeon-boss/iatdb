@@ -29,27 +29,28 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.ForeignRestore;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuickBag;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
 
 public class Bag extends Item implements Iterable<Item> {
 
 	public static final String AC_OPEN	= "OPEN";
-	
+
 	{
 		image = 11;
-		
+
 		defaultAction = AC_OPEN;
 
 		unique = true;
 	}
-	
+
 	public Char owner;
 
 	public ArrayList<Item> items = new ArrayList<>();
@@ -77,12 +78,12 @@ public class Bag extends Item implements Iterable<Item> {
 		super.execute( hero, action );
 
 		if (action.equals( AC_OPEN ) && !items.isEmpty()) {
-			
+
 			GameScene.show( new WndQuickBag( this ) );
-			
+
 		}
 	}
-	
+
 	@Override
 	public boolean collect( Bag container ) {
 
@@ -94,11 +95,13 @@ public class Bag extends Item implements Iterable<Item> {
 		}
 
 		if (super.collect( container )) {
-			
+
 			owner = container.owner;
-			
-			Badges.validateAllBagsBought( this );
-			
+
+			if (!ForeignRestore.inProgress()) {
+				Badges.validateAllBagsBought( this );
+			}
+
 			return true;
 		} else {
 			return false;
@@ -139,24 +142,24 @@ public class Bag extends Item implements Iterable<Item> {
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	public void clear() {
 		items.clear();
 	}
-	
+
 	public void resurrect() {
 		for (Item item : items.toArray(new Item[0])){
 			if (!item.unique) items.remove(item);
 		}
 	}
-	
+
 	private static final String ITEMS	= "inventory";
-	
+
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
@@ -181,7 +184,7 @@ public class Bag extends Item implements Iterable<Item> {
 		}
 		loading = false;
 	}
-	
+
 	public boolean contains( Item item ) {
 		for (Item i : items) {
 			if (i == item) {
@@ -215,12 +218,12 @@ public class Bag extends Item implements Iterable<Item> {
 	public Iterator<Item> iterator() {
 		return new ItemIterator();
 	}
-	
+
 	private class ItemIterator implements Iterator<Item> {
 
 		private int index = 0;
 		private Iterator<Item> nested = null;
-		
+
 		@Override
 		public boolean hasNext() {
 			if (nested != null) {
@@ -233,18 +236,18 @@ public class Bag extends Item implements Iterable<Item> {
 		@Override
 		public Item next() {
 			if (nested != null && nested.hasNext()) {
-				
+
 				return nested.next();
-				
+
 			} else {
-				
+
 				nested = null;
-				
+
 				Item item = items.get( index++ );
 				if (item instanceof Bag) {
 					nested = ((Bag)item).iterator();
 				}
-				
+
 				return item;
 			}
 		}

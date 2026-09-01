@@ -314,7 +314,7 @@ public class EtherealChains extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquipped(Dungeon.hero)) {
+		if (isEquippedByOwner()) {
 			desc += "\n\n";
 			if (cursed)
 				desc += Messages.get(this, "desc_cursed");

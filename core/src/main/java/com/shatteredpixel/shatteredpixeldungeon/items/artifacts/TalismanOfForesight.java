@@ -100,7 +100,7 @@ public class TalismanOfForesight extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new Foresight();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (cursed || target.buff(MagicImmune.class) != null) return;
@@ -123,7 +123,7 @@ public class TalismanOfForesight extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if ( isEquipped( Dungeon.hero ) ){
+		if ( isEquippedByOwner() ){
 			if (!cursed) {
 				desc += "\n\n" + Messages.get(this, "desc_worn");
 
@@ -257,21 +257,21 @@ public class TalismanOfForesight extends Artifact {
 	};
 
 	private static final String WARN = "warn";
-	
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(WARN, warn);
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		warn = bundle.getBoolean(WARN);
 	}
-	
+
 	private boolean warn = false;
-	
+
 	public class Foresight extends ArtifactBuff{
 
 		@Override

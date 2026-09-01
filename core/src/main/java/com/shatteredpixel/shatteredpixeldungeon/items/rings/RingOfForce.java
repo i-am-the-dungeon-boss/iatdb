@@ -53,7 +53,7 @@ public class RingOfForce extends Ring {
 	protected RingBuff buff( ) {
 		return new Force();
 	}
-	
+
 	public static int armedDamageBonus( Char ch ){
 		return getBuffedBonus( ch, Force.class);
 	}
@@ -70,7 +70,7 @@ public class RingOfForce extends Ring {
 			return false;
 		}
 	}
-	
+
 	// *** Weapon-like properties ***
 
 	private static float tier(int str){
@@ -131,12 +131,12 @@ public class RingOfForce extends Ring {
 
 	@Override
 	public String statsInfo() {
-		float tier = tier(Dungeon.hero != null ? Dungeon.hero.STR() : 10);
+		float tier = tier(owner() != null ? owner().STR() : 10);
 		if (isIdentified()) {
 			int level = soloBuffedBonus();
 			String info = Messages.get(this, "stats", min(level, tier), max(level, tier), level);
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
-				level = combinedBuffedBonus(Dungeon.hero);
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+				level = combinedBuffedBonus(owner());
 				info += "\n\n" + Messages.get(this, "combined_stats", min(level, tier), max(level, tier), level);
 			}
 			return info;
@@ -241,11 +241,11 @@ public class RingOfForce extends Ring {
 	public String info() {
 		String info = super.info();
 
-		if (Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.DUELIST
-			&& (anonymous || isIdentified() || isEquipped(Dungeon.hero))){
+		if (owner() != null && owner().heroClass == HeroClass.DUELIST
+			&& (anonymous || isIdentified() || isEquippedByOwner())){
 			//0 if unidentified, solo level if unequipped, combined level if equipped
-			int level = isIdentified() ? (isEquipped(Dungeon.hero) ? getBuffedBonus(Dungeon.hero, Force.class) : soloBuffedBonus()) : 0;
-			float tier = tier(Dungeon.hero.STR());
+			int level = isIdentified() ? (isEquippedByOwner() ? getBuffedBonus(owner(), Force.class) : soloBuffedBonus()) : 0;
+			float tier = tier(owner().STR());
 			int dmgBoost = Math.round(3+tier+(level*((4+2*tier)/8f)));
 			if (isIdentified()) {
 				info += "\n\n" + Messages.get(this, "ability_desc", min(level, tier)+dmgBoost, max(level, tier)+dmgBoost);
@@ -360,4 +360,3 @@ public class RingOfForce extends Ring {
 		}
 	}
 }
-

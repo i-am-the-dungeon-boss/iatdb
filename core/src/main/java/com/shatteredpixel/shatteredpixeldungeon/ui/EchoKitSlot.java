@@ -26,6 +26,7 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.inspect.ItemPreview;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
@@ -36,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Sample;
 
 /**
@@ -166,11 +168,32 @@ public class EchoKitSlot extends ItemSlot {
 		bg.brightness(1.0f);
 	}
 
+	/**
+	 * Opens the description of a copy stamped with the echo, so the whole text —
+	 * its class, subclass, level and strength verdict — is written for the hero
+	 * that owns the kit rather than for whoever is playing. The echo's own item
+	 * is left exactly as it was, and {@code Dungeon.hero} is not touched.
+	 */
 	@Override
 	protected void onClick() {
-		if (item != null && !(item instanceof WndBag.Placeholder)) {
-			GameScene.show(new WndInfoItem(item));
+		if (item == null || item instanceof WndBag.Placeholder) {
+			return;
 		}
+		if (owner == null) {
+			GameScene.show(new WndInfoItem(item));
+			return;
+		}
+		// Shown as a copy. The original may be a live EchoBoss's fighting kit,
+		// and looking at a sword must not identify the sword it is swinging.
+		Item preview = ItemPreview.of(item, owner);
+		if (preview == null) {
+			// No isolated copy, no window: falling back to the original would
+			// describe somebody else's kit against the living player.
+			Game.reportException(new IllegalStateException(
+					"could not copy " + item.getClass().getSimpleName() + " for preview"));
+			return;
+		}
+		GameScene.show(new WndInfoItem(preview));
 	}
 
 	@Override

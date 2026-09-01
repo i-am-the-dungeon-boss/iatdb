@@ -52,7 +52,7 @@ public class AlchemistsToolkit extends Artifact {
 		defaultAction = AC_BREW;
 
 		levelCap = 10;
-		
+
 		charge = 0;
 		partialCharge = 0;
 	}
@@ -89,7 +89,7 @@ public class AlchemistsToolkit extends Artifact {
 				AlchemyScene.assignToolkit(this);
 				Game.switchScene(AlchemyScene.class);
 			}
-			
+
 		} else if (action.equals(AC_ENERGIZE)){
 			if (!isEquipped(hero))              GLog.i( Messages.get(this, "need_to_equip") );
 			else if (cursed)                    GLog.w( Messages.get(this, "cursed") );
@@ -160,7 +160,7 @@ public class AlchemistsToolkit extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new kitEnergy();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (target.buff(MagicImmune.class) != null) return;
@@ -187,15 +187,15 @@ public class AlchemistsToolkit extends Artifact {
 	public String desc() {
 		String result = Messages.get(this, "desc");
 
-		if (isEquipped(Dungeon.hero)) {
+		if (isEquippedByOwner()) {
 			if (cursed)                 result += "\n\n" + Messages.get(this, "desc_cursed");
 			else if (warmUpDelay > 0)   result += "\n\n" + Messages.get(this, "desc_warming");
 			else                        result += "\n\n" + Messages.get(this, "desc_hint");
 		}
-		
+
 		return result;
 	}
-	
+
 	@Override
 	public boolean doEquip(Hero hero) {
 		if (super.doEquip(hero)){
@@ -205,21 +205,21 @@ public class AlchemistsToolkit extends Artifact {
 			return false;
 		}
 	}
-	
+
 	private static final String WARM_UP = "warm_up";
-	
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(WARM_UP, warmUpDelay);
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		warmUpDelay = bundle.getFloat(WARM_UP);
 	}
-	
+
 	public class kitEnergy extends ArtifactBuff {
 
 		@Override

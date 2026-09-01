@@ -209,6 +209,21 @@ public class VillageEcho extends NPC implements EchoInspectable {
 		return true;
 	}
 
+	/**
+	 * A figure leaves town because the standings changed, never because it was
+	 * killed. {@code Mob.destroy()} hands the local player a kill, the
+	 * monsters-slain badge, a bestiary entry and experience whenever the body is
+	 * {@code ENEMY}; today a town figure never is, but that is an accident of
+	 * {@link NPC}'s constructor rather than a promise this class makes. Say it
+	 * here, where it matters, so no later change to the figures can turn a
+	 * leaderboard push into a badge farm.
+	 */
+	@Override
+	public void destroy() {
+		alignment = Alignment.NEUTRAL;
+		super.destroy();
+	}
+
 	@Override
 	public boolean interact(Char c) {
 		if (c != Dungeon.hero) {

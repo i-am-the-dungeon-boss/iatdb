@@ -181,10 +181,10 @@ public class Artifact extends KindofMisc {
 
 	@Override
 	public String info() {
-		if (cursed && cursedKnown && !isEquipped(Dungeon.hero)) {
+		if (cursed && cursedKnown && !isEquippedByOwner()) {
 			return super.info() + "\n\n" + Messages.get(Artifact.class, "curse_known");
 
-		} else if (!isIdentified() && cursedKnown && !isEquipped(Dungeon.hero)) {
+		} else if (!isIdentified() && cursedKnown && !isEquippedByOwner()) {
 			return super.info() + "\n\n" + Messages.get(Artifact.class, "not_cursed");
 
 		} else {

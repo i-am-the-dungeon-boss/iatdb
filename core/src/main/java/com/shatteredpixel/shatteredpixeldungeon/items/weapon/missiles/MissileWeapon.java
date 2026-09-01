@@ -670,16 +670,16 @@ abstract public class MissileWeapon extends Weapon {
 		if (levelKnown) {
 			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_known", tier, augment.damageFactor(min()),
 					augment.damageFactor(max()), STRReq());
-			if (Dungeon.hero != null) {
-				if (STRReq() > Dungeon.hero.STR()) {
+			if (owner() != null) {
+				if (STRReq() > owner().STR()) {
 					info += " " + Messages.get(Weapon.class, "too_heavy");
-				} else if (Dungeon.hero.STR() > STRReq()) {
-					info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
+				} else if (owner().STR() > STRReq()) {
+					info += " " + Messages.get(Weapon.class, "excess_str", owner().STR() - STRReq());
 				}
 			}
 		} else {
 			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_unknown", tier, min(0), max(0), STRReq(0));
-			if (Dungeon.hero != null && STRReq(0) > Dungeon.hero.STR()) {
+			if (owner() != null && STRReq(0) > owner().STR()) {
 				info += " " + Messages.get(MissileWeapon.class, "probably_too_heavy");
 			}
 		}

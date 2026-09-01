@@ -164,7 +164,7 @@ public class SandalsOfNature extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new Naturalism();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (cursed || target.buff(MagicImmune.class) != null) return;
@@ -200,7 +200,7 @@ public class SandalsOfNature extends Artifact {
 	public String desc() {
 		String desc = Messages.get(this, "desc_" + (level()+1));
 
-		if ( isEquipped ( Dungeon.hero ) ) {
+		if ( isEquipped ( owner() ) ) {
 			desc += "\n\n";
 
 			if (!cursed) {

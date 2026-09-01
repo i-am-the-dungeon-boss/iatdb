@@ -52,7 +52,7 @@ public class CapeOfThorns extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new Thorns();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (cooldown == 0) {
@@ -63,11 +63,11 @@ public class CapeOfThorns extends Artifact {
 			target.buff(Thorns.class).proc(0, null, null);
 		}
 	}
-	
+
 	@Override
 	public String desc() {
 		String desc = Messages.get(this, "desc");
-		if (isEquipped( Dungeon.hero )) {
+		if (isEquippedByOwner()) {
 			desc += "\n\n";
 			if (cooldown == 0)
 				desc += Messages.get(this, "desc_inactive");

@@ -33,7 +33,7 @@ How other code starts, extends, or strips this parent:
 | [`create`](../Echo.java)                                       | n/a                | requires `hero_class`; throws if missing                                                                    |
 | [`fromHero`](../Echo.java)                                     | n/a                | capture kit; fight HP starts at HT                                                                          |
 | [`fromBundle`](../Echo.java) / `toBundle`                      | n/a                | persist                                                                                                     |
-| [`EchoHeroSnapshot.restoreHero`](../EchoHeroSnapshot.java)     | n/a                | kit [`Hero`](../../actors/hero/Hero.java) or fail                                                           |
+| [`EchoHeroSnapshot.restoreHero`](../EchoHeroSnapshot.java)     | n/a                | kit [`Hero`](../../actors/hero/Hero.java) or fail; restores inside [`ForeignRestore`](../ForeignRestore.java), so collecting the kit earns the player nothing |
 | [`EchoHeroSnapshot.captureFromHero`](../EchoHeroSnapshot.java) | n/a                | equipment bundle                                                                                            |
 | [`EchoHardStun.appliesTo`](../EchoHardStun.java)               | n/a                | Hero / EchoBoss **and** [`isEchoBossActive`](../../Dungeon.java); stun cap, immunity, chain reject, evasion |
 
@@ -48,6 +48,7 @@ How children specialize the parent (name one child; do not spec it):
 | Equipment restore     | [`EchoHeroSnapshot`](../EchoHeroSnapshot.java)     | —    |
 | When to capture       | [`EchoCaptureTrigger`](../EchoCaptureTrigger.java) | —    |
 | Ranked vs local paths | [`EchoPlayModePaths`](../EchoPlayModePaths.java)   | —    |
+| Foreign-restore guard | [`ForeignRestore`](../ForeignRestore.java)         | —    |
 
 No `Echo` subclasses. Nested packages (`policy`, `action`, `boss`, `online`) are other modules.
 
@@ -105,3 +106,5 @@ What the player sees versus the parent method that produces it:
 - [ ] Kit `paralysed` is overwritten from the **body** each combat query — stun state lives on [`EchoBoss`](../../actors/mobs/EchoBoss.java), not the DTO
 - [ ] Guaranteed-hit tracker is copied onto the kit then moved back to the body — do not leave it only on the phantom kit
 - [ ] [`isEchoBossActive`](../../Dungeon.java) is true for the whole sealed arena (`pendingEcho` + policy), not only while the mob is hunting
+- [ ] Restoring a foreign kit must award the local player **nothing** — no badges, talents, catalog or statistics. [`ForeignRestore`](../ForeignRestore.java) around `restoreHero` is what stops [`Item.collect`](../../items/Item.java) doing that; keep the `try`/`finally` intact
+- [ ] The restored kit stays exactly as its owner left it. Identifying it for display happens on a copy ([`ItemPreview`](../inspect/ItemPreview.java)), never here — an `EchoBoss` fights with this kit

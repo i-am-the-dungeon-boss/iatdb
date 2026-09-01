@@ -221,7 +221,7 @@ public class MasterThievesArmband extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new Thievery();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (cursed || target.buff(MagicImmune.class) != null) return;
@@ -250,7 +250,7 @@ public class MasterThievesArmband extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if ( isEquipped (Dungeon.hero) ){
+		if ( isEquipped (owner()) ){
 			if (cursed){
 				desc += "\n\n" + Messages.get(this, "desc_cursed");
 			} else {
@@ -297,7 +297,7 @@ public class MasterThievesArmband extends Artifact {
 				partialCharge = 0f;
 			}
 		}
-		
+
 		public boolean steal(Item item){
 			int chargesUsed = chargesToUse(item);
 			float stealChance = stealChance(item);

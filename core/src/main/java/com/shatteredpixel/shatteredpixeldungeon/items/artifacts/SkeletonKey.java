@@ -412,7 +412,7 @@ public class SkeletonKey extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if ( isEquipped (Dungeon.hero) ){
+		if ( isEquipped (owner()) ){
 			if (cursed){
 				desc += "\n\n" + Messages.get(this, "desc_cursed");
 			} else {

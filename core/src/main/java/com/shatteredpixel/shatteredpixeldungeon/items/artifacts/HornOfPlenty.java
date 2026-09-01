@@ -213,7 +213,7 @@ public class HornOfPlenty extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquipped(Dungeon.hero)) {
+		if (isEquippedByOwner()) {
 			if (!cursed) {
 				if (level() < levelCap)
 					desc += "\n\n" + Messages.get(this, "desc_hint");

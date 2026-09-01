@@ -188,7 +188,7 @@ public class ChaliceOfBlood extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new chaliceRegen();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (cursed || target.buff(MagicImmune.class) != null) return;
@@ -212,12 +212,12 @@ public class ChaliceOfBlood extends Artifact {
 			}
 		}
 	}
-	
+
 	@Override
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquipped (Dungeon.hero)){
+		if (isEquipped (owner())){
 			desc += "\n\n";
 			if (cursed)
 				desc += Messages.get(this, "desc_cursed");

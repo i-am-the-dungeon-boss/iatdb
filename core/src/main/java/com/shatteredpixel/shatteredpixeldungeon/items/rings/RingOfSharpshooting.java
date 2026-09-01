@@ -40,9 +40,9 @@ public class RingOfSharpshooting extends Ring {
 		if (isIdentified()){
 			String info = Messages.get(this, "stats",
 					soloBuffedBonus(), Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, soloBonus()) - 1f)));
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						combinedBuffedBonus(Dungeon.hero), Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, combinedBonus(Dungeon.hero)) - 1f)));
+						combinedBuffedBonus(owner()), Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, combinedBonus(owner())) - 1f)));
 			}
 			return info;
 		} else {
@@ -61,16 +61,16 @@ public class RingOfSharpshooting extends Ring {
 		if (cursed && cursedKnown) level = Math.min(-1, level-3);
 		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, level+1)-1f)) + "%";
 	}
-	
+
 	@Override
 	protected RingBuff buff( ) {
 		return new Aim();
 	}
-	
+
 	public static int levelDamageBonus( Char target ){
 		return getBuffedBonus(target, RingOfSharpshooting.Aim.class);
 	}
-	
+
 	public static float durabilityMultiplier( Char target ){
 		return (float)(Math.pow(1.2, getBonus(target, Aim.class)));
 	}

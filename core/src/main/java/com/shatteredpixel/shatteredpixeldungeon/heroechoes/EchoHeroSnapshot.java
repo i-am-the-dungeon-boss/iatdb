@@ -99,18 +99,24 @@ public final class EchoHeroSnapshot {
 		Item[] savedQuickslots = snapshotQuickslots();
 		ActionIndicator.Action savedAction = ActionIndicator.action;
 		boolean savedUpdateItemDisplays = GameScene.updateItemDisplays;
+		// Restoring a backpack collects every item into it, and collecting is
+		// how the player earns badges, catalog entries and talent procs. This
+		// hero is somebody else's; none of that is ours to earn.
+		ForeignRestore.enter();
 		try {
 			Hero hero = new Hero();
 			hero.live();
 			hero.restoreFromBundle(echo.echoData);
 			return hero;
 		} finally {
+			ForeignRestore.exit();
 			restoreQuickslots(savedQuickslots);
 			restoreActionIndicator(savedAction);
 			GameScene.updateItemDisplays = savedUpdateItemDisplays;
 			Belongings.bundleRestoring = false;
 		}
 	}
+
 
 	/**
 	 * Echo fight kits start fully charged so drained captures still fight with

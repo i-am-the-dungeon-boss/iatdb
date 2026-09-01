@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.ForeignRestore;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
@@ -239,7 +240,7 @@ public class Item implements Bundlable {
 				if (isSimilar(item)) {
 					item.merge(this);
 					item.updateQuickslot();
-					if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
+					if (!ForeignRestore.inProgress() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
 						Badges.validateItemLevelAquired(this);
 						Talent.onItemCollected(Dungeon.hero, item);
 						if (isIdentified()) {
@@ -272,7 +273,7 @@ public class Item implements Bundlable {
 			}
 		}
 
-		if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
+		if (!ForeignRestore.inProgress() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
 			Badges.validateItemLevelAquired(this);
 			Talent.onItemCollected(Dungeon.hero, this);
 			if (isIdentified()) {
@@ -399,8 +400,9 @@ public class Item implements Bundlable {
 	// requirement)
 	public int buffedLvl() {
 		// only the hero can be affected by Degradation
-		if (Dungeon.hero != null && Dungeon.hero.buff(Degrade.class) != null
-				&& (isEquipped(Dungeon.hero) || Dungeon.hero.belongings.contains(this))) {
+		Hero owner = owner();
+		if (owner != null && owner.buff(Degrade.class) != null
+				&& (isEquipped(owner) || owner.belongings.contains(this))) {
 			return Degrade.reduceLevel(level());
 		} else {
 			return level();
@@ -469,6 +471,40 @@ public class Item implements Bundlable {
 		return false;
 	}
 
+	/**
+	 * Set on a throwaway copy made to be looked at, never on an item in play.
+	 * See {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.inspect.ItemPreview}.
+	 */
+	private Hero previewOwner;
+
+	/** Stamps a preview copy with the hero it belongs to. */
+	public final void previewOwner(Hero owner) {
+		this.previewOwner = owner;
+	}
+
+	/**
+	 * The hero this item belongs to — the question descriptions actually need to
+	 * ask. Who is <em>reading</em> the description is always the local player and
+	 * never changes what it should say; whose sword this is does.
+	 *
+	 * <p>For an item in play that is the player, so this reads exactly as
+	 * {@code Dungeon.hero} did. For a preview of somebody else's kit it is that
+	 * hero, so a duelist reading a mage's staff is not shown duelist text.
+	 */
+	public final Hero owner() {
+		return previewOwner != null ? previewOwner : Dungeon.hero;
+	}
+
+	/**
+	 * Whether the hero this item belongs to has it equipped. Description code
+	 * asks this instead of {@code isEquipped(Dungeon.hero)}, so an echo's kit is
+	 * never described against the living player's gear.
+	 */
+	public final boolean isEquippedByOwner() {
+		Hero owner = owner();
+		return owner != null && isEquipped(owner);
+	}
+
 	public final Item identify() {
 		// Echo phantom kit (and other non-player curUsers) must not teach the
 		// living hero item identities via Catalog / potion-scroll-ring handlers.
@@ -478,10 +514,11 @@ public class Item implements Bundlable {
 	/**
 	 * Whether {@link #identify()} / {@code setKnown()} should update the living
 	 * hero's knowledge. False while an Echo kit (or other non-player Hero) is
-	 * {@link #curUser}.
+	 * {@link #curUser}, and false anywhere inside a foreign scope — reading
+	 * somebody else's items never teaches the player what they are.
 	 */
 	public static boolean grantsPlayerKnowledge() {
-		return curUser == null || curUser == Dungeon.hero;
+		return !ForeignRestore.inProgress() && (curUser == null || curUser == Dungeon.hero);
 	}
 
 	/**
@@ -551,7 +588,9 @@ public class Item implements Bundlable {
 
 	public String info() {
 
-		if (Dungeon.hero != null) {
+		// custom notes are the player's own journal; they say nothing about
+		// somebody else's item
+		if (!ForeignRestore.inProgress() && Dungeon.hero != null) {
 			Notes.CustomRecord note = Notes.findCustomRecord(customNoteID);
 			if (note != null) {
 				// we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in

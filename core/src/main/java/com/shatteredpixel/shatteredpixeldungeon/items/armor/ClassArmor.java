@@ -55,7 +55,7 @@ abstract public class ClassArmor extends Armor {
 
 	private static final String AC_ABILITY = "ABILITY";
 	private static final String AC_TRANSFER = "TRANSFER";
-	
+
 	{
 		levelKnown = true;
 		cursedKnown = true;
@@ -66,9 +66,9 @@ abstract public class ClassArmor extends Armor {
 
 	private Charger charger;
 	public float charge = 0;
-	
+
 	public ClassArmor() {
-		super( 5 );
+		super(5);
 	}
 
 	@Override
@@ -79,9 +79,9 @@ abstract public class ClassArmor extends Armor {
 	}
 
 	@Override
-	public boolean doUnequip( Hero hero, boolean collect, boolean single ) {
-		if (super.doUnequip( hero, collect, single )) {
-			if (charger != null){
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+		if (super.doUnequip(hero, collect, single)) {
+			if (charger != null) {
 				charger.detach();
 				charger = null;
 			}
@@ -98,10 +98,10 @@ abstract public class ClassArmor extends Armor {
 		return user.armorAbility.targetedPos(user, dst);
 	}
 
-	public static ClassArmor upgrade (Hero owner, Armor armor ) {
-		
+	public static ClassArmor upgrade(Hero owner, Armor armor) {
+
 		ClassArmor classArmor = null;
-		
+
 		switch (owner.heroClass) {
 			case WARRIOR:
 				classArmor = new WarriorArmor();
@@ -122,7 +122,7 @@ abstract public class ClassArmor extends Armor {
 				classArmor = new ClericArmor();
 				break;
 		}
-		
+
 		classArmor.level(armor.trueLevel());
 		classArmor.tier = armor.tier;
 		classArmor.augment = armor.augment;
@@ -142,40 +142,40 @@ abstract public class ClassArmor extends Armor {
 		}
 
 		classArmor.charge = 50;
-		
+
 		return classArmor;
 	}
 
-	private static final String ARMOR_TIER	= "armortier";
-	private static final String CHARGE	    = "charge";
+	private static final String ARMOR_TIER = "armortier";
+	private static final String CHARGE = "charge";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( ARMOR_TIER, tier );
-		bundle.put( CHARGE, charge );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(ARMOR_TIER, tier);
+		bundle.put(CHARGE, charge);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		tier = bundle.getInt( ARMOR_TIER );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		tier = bundle.getInt(ARMOR_TIER);
 		charge = bundle.getFloat(CHARGE);
 	}
-	
+
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (isEquipped( hero )) {
-			actions.add( AC_ABILITY );
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (isEquipped(hero)) {
+			actions.add(AC_ABILITY);
 		}
-		actions.add( AC_TRANSFER );
+		actions.add(AC_TRANSFER);
 		return actions;
 	}
 
 	@Override
 	public String actionName(String action, Hero hero) {
-		if (hero.armorAbility != null && action.equals(AC_ABILITY)){
+		if (hero.armorAbility != null && action.equals(AC_ABILITY)) {
 			return Messages.upperCase(hero.armorAbility.name());
 		} else {
 			return super.actionName(action, hero);
@@ -184,39 +184,39 @@ abstract public class ClassArmor extends Armor {
 
 	@Override
 	public String status() {
-		return Messages.format( "%.0f%%", Math.floor(charge) );
+		return Messages.format("%.0f%%", Math.floor(charge));
 	}
 
 	@Override
-	public void execute( Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 
-		super.execute( hero, action );
+		super.execute(hero, action);
 
-		if (action.equals(AC_ABILITY)){
+		if (action.equals(AC_ABILITY)) {
 
-			if (hero.armorAbility == null){
+			if (hero.armorAbility == null) {
 				GameScene.show(new WndChooseAbility(null, this, hero));
-			} else if (!isEquipped( hero )) {
+			} else if (!isEquipped(hero)) {
 				usesTargeting = false;
-				GLog.w( Messages.get(this, "not_equipped") );
+				GLog.w(Messages.get(this, "not_equipped"));
 			} else if (charge < hero.armorAbility.chargeUse(hero)) {
 				usesTargeting = false;
-				GLog.w( Messages.get(this, "low_charge") );
-			} else  {
+				GLog.w(Messages.get(this, "low_charge"));
+			} else {
 				usesTargeting = hero.armorAbility.useTargeting();
 				hero.armorAbility.use(this, hero);
 			}
-			
-		} else if (action.equals(AC_TRANSFER)){
+
+		} else if (action.equals(AC_TRANSFER)) {
 
 			GameScene.show(new WndOptions(new ItemSprite(ItemSpriteSheet.CROWN),
 					Messages.get(ClassArmor.class, "transfer_title"),
 					Messages.get(ClassArmor.class, "transfer_desc"),
 					Messages.get(ClassArmor.class, "transfer_prompt"),
-					Messages.get(ClassArmor.class, "transfer_cancel")){
+					Messages.get(ClassArmor.class, "transfer_cancel")) {
 				@Override
 				protected void onSelect(int index) {
-					if (index == 0){
+					if (index == 0) {
 						GameScene.selectItem(new WndBag.ItemSelector() {
 							@Override
 							public String textPrompt() {
@@ -230,11 +230,12 @@ abstract public class ClassArmor extends Armor {
 
 							@Override
 							public void onSelect(Item item) {
-								if (item == null || item == ClassArmor.this) return;
+								if (item == null || item == ClassArmor.this)
+									return;
 
-								Armor armor = (Armor)item;
+								Armor armor = (Armor) item;
 								armor.detach(hero.belongings.backpack);
-								if (hero.belongings.armor == armor){
+								if (hero.belongings.armor == armor) {
 									hero.belongings.armor = null;
 									if (hero.sprite instanceof HeroSprite) {
 										((HeroSprite) hero.sprite).updateArmor();
@@ -249,21 +250,21 @@ abstract public class ClassArmor extends Armor {
 								if (armor.checkSeal() != null) {
 									inscribe(armor.glyph);
 									seal = armor.checkSeal();
-								} else if (checkSeal() != null){
-									//automates the process of detaching the seal manually
+								} else if (checkSeal() != null) {
+									// automates the process of detaching the seal manually
 									// and re-affixing it to the new armor
-									if (seal.level() > 0){
+									if (seal.level() > 0) {
 										int newLevel = trueLevel() + 1;
 										level(newLevel);
 										Badges.validateItemLevelAquired(ClassArmor.this);
 									}
 
-									//if both source and destination armor have glyphs
+									// if both source and destination armor have glyphs
 									// we assume the player wants the glyph on the destination armor
 									// they can always manually detach first if they don't.
 									// otherwise we automate glyph transfer just like upgrades
-									if (armor.glyph == null && seal.canTransferGlyph()){
-										//do nothing, keep our glyph
+									if (armor.glyph == null && seal.canTransferGlyph()) {
+										// do nothing, keep our glyph
 									} else {
 										inscribe(armor.glyph);
 										seal.setGlyph(null);
@@ -279,10 +280,10 @@ abstract public class ClassArmor extends Armor {
 									cursedKnown = true;
 								}
 
-								GLog.p( Messages.get(ClassArmor.class, "transfer_complete") );
+								GLog.p(Messages.get(ClassArmor.class, "transfer_complete"));
 								hero.sprite.operate(hero.pos);
-								hero.sprite.emitter().burst( Speck.factory( Speck.CROWN), 12 );
-								Sample.INSTANCE.play( Assets.Sounds.EVOKE );
+								hero.sprite.emitter().burst(Speck.factory(Speck.CROWN), 12);
+								Sample.INSTANCE.play(Assets.Sounds.EVOKE);
 								hero.spend(Actor.TICK);
 								hero.busy();
 
@@ -299,12 +300,12 @@ abstract public class ClassArmor extends Armor {
 	public String desc() {
 		String desc = super.desc();
 
-		if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this)) {
-			ArmorAbility ability = Dungeon.hero.armorAbility;
+		if (owner() != null && owner().belongings.contains(this)) {
+			ArmorAbility ability = owner().armorAbility;
 			if (ability != null) {
 				desc += "\n\n" + ability.shortDesc();
-				float chargeUse = ability.chargeUse(Dungeon.hero);
-				//trinity has variable charge cost
+				float chargeUse = ability.chargeUse(owner());
+				// trinity has variable charge cost
 				if (!(ability instanceof Trinity)) {
 					desc += " " + Messages.get(this, "charge_use", Messages.decimalFormat("#.##", chargeUse));
 				}
@@ -315,7 +316,7 @@ abstract public class ClassArmor extends Armor {
 
 		return desc;
 	}
-	
+
 	@Override
 	public int value() {
 		return 0;
@@ -324,9 +325,9 @@ abstract public class ClassArmor extends Armor {
 	public class Charger extends Buff {
 
 		@Override
-		public boolean attachTo( Char target ) {
-			if (super.attachTo( target )) {
-				//if we're loading in and the hero has partially spent a turn, delay for 1 turn
+		public boolean attachTo(Char target) {
+			if (super.attachTo(target)) {
+				// if we're loading in and the hero has partially spent a turn, delay for 1 turn
 				if (target instanceof Hero && Dungeon.hero == null && cooldown() == 0 && target.cooldown() > 0) {
 					spend(TICK);
 				}
@@ -338,7 +339,7 @@ abstract public class ClassArmor extends Armor {
 		@Override
 		public boolean act() {
 			if (Regeneration.regenOn()) {
-				float chargeGain = 100 / 500f; //500 turns to full charge
+				float chargeGain = 100 / 500f; // 500 turns to full charge
 				chargeGain *= RingOfEnergy.armorChargeMultiplier(target);
 				charge += chargeGain;
 				updateQuickslot();

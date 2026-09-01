@@ -262,7 +262,7 @@ public class UnstableSpellbook extends Artifact {
 	protected ArtifactBuff passiveBuff() {
 		return new bookRecharge();
 	}
-	
+
 	@Override
 	public void charge(Hero target, float amount) {
 		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null){
@@ -303,11 +303,11 @@ public class UnstableSpellbook extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquipped(Dungeon.hero)) {
+		if (isEquippedByOwner()) {
 			if (cursed) {
 				desc += "\n\n" + Messages.get(this, "desc_cursed");
 			}
-			
+
 			if (level() < levelCap && scrolls.size() > 0) {
 				desc += "\n\n" + Messages.get(this, "desc_index");
 				desc += "\n" + "_" + Messages.get(scrolls.get(0), "name") + "_";
@@ -315,7 +315,7 @@ public class UnstableSpellbook extends Artifact {
 					desc += "\n" + "_" + Messages.get(scrolls.get(1), "name") + "_";
 			}
 		}
-		
+
 		if (level() > 0) {
 			desc += "\n\n" + Messages.get(this, "desc_empowered");
 		}

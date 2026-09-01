@@ -147,10 +147,13 @@ public class SpiritBow extends Weapon {
 				Math.round(augment.damageFactor(max())),
 				STRReq());
 
-		if (STRReq() > Dungeon.hero.STR()) {
-			info += " " + Messages.get(Weapon.class, "too_heavy");
-		} else if (Dungeon.hero.STR() > STRReq()){
-			info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
+		Hero viewer = owner();
+		if (viewer != null) {
+			if (STRReq() > viewer.STR()) {
+				info += " " + Messages.get(Weapon.class, "too_heavy");
+			} else if (viewer.STR() > STRReq()) {
+				info += " " + Messages.get(Weapon.class, "excess_str", viewer.STR() - STRReq());
+			}
 		}
 
 		switch (augment) {
@@ -171,7 +174,7 @@ public class SpiritBow extends Weapon {
 			info += "\n\n" + Messages.get(Weapon.class, "hardened_no_enchant");
 		}
 
-		if (cursed && isEquipped( Dungeon.hero )) {
+		if (cursed && isEquippedByOwner()) {
 			info += "\n\n" + Messages.get(Weapon.class, "cursed_worn");
 		} else if (cursedKnown && cursed) {
 			info += "\n\n" + Messages.get(Weapon.class, "cursed");
@@ -274,7 +277,8 @@ public class SpiritBow extends Weapon {
 
 	@Override
 	public int level() {
-		int level = Dungeon.hero == null ? 0 : Dungeon.hero.lvl/5;
+		Hero owner = owner();
+		int level = owner == null ? 0 : owner.lvl/5;
 		if (curseInfusionBonus) level += 1 + level/6;
 		return level;
 	}

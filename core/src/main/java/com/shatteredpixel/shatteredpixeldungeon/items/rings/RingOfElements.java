@@ -52,9 +52,9 @@ public class RingOfElements extends Ring {
 		if (isIdentified()){
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, soloBuffedBonus()))));
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(Dungeon.hero)))));
+						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(owner())))));
 			}
 			return info;
 		} else {
@@ -66,7 +66,7 @@ public class RingOfElements extends Ring {
 		if (cursed && cursedKnown) level = Math.min(-1, level-3);
 		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level+1))) + "%";
 	}
-	
+
 	@Override
 	protected RingBuff buff( ) {
 		return new Resistance();
@@ -87,20 +87,20 @@ public class RingOfElements extends Ring {
 
 		RESISTS.addAll( AntiMagic.RESISTS );
 	}
-	
+
 	public static float resist( Char target, Class effect ){
 		if (getBuffedBonus(target, Resistance.class) == 0) return 1f;
-		
+
 		for (Class c : RESISTS){
 			if (c.isAssignableFrom(effect)){
 				return (float)Math.pow(0.825, getBuffedBonus(target, Resistance.class));
 			}
 		}
-		
+
 		return 1f;
 	}
-	
+
 	public class Resistance extends RingBuff {
-	
+
 	}
 }

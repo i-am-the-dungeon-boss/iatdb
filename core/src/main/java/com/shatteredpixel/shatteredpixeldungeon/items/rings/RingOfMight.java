@@ -71,20 +71,20 @@ public class RingOfMight extends Ring {
 		super.level(value);
 		updateTargetHT();
 	}
-	
+
 	private void updateTargetHT(){
 		if (buff != null && buff.target instanceof Hero){
 			((Hero) buff.target).updateHT( false );
 		}
 	}
-	
+
 	public String statsInfo() {
 		if (isIdentified()){
 			String info = Messages.get(this, "stats",
 					soloBonus(), Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, soloBuffedBonus()) - 1f)));
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						getBonus(Dungeon.hero, Might.class), Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, combinedBuffedBonus(Dungeon.hero)) - 1f)));
+						getBonus(owner(), Might.class), Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, combinedBuffedBonus(owner())) - 1f)));
 			}
 			return info;
 		} else {
@@ -108,11 +108,11 @@ public class RingOfMight extends Ring {
 	protected RingBuff buff( ) {
 		return new Might();
 	}
-	
+
 	public static int strengthBonus( Char target ){
 		return getBonus( target, Might.class );
 	}
-	
+
 	public static float HTMultiplier( Char target ){
 		return (float)Math.pow(1.035, getBuffedBonus(target, Might.class));
 	}
@@ -120,4 +120,3 @@ public class RingOfMight extends Ring {
 	public class Might extends RingBuff {
 	}
 }
-
