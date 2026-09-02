@@ -18,9 +18,11 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.heroechoes;
 
+import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoPlayerAuth;
 import com.watabou.noosa.Game;
 import io.sentry.Sentry;
 import io.sentry.SentryLevel;
+import io.sentry.protocol.User;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,15 +48,29 @@ public final class SentryCrashReporting {
 	/** Sent when the player files a report without typing anything. */
 	public static final String DEFAULT_USER_REPORT = "Player-reported error (no description)";
 
+	/**
+	 * Player-filed reports are not crashes: they are triaged separately from real
+	 * errors, so they go out at WARNING.
+	 */
+	public static final SentryLevel USER_REPORT_LEVEL = SentryLevel.WARNING;
+
 	@FunctionalInterface
 	public interface MessageReporter {
-		void report(String message);
+		/** {@code username} is the reporting player's name, empty when unknown. */
+		void report(String message, String username);
 	}
 
 	private static final Reporter DEFAULT = Sentry::captureException;
 
-	private static final MessageReporter DEFAULT_MESSAGE =
-			message -> Sentry.captureMessage(message, SentryLevel.ERROR);
+	private static final MessageReporter DEFAULT_MESSAGE = (message, username) ->
+			Sentry.withScope(scope -> {
+				if (!username.isEmpty()) {
+					User user = new User();
+					user.setUsername(username);
+					scope.setUser(user);
+				}
+				Sentry.captureMessage(message, USER_REPORT_LEVEL);
+			});
 
 	private static Reporter reporter = DEFAULT;
 
@@ -80,17 +96,37 @@ public final class SentryCrashReporting {
 	}
 
 	/**
-	 * Files a player-initiated error report as a Sentry event at ERROR level. The
+	 * Files a player-initiated report as a Sentry event at
+	 * {@link #USER_REPORT_LEVEL}, attributed to the reporting player. The
 	 * description is optional: blank or null reports still go out, tagged with
 	 * {@link #DEFAULT_USER_REPORT}, since the surrounding scope (version, run state)
 	 * is the useful part. INDEV builds never report.
 	 */
 	public static void reportUserMessage(String message) {
+		reportUserMessage(message, currentUsername());
+	}
+
+	/** As {@link #reportUserMessage(String)}, with an explicit reporter name. */
+	public static void reportUserMessage(String message, String username) {
 		if (isDevBuild()) {
 			return;
 		}
 		String trimmed = message != null ? message.trim() : "";
-		messageReporter.report(trimmed.isEmpty() ? DEFAULT_USER_REPORT : trimmed);
+		String name = username != null ? username.trim() : "";
+		messageReporter.report(trimmed.isEmpty() ? DEFAULT_USER_REPORT : trimmed, name);
+	}
+
+	/**
+	 * The reporting player's name, empty when there is no session and no local
+	 * name; settings access must never block a report.
+	 */
+	private static String currentUsername() {
+		try {
+			String name = EchoPlayerAuth.preferredUsername();
+			return name != null ? name : "";
+		} catch (Throwable ignored) {
+			return "";
+		}
 	}
 
 	public static void report(Throwable throwable) {

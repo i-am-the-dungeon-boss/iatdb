@@ -154,7 +154,7 @@ class SentryCrashReportingTest {
 	@DisplayName("user report forwards the typed message to the installed message reporter")
 	void userReportForwardsTypedMessage() {
 		List<String> captured = new ArrayList<>();
-		SentryCrashReporting.setMessageReporter(captured::add);
+		SentryCrashReporting.setMessageReporter((message, username) -> captured.add(message));
 
 		SentryCrashReporting.reportUserMessage("  the boss walked into lava  ");
 
@@ -162,10 +162,39 @@ class SentryCrashReportingTest {
 	}
 
 	@Test
+	@DisplayName("user report carries the reporting player's username")
+	void userReportCarriesUsername() {
+		List<String> captured = new ArrayList<>();
+		SentryCrashReporting.setMessageReporter((message, username) -> captured.add(username));
+
+		SentryCrashReporting.reportUserMessage("stuck on floor 5", "  Mordred  ");
+
+		Assertions.assertThat(captured).containsExactly("Mordred");
+	}
+
+	@Test
+	@DisplayName("user report sends an empty username when the player has none")
+	void userReportWithoutUsernameSendsEmpty() {
+		List<String> captured = new ArrayList<>();
+		SentryCrashReporting.setMessageReporter((message, username) -> captured.add(username));
+
+		SentryCrashReporting.reportUserMessage("stuck on floor 5", null);
+
+		Assertions.assertThat(captured).containsExactly("");
+	}
+
+	@Test
+	@DisplayName("player reports go out as warnings, not errors")
+	void userReportUsesWarningLevel() {
+		Assertions.assertThat(SentryCrashReporting.USER_REPORT_LEVEL)
+				.isEqualTo(io.sentry.SentryLevel.WARNING);
+	}
+
+	@Test
 	@DisplayName("user report with no message still sends a default description")
 	void userReportWithoutMessageSendsDefault() {
 		List<String> captured = new ArrayList<>();
-		SentryCrashReporting.setMessageReporter(captured::add);
+		SentryCrashReporting.setMessageReporter((message, username) -> captured.add(message));
 
 		SentryCrashReporting.reportUserMessage("   ");
 		SentryCrashReporting.reportUserMessage(null);
@@ -182,7 +211,7 @@ class SentryCrashReportingTest {
 		Game.version = "1.0.0-INDEV";
 		try {
 			List<String> captured = new ArrayList<>();
-			SentryCrashReporting.setMessageReporter(captured::add);
+			SentryCrashReporting.setMessageReporter((message, username) -> captured.add(message));
 
 			SentryCrashReporting.reportUserMessage("nope");
 
