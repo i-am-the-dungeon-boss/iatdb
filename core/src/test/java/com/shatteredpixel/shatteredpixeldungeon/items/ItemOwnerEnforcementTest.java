@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Equipment describes itself against its owner, not against the player.
+ * An item describes itself against its owner, not against the player.
  *
  * <p>Who is <em>reading</em> a description is always the local player and never
  * changes what it should say. Whose sword it is does. Description code therefore
@@ -30,17 +30,22 @@ import java.util.regex.Pattern;
  */
 class ItemOwnerEnforcementTest {
 
-	/** Worn or wielded: the slots an echo inspect actually renders. */
-	private static final String[] EQUIPMENT_ROOTS = {
-			"items/weapon",
-			"items/armor",
-			"items/artifacts",
-			"items/rings"
+	/**
+	 * Everything an echo window can render. The boss inspect shows the six worn
+	 * slots; the echo detail window shows the whole backpack, so potions,
+	 * scrolls, wands and the rest are in scope too.
+	 */
+	private static final String[] ITEM_ROOTS = {
+			"items"
 	};
 
-	private static final String[] EQUIPMENT_FILES = {
-			"items/BrokenSeal.java",
-			"items/KindofMisc.java"
+	/**
+	 * {@link com.shatteredpixel.shatteredpixeldungeon.items.Item} is where
+	 * {@code owner()} is defined, so it is the one file allowed to name the
+	 * player directly.
+	 */
+	private static final String[] EXEMPT = {
+			"Item.java"
 	};
 
 	private static final String PACKAGE_ROOT =
@@ -52,22 +57,19 @@ class ItemOwnerEnforcementTest {
 					+ "\\s*\\([^;{()]*\\)\\s*\\{");
 
 	@Test
-	@DisplayName("equipment descriptions read the owner, never Dungeon.hero")
+	@DisplayName("item descriptions read the owner, never Dungeon.hero")
 	void equipmentDescriptionsReadTheOwner() throws IOException {
 		Path root = findRepoDir(PACKAGE_ROOT);
 		Assertions.assertThat(root).as("package root not found").isNotNull();
 
 		List<String> offenders = new ArrayList<>();
-		for (String dir : EQUIPMENT_ROOTS) {
+		for (String dir : ITEM_ROOTS) {
 			collect(root.resolve(dir), offenders);
-		}
-		for (String file : EQUIPMENT_FILES) {
-			scan(root.resolve(file), offenders);
 		}
 
 		Assertions.assertThat(offenders)
-				.as("use owner() / isEquippedByOwner() in equipment description methods,"
-						+ " so an echo's kit is described against the echo that owns it")
+				.as("use owner() / isEquippedByOwner() in item description methods,"
+						+ " so an echo's things are described against the echo that owns them")
 				.isEmpty();
 	}
 
@@ -101,6 +103,11 @@ class ItemOwnerEnforcementTest {
 			return;
 		}
 		String name = file.getFileName().toString();
+		for (String exempt : EXEMPT) {
+			if (exempt.equals(name)) {
+				return;
+			}
+		}
 		Matcher method = DESCRIPTION_METHOD.matcher(source);
 		while (method.find()) {
 			int open = source.indexOf('{', method.end() - 1);

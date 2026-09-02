@@ -9,9 +9,11 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -77,6 +79,44 @@ class EchoItemIdentificationTest {
 	}
 
 	@Test
+	@DisplayName("A previewed echo's potion and scroll show their true names")
+	void previewedConsumablesShowTheirTrueNames() {
+		Hero restored = EchoHeroSnapshot.restoreHero(echoWearingAnUnknownRing());
+		Item potion = carried(restored, PotionOfHealing.class);
+		Item scroll = carried(restored, ScrollOfIdentify.class);
+
+		// Deliberately not asserted here: that the originals still read unknown.
+		// Potion and Scroll identity lives in a JVM-wide handler that earlier
+		// tests in the same fork may already have taught, so the isolation
+		// guarantee is asserted against the handler itself, in the test below.
+		Assertions.assertThat(ItemPreview.of(potion, restored).name())
+				.contains(Messages.get(PotionOfHealing.class, "name"));
+		Assertions.assertThat(ItemPreview.of(scroll, restored).name())
+				.contains(Messages.get(ScrollOfIdentify.class, "name"));
+	}
+
+	@Test
+	@DisplayName("Reading an echo's potion and scroll adds nothing to the player's knowledge")
+	void previewingConsumablesTeachesThePlayerNothing() {
+		EchoTestSupport.warriorHero();
+		HashSet<Class<? extends Potion>> potionsBefore = new HashSet<>(Potion.getKnown());
+		HashSet<Class<? extends Scroll>> scrollsBefore = new HashSet<>(Scroll.getKnown());
+
+		Hero restored = EchoHeroSnapshot.restoreHero(echoWearingAnUnknownRing());
+		ItemPreview.of(carried(restored, PotionOfHealing.class), restored);
+		ItemPreview.of(carried(restored, ScrollOfIdentify.class), restored);
+
+		Assertions.assertThat(Potion.getKnown()).isEqualTo(potionsBefore);
+		Assertions.assertThat(Scroll.getKnown()).isEqualTo(scrollsBefore);
+	}
+
+	private static Item carried(Hero hero, Class<? extends Item> kind) {
+		Item found = hero.belongings.getItem(kind);
+		Assertions.assertThat(found).as("echo should be carrying a " + kind.getSimpleName()).isNotNull();
+		return found;
+	}
+
+	@Test
 	@DisplayName("Reading an echo's ring adds nothing to the player's known rings")
 	void inspectingTeachesThePlayerNothing() {
 		Echo foreign = echoWearingAnUnknownRing();
@@ -101,6 +141,9 @@ class EchoItemIdentificationTest {
 
 		RingOfHaste ring = new RingOfHaste();
 		owner.belongings.ring = ring;
+
+		new PotionOfHealing().collect(owner.belongings.backpack);
+		new ScrollOfIdentify().collect(owner.belongings.backpack);
 
 		Echo echo = Echo.create(
 				5,

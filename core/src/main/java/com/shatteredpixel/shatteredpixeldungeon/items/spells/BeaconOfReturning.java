@@ -54,7 +54,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class BeaconOfReturning extends Spell {
-	
+
 	{
 		image = ItemSpriteSheet.RETURN_BEACON;
 
@@ -63,11 +63,11 @@ public class BeaconOfReturning extends Spell {
 
 	//This class has a variety of code for compat with pre-v3.3.0 saves
 	//Previously the destination was an item property, but in 3.3.0 this was changed to use a buff
-	
+
 	public int returnDepth	= -1;
 	public int returnBranch	= 0;
 	public int returnPos;
-	
+
 	@Override
 	protected void onCast(final Hero hero) {
 
@@ -90,13 +90,13 @@ public class BeaconOfReturning extends Spell {
 					}
 				}
 			});
-			
+
 		}
 	}
-	
+
 	//we reset return depth when beacons are dropped to prevent
 	//having two stacks of beacons with different return locations
-	
+
 	@Override
 	protected void onThrow(int cell) {
 		if (returnDepth != -1) {
@@ -107,7 +107,7 @@ public class BeaconOfReturning extends Spell {
 		}
 		super.onThrow(cell);
 	}
-	
+
 	@Override
 	public void doDrop(Hero hero) {
 		if (returnDepth != -1) {
@@ -116,7 +116,7 @@ public class BeaconOfReturning extends Spell {
 		}
 		super.doDrop(hero);
 	}
-	
+
 	private void setBeacon(Hero hero ){
 		if (returnDepth != -1){
 			Notes.remove(Notes.Landmark.BEACON_LOCATION, returnDepth);
@@ -132,17 +132,17 @@ public class BeaconOfReturning extends Spell {
 		tracker.returnPos = hero.pos;
 
 		Notes.add(Notes.Landmark.BEACON_LOCATION, tracker.returnDepth);
-		
+
 		hero.spend( 1f );
 		hero.busy();
-		
+
 		GLog.i( Messages.get(this, "set") );
-		
+
 		hero.sprite.operate( hero.pos );
 		Sample.INSTANCE.play( Assets.Sounds.BEACON );
 		updateQuickslot();
 	}
-	
+
 	private void returnBeacon( Hero hero ){
 
 		BeaconTracker tracker = hero.buff(BeaconTracker.class);
@@ -156,7 +156,7 @@ public class BeaconOfReturning extends Spell {
 			tracker.returnBranch = returnBranch;
 			tracker.returnPos = returnPos;
 		}
-		
+
 		if (tracker.returnDepth == Dungeon.depth && tracker.returnBranch == Dungeon.branch) {
 
 			Char existing = Actor.findChar(tracker.returnPos);
@@ -224,12 +224,12 @@ public class BeaconOfReturning extends Spell {
 			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());
 		}
 	}
-	
+
 	@Override
 	public String desc() {
 		String desc = super.desc();
-		if (Dungeon.hero != null) {
-			BeaconTracker tracker = Dungeon.hero.buff(BeaconTracker.class);
+		if (owner() != null) {
+			BeaconTracker tracker = owner().buff(BeaconTracker.class);
 			if (tracker != null){
 				desc += "\n\n" + Messages.get(this, "desc_set", tracker.returnDepth);
 			} else if (returnDepth != -1) {
@@ -238,18 +238,18 @@ public class BeaconOfReturning extends Spell {
 		}
 		return desc;
 	}
-	
+
 	private static final ItemSprite.Glowing WHITE = new ItemSprite.Glowing( 0xFFFFFF );
-	
+
 	@Override
 	public ItemSprite.Glowing glowing() {
 		return returnDepth != -1 ? WHITE : null;
 	}
-	
+
 	private static final String DEPTH	= "depth";
 	private static final String BRANCH	= "branch";
 	private static final String POS		= "pos";
-	
+
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
@@ -259,7 +259,7 @@ public class BeaconOfReturning extends Spell {
 			bundle.put( POS, returnPos );
 		}
 	}
-	
+
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle(bundle);
@@ -267,7 +267,7 @@ public class BeaconOfReturning extends Spell {
 		returnBranch = bundle.getInt( BRANCH );
 		returnPos	= bundle.getInt( POS );
 	}
-	
+
 	@Override
 	public int value() {
 		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
@@ -277,21 +277,21 @@ public class BeaconOfReturning extends Spell {
 	public int energyVal() {
 		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
 
 		private static final int OUT_QUANTITY = 5;
-		
+
 		{
 			inputs =  new Class[]{ScrollOfPassage.class};
 			inQuantity = new int[]{1};
-			
+
 			cost = 12;
-			
+
 			output = BeaconOfReturning.class;
 			outQuantity = OUT_QUANTITY;
 		}
-		
+
 	}
 
 	public static class BeaconTracker extends Buff {

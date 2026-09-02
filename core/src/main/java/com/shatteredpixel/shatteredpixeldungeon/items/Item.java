@@ -482,6 +482,11 @@ public class Item implements Bundlable {
 		this.previewOwner = owner;
 	}
 
+	/** True for a copy made to be looked at, false for an item in play. */
+	public final boolean isPreview() {
+		return previewOwner != null;
+	}
+
 	/**
 	 * The hero this item belongs to — the question descriptions actually need to
 	 * ask. Who is <em>reading</em> the description is always the local player and
@@ -590,7 +595,7 @@ public class Item implements Bundlable {
 
 		// custom notes are the player's own journal; they say nothing about
 		// somebody else's item
-		if (!ForeignRestore.inProgress() && Dungeon.hero != null) {
+		if (!isPreview() && Dungeon.hero != null) {
 			Notes.CustomRecord note = Notes.findCustomRecord(customNoteID);
 			if (note != null) {
 				// we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in

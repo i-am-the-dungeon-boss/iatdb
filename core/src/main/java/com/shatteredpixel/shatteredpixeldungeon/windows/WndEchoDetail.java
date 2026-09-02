@@ -1,6 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
-import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
@@ -12,7 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
-import com.shatteredpixel.shatteredpixeldungeon.ui.InventorySlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.EchoKitSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -58,7 +57,6 @@ public class WndEchoDetail extends WndTabbed {
 	private final EchoStorage.EchoEntry entry;
 	private final Echo echo;
 	private final Hero viewHero;
-	private final Hero previousHero;
 
 	private StatsTab stats;
 	private InventoryTab inventory;
@@ -68,11 +66,7 @@ public class WndEchoDetail extends WndTabbed {
 
 		this.entry = entry;
 		this.echo = entry.echo;
-		this.previousHero = Dungeon.hero;
 		this.viewHero = EchoHeroLoader.load(echo);
-		if (viewHero != null) {
-			Dungeon.hero = viewHero;
-		}
 
 		resize(WIDTH, HEIGHT);
 
@@ -127,21 +121,13 @@ public class WndEchoDetail extends WndTabbed {
 		});
 	}
 
-	@Override
-	public void hide() {
-		if (previousHero != null) {
-			Dungeon.hero = previousHero;
-		}
-		super.hide();
-	}
-
 	private class StatsTab extends Group {
 
 		private static final int GAP = 6;
 		private float pos;
 
 		StatsTab(EchoStorage.EchoEntry entry) {
-			Hero hero = viewHero != null ? viewHero : EchoHeroLoader.load(echo);
+			Hero hero = viewHero;
 
 			IconTitle title = new IconTitle();
 			title.icon(HeroSprite.avatar(hero));
@@ -240,25 +226,25 @@ public class WndEchoDetail extends WndTabbed {
 			}
 			slotSize = fittingInventorySlotSize(equipped + stuff.backpack.capacity());
 
-			placeItem(stuff.weapon != null ? stuff.weapon : placeholder(ItemSpriteSheet.WEAPON_HOLDER));
-			placeItem(stuff.armor != null ? stuff.armor : placeholder(ItemSpriteSheet.ARMOR_HOLDER));
-			placeItem(stuff.artifact != null ? stuff.artifact : placeholder(ItemSpriteSheet.ARTIFACT_HOLDER));
-			placeItem(stuff.misc != null ? stuff.misc : placeholder(ItemSpriteSheet.SOMETHING));
-			placeItem(stuff.ring != null ? stuff.ring : placeholder(ItemSpriteSheet.RING_HOLDER));
+			placeItem(stuff.weapon != null ? stuff.weapon : placeholder(ItemSpriteSheet.WEAPON_HOLDER), true);
+			placeItem(stuff.armor != null ? stuff.armor : placeholder(ItemSpriteSheet.ARMOR_HOLDER), true);
+			placeItem(stuff.artifact != null ? stuff.artifact : placeholder(ItemSpriteSheet.ARTIFACT_HOLDER), true);
+			placeItem(stuff.misc != null ? stuff.misc : placeholder(ItemSpriteSheet.SOMETHING), true);
+			placeItem(stuff.ring != null ? stuff.ring : placeholder(ItemSpriteSheet.RING_HOLDER), true);
 
 			if (stuff.secondWep != null) {
-				placeItem(stuff.secondWep);
+				placeItem(stuff.secondWep, true);
 			}
 
 			Bag backpack = stuff.backpack;
 			for (Item item : backpack.items.toArray(new Item[0])) {
 				if (!(item instanceof Bag)) {
-					placeItem(item);
+					placeItem(item, false);
 				}
 			}
 
 			while ((count - equipped) < backpack.capacity()) {
-				placeItem(null);
+				placeItem(null, false);
 			}
 		}
 
@@ -266,26 +252,20 @@ public class WndEchoDetail extends WndTabbed {
 			return new WndBag.Placeholder(image);
 		}
 
-		private void placeItem(final Item item) {
+		/**
+		 * {@link EchoKitSlot} rather than
+		 * {@link com.shatteredpixel.shatteredpixeldungeon.ui.InventorySlot}: the
+		 * shared slot reads {@code Dungeon.hero} to decide what is equipped and
+		 * whether the inventory is lost, which is the wrong hero here and is null
+		 * outright when this window is opened from the title screen.
+		 */
+		private void placeItem(final Item item, boolean equipped) {
 			count++;
 
 			int x = col * (slotSize + SLOT_MARGIN);
 			int y = TITLE_HEIGHT + row * (slotSize + SLOT_MARGIN);
 
-			InventorySlot slot = new InventorySlot(item) {
-				@Override
-				protected void onClick() {
-					if (item != null && !(item instanceof WndBag.Placeholder)) {
-						GameScene.show(new WndInfoItem(item));
-					}
-				}
-
-				@Override
-				protected boolean onLongClick() {
-					onClick();
-					return true;
-				}
-			};
+			EchoKitSlot slot = new EchoKitSlot(item, viewHero, equipped);
 			if (item == null || item instanceof WndBag.Placeholder) {
 				slot.enable(false);
 			}

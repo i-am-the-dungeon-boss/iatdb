@@ -41,15 +41,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Amulet extends Item {
-	
+
 	private static final String AC_END = "END";
-	
+
 	{
 		image = ItemSpriteSheet.AMULET;
-		
+
 		unique = true;
 	}
-	
+
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
@@ -60,7 +60,7 @@ public class Amulet extends Item {
 		}
 		return actions;
 	}
-	
+
 	@Override
 	public void execute( Hero hero, String action ) {
 
@@ -70,11 +70,11 @@ public class Amulet extends Item {
 			showAmuletScene( false );
 		}
 	}
-	
+
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
 		if (super.doPickUp( hero, pos )) {
-			
+
 			if (!Statistics.amuletObtained) {
 				Statistics.amuletObtained = true;
 				hero.spend(-hero.cooldown());
@@ -94,13 +94,13 @@ public class Amulet extends Item {
 					}
 				});
 			}
-			
+
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	private void showAmuletScene( boolean showText ) {
 		AmuletScene.noText = !showText;
 		Game.switchScene( AmuletScene.class, new Game.SceneChangeCallback() {
@@ -122,12 +122,12 @@ public class Amulet extends Item {
 			}
 		});
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
@@ -137,7 +137,7 @@ public class Amulet extends Item {
 	public String desc() {
 		String desc = super.desc();
 
-		if (Dungeon.hero == null || Dungeon.hero.buff(AscensionChallenge.class) == null){
+		if (owner() == null || owner().buff(AscensionChallenge.class) == null){
 			desc += "\n\n" + Messages.get(this, "desc_origins");
 		} else {
 			desc += "\n\n" + Messages.get(this, "desc_ascent");

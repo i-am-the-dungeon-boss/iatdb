@@ -26,7 +26,9 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.inspect;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 
 /**
@@ -84,18 +86,33 @@ public final class ItemPreview {
 	 * known rather than as the guesswork its owner died with.
 	 *
 	 * <p>{@code identify(false)} deliberately skips the by-hero half of
-	 * identification — no catalog entry, no discovered-item statistic. Rings are
-	 * the one worn slot whose identity lives in a table shared with the player
-	 * rather than on the item, so they are anonymized instead: the base game's
-	 * own way to show a true name without touching that table.
+	 * identification — no catalog entry, no discovered-item statistic. Potions,
+	 * scrolls and rings keep their identity in tables shared with the player
+	 * rather than on the item, so they are anonymized <em>first</em>: the base
+	 * game's own way to show a true name without touching those tables, and the
+	 * only thing that stops {@code identify} teaching the player through them.
 	 */
 	private static void identifyForDisplay(Item preview) {
-		if (preview instanceof Ring) {
-			((Ring) preview).anonymize();
-		}
+		anonymize(preview);
 		preview.identify(false);
 		if (preview instanceof MagesStaff && ((MagesStaff) preview).wand() != null) {
 			((MagesStaff) preview).wand().identify(false);
+		}
+	}
+
+	/**
+	 * Rings, potions and scrolls answer "what am I?" from a table the player
+	 * owns, so identifying one would write into that table. Anonymizing says
+	 * "show the true name, change nothing" instead — and has to happen before
+	 * {@code identify}, which would otherwise reach the table first.
+	 */
+	private static void anonymize(Item preview) {
+		if (preview instanceof Ring) {
+			((Ring) preview).anonymize();
+		} else if (preview instanceof Potion) {
+			((Potion) preview).anonymize();
+		} else if (preview instanceof Scroll) {
+			((Scroll) preview).anonymize();
 		}
 	}
 }

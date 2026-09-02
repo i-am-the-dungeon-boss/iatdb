@@ -48,7 +48,7 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 
 public class ReclaimTrap extends TargetedSpell {
-	
+
 	{
 		image = ItemSpriteSheet.RECLAIM_TRAP;
 
@@ -60,7 +60,7 @@ public class ReclaimTrap extends TargetedSpell {
 	//a buff attached to the hero, which is much more resistant to exploits
 
 	private Class<?extends Trap> storedTrap = null;
-	
+
 	@Override
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
@@ -89,12 +89,12 @@ public class ReclaimTrap extends TargetedSpell {
 			Trap t = Dungeon.level.traps.get(bolt.collisionPos);
 			if (t != null && t.active && t.visible) {
 				t.disarm(); //even disarms traps that normally wouldn't be
-				
+
 				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 				ScrollOfRecharging.charge(hero);
 				Buff.affect(hero, ReclaimedTrap.class).trap = t.getClass();
 				Bestiary.setSeen(t.getClass());
-				
+
 			} else {
 				GLog.w(Messages.get(this, "no_trap"));
 			}
@@ -104,30 +104,30 @@ public class ReclaimTrap extends TargetedSpell {
 			curUser.spendAndNext( timeToCast() );
 
 		} else {
-			
+
 			Trap t = Reflection.newInstance(storedTrap);
-			
+
 			t.pos = bolt.collisionPos;
 			t.reclaimed = true;
 			Bestiary.countEncounter(t.getClass());
 			t.activate();
 
 			onSpellused();
-			
+
 		}
 	}
-	
+
 	@Override
 	public String desc() {
 		String desc = super.desc();
 		if (storedTrap != null){
 			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(storedTrap, "name"));
-		} else if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this) && Dungeon.hero.buff(ReclaimedTrap.class) != null){
-			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(Dungeon.hero.buff(ReclaimedTrap.class).trap, "name"));
+		} else if (owner() != null && owner().belongings.contains(this) && owner().buff(ReclaimedTrap.class) != null){
+			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(owner().buff(ReclaimedTrap.class).trap, "name"));
 		}
 		return desc;
 	}
-	
+
 	private static final ItemSprite.Glowing[] COLORS = new ItemSprite.Glowing[]{
 			new ItemSprite.Glowing( 0xFF0000 ),
 			new ItemSprite.Glowing( 0xFF8000 ),
@@ -139,7 +139,7 @@ public class ReclaimTrap extends TargetedSpell {
 			new ItemSprite.Glowing( 0x808080 ),
 			new ItemSprite.Glowing( 0x000000 )
 	};
-	
+
 	@Override
 	public ItemSprite.Glowing glowing() {
 		if (storedTrap != null){
@@ -149,7 +149,7 @@ public class ReclaimTrap extends TargetedSpell {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public int value() {
 		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
@@ -159,31 +159,31 @@ public class ReclaimTrap extends TargetedSpell {
 	public int energyVal() {
 		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
 	}
-	
+
 	private static final String STORED_TRAP = "stored_trap";
-	
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		if (storedTrap != null) bundle.put(STORED_TRAP, storedTrap);
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		if (bundle.contains(STORED_TRAP)) storedTrap = bundle.getClass(STORED_TRAP);
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
 
 		private static final int OUT_QUANTITY = 5;
-		
+
 		{
 			inputs =  new Class[]{ScrollOfMagicMapping.class, MetalShard.class};
 			inQuantity = new int[]{1, 1};
-			
+
 			cost = 8;
-			
+
 			output = ReclaimTrap.class;
 			outQuantity = OUT_QUANTITY;
 		}
@@ -217,5 +217,5 @@ public class ReclaimTrap extends TargetedSpell {
 			trap = bundle.getClass(TRAP);
 		}
 	}
-	
+
 }

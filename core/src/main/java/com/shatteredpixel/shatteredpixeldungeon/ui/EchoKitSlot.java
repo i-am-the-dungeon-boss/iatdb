@@ -28,8 +28,10 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.inspect.ItemPreview;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -113,6 +115,8 @@ public class EchoKitSlot extends ItemSlot {
 	@Override
 	public void item(Item item) {
 		super.item(item);
+
+		bg.visible = !(item instanceof Gold || item instanceof Bag);
 
 		if (item != null) {
 			bg.texture(TextureCache.createSolid(equipped ? EQUIPPED : NORMAL));
