@@ -48,6 +48,11 @@ param(
     # Skip vercel promote for hero-echoes after the GitHub Release.
     [switch] $SkipVercelPromote,
 
+    # Re-release the current version without bumping: move an existing tag to
+    # HEAD, force-push it, and overwrite the existing GitHub Release's notes and
+    # assets. Without this, an existing tag on another commit aborts the release.
+    [switch] $Force,
+
     # Override path to the hero-echoes repo (default: sibling ../hero-echoes or HERO_ECHOES_ROOT).
     [string] $HeroEchoesRoot = ''
 )
@@ -395,13 +400,24 @@ foreach ($a in $assets) { Write-Host "  - $(Split-Path $a -Leaf)" }
 Write-Host "Notes: $notesPath"
 Write-Host ''
 
+$forceTagPush = $false
 git show-ref --verify --quiet "refs/tags/$tagName"
 if ($LASTEXITCODE -eq 0) {
     $tagCommit = (git rev-list -n 1 $tagName).Trim()
     if ($tagCommit -ne $commitSha) {
-        throw "Tag $tagName already exists on $tagCommit but HEAD is $commitSha"
+        if (-not $Force) {
+            throw "Tag $tagName already exists on $tagCommit but HEAD is $commitSha"
+        }
+        $forceTagPush = $true
+        Write-Host ">> git tag -f $tagName (was $tagCommit)"
+        if (-not $DryRun) {
+            Invoke-Checked {
+                git tag -f -a $tagName -m "IATDB ${versionName} (versionCode ${versionCode})"
+            } 'git tag -f failed'
+        }
+    } else {
+        Write-Host ">> Tag $tagName already points at HEAD"
     }
-    Write-Host ">> Tag $tagName already points at HEAD"
 } else {
     Write-Host ">> git tag -a $tagName"
     if (-not $DryRun) {
@@ -411,25 +427,50 @@ if ($LASTEXITCODE -eq 0) {
     }
 }
 
-Write-Host ">> git push $Remote $tagName"
+$pushArgs = if ($forceTagPush) { @('push', '--force', $Remote, $tagName) } else { @('push', $Remote, $tagName) }
+Write-Host ">> git $($pushArgs -join ' ')"
 if (-not $DryRun) {
-    Invoke-Checked { git push $Remote $tagName } 'git push tag failed'
+    Invoke-Checked { git @pushArgs } 'git push tag failed'
 }
 
-# Version first: GitHub's release list truncates titles on the left.
-$ghArgs = @(
-    'release', 'create', $tagName,
-    '--title', "$versionName - I am the Dungeon Boss",
-    '--notes-file', $notesPath
-)
-if ($Draft) { $ghArgs += '--draft' }
-$ghArgs += @($assets)
+$releaseTitle = "$versionName - I am the Dungeon Boss"
+& gh release view $tagName --json tagName *> $null
+$releaseExists = ($LASTEXITCODE -eq 0)
 
-Write-Host ">> gh $($ghArgs -join ' ')"
-if (-not $DryRun) {
-    & gh @ghArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "gh release create failed with exit code $LASTEXITCODE"
+if ($releaseExists -and -not $Force) {
+    throw "GitHub Release $tagName already exists. Bump the version, or pass -Force to overwrite it."
+}
+
+if ($releaseExists) {
+    # Re-release: keep the same release, replace its notes and assets.
+    Write-Host ">> gh release edit $tagName (overwriting notes)"
+    Write-Host ">> gh release upload $tagName --clobber"
+    if (-not $DryRun) {
+        & gh release edit $tagName --title $releaseTitle --notes-file $notesPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "gh release edit failed with exit code $LASTEXITCODE"
+        }
+        & gh release upload $tagName @assets --clobber
+        if ($LASTEXITCODE -ne 0) {
+            throw "gh release upload failed with exit code $LASTEXITCODE"
+        }
+    }
+} else {
+    # Version first: GitHub's release list truncates titles on the left.
+    $ghArgs = @(
+        'release', 'create', $tagName,
+        '--title', $releaseTitle,
+        '--notes-file', $notesPath
+    )
+    if ($Draft) { $ghArgs += '--draft' }
+    $ghArgs += @($assets)
+
+    Write-Host ">> gh $($ghArgs -join ' ')"
+    if (-not $DryRun) {
+        & gh @ghArgs
+        if ($LASTEXITCODE -ne 0) {
+            throw "gh release create failed with exit code $LASTEXITCODE"
+        }
     }
 }
 
