@@ -76,6 +76,8 @@ class ProjectLinksTest {
 				.isEqualTo(required(props, "github.owner.repo"));
 		Assertions.assertThat(ProjectLinks.DEVELOPER_EMAIL)
 				.isEqualTo(required(props, "developer.email"));
+		Assertions.assertThat(ProjectLinks.KOFI_URL)
+				.isEqualTo(required(props, "kofi.url"));
 
 		Assertions.assertThat(ProjectLinks.GITHUB_REPO_URL)
 				.isEqualTo("https://github.com/" + ProjectLinks.GITHUB_OWNER_REPO);
@@ -194,6 +196,16 @@ class ProjectLinksTest {
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/AboutScene.java");
 		Assertions.assertThat(source).contains("ProjectLinks.HOMEPAGE_URL");
 		Assertions.assertThat(source).contains("ProjectLinks.HOMEPAGE_HOST");
+	}
+
+	@Test
+	@DisplayName("SupporterScene opens the Ko-fi page from ProjectLinks")
+	void supporterSceneLinksKofi() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java");
+		Assertions.assertThat(source).contains("ProjectLinks.KOFI_URL");
+		Assertions.assertThat(source).contains("platform.openURI");
+		Assertions.assertThat(source).doesNotContain("ko-fi.com");
 	}
 
 	@Test

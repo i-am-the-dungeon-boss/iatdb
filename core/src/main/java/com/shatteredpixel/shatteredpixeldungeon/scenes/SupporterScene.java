@@ -25,6 +25,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.ProjectLinks;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.services.billing.SupportBilling;
@@ -33,13 +34,13 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.SupportPrompts;
 import com.shatteredpixel.shatteredpixeldungeon.ui.SupportTipProducts;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
 import com.watabou.noosa.Camera;
-import com.watabou.noosa.Image;
 import com.watabou.noosa.NinePatch;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.RectF;
@@ -50,6 +51,9 @@ public class SupporterScene extends PixelScene {
 
 	private static final int BTN_HEIGHT = 22;
 	private static final int GAP = 2;
+
+	/** Tip products are Play-only; other platforms fall back to the Ko-fi link. */
+	private static final String[] NO_PRODUCTS = {};
 
 	@Override
 	public void create() {
@@ -86,7 +90,9 @@ public class SupporterScene extends PixelScene {
 		add(msg);
 
 		ArrayList<StyledButton> tipButtons = new ArrayList<>();
-		for (String productId : SupportTipProducts.PRODUCT_IDS) {
+		for (String productId : SupportPrompts.playBillingEnabled()
+				? SupportTipProducts.PRODUCT_IDS
+				: NO_PRODUCTS) {
 			final String id = productId;
 			StyledButton tip = new StyledButton(Chrome.Type.GREY_BUTTON_TR,
 					Messages.get(this, "tip_amount", SupportTipProducts.displayAmountUsd(id))) {
@@ -119,7 +125,20 @@ public class SupporterScene extends PixelScene {
 			tipButtons.add(tip);
 		}
 
-		float elementHeight = msg.height() + tipButtons.size() * (BTN_HEIGHT + GAP);
+		StyledButton kofi = new StyledButton(Chrome.Type.GREY_BUTTON_TR,
+				Messages.get(this, "kofi")) {
+			@Override
+			protected void onClick() {
+				super.onClick();
+				ShatteredPixelDungeon.platform.openURI(ProjectLinks.KOFI_URL);
+			}
+		};
+		kofi.icon(Icons.get(Icons.GOLD));
+		kofi.textColor(Window.TITLE_COLOR);
+		kofi.setSize(elementWidth, BTN_HEIGHT);
+		add(kofi);
+
+		float elementHeight = msg.height() + (tipButtons.size() + 1) * (BTN_HEIGHT + GAP);
 
 		float top = insets.top + 16 + Math.max(0, (h - 16 - elementHeight) / 2f);
 		float left = insets.left + (w - elementWidth) / 2f;
@@ -133,6 +152,9 @@ public class SupporterScene extends PixelScene {
 			align(tip);
 			y = tip.bottom() + GAP;
 		}
+
+		kofi.setPos(left, y);
+		align(kofi);
 	}
 
 	@Override
@@ -144,7 +166,6 @@ public class SupporterScene extends PixelScene {
 
 		NinePatch bg;
 		RenderedTextBlock text;
-		Image icon;
 
 		@Override
 		protected void createChildren() {
@@ -152,14 +173,11 @@ public class SupporterScene extends PixelScene {
 			add(bg);
 
 			String message = Messages.get(SupporterScene.class, "intro");
-			message += "\n\n" + Messages.get(SupporterScene.class, "play_msg");
-			message += "\n\n- Dungeon Boss";
+			message += "\n\n" + Messages.get(SupporterScene.class,
+					SupportPrompts.playBillingEnabled() ? "play_msg" : "kofi_msg");
 
 			text = PixelScene.renderTextBlock(message, 6);
 			add(text);
-
-			icon = Icons.get(Icons.IATDB);
-			add(icon);
 		}
 
 		@Override
@@ -169,9 +187,6 @@ public class SupporterScene extends PixelScene {
 
 			text.maxWidth((int) width - bg.marginHor());
 			text.setPos(x + bg.marginLeft(), y + bg.marginTop() + 1);
-
-			icon.y = text.bottom() - icon.height() + 4;
-			icon.x = x + 25;
 
 			height = (text.bottom() + 3) - y;
 			height += bg.marginBottom();

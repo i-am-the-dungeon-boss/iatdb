@@ -21,6 +21,13 @@ class SupportPromptsTest {
 	}
 
 	@Test
+	@DisplayName("keeps the support screen reachable without billing (Ko-fi link)")
+	void supportSceneEnabledWithoutBilling() {
+		SupportBilling.service = null;
+		Assertions.assertThat(SupportPrompts.supportSceneEnabled()).isTrue();
+	}
+
+	@Test
 	@DisplayName("enables Play tip billing when billing service is available")
 	void enablesPlayBillingWhenAvailable() {
 		SupportBilling.service = new SupportBillingService() {

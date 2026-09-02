@@ -17,7 +17,15 @@ public final class SupportPrompts {
 		return false;
 	}
 
-	/** Whether in-app Support entry points (Play tip billing) should be shown. */
+	/**
+	 * Whether the Support screen is reachable. Always: every platform can open
+	 * the Ko-fi page, even where Play tip billing is unavailable.
+	 */
+	public static boolean supportSceneEnabled() {
+		return true;
+	}
+
+	/** Whether the in-app Play tip buttons should be shown. */
 	public static boolean playBillingEnabled() {
 		return SupportBilling.isAvailable();
 	}

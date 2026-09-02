@@ -247,8 +247,6 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_WORLD_CHAT = "world_chat";
 	public static final String KEY_WORLD_CHAT_MUTED = "world_chat_muted";
 
-	/** Never stored; see {@link #worldChat()}. Off on every launch. */
-	private static boolean worldChatThisSession = false;
 	public static final String KEY_DEBUG_START = "debug_start";
 	public static final String KEY_DEBUG_START_DEPTH = "debug_start_depth";
 	public static final String KEY_DEBUG_STRATEGY_KIT = "debug_strategy_kit";
@@ -277,21 +275,16 @@ public class SPDSettings extends GameSettings {
 	 * Whether the world channel stays open once the player is in the dungeon.
 	 * The village channel is separate and always connects.
 	 *
-	 * <p>Session-scoped on purpose: it is held in memory and starts off on every
-	 * launch, rather than being saved. Joining a public channel is a choice worth
-	 * making knowingly, and a flag persisted once would quietly keep a player in
-	 * chat during every future run without ever asking again — which is exactly
-	 * what a first-entry consent notice is supposed to prevent.
-	 *
-	 * <p>{@link #KEY_WORLD_CHAT} is kept only so an older build's saved value can
-	 * be recognised and ignored; nothing writes it any more.
+	 * <p>On by default, and the player's own choice is persisted: unchecking it
+	 * keeps later runs out of chat without asking again, and re-checking it
+	 * sticks the same way.
 	 */
 	public static void worldChat(boolean value) {
-		worldChatThisSession = value;
+		put(KEY_WORLD_CHAT, value);
 	}
 
 	public static boolean worldChat() {
-		return worldChatThisSession;
+		return getBoolean(KEY_WORLD_CHAT, true);
 	}
 
 	/** Comma-joined lowercased usernames; see {@code worldnet.MuteList}. */

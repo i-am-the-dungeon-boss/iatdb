@@ -214,7 +214,7 @@ public class TitleScene extends PixelScene {
 			add(btnDebug);
 		}
 
-		if (SupportPrompts.playBillingEnabled()) {
+		if (SupportPrompts.supportSceneEnabled()) {
 			btnSupport = new SupportButton(GREY_TR, Messages.get(this, "support"));
 			add(btnSupport);
 		}

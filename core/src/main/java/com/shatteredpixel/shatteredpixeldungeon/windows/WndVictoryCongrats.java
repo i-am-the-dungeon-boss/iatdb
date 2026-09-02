@@ -110,7 +110,7 @@ public class WndVictoryCongrats extends Window {
 		height += Math.max(dailyImg.height(), dailyTxt.height()) + 6;
 
 		String finalMessage = Messages.get(this, "thank_you");
-		if (SupportPrompts.playBillingEnabled()) {
+		if (SupportPrompts.supportSceneEnabled()) {
 			finalMessage += " " + Messages.get(this, "support_prompt");
 		}
 		RenderedTextBlock finalTxt = PixelScene.renderTextBlock(finalMessage, 6);
@@ -128,7 +128,7 @@ public class WndVictoryCongrats extends Window {
 		};
 		btnClose.icon(Icons.EXIT.get());
 
-		if (SupportPrompts.playBillingEnabled()) {
+		if (SupportPrompts.supportSceneEnabled()) {
 			RedButton btnSupport = new RedButton(Messages.get(this, "support")) {
 				@Override
 				protected void onClick() {

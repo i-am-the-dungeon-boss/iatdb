@@ -56,6 +56,9 @@ public final class ProjectLinks {
 	public static final String GITHUB_RELEASES_API_URL = "https://api.github.com/repos/" + GITHUB_OWNER_REPO
 			+ "/releases";
 
+	/** Public tip / donation page players are sent to from the support screen. */
+	public static final String KOFI_URL = required("kofi.url");
+
 	public static final String DEVELOPER_EMAIL = required("developer.email");
 
 	/** {@code mailto:} form of {@link #DEVELOPER_EMAIL} for markdown / URI use. */
