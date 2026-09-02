@@ -63,6 +63,22 @@ public class TalentsPane extends ScrollPane {
 	}
 
 	public TalentsPane(TalentButton.Mode mode, ArrayList<LinkedHashMap<Talent, Integer>> talents, int tiersAvailable) {
+		this(mode, talents, tiersAvailable, true);
+	}
+
+	/**
+	 * Somebody else's talents, read rather than spent: an echo standing in the
+	 * village, or a hero being looked up.
+	 *
+	 * <p>Same panes, no locked-tier prompt. "Reach level 6 to unlock more
+	 * talents" is an instruction to the person holding the phone, and levelling
+	 * up does nothing to the tiers another player's echo never earned.
+	 */
+	public static TalentsPane preview(ArrayList<LinkedHashMap<Talent, Integer>> talents, int tiersAvailable) {
+		return new TalentsPane(TalentButton.Mode.INFO, talents, tiersAvailable, false);
+	}
+
+	private TalentsPane(TalentButton.Mode mode, ArrayList<LinkedHashMap<Talent, Integer>> talents, int tiersAvailable, boolean ownHero) {
 		super(new Component());
 
 		Ratmogrify.useRatroicEnergy = Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify;
@@ -88,14 +104,9 @@ public class TalentsPane extends ScrollPane {
 		blocker = new ColorBlock(0, 0, 0xFF222222);
 		content.add(blocker);
 
-		if (tiersAvailable == 1) {
-			blockText = PixelScene.renderTextBlock(Messages.get(this, "unlock_tier2"), 6);
-			content.add(blockText);
-		} else if (tiersAvailable == 2) {
-			blockText = PixelScene.renderTextBlock(Messages.get(this, "unlock_tier3"), 6);
-			content.add(blockText);
-		} else if (tiersAvailable == 3) {
-			blockText = PixelScene.renderTextBlock(Messages.get(this, "unlock_tier4"), 6);
+		String prompt = lockedTierPrompt(tiersAvailable, ownHero);
+		if (prompt != null) {
+			blockText = PixelScene.renderTextBlock(prompt, 6);
 			content.add(blockText);
 		} else {
 			blockText = null;
@@ -104,6 +115,29 @@ public class TalentsPane extends ScrollPane {
 		for (int i = panes.size() - 1; i >= 0; i--) {
 			content.bringToFront(panes.get(i));
 		}
+	}
+
+	/**
+	 * What to say under the last visible tier, or null when there is nothing
+	 * useful to say.
+	 *
+	 * <p>Split out so the rule is a question about who is reading, answerable
+	 * without a scene to draw the text in.
+	 */
+	static String lockedTierPrompt(int tiersAvailable, boolean ownHero) {
+		if (!ownHero) {
+			return null;
+		}
+		if (tiersAvailable == 1) {
+			return Messages.get(TalentsPane.class, "unlock_tier2");
+		}
+		if (tiersAvailable == 2) {
+			return Messages.get(TalentsPane.class, "unlock_tier3");
+		}
+		if (tiersAvailable == 3) {
+			return Messages.get(TalentsPane.class, "unlock_tier4");
+		}
+		return null;
 	}
 
 	private static int defaultTiersAvailable(TalentButton.Mode mode,

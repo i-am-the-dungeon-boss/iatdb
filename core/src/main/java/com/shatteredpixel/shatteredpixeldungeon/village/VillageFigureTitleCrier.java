@@ -24,6 +24,10 @@ import com.watabou.noosa.Gizmo;
  * size. A title sits directly above a {@link NameTag} and is read as part of the
  * same label, so it is drawn a point under the name — close enough to belong to
  * it, small enough that the name stays the thing you read first.
+ *
+ * <p>The colour comes from the title rather than from the combat statuses: every
+ * honour shouts in its own, so a square full of figures reads as a leaderboard
+ * from a distance instead of a wall of identical green.
  */
 public class VillageFigureTitleCrier extends Gizmo {
 
@@ -40,12 +44,12 @@ public class VillageFigureTitleCrier extends Gizmo {
 	}
 
 	private final CharSprite owner;
-	private final String title;
+	private final VillageTitle title;
 	/** Starts due, so a body that has just landed says what it is at once. */
 	private float waited = PERIOD;
 	private TitleText text;
 
-	public VillageFigureTitleCrier(CharSprite owner, String title) {
+	public VillageFigureTitleCrier(CharSprite owner, VillageTitle title) {
 		this.owner = owner;
 		this.title = title;
 	}
@@ -68,7 +72,7 @@ public class VillageFigureTitleCrier extends Gizmo {
 		// the sprite is standing now rather than where it was placed.
 		float x = owner.destinationCenter().x;
 		float y = owner.destinationCenter().y - owner.height() / 2f;
-		text.reset(x, y, title, CharSprite.POSITIVE, FloatingText.NO_ICON, true);
+		text.reset(x, y, title.text, title.color, FloatingText.NO_ICON, true);
 	}
 
 	/**

@@ -59,15 +59,27 @@ public final class WorldChannel implements WorldNet.Observer {
 		WorldNet.observe(this);
 		// The figures land with the greeting, several frames before this scene
 		// exists to stand them in, so the village fills from what is already known
-		// rather than waiting for whatever changes next.
+		// rather than waiting for whatever changes next. The roster for the same
+		// reason, and one more: a scene rebuilt mid-visit — a window resize — took
+		// the ghosts down with it, and the next snapshot is seconds away.
 		onWorldFigures(WorldNet.figures());
+		onWorldRoster(WorldNet.roster());
 	}
 
+	/**
+	 * Gives up the scene's own things, and only those.
+	 *
+	 * <p>This runs whenever the scene ends, which is not the same event as the
+	 * player leaving town — resizing the window ends one too. So the avatars and
+	 * the labels go, because they are furniture in a scene that no longer exists,
+	 * and nothing that belongs to the village itself is touched: the figures are
+	 * the level's, and the outstanding bundle requests are dropped when town is
+	 * actually left.
+	 */
 	public void detach() {
 		WorldNet.unobserve(this);
 		remotePlayers.clear();
-		VillageFigures.clear();
-		VillageEchoBundles.clear();
+		VillageFigures.dropLabels();
 	}
 
 	public RemotePlayers remotePlayers() {
@@ -127,7 +139,7 @@ public final class WorldChannel implements WorldNet.Observer {
 	@Override
 	public void onWorldFigures(List<VillageFigure> figures) {
 		if (!VillageSession.inVillage()) {
-			VillageFigures.clear();
+			VillageFigures.dropLabels();
 			VillageEchoBundles.clear();
 			return;
 		}

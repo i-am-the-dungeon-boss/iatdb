@@ -12,7 +12,7 @@ class VillageFigureTitleCrierTest {
 	@Test
 	@DisplayName("The title is shouted the moment the body lands, not one period later")
 	void criesImmediately() {
-		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, "Sewers Boss!");
+		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, new VillageTitle("Sewers Boss!", 0x88CC44, "desc"));
 
 		Assertions.assertThat(crier.advance(0f)).isTrue();
 	}
@@ -20,7 +20,7 @@ class VillageFigureTitleCrierTest {
 	@Test
 	@DisplayName("Nothing between shouts: the text has to clear before it comes back")
 	void waitsOutThePeriod() {
-		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, "Sewers Boss!");
+		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, new VillageTitle("Sewers Boss!", 0x88CC44, "desc"));
 		crier.advance(0f);
 
 		Assertions.assertThat(crier.advance(VillageFigureTitleCrier.PERIOD / 2f)).isFalse();
@@ -30,7 +30,7 @@ class VillageFigureTitleCrierTest {
 	@Test
 	@DisplayName("A frame longer than the period is one shout, not a burst of them")
 	void aLongFrameIsStillOneShout() {
-		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, "Sewers Boss!");
+		VillageFigureTitleCrier crier = new VillageFigureTitleCrier(null, new VillageTitle("Sewers Boss!", 0x88CC44, "desc"));
 		crier.advance(0f);
 
 		Assertions.assertThat(crier.advance(VillageFigureTitleCrier.PERIOD * 10f)).isTrue();

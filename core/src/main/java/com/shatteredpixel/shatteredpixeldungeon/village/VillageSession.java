@@ -151,6 +151,11 @@ public final class VillageSession {
 		QuickSlotButton.reset();
 		Item.clearCurrent();
 
+		// Nothing outstanding follows the player down the stairs. Here rather than
+		// on the scene ending, which also happens on a resize the player never
+		// asked to be treated as leaving.
+		VillageEchoBundles.clear();
+
 		VillageGateway.discardStoredVillage();
 	}
 

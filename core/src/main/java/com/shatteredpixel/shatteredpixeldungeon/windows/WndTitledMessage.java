@@ -46,14 +46,32 @@ public class WndTitledMessage extends Window {
 
 		super();
 
+		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
+		if (!useHighlighting()) text.setHightlighting(false);
+		text.text( message, WIDTH_MIN );
+
+		layoutBody( titlebar, text );
+
+	}
+
+	//for bodies that are more than one run of same-coloured text, and so have to
+	//be built as several blocks by the caller rather than from one string here
+	public WndTitledMessage( Component titlebar, RenderedTextBlock text ) {
+
+		super();
+
+		layoutBody( titlebar, text );
+
+	}
+
+	private void layoutBody( Component titlebar, RenderedTextBlock text ) {
+
 		int width = WIDTH_MIN;
 
 		titlebar.setRect( 0, 0, width, 0 );
 		add(titlebar);
 
-		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
-		if (!useHighlighting()) text.setHightlighting(false);
-		text.text( message, width );
+		text.maxWidth( width );
 		text.setPos( titlebar.left(), titlebar.bottom() + 2*GAP );
 		add( text );
 

@@ -17,6 +17,7 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A player's echo, standing in the village because it earned a spot on the
@@ -123,32 +124,59 @@ public class VillageEcho extends NPC implements EchoInspectable {
 		return figure.userName;
 	}
 
+	/**
+	 * Who they are and everything the town honours them for.
+	 *
+	 * <p>The flat reading, for anywhere a description is a single string. The
+	 * inspect window draws the same content from {@link #preamble()} and
+	 * {@link #titles()} instead, so each honour keeps its own colour.
+	 */
 	@Override
 	public String description() {
-		StringBuilder text = new StringBuilder(Messages.get(this, "desc"));
-		for (int i = 0; i < figure.badges.size(); i++) {
-			String line = badgeLine(figure.badges.get(i));
-			if (line != null) {
-				text.append("\n\n").append(line);
+		StringBuilder text = new StringBuilder(preamble());
+		List<VillageTitle> titles = titles();
+		for (int i = 0; i < titles.size(); i++) {
+			VillageTitle title = titles.get(i);
+			if (title.description != null) {
+				// Boast first, then what earned it — the same shape the window
+				// draws, minus the colour a flat string cannot carry.
+				text.append("\n\n").append(title.text).append(' ').append(title.description);
 			}
 		}
 		return text.toString();
 	}
 
+	/** What this body is, before anything it has done. Never an honour. */
+	public String preamble() {
+		return Messages.get(this, "desc");
+	}
+
 	/**
-	 * One badge's sentence, or null when this build does not know the kind — a
-	 * newer server may name badges this one has no wording for, and a missing
-	 * line reads better than the missing-key marker.
+	 * Every honour the player behind this body holds, this body's own first.
+	 *
+	 * <p>The player's rather than the echo's: somebody can stand in the square
+	 * more than once, and walking up to either body should say the same thing
+	 * about who is being looked at.
 	 */
-	private String badgeLine(VillageFigure.Badge badge) {
-		String key = "badge_" + badge.kind.replace('-', '_');
-		String line = badge.hasCount()
-				? Messages.get(this, key, badge.count)
-				: Messages.get(this, key);
-		if (line == null || line.startsWith("!!!")) {
-			return null;
+	public List<VillageTitle> titles() {
+		return VillageFigureTitle.heldBy(figure, standingFigures());
+	}
+
+	/**
+	 * The figures currently standing in town, for looking up the rest of this
+	 * player's honours.
+	 *
+	 * <p>Empty outside a live village — a figure restored from a save and read
+	 * before the world channel has sent anything still describes itself, it just
+	 * has nobody to compare against.
+	 */
+	private static List<VillageFigure> standingFigures() {
+		ArrayList<VillageEcho> bodies = VillageFigures.standing();
+		ArrayList<VillageFigure> figures = new ArrayList<>();
+		for (int i = 0; i < bodies.size(); i++) {
+			figures.add(bodies.get(i).figure());
 		}
-		return line;
+		return figures;
 	}
 
 	@Override

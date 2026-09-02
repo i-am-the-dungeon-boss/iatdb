@@ -75,6 +75,7 @@ import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
@@ -118,6 +119,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNet;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigures;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.LocalPlayerTag;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.NameTag;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.VillageUpdateGate;
@@ -349,6 +351,13 @@ public class GameScene extends PixelScene {
 
 		for (Mob mob : Dungeon.level.mobs) {
 			addMobSprite(mob);
+		}
+
+		// The bodies came with the level, but the tags over their heads went down
+		// with whatever scene was here before — a resize, or a run the player just
+		// came back from — so this scene raises them over the sprites it just made.
+		if (Dungeon.level instanceof VillageLevel) {
+			VillageFigures.raiseLabels((VillageLevel) Dungeon.level);
 		}
 
 		raisedTerrain = new RaisedTerrainTilemap();

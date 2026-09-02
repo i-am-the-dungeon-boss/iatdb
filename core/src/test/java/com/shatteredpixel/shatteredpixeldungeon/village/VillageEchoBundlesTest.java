@@ -98,13 +98,13 @@ class VillageEchoBundlesTest {
 		Dungeon.hero = new Hero();
 		engine = new RequestRecorder();
 		WorldNet.setEngineForTests(engine);
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 		VillageEchoBundles.clear();
 	}
 
 	@AfterEach
 	void leaveTown() {
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 		VillageEchoBundles.clear();
 		WorldNet.reset();
 		Dungeon.level = null;

@@ -31,14 +31,30 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.VillageEchoInfoBlock;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageEcho;
 import com.watabou.noosa.ui.Component;
 
 public class WndInfoMob extends WndTitledMessage {
 
 	public WndInfoMob(Mob mob) {
 
-		super(new MobTitle(mob), mob.info());
+		super(new MobTitle(mob), infoBlock(mob));
 
+	}
+
+	/**
+	 * A mob's info text. A village figure's is several blocks rather than one:
+	 * its honours each carry their own colour, the same colour the figure shouts
+	 * in the square.
+	 */
+	public static RenderedTextBlock infoBlock(Mob mob) {
+		if (mob instanceof VillageEcho) {
+			return new VillageEchoInfoBlock((VillageEcho) mob, 6, WIDTH_MIN);
+		}
+		RenderedTextBlock text = PixelScene.renderTextBlock(6);
+		text.text(mob.info(), WIDTH_MIN);
+		return text;
 	}
 
 	static class MobTitle extends Component {

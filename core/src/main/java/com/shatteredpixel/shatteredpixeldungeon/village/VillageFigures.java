@@ -1,6 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.NameTag;
@@ -26,8 +28,16 @@ import java.util.Map;
  */
 public final class VillageFigures {
 
-	private static final ArrayList<VillageEcho> standing = new ArrayList<>();
-	/** The labels and criers over each body, so they come down with it. */
+	/**
+	 * The labels and criers over each body, so they come down with it.
+	 *
+	 * <p>The only state this class keeps. Which bodies are standing is not
+	 * recorded here at all — it is read back off the level, so there is no
+	 * second copy of it to fall out of step. The labels are the exception
+	 * because they are scene furniture rather than level content: they die with
+	 * the scene that holds them and are {@link #raiseLabels raised again} over
+	 * the next one.
+	 */
 	private static final Map<VillageEcho, ArrayList<Gizmo>> labels = new HashMap<>();
 
 	private VillageFigures() {
@@ -119,9 +129,43 @@ public final class VillageFigures {
 		return a == null ? b == null : a.equals(b);
 	}
 
-	/** The bodies currently standing in town. */
+	/**
+	 * The bodies currently standing in town, read off the level itself.
+	 *
+	 * <p>Derived rather than tracked. The figures are mobs, so the level already
+	 * knows which of them are standing and keeps knowing across everything that
+	 * happens to the scene above it — a window resize rebuilding the scene, a
+	 * saved village being restored. A list kept here beside that one could only
+	 * ever agree with it or be wrong, and it was wrong exactly when the scene
+	 * went away without the player leaving town.
+	 *
+	 * <p>Empty outside a village: whoever was standing in town is not standing in
+	 * the dungeon the player walked into.
+	 */
 	public static ArrayList<VillageEcho> standing() {
-		return new ArrayList<>(standing);
+		return standing(Dungeon.level instanceof VillageLevel ? (VillageLevel) Dungeon.level : null);
+	}
+
+	/** {@link #standing()} for a named level, for the push that carries its own. */
+	private static ArrayList<VillageEcho> standing(VillageLevel level) {
+		ArrayList<VillageEcho> bodies = new ArrayList<>();
+		if (level == null || level.mobs == null) {
+			return bodies;
+		}
+		for (Mob mob : level.mobs) {
+			if (mob instanceof VillageEcho) {
+				// Insertion order by cell: the level stores mobs in a hash set, and
+				// a village that reshuffles itself every read would show a player's
+				// honours in a different order each time somebody looked.
+				VillageEcho body = (VillageEcho) mob;
+				int at = bodies.size();
+				while (at > 0 && bodies.get(at - 1).pos > body.pos) {
+					at--;
+				}
+				bodies.add(at, body);
+			}
+		}
+		return bodies;
 	}
 
 	/**
@@ -136,11 +180,10 @@ public final class VillageFigures {
 			return;
 		}
 
-		Diff diff = diff(standing, figures);
+		Diff diff = diff(standing(level), figures);
 
 		for (int i = 0; i < diff.removed.size(); i++) {
 			VillageEcho body = diff.removed.get(i);
-			standing.remove(body);
 			takeDownLabels(body);
 			level.mobs.remove(body);
 			body.destroy();
@@ -174,7 +217,6 @@ public final class VillageFigures {
 			body.pos = cell;
 			level.mobs.add(body);
 			Actor.add(body);
-			standing.add(body);
 			// The village is already on screen when a push lands — generation's own
 			// sprite pass ran long ago — so a body added now has to make its own.
 			GameScene.addSprite(body);
@@ -195,7 +237,7 @@ public final class VillageFigures {
 	 * linked a sprite to the body, so there is no head to follow.
 	 */
 	private static void raiseLabels(VillageEcho body) {
-		if (body.sprite == null) {
+		if (body.sprite == null || labels.containsKey(body)) {
 			return;
 		}
 		ArrayList<Gizmo> raised = new ArrayList<>();
@@ -205,7 +247,7 @@ public final class VillageFigures {
 			GameScene.addToMobLayer(nameTag);
 			raised.add(nameTag);
 		}
-		String title = VillageFigureTitle.of(body.figure());
+		VillageTitle title = VillageFigureTitle.of(body.figure());
 		if (title != null) {
 			VillageFigureTitleCrier crier = new VillageFigureTitleCrier(body.sprite, title);
 			GameScene.addToMobLayer(crier);
@@ -227,9 +269,34 @@ public final class VillageFigures {
 		}
 	}
 
-	/** Nothing follows the player out of town. */
-	public static void clear() {
-		standing.clear();
+	/**
+	 * Hangs the labels over every body a freshly built scene inherited.
+	 *
+	 * <p>The bodies outlive the scene — they are the level's — but the tags over
+	 * their heads do not, so a scene that was built over a village already full
+	 * of figures has to raise them itself. Without this, resizing the window
+	 * leaves the square standing there nameless: the labels went down with the
+	 * old scene and no push is coming, because nothing about the figures changed.
+	 *
+	 * <p>Render thread only, and after the scene has given the mobs their sprites
+	 * — there is no head to hang a name over until then.
+	 */
+	public static void raiseLabels(VillageLevel level) {
+		ArrayList<VillageEcho> bodies = standing(level);
+		for (int i = 0; i < bodies.size(); i++) {
+			raiseLabels(bodies.get(i));
+		}
+	}
+
+	/**
+	 * Forgets the labels, for a scene that is going away.
+	 *
+	 * <p>Only the labels: the bodies belong to the level, and the scene ending is
+	 * not the player leaving town — a window resize ends one too. Whether the
+	 * figures are still standing is the level's answer to give, and it gives the
+	 * right one either way.
+	 */
+	public static void dropLabels() {
 		labels.clear();
 	}
 }

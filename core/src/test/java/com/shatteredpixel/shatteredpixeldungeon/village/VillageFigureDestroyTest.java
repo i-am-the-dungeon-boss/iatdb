@@ -36,13 +36,13 @@ class VillageFigureDestroyTest {
 		Dungeon.depth = VillageLevel.VILLAGE_DEPTH;
 		Dungeon.branch = 0;
 		Dungeon.hero = new VillageHero(HeroClass.WARRIOR);
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 		VillageEchoBundles.clear();
 	}
 
 	@AfterEach
 	void leaveTown() {
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 		VillageEchoBundles.clear();
 		WorldNet.reset();
 		Dungeon.level = null;

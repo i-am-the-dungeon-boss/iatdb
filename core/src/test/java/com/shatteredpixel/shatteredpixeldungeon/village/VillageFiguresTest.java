@@ -26,12 +26,12 @@ class VillageFiguresTest {
 		Dungeon.branch = 0;
 		// Mob.destroy does hero bookkeeping, and town always has one standing in it.
 		Dungeon.hero = new Hero();
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 	}
 
 	@AfterEach
 	void leaveTown() {
-		VillageFigures.clear();
+		VillageFigures.dropLabels();
 		Dungeon.level = null;
 		Dungeon.hero = null;
 		Actor.clear();
@@ -249,6 +249,55 @@ class VillageFiguresTest {
 		VillageFigures.apply(level, list(depthPost(5, "5-1")));
 
 		Assertions.assertThat(VillageFigures.standing()).containsExactly(first);
+	}
+
+	@Test
+	@DisplayName("reads the standing bodies off the level, so a rebuilt scene inherits them")
+	void standingIsReadFromTheLevel() {
+		VillageLevel level = village();
+		VillageFigures.apply(level, list(depthPost(5, "5-1"), mention("m-1", "hero-slayer")));
+		ArrayList<VillageEcho> before = VillageFigures.standing();
+		// What a window resize does: the scene is torn down and built again over
+		// the same level. The bodies are level state, so they are still here.
+		VillageFigures.dropLabels();
+
+		Assertions.assertThat(VillageFigures.standing())
+				.containsExactlyInAnyOrderElementsOf(before);
+	}
+
+	@Test
+	@DisplayName("a push after a scene rebuild keeps the same bodies rather than orphaning them")
+	void pushAfterRebuildKeepsTheSameBodies() {
+		VillageLevel level = village();
+		VillageFigures.apply(level, list(depthPost(5, "5-1")));
+		VillageEcho first = VillageFigures.standing().get(0);
+		VillageFigures.dropLabels();
+
+		VillageFigures.apply(level, list(depthPost(5, "5-1")));
+
+		Assertions.assertThat(VillageFigures.standing()).containsExactly(first);
+	}
+
+	@Test
+	@DisplayName("bodies restored with a saved village stand without waiting for a push")
+	void bodiesRestoredWithTheLevelAreStanding() {
+		VillageLevel level = village();
+		VillageEcho saved = new VillageEcho(depthPost(5, "5-1"));
+		saved.pos = 1;
+		level.mobs.add(saved);
+
+		Assertions.assertThat(VillageFigures.standing()).containsExactly(saved);
+	}
+
+	@Test
+	@DisplayName("nothing is standing outside a village, whatever town last held")
+	void nothingStandsOutsideAVillage() {
+		VillageLevel level = village();
+		VillageFigures.apply(level, list(depthPost(5, "5-1")));
+
+		Dungeon.level = null;
+
+		Assertions.assertThat(VillageFigures.standing()).isEmpty();
 	}
 
 	@Test

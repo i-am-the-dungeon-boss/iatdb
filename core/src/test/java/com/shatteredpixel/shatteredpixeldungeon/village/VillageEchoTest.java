@@ -73,6 +73,20 @@ class VillageEchoTest {
 	}
 
 	@Test
+	@DisplayName("The description explains the title the figure is shouting, not only its badges")
+	void descriptionExplainsTheDepthTitle() {
+		VillageFigure figure = warriorFigure();
+		figure.badges.clear();
+		VillageEcho echo = new VillageEcho(figure);
+
+		String description = echo.description();
+
+		Assertions.assertThat(description).doesNotContain("!!!");
+		Assertions.assertThat(description)
+				.contains(VillageFigureTitle.of(figure).description);
+	}
+
+	@Test
 	@DisplayName("An unknown badge kind is skipped rather than printing a missing-key marker")
 	void unknownBadgeKindIsSkipped() {
 		VillageFigure figure = warriorFigure();

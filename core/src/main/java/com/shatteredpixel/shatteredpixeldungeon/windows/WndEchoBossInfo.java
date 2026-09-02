@@ -38,7 +38,6 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.EchoKitSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
-import com.shatteredpixel.shatteredpixeldungeon.ui.TalentButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TalentsPane;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.watabou.noosa.Group;
@@ -166,8 +165,8 @@ public class WndEchoBossInfo extends WndTabbed {
 		WndInfoMob.MobTitle title = new WndInfoMob.MobTitle(body);
 		title.setRect(0, 0, width, 0);
 
-		RenderedTextBlock text = PixelScene.renderTextBlock(6);
-		text.text(body.info(), width);
+		RenderedTextBlock text = WndInfoMob.infoBlock(body);
+		text.maxWidth(width);
 		text.setPos(title.left(), title.bottom() + 2 * GAP);
 
 		while (PixelScene.landscape()
@@ -261,10 +260,7 @@ public class WndEchoBossInfo extends WndTabbed {
 		private final TalentsPane pane;
 
 		TalentsTab() {
-			pane = new TalentsPane(
-					TalentButton.Mode.INFO,
-					echoHero.talents,
-					talentTiersToShow(echoHero));
+			pane = TalentsPane.preview(echoHero.talents, talentTiersToShow(echoHero));
 			add(pane);
 		}
 
