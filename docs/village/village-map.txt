@@ -1,0 +1,53 @@
+Village map - generated from the built level, not hand-typed.
+Regenerate with:  ./gradlew :core:renderVillage
+To propose a change, edit this file and hand it back.
+
+  #  wall             T  forest (high grass)  ,  grass
+  .  sand             ~  water                =  paving / carpet
+  +  door             >  dungeon stair        X  barricade
+  o  well             I  statue               e  forge embers
+  D  wall decoration  V  villager
+
+the altar - all one paving underneath, the letter is what is drawn on it
+  *  walkway          H  raised dais          h  step tread
+  @  throne seat, solid - nobody stands on it
+  s  sewers quarter   p  prison   c  caves    y  city
+  S  sewers basin     P  prison   C  caves    Y  city   - each its own water
+
+  1..5  where the echo bosses stand, shallowest first
+  m     where an honorable mention stands
+
+     012345678901234567890123456789012
+  0  #################################
+  1  #TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT#
+  2  #TTTTTTTTTTTT#######TTTTTTTTTTTT#
+  3  #TTTTTTTTTTTT#=====#TTTTTTTTTTTT#
+  4  #TTT,,,,,,,,I#==>==#I,,,,,,,,TTT#
+  5  #TTT,,,,,,,,,#=====#,,,,,,,,,TTT#
+  6  #TTTT##D####,###=###,#######,TTT#
+  7  #TTT,#=====#,,,,=,,,,#=====#,TTT#
+  8  #TTT,#=====#,,,,=,,,,#==e==#TTTT#
+  9  #TTT,#=====#,,T,=T,,,#=====#,TTT#
+ 10  #TTT,###+###,,ss*pp,,###+###,TTT#
+ 11  #TTT,,,mV,,,ssss*pppp,,,V,,,,TTT#
+ 12  #TTT,m,,,m,SSsss*pppPP,,,T,,,TTT#
+ 13  #TTT,T,o,,,SS1sshpp2PP,,,,,,,TTT#
+ 14  #TTT,,,,T,ssssHHHHHpppp,,T,,,TTT#
+ 15  #TTT,m,,,mssssHH@HHpppp,,,,,,####
+ 16  #TT=======***hHHHHHh***======X==#
+ 17  #TTT,,,,,,yyyyHH5HHcccc,,,,,,####
+ 18  #TTT######yyyyHHHHHcccc##D###TTT#
+ 19  #TTT#====#,YY4yyhcc3CC,#====#TTT#
+ 20  #TTT#====#,YYyyy*cccCCT#====#TTT#
+ 21  #TTT#====#,,yyyy*cccc,,#====#TTT#
+ 22  #TTT##+###,,,,yy*cc,,,,###+##TTT#
+ 23  #TTT,,V,,,,,####+##,,,TT,,V,,TTT#
+ 24  #TTT,,,,,,,,#=====#,,,,T,,,,,TTT#
+ 25  #TTT,,,,,T,T#=====#,,,,,,,,,,TTT#
+ 26  #TTT,,,,,,,,###+###,,,,,,,,,,TTT#
+ 27  #TTT.................==......TTT#
+ 28  #TTT.................==......TTT#
+ 29  #~~~~~~~~~~~~~~~~~~~~==~~~~~~~~~#
+ 30  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+ 31  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+ 32  #################################

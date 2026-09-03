@@ -37,7 +37,17 @@ import java.awt.RenderingHints;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarOverlay;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarOverlay;
+import com.shatteredpixel.shatteredpixeldungeon.village.EchoAltar;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigurePlacement;
+
 import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.io.File;
 import java.io.IOException;
 
@@ -113,6 +123,11 @@ public final class VillageMapRenderer {
 			out.getParentFile().mkdirs();
 		}
 		ImageIO.write(image, "png", out);
+
+		File chart = new File(out.getParentFile(), "village-map.txt");
+		writeChart(level, chart);
+		System.out.println("village charted to " + chart.getCanonicalPath());
+
 		System.out.println("village rendered to " + out.getCanonicalPath()
 				+ " (" + image.getWidth() + "x" + image.getHeight()
 				+ ", seed " + options.seed + ")");
@@ -121,6 +136,140 @@ public final class VillageMapRenderer {
 		// so the process has to be told to end once the image is written
 		System.exit(0);
 	}
+
+	/**
+	 * A one-character-per-cell chart of the village, for marking up by hand.
+	 *
+	 * <p>The picture is the better likeness but it cannot be edited, and a chart
+	 * typed out by hand drifts from the code the moment either moves. This is
+	 * read off the built level, so it is always what the game actually makes.
+	 *
+	 * <p>Where a cell's terrain does not tell the whole story the chart shows the
+	 * thing that does: every cell of the altar is the same paving, so it is the
+	 * quarter, the basin or the dais that gets the character, and the five spots
+	 * the echo bosses stand on are numbered over the top of all of it.
+	 */
+	private static void writeChart(VillageLevel level, File out) throws IOException {
+		int w = level.width();
+		StringBuilder chart = new StringBuilder();
+		chart.append(CHART_LEGEND);
+
+		chart.append("     ");
+		for (int x = 0; x < w; x++) {
+			chart.append(x % 10);
+		}
+		chart.append('\n');
+
+		int[] posts = VillageFigurePlacement.depthPosts(level);
+		int[] mentions = VillageFigurePlacement.mentionPosts(level);
+
+		for (int y = 0; y < level.height(); y++) {
+			chart.append(String.format("%3d  ", y));
+			for (int x = 0; x < w; x++) {
+				chart.append(chartChar(level, posts, mentions, x, y));
+			}
+			chart.append('\n');
+		}
+		try (Writer writer = new OutputStreamWriter(
+				new FileOutputStream(out), StandardCharsets.UTF_8)) {
+			writer.write(chart.toString());
+		}
+	}
+
+	private static char chartChar(VillageLevel level, int[] posts, int[] mentions,
+			int x, int y) {
+		int cell = level.cell(x, y);
+
+		for (int i = 0; i < posts.length; i++) {
+			if (posts[i] == cell) {
+				return (char) ('1' + i);
+			}
+		}
+		for (int i = 0; i < mentions.length; i++) {
+			if (mentions[i] == cell) {
+				return 'm';
+			}
+		}
+		for (Mob mob : level.mobs) {
+			if (mob.pos == cell) {
+				return 'V';
+			}
+		}
+
+		if (EchoAltar.isThroneSeat(x, y)) {
+			return '@';
+		}
+		if (EchoAltar.inBasin(x, y)) {
+			return basinChar(EchoAltar.quadrantOf(x, y));
+		}
+		if (EchoAltar.inDais(x, y)) {
+			return 'H';
+		}
+		if (EchoAltar.isTread(x, y)) {
+			return 'h';
+		}
+		int quarter = EchoAltar.quadrantOf(x, y);
+		if (quarter != EchoAltar.NONE) {
+			return quarterChar(quarter);
+		}
+		if (EchoAltar.onCross(x, y)) {
+			return '*';
+		}
+
+		switch (level.map[cell]) {
+			case Terrain.WALL:           return '#';
+			case Terrain.WALL_DECO:      return 'D';
+			case Terrain.HIGH_GRASS:     return 'T';
+			case Terrain.FURROWED_GRASS: return 't';
+			case Terrain.GRASS:          return ',';
+			case Terrain.EMPTY:          return '.';
+			case Terrain.EMPTY_SP:       return '=';
+			case Terrain.WATER:          return '~';
+			case Terrain.DOOR:           return '+';
+			case Terrain.EXIT:           return '>';
+			case Terrain.WELL:           return 'o';
+			case Terrain.STATUE:         return 'I';
+			case Terrain.EMBERS:         return 'e';
+			case Terrain.BARRICADE:      return 'X';
+			case Terrain.CUSTOM_DECO:    return '@';
+			default:                     return '?';
+		}
+	}
+
+	private static char quarterChar(int region) {
+		switch (region) {
+			case EchoAltar.SEWERS: return 's';
+			case EchoAltar.PRISON: return 'p';
+			case EchoAltar.CAVES:  return 'c';
+			case EchoAltar.CITY:   return 'y';
+			default: throw new IllegalArgumentException("no chart character for " + region);
+		}
+	}
+
+	private static char basinChar(int region) {
+		return Character.toUpperCase(quarterChar(region));
+	}
+
+	private static final String CHART_LEGEND = ""
+			+ "Village map - generated from the built level, not hand-typed.\n"
+			+ "Regenerate with:  ./gradlew :core:renderVillage\n"
+			+ "To propose a change, edit this file and hand it back.\n"
+			+ "\n"
+			+ "  #  wall             T  forest (high grass)  ,  grass\n"
+			+ "  .  sand             ~  water                =  paving / carpet\n"
+			+ "  +  door             >  dungeon stair        X  barricade\n"
+			+ "  o  well             I  statue               e  forge embers\n"
+			+ "  D  wall decoration  V  villager\n"
+			+ "\n"
+			+ "the altar - all one paving underneath, the letter is what is drawn on it\n"
+			+ "  *  walkway          H  raised dais          h  step tread\n"
+			+ "  @  throne seat, solid - nobody stands on it\n"
+			+ "  s  sewers quarter   p  prison   c  caves    y  city\n"
+			+ "  S  sewers basin     P  prison   C  caves    Y  city   - each its own water\n"
+			+ "\n"
+			+ "  1..5  where the echo bosses stand, shallowest first\n"
+			+ "  m     where an honorable mention stands\n"
+			+ "\n";
 
 	/**
 	 * A directory handed over by the {@code renderVillage} Gradle task. The tool
