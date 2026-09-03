@@ -235,6 +235,18 @@ class EchoAltarTest {
 	}
 
 	@Test
+	@DisplayName("The deepest echo sits in the throne, at the middle of the altar")
+	void theDeepestEchoSitsInTheThrone() {
+		int deepest = EchoAltar.POST_X.length - 1;
+
+		Assertions.assertThat(EchoAltar.POST_X[deepest]).isEqualTo(EchoAltar.THRONE_SEAT_X);
+		Assertions.assertThat(EchoAltar.POST_Y[deepest]).isEqualTo(EchoAltar.THRONE_SEAT_Y);
+		Assertions.assertThat(EchoAltar.isThroneSeat(EchoAltar.CENTRE_X, EchoAltar.CENTRE_Y))
+				.as("the chair stands on the centre of the disc")
+				.isTrue();
+	}
+
+	@Test
 	@DisplayName("Each basin holds its own region's water, and no two hold the same")
 	void eachBasinHoldsItsOwnRegionsWater() {
 		Assertions.assertThat(AltarPool.waterFor(EchoAltar.SEWERS))

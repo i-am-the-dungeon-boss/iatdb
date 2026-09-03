@@ -263,7 +263,7 @@ public final class VillageMapRenderer {
 			+ "\n"
 			+ "the altar - all one paving underneath, the letter is what is drawn on it\n"
 			+ "  *  walkway          H  raised dais          h  step tread\n"
-			+ "  @  throne seat, solid - nobody stands on it\n"
+			+ "  @  throne seat - the deepest echo sits here, so it usually reads 5\n"
 			+ "  s  sewers quarter   p  prison   c  caves    y  city\n"
 			+ "  S  sewers basin     P  prison   C  caves    Y  city   - each its own water\n"
 			+ "\n"

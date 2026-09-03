@@ -45,9 +45,12 @@ public final class EchoAltar {
 	public static final int DAIS_TOP = CENTRE_Y - DAIS_REACH - 1;
 	public static final int DAIS_SPAN = (DAIS_REACH + 1) * 2 + 1;
 
-	/** The throne's seat. Solid, so nobody ever stands on it. */
-	public static final int THRONE_SEAT_X = 16;
-	public static final int THRONE_SEAT_Y = 15;
+	/**
+	 * The throne's seat, dead centre of the disc. Walkable: the deepest echo is
+	 * meant to be found sitting in the chair rather than standing in front of it.
+	 */
+	public static final int THRONE_SEAT_X = CENTRE_X;
+	public static final int THRONE_SEAT_Y = CENTRE_Y;
 
 	/** Not part of the altar. */
 	public static final int NONE = 0;
@@ -64,7 +67,7 @@ public final class EchoAltar {
 	 * order and not something to "correct" into geometric order.
 	 */
 	public static final int[] POST_X = { 13, 19, 19, 13, THRONE_SEAT_X };
-	public static final int[] POST_Y = { 13, 13, 19, 19, 17 };
+	public static final int[] POST_Y = { 13, 13, 19, 19, THRONE_SEAT_Y };
 
 	private EchoAltar() {
 	}

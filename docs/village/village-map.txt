@@ -10,7 +10,7 @@ To propose a change, edit this file and hand it back.
 
 the altar - all one paving underneath, the letter is what is drawn on it
   *  walkway          H  raised dais          h  step tread
-  @  throne seat, solid - nobody stands on it
+  @  throne seat - the deepest echo sits here, so it usually reads 5
   s  sewers quarter   p  prison   c  caves    y  city
   S  sewers basin     P  prison   C  caves    Y  city   - each its own water
 
@@ -33,9 +33,9 @@ the altar - all one paving underneath, the letter is what is drawn on it
  12  #TTT,m,,,m,SSsss*pppPP,,,T,,,TTT#
  13  #TTT,T,o,,,SS1sshpp2PP,,,,,,,TTT#
  14  #TTT,,,,T,ssssHHHHHpppp,,T,,,TTT#
- 15  #TTT,m,,,mssssHH@HHpppp,,,,,,####
- 16  #TT=======***hHHHHHh***======X==#
- 17  #TTT,,,,,,yyyyHH5HHcccc,,,,,,####
+ 15  #TTT,m,,,mssssHHHHHpppp,,,,,,####
+ 16  #TT=======***hHH5HHh***======X==#
+ 17  #TTT,,,,,,yyyyHHHHHcccc,,,,,,####
  18  #TTT######yyyyHHHHHcccc##D###TTT#
  19  #TTT#====#,YY4yyhcc3CC,#====#TTT#
  20  #TTT#====#,YYyyy*cccCCT#====#TTT#

@@ -31,8 +31,8 @@ import com.watabou.noosa.Tilemap;
  * and it assumes a data index that equals the level cell index. Neither holds
  * here, so the nine tiles are written out instead.
  *
- * <p>The seat itself is {@code Terrain.CUSTOM_DECO} and therefore solid, so no
- * echo and no villager ever ends up standing in the chair.
+ * <p>The seat is left walkable on purpose: the deepest echo's post is the chair
+ * itself, so the reigning Halls champion is found sitting in it.
  */
 public class AltarThrone extends CustomTilemap implements AltarOverlay {
 

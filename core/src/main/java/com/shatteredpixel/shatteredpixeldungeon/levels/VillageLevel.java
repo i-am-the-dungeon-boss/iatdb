@@ -232,9 +232,6 @@ public class VillageLevel extends Level {
 				}
 			}
 		}
-		// the throne itself is solid, so the seat is never stood on
-		map[cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y)] = Terrain.CUSTOM_DECO;
-
 		// a basin in each quarter, holding that region's own water. Real water
 		// terrain, so it behaves like water; the region's colour comes from the
 		// AltarPool laid over it, since a level only has one water texture

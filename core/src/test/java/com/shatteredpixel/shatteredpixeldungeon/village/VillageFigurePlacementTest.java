@@ -218,14 +218,17 @@ class VillageFigurePlacementTest {
 	}
 
 	@Test
-	@DisplayName("Nobody stands on the throne itself")
-	void nobodyStandsOnTheThrone() {
+	@DisplayName("The deepest echo stands in the throne")
+	void theDeepestEchoStandsInTheThrone() {
 		VillageLevel level = village();
 
 		int seat = level.cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y);
-		Assertions.assertThat(level.solid[seat]).as("the throne is solid").isTrue();
-		Assertions.assertThat(level.passable[seat]).as("the throne is not walkable").isFalse();
-		Assertions.assertThat(allAnchors(level)).doesNotContain(seat);
+		Assertions.assertThat(level.passable[seat]).as("the seat is stood on").isTrue();
+
+		int[] posts = VillageFigurePlacement.depthPosts(level);
+		Assertions.assertThat(posts[posts.length - 1])
+				.as("the deepest echo takes the chair")
+				.isEqualTo(seat);
 	}
 
 	@Test
