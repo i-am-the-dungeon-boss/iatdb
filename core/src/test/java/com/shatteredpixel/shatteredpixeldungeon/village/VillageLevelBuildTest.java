@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
@@ -167,6 +168,11 @@ class VillageLevelBuildTest {
             if (!onEdgeRing) {
                 continue;
             }
+            // the one deliberate exception: the east road runs out through the
+            // edge on purpose, so the world reads as carrying on past the trees
+            if (y == VillageLevel.TRACK_Y && x > VillageLevel.EAST_BARRICADE_X) {
+                continue;
+            }
             Assertions.assertThat(level.map[cell])
                     .as("cell (%d,%d) on the map edge", x, y)
                     .isIn(Terrain.HIGH_GRASS, Terrain.WATER, Terrain.WALL);
@@ -182,25 +188,94 @@ class VillageLevelBuildTest {
      * player is invited to walk toward.
      */
     @Test
-    @DisplayName("The tracks east and west run on into the trees")
-    void theTracksRunIntoTheTrees() {
+    @DisplayName("The west track runs on into the trees and stops there")
+    void theWestTrackRunsIntoTheTrees() {
         VillageLevel level = village();
 
-        int row = 16;
+        int row = VillageLevel.TRACK_Y;
         Assertions.assertThat(level.map[level.cell(3, row)])
                 .as("the west track should carry on inside the tree line")
                 .isEqualTo(Terrain.EMPTY_SP);
-        Assertions.assertThat(level.map[level.cell(VillageLevel.SIZE - 4, row)])
-                .as("the east track should carry on inside the tree line")
-                .isEqualTo(Terrain.EMPTY_SP);
-
-        // and stop there — the trees close over them before the border
         Assertions.assertThat(level.map[level.cell(2, row)])
                 .as("the west track should not reach the map border")
                 .isEqualTo(Terrain.HIGH_GRASS);
-        Assertions.assertThat(level.map[level.cell(VillageLevel.SIZE - 3, row)])
-                .as("the east track should not reach the map border")
-                .isEqualTo(Terrain.HIGH_GRASS);
+    }
+
+    /**
+     * The east road is the one piece of the village that exists to be looked at
+     * rather than walked. It has to carry on past the last cell the player can
+     * stand on, because a road that ends exactly where the player is stopped
+     * reads as the map ending; a road that keeps going past a barricade reads as
+     * somewhere else being out there. So both halves are asserted together — the
+     * paving continues, and none of the continuation is reachable.
+     */
+    @Test
+    @DisplayName("The east road carries on past a barricade the player cannot pass")
+    void theEastRoadCarriesOnButIsClosed() {
+        VillageLevel level = village();
+
+        int row = VillageLevel.TRACK_Y;
+        int barricade = level.cell(VillageLevel.EAST_BARRICADE_X, row);
+        Assertions.assertThat(level.map[barricade])
+                .as("the road east should be barricaded")
+                .isEqualTo(Terrain.BARRICADE);
+        Assertions.assertThat(level.solid[barricade])
+                .as("the barricade should be solid")
+                .isTrue();
+
+        for (int x = VillageLevel.EAST_BARRICADE_X + 1; x < VillageLevel.SIZE - 1; x++) {
+            int cell = level.cell(x, row);
+            Assertions.assertThat(level.map[cell])
+                    .as("the road should carry on paved at (%d,%d)", x, row)
+                    .isEqualTo(Terrain.EMPTY_SP);
+            Assertions.assertThat(reachable(level, level.arrivalCell(), cell))
+                    .as("the road past the barricade should not be walkable, at (%d,%d)", x, row)
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("The altar is laid over with its four quarters, its dais and its throne")
+    void theAltarIsDressedWithItsTilemaps() {
+        VillageLevel level = village();
+
+        int quarters = 0;
+        boolean dais = false;
+        boolean throne = false;
+        for (int i = 0; i < level.customTiles.size(); i++) {
+            Object tiles = level.customTiles.get(i);
+            if (tiles instanceof AltarQuadrant) {
+                quarters++;
+            } else if (tiles instanceof AltarDais) {
+                dais = true;
+            } else if (tiles instanceof AltarThrone) {
+                throne = true;
+            }
+        }
+
+        Assertions.assertThat(quarters).as("one quarter per region").isEqualTo(4);
+        Assertions.assertThat(dais).as("the raised centre").isTrue();
+        Assertions.assertThat(throne).as("the throne").isTrue();
+
+        // the shadow has to be on the wall layer or figures walk over it
+        boolean shadow = false;
+        for (int i = 0; i < level.customWalls.size(); i++) {
+            if (level.customWalls.get(i) instanceof AltarThroneShadow) {
+                shadow = true;
+            }
+        }
+        Assertions.assertThat(shadow).as("the throne's shadow, on the wall layer").isTrue();
+    }
+
+    @Test
+    @DisplayName("The village's water is not the city's lava-toned sheet")
+    void theSeaIsBlue() {
+        VillageLevel level = village();
+
+        // the rest of the village is floored from the city sheet, but its water
+        // is the magma one - fine for a few decorative cells, wrong for a sea
+        Assertions.assertThat(level.waterTex())
+                .isNotEqualTo(Assets.Environment.WATER_CITY);
     }
 
     @Test
@@ -233,9 +308,15 @@ class VillageLevelBuildTest {
             if (!level.passable[cell]) {
                 continue;
             }
+            int x = cell % level.width();
+            int y = cell / level.width();
+            // the road past the east barricade is the sole exception, and is
+            // unwalkable on purpose - theEastRoadCarriesOnButIsClosed owns it
+            if (y == VillageLevel.TRACK_Y && x > VillageLevel.EAST_BARRICADE_X) {
+                continue;
+            }
             Assertions.assertThat(reachable(level, level.arrivalCell(), cell))
-                    .as("cell (%d,%d) is walled off from the rest of town",
-                            cell % level.width(), cell / level.width())
+                    .as("cell (%d,%d) is walled off from the rest of town", x, y)
                     .isTrue();
         }
     }

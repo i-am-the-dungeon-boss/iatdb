@@ -26,8 +26,24 @@ public final class EchoAltar {
 	 */
 	private static final int RADIUS_SQ = 42;
 
+	/**
+	 * How far the disc reaches along an axis, and the bounding square that
+	 * follows from it. The quadrant tilemaps are rectangles and have to cover the
+	 * disc exactly, so the bound is derived here rather than written out again
+	 * beside a radius it has to agree with.
+	 */
+	public static final int DISC_REACH = 6;
+	public static final int DISC_LEFT = CENTRE_X - DISC_REACH;
+	public static final int DISC_TOP = CENTRE_Y - DISC_REACH;
+	public static final int DISC_SPAN = DISC_REACH * 2 + 1;
+
 	/** The dais is the square of cells within this reach of the centre. */
-	private static final int DAIS_REACH = 2;
+	public static final int DAIS_REACH = 2;
+
+	/** Bounding square of the dais together with the four step treads. */
+	public static final int DAIS_LEFT = CENTRE_X - DAIS_REACH - 1;
+	public static final int DAIS_TOP = CENTRE_Y - DAIS_REACH - 1;
+	public static final int DAIS_SPAN = (DAIS_REACH + 1) * 2 + 1;
 
 	/** The throne's seat. Solid, so nobody ever stands on it. */
 	public static final int THRONE_SEAT_X = 16;
@@ -86,6 +102,22 @@ public final class EchoAltar {
 			return dx < 0 ? SEWERS : PRISON;
 		}
 		return dx < 0 ? CITY : CAVES;
+	}
+
+	/**
+	 * The single step up onto the dais at the head of each approach. Four cells,
+	 * one where each arm of the walkway meets the raised centre.
+	 */
+	public static boolean isTread(int x, int y) {
+		int dx = x - CENTRE_X;
+		int dy = y - CENTRE_Y;
+		if (dx == 0) {
+			return Math.abs(dy) == DAIS_REACH + 1;
+		}
+		if (dy == 0) {
+			return Math.abs(dx) == DAIS_REACH + 1;
+		}
+		return false;
 	}
 
 	public static boolean isThroneSeat(int x, int y) {

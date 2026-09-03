@@ -93,7 +93,7 @@ Honorable mentions stay in their existing cluster around the well.
 | Four quarter wedges | One `CustomTilemap` each, `texture` set to that region's sheet — `TILES_SEWERS`, `TILES_PRISON`, `TILES_CAVES`, `TILES_CITY`. |
 | Halls centre | A fifth `CustomTilemap` on `TILES_HALLS`. |
 | Throne | A sixth `CustomTilemap` on `Assets.Environment.CITY_BOSS`, painted over `Terrain.CUSTOM_DECO` — the same recipe as [`CityBossLevel.CustomGroundVisuals`](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/CityBossLevel.java). Throne tiles are `13*8+1..3`, `14*8+1..3`, `15*8+1..3`; shadow is `13*8+5` on the wall layer. |
-| Raised dais | Ring drawn via `customWalls` so it reads as elevated, with step treads on all four approaches. |
+| Raised dais | The halls sheet's worked floor over a 5×5 centre, with a step tread where each arm of the walkway meets it. *(The sketch's elevation ring on `customWalls` is not built — it needs art the halls sheet does not contain.)* |
 | Walkway | Carpet cross through the disc — north to the dungeon gate, south to the tavern and dock, east/west to the wood-paths. |
 | Occupants | The existing `VillageEcho` pattern: `PASSIVE` + `IMMOVABLE` NPC, `level.mobs.add(body)` then `GameScene.addSprite(body)`, as in [`VillageFigures.java`](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/village/VillageFigures.java). |
 
@@ -102,10 +102,23 @@ purely visual overlay on top of it.
 
 ## Implementation notes
 
-- `VillageLevel.tilesTex()` returns `TILES_CITY` today and the village uses **no**
+- `VillageLevel.tilesTex()` returns `TILES_CITY` and the village previously used **no**
   `CustomTilemap` at all. Six of them is a new pattern for this level — mechanically fine,
   since `CustomTilemap.texture` is per-instance, but no existing level in the repo mixes
   region tilesets like this.
+- **Nothing on the altar may call `create()` outside the game.** It resolves the texture
+  through the texture cache and so needs a GL context the headless test harness does not
+  have. Every altar piece therefore implements
+  [`AltarOverlay`](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/village/AltarOverlay.java)
+  — a pure `tileData()` plus the sheet it is read from — which is what both the tests and
+  [`VillageMapRenderer`](../../core/src/test/java/com/shatteredpixel/shatteredpixeldungeon/tools/VillageMapRenderer.java)
+  use. `create()` only feeds that array to the tilemap.
+- **Each quarter is floored by colour, not by `FLOOR` everywhere.** The plain floors of the
+  sewers and the prison are within a few values of the same grey, and the caves' is dark
+  enough (43,40,38) to read as a hole in the plaza; `FLOOR_ALT_1` and `FLOOR_ALT_2` are
+  pixel-identical to `FLOOR` on all five sheets, so alt-tile variance buys nothing. Sewers
+  and caves take their sheet's `FLOOR_SP`, prison and city their `FLOOR` — the city cannot
+  take `FLOOR_SP`, because on that sheet it is the red carpet the walkway is made of.
 - All five `tiles_*.png` share **one 16-column layout, and tile index N is the same terrain on
   every sheet** — `DungeonTerrainTilemap.getTileVisual()` computes indices from
   `DungeonTileSheet` constants with no region branching at all. So `DungeonTileSheet.FLOOR`

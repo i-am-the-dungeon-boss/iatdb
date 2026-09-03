@@ -35,6 +35,10 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarDais;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarQuadrant;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarThrone;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarThroneShadow;
 import com.shatteredpixel.shatteredpixeldungeon.village.EchoAltar;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndDungeonMode;
 import com.watabou.noosa.Game;
@@ -79,6 +83,17 @@ public class VillageLevel extends Level {
 	private static final int WELL_X = 7;
 	private static final int WELL_Y = 13;
 
+	/** The row the east and west tracks run along, level with the altar. */
+	public static final int TRACK_Y = 16;
+
+	/**
+	 * Where the east road is closed off. The paving carries on past this cell to
+	 * the map's edge but nobody ever walks it: a road that stops exactly where
+	 * the player is stopped reads as the world ending, while one that keeps going
+	 * past a barricade reads as there being somewhere else to go.
+	 */
+	public static final int EAST_BARRICADE_X = SIZE - 4;
+
 	{
 		color1 = 0x48763c;
 		color2 = 0x59994a;
@@ -99,7 +114,10 @@ public class VillageLevel extends Level {
 
 	@Override
 	public String waterTex() {
-		return Assets.Environment.WATER_CITY;
+		// deliberately not the city's water, which the rest of the village's
+		// tileset comes from: that sheet is the lava-toned one, and a three-row
+		// strip of it along the south edge reads as magma rather than as the sea
+		return Assets.Environment.WATER_PRISON;
 	}
 
 	@Override
@@ -212,6 +230,16 @@ public class VillageLevel extends Level {
 		}
 		// the throne itself is solid, so the seat is never stood on
 		map[cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y)] = Terrain.CUSTOM_DECO;
+
+		// order is draw order: the quarters floor the disc, the dais covers the
+		// middle of them, and the throne sits on top of the dais
+		customTiles.add(new AltarQuadrant(EchoAltar.SEWERS));
+		customTiles.add(new AltarQuadrant(EchoAltar.PRISON));
+		customTiles.add(new AltarQuadrant(EchoAltar.CAVES));
+		customTiles.add(new AltarQuadrant(EchoAltar.CITY));
+		customTiles.add(new AltarDais());
+		customTiles.add(new AltarThrone());
+		customWalls.add(new AltarThroneShadow());
 	}
 
 	/**
@@ -224,12 +252,22 @@ public class VillageLevel extends Level {
 		// gate down to the altar, and altar down to the tavern door
 		Painter.fill(this, px, 7, 1, 3, Terrain.EMPTY_SP);
 		Painter.fill(this, px, 20, 1, 3, Terrain.EMPTY_SP);
-		// tracks east and west, running out of town and into the trees. They
-		// carry one column into the belt and stop: far enough that the woods
-		// close over them, short of the border so the map never ends at the end
-		// of a path the player is being invited to walk toward
-		Painter.fill(this, 3, 16, 7, 1, Terrain.EMPTY_SP);
-		Painter.fill(this, 23, 16, 7, 1, Terrain.EMPTY_SP);
+		// the west track carries one column into the belt and stops there, the
+		// woods closing over it
+		Painter.fill(this, 3, TRACK_Y, 7, 1, Terrain.EMPTY_SP);
+
+		// the east road instead runs the whole way out through the trees and off
+		// the map, and is barricaded where it leaves town — so the paving the
+		// player can see carries on past the last cell they can reach.
+		//
+		// It runs through a stone cut rather than open woods, because the belt is
+		// walkable high grass: a barricade alone would only be walked around.
+		Painter.fill(this, 23, TRACK_Y, SIZE - 24, 1, Terrain.EMPTY_SP);
+		Painter.fill(this, EAST_BARRICADE_X, TRACK_Y - 1, SIZE - 1 - EAST_BARRICADE_X, 1,
+				Terrain.WALL);
+		Painter.fill(this, EAST_BARRICADE_X, TRACK_Y + 1, SIZE - 1 - EAST_BARRICADE_X, 1,
+				Terrain.WALL);
+		map[cell(EAST_BARRICADE_X, TRACK_Y)] = Terrain.BARRICADE;
 
 		// where the hero arrives in the village: on the paving in front of the
 		// dungeon mouth, a step short of it. No staircase and no transition —

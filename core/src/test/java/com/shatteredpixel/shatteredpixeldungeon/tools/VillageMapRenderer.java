@@ -34,6 +34,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarOverlay;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -64,13 +67,18 @@ public final class VillageMapRenderer {
 	private final int height;
 	private final BufferedImage sheet;
 	private final BufferedImage water;
+	private final Level level;
+	private final File assets;
 
-	private VillageMapRenderer(Level level, BufferedImage sheet, BufferedImage water) {
+	private VillageMapRenderer(Level level, BufferedImage sheet, BufferedImage water,
+			File assets) {
 		this.map = level.map;
 		this.width = level.width();
 		this.height = level.height();
 		this.sheet = sheet;
 		this.water = water;
+		this.level = level;
+		this.assets = assets;
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -91,7 +99,7 @@ public final class VillageMapRenderer {
 		File assets = dirProperty(ASSETS_DIR);
 		BufferedImage sheet = ImageIO.read(new File(assets, level.tilesTex()));
 		BufferedImage water = ImageIO.read(new File(assets, level.waterTex()));
-		BufferedImage image = new VillageMapRenderer(level, sheet, water).render();
+		BufferedImage image = new VillageMapRenderer(level, sheet, water, assets).render();
 		if (options.markers) {
 			drawMarkers(image, level);
 		}
@@ -143,14 +151,69 @@ public final class VillageMapRenderer {
 		for (int pos = 0; pos < map.length; pos++) {
 			draw(g, pos, terrainVisual(pos));
 		}
+		drawOverlays(g, level.customTiles);
 		for (int pos = 0; pos < map.length; pos++) {
 			draw(g, pos, raisedTerrainVisual(pos));
 		}
 		for (int pos = 0; pos < map.length; pos++) {
 			draw(g, pos, wallVisual(pos));
 		}
+		drawOverlays(g, level.customWalls);
 		g.dispose();
 		return image;
+	}
+
+	/**
+	 * The altar is not terrain — it is a stack of {@code CustomTilemap}s, each
+	 * read off a different region's sheet, laid over paving that is the same
+	 * everywhere. Without this the doc's picture shows a plain red disc and the
+	 * one part of the village most likely to be laid out wrongly is the one part
+	 * nobody can look at.
+	 */
+	private void drawOverlays(Graphics2D g, java.util.List<? extends CustomTilemap> tilemaps) {
+		for (int i = 0; i < tilemaps.size(); i++) {
+			CustomTilemap tiles = tilemaps.get(i);
+			if (!(tiles instanceof AltarOverlay)) {
+				continue;
+			}
+			AltarOverlay overlay = (AltarOverlay) tiles;
+			BufferedImage texture = overlaySheet(overlay.textureName());
+			int columns = texture.getWidth() / TILE;
+			int[] data = overlay.tileData();
+			for (int j = 0; j < data.length; j++) {
+				if (data[j] < 0) {
+					continue;
+				}
+				int sx = (data[j] % columns) * TILE;
+				int sy = (data[j] / columns) * TILE;
+				if (sy + TILE > texture.getHeight()) {
+					continue;
+				}
+				int dx = (tiles.tileX + (j % tiles.tileW)) * TILE;
+				int dy = (tiles.tileY + (j / tiles.tileW)) * TILE;
+				g.drawImage(texture, dx, dy, dx + TILE, dy + TILE,
+						sx, sy, sx + TILE, sy + TILE, null);
+			}
+		}
+	}
+
+	private final java.util.HashMap<String, BufferedImage> sheets = new java.util.HashMap<>();
+
+	private BufferedImage overlaySheet(String name) {
+		BufferedImage cached = sheets.get(name);
+		if (cached != null) {
+			return cached;
+		}
+		try {
+			BufferedImage loaded = ImageIO.read(new File(assets, name));
+			if (loaded == null) {
+				throw new IllegalStateException("not an image: " + name);
+			}
+			sheets.put(name, loaded);
+			return loaded;
+		} catch (IOException e) {
+			throw new IllegalStateException("could not read altar sheet " + name, e);
+		}
 	}
 
 	/**
