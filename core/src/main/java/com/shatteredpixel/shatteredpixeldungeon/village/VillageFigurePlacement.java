@@ -6,12 +6,12 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 /**
  * Where the standing figures go.
  *
- * <p>Fixed and deterministic rather than scattered: the depth posts read as a
- * row along the waterfront, in depth order, so a player can learn where to look
- * for depth 15; the mentions gather round the well, which is the one landmark in
- * the middle of town. Both are asserted by a test rather than eyeballed, because
- * the village's terrain, its four villagers and its path all have prior claims
- * on those cells and none of them are obvious from a coordinate.
+ * <p>Fixed and deterministic rather than scattered: the depth posts stand on the
+ * echo altar, one to a quarter and the deepest before the throne, so a player
+ * can learn where to look for depth 15; the mentions gather round the well.
+ * Both are asserted by a test rather than eyeballed, because the village's
+ * terrain, its four villagers and its paths all have prior claims on those cells
+ * and none of them are obvious from a coordinate.
  */
 public final class VillageFigurePlacement {
 
@@ -20,30 +20,35 @@ public final class VillageFigurePlacement {
 	/** One per honorable mention. */
 	public static final int MENTION_POSTS = 5;
 
-	/**
-	 * The promenade: below the bank at y = 4, above the path's top at y = 6.
-	 * Column 8 is the path down to the dungeon and is left out of the run.
-	 */
-	private static final int PROMENADE_Y = 5;
-	private static final int[] PROMENADE_X = { 2, 4, 6, 10, 12 };
+	/** The well the mentions gather round, on the north-west green. */
+	private static final int WELL_X = 7;
+	private static final int WELL_Y = 13;
 
-	/** Round the well at (16, 14), clear of the sage who stands at (17, 15). */
+	/**
+	 * Where the mentions stand relative to the well. The well itself has moved
+	 * off the middle of town to make room for the altar, but the ring around it
+	 * is the arrangement players already know, so the offsets are kept exactly
+	 * and only the origin moved.
+	 */
 	private static final int[][] WELL_CLUSTER = {
-			{ 16, 12 },
-			{ 14, 13 },
-			{ 18, 13 },
-			{ 14, 16 },
-			{ 18, 16 }
+			{ 0, -2 },
+			{ -2, -1 },
+			{ 2, -1 },
+			{ -2, 2 },
+			{ 2, 2 }
 	};
 
 	private VillageFigurePlacement() {
 	}
 
-	/** The five waterfront spots, shallowest first. */
+	/**
+	 * The five spots on the echo altar, shallowest first — one per quarter of the
+	 * disc, and the deepest before the throne.
+	 */
 	public static int[] depthPosts(VillageLevel level) {
-		int[] cells = new int[PROMENADE_X.length];
-		for (int i = 0; i < PROMENADE_X.length; i++) {
-			cells[i] = level.cell(PROMENADE_X[i], PROMENADE_Y);
+		int[] cells = new int[DEPTH_POSTS];
+		for (int i = 0; i < DEPTH_POSTS; i++) {
+			cells[i] = level.cell(EchoAltar.POST_X[i], EchoAltar.POST_Y[i]);
 		}
 		return cells;
 	}
@@ -52,7 +57,7 @@ public final class VillageFigurePlacement {
 	public static int[] mentionPosts(VillageLevel level) {
 		int[] cells = new int[WELL_CLUSTER.length];
 		for (int i = 0; i < WELL_CLUSTER.length; i++) {
-			cells[i] = level.cell(WELL_CLUSTER[i][0], WELL_CLUSTER[i][1]);
+			cells[i] = level.cell(WELL_X + WELL_CLUSTER[i][0], WELL_Y + WELL_CLUSTER[i][1]);
 		}
 		return cells;
 	}

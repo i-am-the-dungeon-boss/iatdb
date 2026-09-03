@@ -35,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.village.EchoAltar;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndDungeonMode;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Music;
@@ -67,9 +68,16 @@ public class VillageLevel extends Level {
 	public static final int VILLAGE_DEPTH = 0;
 	public static final int HOUSE_BRANCH = 1;
 
-	/** Column the paved path runs down, and the row it starts on. */
-	private static final int PATH_X = 8;
-	private static final int PATH_TOP = 6;
+	/** Column the paved path runs down, and the row the dungeon stair sits on. */
+	private static final int PATH_X = 16;
+	private static final int GATE_Y = 4;
+
+	/** The dock runs south from the sand on these two columns. */
+	private static final int DOCK_X = 15;
+
+	/** The well, on the north-west green. */
+	private static final int WELL_X = 7;
+	private static final int WELL_Y = 13;
 
 	{
 		color1 = 0x48763c;
@@ -102,59 +110,123 @@ public class VillageLevel extends Level {
 		// the open ground, ringed by wall so the level stays closed
 		Painter.fill(this, 1, 1, SIZE - 2, SIZE - 2, Terrain.GRASS);
 
+		buildForestBelt();
 		buildShore();
-		buildVillage();
+		buildGatehouse();
+		buildBuildings();
+		buildAltar();
 		buildPathAndEntrances();
+		scatterGrass();
 
 		feeling = Feeling.NONE;
 		return true;
 	}
 
-	/** Water along the top edge, with a walkable bank below it. */
-	private void buildShore() {
-		Painter.fill(this, 1, 1, SIZE - 2, 3, Terrain.WATER);
-		Painter.fill(this, 1, 4, SIZE - 2, 1, Terrain.EMPTY_SP);
+	/**
+	 * Trees banked against the north, east and west edges.
+	 *
+	 * <p>The village has to read as a place in a world rather than a square of
+	 * ground with nothing past it, so the map never ends in bare grass: the woods
+	 * close it on three sides and the sea on the fourth, and the camera is held
+	 * inside that ring so the player never scrolls out to the border.
+	 */
+	private void buildForestBelt() {
+		Painter.fill(this, 1, 1, SIZE - 2, 3, Terrain.HIGH_GRASS);
+		Painter.fill(this, 1, 1, 3, SIZE - 2, Terrain.HIGH_GRASS);
+		Painter.fill(this, SIZE - 4, 1, 3, SIZE - 2, Terrain.HIGH_GRASS);
 	}
 
-	/** Shop, smithy, well and greenery — dressing plus the shopkeeper's stall. */
-	private void buildVillage() {
-		// market stall, east side
-		Painter.fill(this, 20, 6, 8, 5, Terrain.WALL);
-		Painter.fill(this, 21, 7, 6, 3, Terrain.EMPTY_SP);
+	/** Sand along the south edge, open sea past it, and a dock out into it. */
+	private void buildShore() {
+		Painter.fill(this, 1, SIZE - 4, SIZE - 2, 3, Terrain.WATER);
+		// bare floor, not the paving used everywhere else: the shore should read
+		// as ground the town stops at, rather than as more of its carpet
+		Painter.fill(this, 4, SIZE - 6, SIZE - 8, 2, Terrain.EMPTY);
+		// the dock stops a row short of the water's edge, so the outermost ring
+		// stays open sea and the planking never reads as the map running out
+		Painter.fill(this, DOCK_X, SIZE - 6, 2, 3, Terrain.EMPTY_SP);
+	}
+
+	/** The gatehouse over the dungeon stair, at the top of the map. */
+	private void buildGatehouse() {
+		Painter.fill(this, 13, 2, 7, 5, Terrain.WALL);
+		Painter.fill(this, 14, 3, 5, 3, Terrain.EMPTY_SP);
+		// the way out of the gatehouse, into town
+		map[cell(pathX(), 6)] = Terrain.EMPTY_SP;
+
+		// statues flanking the gate
+		map[cell(12, 4)] = Terrain.STATUE;
+		map[cell(20, 4)] = Terrain.STATUE;
+	}
+
+	/** Guild and smithy to the north, elder and shop to the south, tavern on the sand. */
+	private void buildBuildings() {
+		// guild: the crier shouts titles from its steps
+		Painter.fill(this, 5, 6, 7, 5, Terrain.WALL);
+		Painter.fill(this, 6, 7, 5, 3, Terrain.EMPTY_SP);
+		map[cell(8, 10)] = Terrain.DOOR;
+		map[cell(7, 6)] = Terrain.WALL_DECO;
+
+		// smithy, its forge banked up against the north wall
+		Painter.fill(this, 21, 6, 7, 5, Terrain.WALL);
+		Painter.fill(this, 22, 7, 5, 3, Terrain.EMPTY_SP);
 		map[cell(24, 10)] = Terrain.DOOR;
-		map[cell(21, 8)] = Terrain.WALL_DECO;
+		map[cell(24, 8)] = Terrain.EMBERS;
 
-		// well on the green
-		map[cell(16, 14)] = Terrain.WELL;
+		// elder's cottage
+		Painter.fill(this, 4, 18, 6, 5, Terrain.WALL);
+		Painter.fill(this, 5, 19, 4, 3, Terrain.EMPTY_SP);
+		map[cell(6, 22)] = Terrain.DOOR;
 
-		// a firepit the villagers gather round
-		map[cell(11, 18)] = Terrain.EMBERS;
-		map[cell(10, 18)] = Terrain.EMPTY_SP;
-		map[cell(12, 18)] = Terrain.EMPTY_SP;
+		// shop
+		Painter.fill(this, 23, 18, 6, 5, Terrain.WALL);
+		Painter.fill(this, 24, 19, 4, 3, Terrain.EMPTY_SP);
+		map[cell(26, 22)] = Terrain.DOOR;
+		map[cell(25, 18)] = Terrain.WALL_DECO;
 
-		// statue flanking the dungeon mouth
-		map[cell(15, 27)] = Terrain.STATUE;
-		map[cell(19, 27)] = Terrain.STATUE;
+		// tavern, facing the water, with a door onto the sand
+		Painter.fill(this, 12, 23, 7, 4, Terrain.WALL);
+		Painter.fill(this, 13, 24, 5, 2, Terrain.EMPTY_SP);
+		map[cell(16, 23)] = Terrain.DOOR;
+		map[cell(15, 26)] = Terrain.DOOR;
 
-		// tall grass patches, kept clear of the path
-		for (int i = 0; i < 40; i++) {
-			int x = Random.IntRange(2, SIZE - 3);
-			int y = Random.IntRange(12, SIZE - 3);
-			int cell = cell(x, y);
-			if (map[cell] == Terrain.GRASS && Math.abs(x - pathX()) > 2) {
-				map[cell] = Terrain.HIGH_GRASS;
-			}
-		}
+		// the well, moved off the middle of town to make room for the altar
+		map[cell(WELL_X, WELL_Y)] = Terrain.WELL;
 	}
 
 	/**
-	 * The paved path down to the dungeon mouth, the dungeon transition itself,
-	 * and the arrival point.
+	 * The echo altar: one paved disc, quartered by its walkway, with the throne
+	 * seated at the centre.
+	 *
+	 * <p>Terrain only. What makes each quarter read as its own region is a set of
+	 * {@code CustomTilemap}s laid over this paving, so the ground here is the
+	 * same walkable paving throughout and the shape lives in {@link EchoAltar}.
+	 */
+	private void buildAltar() {
+		for (int y = 1; y < SIZE - 1; y++) {
+			for (int x = 1; x < SIZE - 1; x++) {
+				if (EchoAltar.inDisc(x, y)) {
+					map[cell(x, y)] = Terrain.EMPTY_SP;
+				}
+			}
+		}
+		// the throne itself is solid, so the seat is never stood on
+		map[cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y)] = Terrain.CUSTOM_DECO;
+	}
+
+	/**
+	 * The paving joining the gate to the altar and on to the tavern, the two
+	 * tracks trailing off into the woods, the dungeon transition and the arrival
+	 * point.
 	 */
 	private void buildPathAndEntrances() {
 		int px = pathX();
-		Painter.fill(this, px, PATH_TOP, 1, SIZE - PATH_TOP - 3, Terrain.EMPTY_SP);
-		Painter.fill(this, px - 1, 24, 3, 4, Terrain.EMPTY_SP);
+		// gate down to the altar, and altar down to the tavern door
+		Painter.fill(this, px, 7, 1, 3, Terrain.EMPTY_SP);
+		Painter.fill(this, px, 20, 1, 3, Terrain.EMPTY_SP);
+		// tracks east and west, running out of town and into the trees
+		Painter.fill(this, 4, 16, 6, 1, Terrain.EMPTY_SP);
+		Painter.fill(this, 23, 16, 6, 1, Terrain.EMPTY_SP);
 
 		// where the hero arrives in the village: on the paving in front of the
 		// dungeon mouth, a step short of it. No staircase and no transition —
@@ -172,6 +244,20 @@ public class VillageLevel extends Level {
 		// still routes to it, but nothing in the village opens onto it
 	}
 
+	/** Tall grass over the open green, wherever the town has not already built. */
+	private void scatterGrass() {
+		for (int i = 0; i < 40; i++) {
+			int x = Random.IntRange(4, SIZE - 5);
+			int y = Random.IntRange(6, SIZE - 7);
+			int cell = cell(x, y);
+			// plain grass is the only thing left open; paving, walls, sand and
+			// the altar have all claimed their cells by now
+			if (map[cell] == Terrain.GRASS) {
+				map[cell] = Terrain.HIGH_GRASS;
+			}
+		}
+	}
+
 	public int cell(int x, int y) {
 		return y * width() + x;
 	}
@@ -182,17 +268,18 @@ public class VillageLevel extends Level {
 	}
 
 	/**
-	 * Where the hero stands on arriving in town: one step north of the dungeon
-	 * mouth, facing it. The village has no entrance transition to be placed at,
+	 * Where the hero stands on arriving in town: one step south of the dungeon
+	 * mouth, facing it. The gate is at the top of the map, so the town lies below
+	 * the arrival point. The village has no entrance transition to be placed at,
 	 * so every arrival names this cell explicitly — and it is never the mouth
 	 * itself, which would leave the player standing on a transition.
 	 */
 	public int arrivalCell() {
-		return dungeonEntrance() - width();
+		return dungeonEntrance() + width();
 	}
 
 	public int dungeonEntrance() {
-		return cell(pathX(), SIZE - 4);
+		return cell(pathX(), GATE_Y);
 	}
 
 	@Override
@@ -258,10 +345,11 @@ public class VillageLevel extends Level {
 	protected void createMobs() {
 		// flavour only: the stall keeper carries no stock. With no gold and
 		// nothing that survives the descent, a real trade window is a dead end.
-		addVillager(Villager.Kind.KEEPER, cell(24, 9));
-		addVillager(Villager.Kind.SMITH, cell(11, 19));
-		addVillager(Villager.Kind.SAGE, cell(17, 15));
-		addVillager(Villager.Kind.ELDER, cell(pathX() + 2, 25));
+		// each stands on their own doorstep, where they can actually be seen
+		addVillager(Villager.Kind.SAGE, cell(8, 11));
+		addVillager(Villager.Kind.SMITH, cell(24, 11));
+		addVillager(Villager.Kind.ELDER, cell(6, 23));
+		addVillager(Villager.Kind.KEEPER, cell(26, 23));
 	}
 
 	private void addVillager(Villager.Kind kind, int pos) {

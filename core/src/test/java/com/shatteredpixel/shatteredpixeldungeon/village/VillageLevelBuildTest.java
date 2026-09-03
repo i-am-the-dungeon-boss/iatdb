@@ -114,6 +114,121 @@ class VillageLevelBuildTest {
         Assertions.assertThat(level.invalidHeroPos(arrival)).isFalse();
         Assertions.assertThat(level.passable[arrival]).isTrue();
         Assertions.assertThat(level.map[arrival]).isEqualTo(Terrain.EMPTY_SP);
+
+        // the gate stands at the top of the map, so the hero arrives below it
+        Assertions.assertThat(arrival).isEqualTo(level.dungeonEntrance() + level.width());
+    }
+
+    @Test
+    @DisplayName("The dungeon gate stands on the northern half of the map")
+    void dungeonMouthIsOnTheNorthEdge() {
+        VillageLevel level = village();
+
+        int mouth = level.dungeonEntrance();
+        Assertions.assertThat(mouth / level.width())
+                .as("the gate should sit in the north half")
+                .isLessThan(VillageLevel.SIZE / 2);
+        Assertions.assertThat(level.map[mouth]).isEqualTo(Terrain.EXIT);
+    }
+
+    @Test
+    @DisplayName("The sea lies along the southern edge, and nowhere else")
+    void theSeaIsOnTheSouthEdge() {
+        VillageLevel level = village();
+
+        boolean sawWater = false;
+        for (int cell = 0; cell < level.length(); cell++) {
+            if (level.map[cell] != Terrain.WATER) {
+                continue;
+            }
+            sawWater = true;
+            Assertions.assertThat(cell / level.width())
+                    .as("water at cell %d should be in the south half", cell)
+                    .isGreaterThanOrEqualTo(VillageLevel.SIZE / 2);
+        }
+        Assertions.assertThat(sawWater).as("the village should have a shoreline").isTrue();
+    }
+
+    /**
+     * The map border must never be the last thing the player sees, so the ring
+     * just inside the wall is always forest or open sea — never bare ground that
+     * would read as the world simply stopping.
+     */
+    @Test
+    @DisplayName("The edge of the map is always forest or sea, never bare ground")
+    void theMapEdgeIsAlwaysForestOrSea() {
+        VillageLevel level = village();
+
+        for (int cell = 0; cell < level.length(); cell++) {
+            int x = cell % level.width();
+            int y = cell / level.width();
+            boolean onEdgeRing = x <= 2 || y <= 2
+                    || x >= level.width() - 3 || y >= level.height() - 3;
+            if (!onEdgeRing) {
+                continue;
+            }
+            Assertions.assertThat(level.map[cell])
+                    .as("cell (%d,%d) on the map edge", x, y)
+                    .isIn(Terrain.HIGH_GRASS, Terrain.WATER, Terrain.WALL);
+        }
+    }
+
+    @Test
+    @DisplayName("The dock runs off the sand and out over the water")
+    void theDockRunsIntoTheWater() {
+        VillageLevel level = village();
+
+        // the planking stops one row short of the outermost ring, so open sea
+        // still runs past the end of the dock
+        int dockEnd = level.cell(16, VillageLevel.SIZE - 4);
+        Assertions.assertThat(level.map[dockEnd])
+                .as("the far end of the dock should be walkable planking")
+                .isEqualTo(Terrain.EMPTY_SP);
+        Assertions.assertThat(reachable(level, level.arrivalCell(), dockEnd))
+                .as("the dock should be walkable from the arrival point")
+                .isTrue();
+    }
+
+    /**
+     * A village the player cannot cross is worse than an empty one. Every open
+     * cell must hang together, which also proves each building is enterable
+     * without naming a single door.
+     */
+    @Test
+    @DisplayName("Every open cell in the village is reachable from the arrival point")
+    void theWholeVillageHangsTogether() {
+        VillageLevel level = village();
+
+        for (int cell = 0; cell < level.length(); cell++) {
+            if (!level.passable[cell]) {
+                continue;
+            }
+            Assertions.assertThat(reachable(level, level.arrivalCell(), cell))
+                    .as("cell (%d,%d) is walled off from the rest of town",
+                            cell % level.width(), cell / level.width())
+                    .isTrue();
+        }
+    }
+
+    @Test
+    @DisplayName("Every building has a door, and the town has at least five of them")
+    void everyBuildingIsEnterable() {
+        VillageLevel level = village();
+
+        int doors = 0;
+        for (int cell = 0; cell < level.length(); cell++) {
+            if (level.map[cell] != Terrain.DOOR) {
+                continue;
+            }
+            doors++;
+            Assertions.assertThat(reachable(level, level.arrivalCell(), cell))
+                    .as("door at (%d,%d) cannot be reached",
+                            cell % level.width(), cell / level.width())
+                    .isTrue();
+        }
+        Assertions.assertThat(doors)
+                .as("guild, smithy, elder, shop and tavern all need a way in")
+                .isGreaterThanOrEqualTo(5);
     }
 
     @Test

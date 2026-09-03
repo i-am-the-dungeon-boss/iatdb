@@ -4,6 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VillageLevel;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,19 +79,69 @@ class VillageFigurePlacementTest {
 		}
 	}
 
+	/**
+	 * This used to check that no figure stood on the path's column, which only
+	 * meant anything while the path was a single straight run. The altar's
+	 * walkway is a cross and the deepest echo stands squarely on its axis, so the
+	 * column is no longer the thing to protect. What always mattered is that a
+	 * town full of figures never walls the player in — and asserting that
+	 * directly is stronger, since it also catches a figure plugging a doorway,
+	 * which the column check never could.
+	 */
 	@Test
-	@DisplayName("No figure blocks the way in, the way down, or the path between them")
-	void anchorsKeepTheRoadClear() {
+	@DisplayName("A village full of figures still lets the hero cross it")
+	void anchorsNeverBlockTheWayThrough() {
 		VillageLevel level = village();
-		int pathX = VillageLevel.SIZE > 0 ? level.arrivalCell() % level.width() : 0;
 
+		boolean[] blocked = new boolean[level.length()];
 		for (Integer cell : allAnchors(level)) {
 			Assertions.assertThat(cell).isNotEqualTo(level.arrivalCell());
 			Assertions.assertThat(cell).isNotEqualTo(level.dungeonEntrance());
-			Assertions.assertThat(cell % level.width())
-					.as("cell %d is off the path column", cell)
-					.isNotEqualTo(pathX);
+			blocked[cell] = true;
 		}
+
+		Assertions.assertThat(reachableAvoiding(level, level.arrivalCell(),
+						level.dungeonEntrance(), blocked))
+				.as("the dungeon gate is still reachable with every post taken")
+				.isTrue();
+
+		for (int cell = 0; cell < level.length(); cell++) {
+			if (level.map[cell] != Terrain.DOOR) {
+				continue;
+			}
+			Assertions.assertThat(reachableAvoiding(level, level.arrivalCell(), cell, blocked))
+					.as("door at (%d,%d) is walled off once every post is taken",
+							cell % level.width(), cell / level.width())
+					.isTrue();
+		}
+	}
+
+	/** Flood fill across passable cells, treating the given cells as occupied. */
+	private boolean reachableAvoiding(VillageLevel level, int from, int to, boolean[] blocked) {
+		boolean[] seen = new boolean[level.length()];
+		java.util.ArrayDeque<Integer> queue = new java.util.ArrayDeque<>();
+		queue.add(from);
+		seen[from] = true;
+		int[] steps = { -1, 1, -level.width(), level.width() };
+		while (!queue.isEmpty()) {
+			int cell = queue.poll();
+			if (cell == to) {
+				return true;
+			}
+			for (int step : steps) {
+				int next = cell + step;
+				if (next < 0 || next >= level.length() || seen[next] || blocked[next]) {
+					continue;
+				}
+				if (level.passable[next]
+						|| level.map[next] == Terrain.EXIT
+						|| level.map[next] == Terrain.DOOR) {
+					seen[next] = true;
+					queue.add(next);
+				}
+			}
+		}
+		return false;
 	}
 
 	@Test
@@ -105,6 +156,76 @@ class VillageFigurePlacementTest {
 
 		Assertions.assertThat(taken).as("create() places the villagers").isNotEmpty();
 		Assertions.assertThat(allAnchors(level)).doesNotContainAnyElementsOf(taken);
+	}
+
+	@Test
+	@DisplayName("The echo bosses stand on the altar, one to a quarter and the deepest at the throne")
+	void depthPostsSitOnTheAltar() {
+		VillageLevel level = village();
+
+		int[] posts = VillageFigurePlacement.depthPosts(level);
+		int[] expected = { EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY };
+
+		for (int i = 0; i < posts.length; i++) {
+			int x = posts[i] % level.width();
+			int y = posts[i] / level.width();
+			Assertions.assertThat(EchoAltar.inDisc(x, y))
+					.as("post %d at (%d,%d) is on the altar", i, x, y)
+					.isTrue();
+		}
+
+		for (int i = 0; i < expected.length; i++) {
+			int x = posts[i] % level.width();
+			int y = posts[i] / level.width();
+			Assertions.assertThat(EchoAltar.quadrantOf(x, y))
+					.as("post %d should stand on its own quarter", i)
+					.isEqualTo(expected[i]);
+		}
+
+		int deepestX = posts[4] % level.width();
+		int deepestY = posts[4] / level.width();
+		Assertions.assertThat(EchoAltar.inDais(deepestX, deepestY))
+				.as("the deepest echo stands on the raised centre")
+				.isTrue();
+	}
+
+	@Test
+	@DisplayName("The mentions keep their ring around the well, wherever the well now sits")
+	void mentionPostsKeepTheirArrangement() {
+		VillageLevel level = village();
+
+		int well = -1;
+		for (int cell = 0; cell < level.length(); cell++) {
+			if (level.map[cell] == Terrain.WELL) {
+				well = cell;
+			}
+		}
+		Assertions.assertThat(well).as("the village still has a well").isNotEqualTo(-1);
+
+		int wellX = well % level.width();
+		int wellY = well / level.width();
+		int[][] arrangement = { { 0, -2 }, { -2, -1 }, { 2, -1 }, { -2, 2 }, { 2, 2 } };
+
+		int[] posts = VillageFigurePlacement.mentionPosts(level);
+		for (int i = 0; i < posts.length; i++) {
+			Assertions.assertThat(posts[i] % level.width() - wellX)
+					.as("mention %d keeps its offset east of the well", i)
+					.isEqualTo(arrangement[i][0]);
+			Assertions.assertThat(posts[i] / level.width() - wellY)
+					.as("mention %d keeps its offset south of the well", i)
+					.isEqualTo(arrangement[i][1]);
+		}
+	}
+
+	@Test
+	@DisplayName("Nobody stands on the throne itself")
+	void nobodyStandsOnTheThrone() {
+		VillageLevel level = village();
+
+		int seat = level.cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y);
+		Assertions.assertThat(level.solid[seat]).as("the throne is solid").isTrue();
+		Assertions.assertThat(level.passable[seat]).as("the throne is not walkable").isFalse();
+		Assertions.assertThat(allAnchors(level)).doesNotContain(seat);
 	}
 
 	@Test
