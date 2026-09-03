@@ -173,6 +173,36 @@ class VillageLevelBuildTest {
         }
     }
 
+    /**
+     * The sketch labels these "to the woods". A track that stops in open grass a
+     * column short of the tree line reads as the town simply running out, which
+     * is the opposite of what the forest belt is there to do — so the paving has
+     * to reach into the belt and be swallowed by it. It must not reach the map
+     * border either: that would put the world's edge at the end of a path the
+     * player is invited to walk toward.
+     */
+    @Test
+    @DisplayName("The tracks east and west run on into the trees")
+    void theTracksRunIntoTheTrees() {
+        VillageLevel level = village();
+
+        int row = 16;
+        Assertions.assertThat(level.map[level.cell(3, row)])
+                .as("the west track should carry on inside the tree line")
+                .isEqualTo(Terrain.EMPTY_SP);
+        Assertions.assertThat(level.map[level.cell(VillageLevel.SIZE - 4, row)])
+                .as("the east track should carry on inside the tree line")
+                .isEqualTo(Terrain.EMPTY_SP);
+
+        // and stop there — the trees close over them before the border
+        Assertions.assertThat(level.map[level.cell(2, row)])
+                .as("the west track should not reach the map border")
+                .isEqualTo(Terrain.HIGH_GRASS);
+        Assertions.assertThat(level.map[level.cell(VillageLevel.SIZE - 3, row)])
+                .as("the east track should not reach the map border")
+                .isEqualTo(Terrain.HIGH_GRASS);
+    }
+
     @Test
     @DisplayName("The dock runs off the sand and out over the water")
     void theDockRunsIntoTheWater() {

@@ -1,0 +1,158 @@
+<svg viewBox="0 0 660 700" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <defs>
+    <pattern id="grass" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#4a6b3c"/>
+      <circle cx="1" cy="1" r="0.6" fill="#6a9556"/>
+      <circle cx="4" cy="4" r="0.6" fill="#6a9556"/>
+    </pattern>
+    <pattern id="forest" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="#233a1c"/>
+      <circle cx="3" cy="3" r="2" fill="#2f4d24"/>
+      <circle cx="7" cy="7" r="2" fill="#2f4d24"/>
+    </pattern>
+    <pattern id="carpet" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#7a1f1f"/>
+      <rect x="0" y="0" width="6" height="1" fill="#d4a63a"/>
+    </pattern>
+    <pattern id="plaza" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#b8a985"/>
+      <rect x="0" y="0" width="8" height="1" fill="#8f7f5c"/>
+      <rect x="0" y="0" width="1" height="8" fill="#8f7f5c"/>
+    </pattern>
+    <pattern id="water" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect width="12" height="12" fill="#2b4a7a"/>
+      <path d="M0 4 Q3 2 6 4 T12 4" stroke="#4a72b8" stroke-width="0.8" fill="none"/>
+      <path d="M0 9 Q3 7 6 9 T12 9" stroke="#4a72b8" stroke-width="0.8" fill="none"/>
+    </pattern>
+    <pattern id="sand" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#d9c58a"/>
+      <circle cx="2" cy="2" r="0.5" fill="#b8a465"/>
+      <circle cx="5" cy="4" r="0.5" fill="#b8a465"/>
+    </pattern>
+    <pattern id="planks" width="6" height="14" patternUnits="userSpaceOnUse">
+      <rect width="6" height="14" fill="#7a5230"/>
+      <rect x="0" y="0" width="6" height="1" fill="#3a2415"/>
+      <rect x="0" y="13" width="6" height="1" fill="#3a2415"/>
+    </pattern>
+  </defs>
+
+  <!-- Frame + forest -->
+  <rect x="20" y="20" width="620" height="620" fill="url(#forest)"/>
+  <rect x="38" y="38" width="584" height="584" fill="url(#grass)"/>
+
+  <!-- Forest belts (north, west, south) -->
+  <rect x="38" y="38" width="584" height="80" fill="url(#forest)" opacity="0.85"/>
+  <rect x="38" y="542" width="584" height="80" fill="url(#forest)" opacity="0.85"/>
+  <rect x="38" y="118" width="80" height="424" fill="url(#forest)" opacity="0.85"/>
+
+  <!-- East shoreline: sand strip + water belt replaces east forest -->
+  <rect x="480" y="118" width="30" height="424" fill="url(#sand)"/>
+  <rect x="510" y="118" width="112" height="424" fill="url(#water)"/>
+
+  <!-- Camera clamp -->
+  <rect x="118" y="118" width="404" height="424" fill="none" stroke="#f5c542" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+  <text x="320" y="112" text-anchor="middle" font-size="10" fill="#f5c542">camera pan clamp — forest/sea continue past the edge</text>
+
+  <!-- Dungeon gatehouse, top-center -->
+  <rect x="260" y="128" width="120" height="70" fill="#5d5148" stroke="#2b241f" stroke-width="2"/>
+  <rect x="305" y="178" width="30" height="20" fill="#1a1310"/>
+  <text x="320" y="164" text-anchor="middle" font-size="11" fill="#f4e4c1" font-weight="bold">DUNGEON</text>
+  <text x="320" y="176" text-anchor="middle" font-size="8" fill="#f4e4c1">gate → WndDungeonMode</text>
+
+  <!-- Path dungeon → plaza -->
+  <rect x="312" y="198" width="16" height="120" fill="url(#carpet)"/>
+
+  <!-- Echo plaza -->
+  <circle cx="320" cy="380" r="85" fill="url(#plaza)" stroke="#6b5c40" stroke-width="2"/>
+  <text x="320" y="340" text-anchor="middle" font-size="12" fill="#2b241f" font-weight="bold">ECHO PLAZA</text>
+  <g fill="#8a7a5a" stroke="#4a3d28">
+    <rect x="280" y="358" width="14" height="14"/>
+    <rect x="308" y="350" width="14" height="14"/>
+    <rect x="336" y="350" width="14" height="14"/>
+    <rect x="362" y="358" width="14" height="14"/>
+    <rect x="288" y="388" width="14" height="14"/>
+    <rect x="316" y="398" width="14" height="14"/>
+    <rect x="344" y="398" width="14" height="14"/>
+    <rect x="368" y="388" width="14" height="14"/>
+  </g>
+  <text x="320" y="418" text-anchor="middle" font-size="8" fill="#2b241f">figures + stored echoes</text>
+
+  <!-- Guild, west of plaza -->
+  <rect x="140" y="260" width="110" height="90" fill="#6b4a2b" stroke="#2b241f" stroke-width="2"/>
+  <polygon points="140,260 195,235 250,260" fill="#8a5a30" stroke="#2b241f" stroke-width="2"/>
+  <rect x="187" y="325" width="16" height="25" fill="#1a1310"/>
+  <text x="195" y="298" text-anchor="middle" font-size="12" fill="#f4e4c1" font-weight="bold">GUILD</text>
+  <text x="195" y="312" text-anchor="middle" font-size="8" fill="#f4e4c1">crier · leaderboard</text>
+
+  <!-- Tavern, east of plaza, facing the water -->
+  <rect x="390" y="260" width="90" height="90" fill="#7a4a2b" stroke="#2b241f" stroke-width="2"/>
+  <polygon points="390,260 435,235 480,260" fill="#a05a30" stroke="#2b241f" stroke-width="2"/>
+  <rect x="470" y="300" width="10" height="20" fill="#1a1310"/>
+  <text x="435" y="298" text-anchor="middle" font-size="12" fill="#f4e4c1" font-weight="bold">TAVERN</text>
+  <text x="435" y="312" text-anchor="middle" font-size="8" fill="#f4e4c1">world chat</text>
+  <text x="435" y="322" text-anchor="middle" font-size="8" fill="#f4e4c1">seaside porch →</text>
+
+  <!-- Paths plaza ↔ guild, plaza ↔ tavern (through sand to dock) -->
+  <rect x="235" y="372" width="85" height="16" fill="url(#carpet)"/>
+  <rect x="320" y="372" width="90" height="16" fill="url(#carpet)"/>
+
+  <!-- Dock: planks from tavern porch across sand + into water -->
+  <rect x="480" y="304" width="120" height="18" fill="url(#planks)" stroke="#3a2415"/>
+  <!-- pilings -->
+  <g fill="#3a2415">
+    <rect x="515" y="322" width="3" height="6"/>
+    <rect x="555" y="322" width="3" height="6"/>
+    <rect x="590" y="322" width="3" height="6"/>
+  </g>
+  <!-- boat -->
+  <ellipse cx="608" cy="360" rx="14" ry="6" fill="#5d3a1c" stroke="#2b1a0d"/>
+  <rect x="606" y="340" width="2" height="20" fill="#2b1a0d"/>
+  <polygon points="608,342 620,354 608,354" fill="#f4e4c1" stroke="#2b1a0d"/>
+  <text x="602" y="380" text-anchor="middle" font-size="8" fill="#f4e4c1">dock</text>
+
+  <!-- Smithy, southwest -->
+  <rect x="150" y="440" width="90" height="60" fill="#4a4038" stroke="#2b241f" stroke-width="2"/>
+  <rect x="152" y="442" width="20" height="20" fill="#c94a1a"/>
+  <text x="195" y="475" text-anchor="middle" font-size="11" fill="#f4e4c1" font-weight="bold">SMITHY</text>
+
+  <!-- Elder cottage, southeast (inland, not blocking beach) -->
+  <rect x="380" y="440" width="90" height="60" fill="#5d4a2b" stroke="#2b241f" stroke-width="2"/>
+  <polygon points="380,440 425,420 470,440" fill="#7a5f38" stroke="#2b241f" stroke-width="2"/>
+  <text x="425" y="475" text-anchor="middle" font-size="11" fill="#f4e4c1" font-weight="bold">ELDER</text>
+
+  <!-- South path plaza → gate -->
+  <rect x="312" y="465" width="16" height="115" fill="url(#carpet)"/>
+
+  <!-- Village gate, south, arched entry through forest -->
+  <rect x="270" y="555" width="100" height="55" fill="#5d5148" stroke="#2b241f" stroke-width="2"/>
+  <!-- arch cutout -->
+  <path d="M 305 610 L 305 578 Q 320 560 335 578 L 335 610 Z" fill="url(#carpet)"/>
+  <!-- torches -->
+  <circle cx="285" cy="572" r="4" fill="#f5a742"/>
+  <circle cx="355" cy="572" r="4" fill="#f5a742"/>
+  <text x="320" y="548" text-anchor="middle" font-size="11" fill="#f4e4c1" font-weight="bold">VILLAGE GATE</text>
+  <text x="320" y="628" text-anchor="middle" font-size="8" fill="#f4e4c1">road continues into forest (decorative, non-walkable)</text>
+
+  <!-- Player house, southwest corner (moved out of the way of the gate) -->
+  <rect x="140" y="530" width="80" height="45" fill="#4a3d28" stroke="#2b241f" stroke-width="2"/>
+  <polygon points="140,530 180,512 220,530" fill="#6b5940" stroke="#2b241f" stroke-width="2"/>
+  <text x="180" y="558" text-anchor="middle" font-size="10" fill="#f4e4c1" font-weight="bold">HOUSE</text>
+  <!-- little path from house to plaza -->
+  <rect x="220" y="536" width="90" height="8" fill="url(#carpet)" opacity="0.7"/>
+
+  <!-- Legend -->
+  <g transform="translate(30, 655)" font-size="10" fill="#1a1310">
+    <rect x="0" y="0" width="600" height="35" fill="#efe6d0" stroke="#8f7f5c"/>
+    <rect x="8" y="6" width="14" height="8" fill="url(#forest)"/><text x="26" y="14">forest</text>
+    <rect x="70" y="6" width="14" height="8" fill="url(#water)"/><text x="88" y="14">sea</text>
+    <rect x="120" y="6" width="14" height="8" fill="url(#sand)"/><text x="138" y="14">shore</text>
+    <rect x="180" y="6" width="14" height="8" fill="url(#planks)"/><text x="198" y="14">dock</text>
+    <rect x="240" y="6" width="14" height="8" fill="url(#carpet)"/><text x="258" y="14">path</text>
+    <rect x="290" y="6" width="14" height="8" fill="url(#plaza)"/><text x="308" y="14">plaza</text>
+    <rect x="340" y="6" width="14" height="8" fill="url(#grass)"/><text x="358" y="14">grass</text>
+    <rect x="410" y="6" width="14" height="8" fill="none" stroke="#f5c542" stroke-dasharray="3 2"/><text x="428" y="14">camera clamp</text>
+    <text x="8" y="28">Two gates now: DUNGEON north (into the dungeon) · VILLAGE GATE south (arrival). Sea to the east with a dock off the tavern porch.</text>
+  </g>
+
+  <text x="320" y="34" text-anchor="middle" font-size="11" fill="#f4e4c1">N ↑</text>
+</svg>

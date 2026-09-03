@@ -1,0 +1,160 @@
+<svg viewBox="0 0 760 900" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <defs>
+    <pattern id="pz2" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#b8a985"/>
+      <rect width="14" height="1.5" fill="#95866190"/><rect width="1.5" height="14" fill="#95866190"/>
+    </pattern>
+    <pattern id="qSew" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect width="22" height="22" fill="#3d6b5e"/>
+      <rect width="22" height="2" fill="#2a4c42"/><rect width="2" height="22" fill="#2a4c42"/>
+      <circle cx="14" cy="14" r="1.8" fill="#5c9182"/>
+    </pattern>
+    <pattern id="qPri" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect width="22" height="22" fill="#8a6a48"/>
+      <rect width="22" height="2" fill="#5f4830"/><rect width="2" height="22" fill="#5f4830"/>
+      <rect x="10" y="11" width="8" height="2" fill="#a68356"/>
+    </pattern>
+    <pattern id="qCav" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect width="22" height="22" fill="#57473a"/>
+      <rect width="22" height="2" fill="#3a2e25"/><rect width="2" height="22" fill="#3a2e25"/>
+      <circle cx="14" cy="9" r="2.2" fill="#a8541f"/>
+    </pattern>
+    <pattern id="qCit" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect width="22" height="22" fill="#6a5a8a"/>
+      <rect width="22" height="2" fill="#463a5e"/><rect width="2" height="22" fill="#463a5e"/>
+      <rect x="11" y="12" width="6" height="6" fill="#d4a63a" opacity="0.6"/>
+    </pattern>
+    <pattern id="qHal" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect width="22" height="22" fill="#3a1f2a"/>
+      <rect width="22" height="2" fill="#22121a"/><rect width="2" height="22" fill="#22121a"/>
+      <circle cx="14" cy="13" r="2.2" fill="#a8321f"/>
+    </pattern>
+    <pattern id="seam" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#7a1f1f"/>
+      <rect width="14" height="2" fill="#d4a63a"/>
+    </pattern>
+    <radialGradient id="echoGlow">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="760" height="900" fill="#1c1a17"/>
+
+  <text x="380" y="32" text-anchor="middle" font-size="17" fill="#f4e4c1" font-weight="bold">THE ECHO ALTAR — one disc, four quarters, raised centre</text>
+  <text x="380" y="52" text-anchor="middle" font-size="11" fill="#c9b98f">Five ECHO BOSSES only — the reigning player-echo per region. No actual dungeon bosses stand here.</text>
+
+  <!-- plaza ground -->
+  <rect x="70" y="80" width="620" height="600" fill="url(#pz2)" opacity="0.35"/>
+
+  <!-- the disc, four quarters -->
+  <g stroke="#1a1310" stroke-width="2.5">
+    <path d="M370,380 L370,110 A270,270 0 0 0 100,380 Z" fill="url(#qSew)"/>
+    <path d="M370,380 L370,110 A270,270 0 0 1 640,380 Z" fill="url(#qPri)"/>
+    <path d="M370,380 L640,380 A270,270 0 0 1 370,650 Z" fill="url(#qCav)"/>
+    <path d="M370,380 L370,650 A270,270 0 0 1 100,380 Z" fill="url(#qCit)"/>
+  </g>
+  <circle cx="370" cy="380" r="270" fill="none" stroke="#d4b877" stroke-width="4"/>
+
+  <!-- cross walkway seams -->
+  <rect x="344" y="110" width="52" height="540" fill="url(#seam)" opacity="0.95" stroke="#3a1010"/>
+  <rect x="100" y="354" width="540" height="52" fill="url(#seam)" opacity="0.95" stroke="#3a1010"/>
+
+  <!-- raised dais: outer step ring then platform -->
+  <circle cx="370" cy="380" r="132" fill="#2b1a20" stroke="#0f0709" stroke-width="2"/>
+  <circle cx="370" cy="380" r="118" fill="#4a2b33" stroke="#1a0d10" stroke-width="2"/>
+  <circle cx="370" cy="380" r="104" fill="url(#qHal)" stroke="#5a1f1f" stroke-width="3"/>
+  <!-- step treads on the four approaches -->
+  <g fill="#6b4046" stroke="#1a0d10" stroke-width="1.2">
+    <rect x="344" y="248" width="52" height="9"/><rect x="344" y="259" width="52" height="9"/>
+    <rect x="344" y="503" width="52" height="9"/><rect x="344" y="514" width="52" height="9"/>
+    <rect x="238" y="354" width="9" height="52"/><rect x="249" y="354" width="9" height="52"/>
+    <rect x="493" y="354" width="9" height="52"/><rect x="504" y="354" width="9" height="52"/>
+  </g>
+
+  <!-- throne carpet + chair (CITY_BOSS tiles) -->
+  <rect x="340" y="336" width="60" height="76" fill="url(#seam)" stroke="#d4a63a" stroke-width="1.5"/>
+  <rect x="352" y="338" width="36" height="40" fill="#5a4a2e" stroke="#2b241f" stroke-width="2"/>
+  <rect x="346" y="372" width="48" height="11" fill="#4a3d28" stroke="#2b241f" stroke-width="2"/>
+  <rect x="356" y="330" width="28" height="9" fill="#f5c542" opacity="0.85"/>
+
+  <!-- ===== HALLS ECHO BOSS on the throne ===== -->
+  <g>
+    <circle cx="370" cy="356" r="34" fill="url(#echoGlow)"/>
+    <path d="M356,378 L360,346 Q370,336 380,346 L384,378 Z" fill="#a8321f" stroke="#4a120c" stroke-width="1.8" opacity="0.92"/>
+    <circle cx="370" cy="342" r="9" fill="#f5e0a8" stroke="#4a120c" stroke-width="1.5"/>
+    <rect x="386" y="342" width="3" height="34" fill="#d4c8a8"/>
+    <ellipse cx="370" cy="382" rx="20" ry="5" fill="#00000066"/>
+  </g>
+  <rect x="298" y="404" width="144" height="17" fill="#5a1f1f" rx="3"/>
+  <text x="370" y="417" text-anchor="middle" font-size="10.5" fill="#f5c542" font-weight="bold">HALLS ECHO BOSS · 21–25</text>
+
+  <!-- ===== quadrant echo bosses ===== -->
+  <!-- NW sewers -->
+  <g>
+    <circle cx="235" cy="245" r="34" fill="url(#echoGlow)"/>
+    <path d="M221,268 L225,236 Q235,226 245,236 L249,268 Z" fill="#4a9c7a" stroke="#173d2e" stroke-width="1.8" opacity="0.92"/>
+    <circle cx="235" cy="232" r="9" fill="#e0f5e8" stroke="#173d2e" stroke-width="1.5"/>
+    <rect x="251" y="232" width="3" height="34" fill="#d4c8a8"/>
+    <ellipse cx="235" cy="272" rx="20" ry="5" fill="#00000066"/>
+  </g>
+  <rect x="163" y="286" width="144" height="17" fill="#1d3830" rx="3"/>
+  <text x="235" y="299" text-anchor="middle" font-size="10.5" fill="#8fd4bf" font-weight="bold">SEWERS ECHO · 1–5</text>
+  <text x="235" y="196" text-anchor="middle" font-size="9.5" fill="#c8f0e0">tiles_sewers.png</text>
+
+  <!-- NE prison -->
+  <g>
+    <circle cx="505" cy="245" r="34" fill="url(#echoGlow)"/>
+    <path d="M491,268 L495,236 Q505,226 515,236 L519,268 Z" fill="#c99a5a" stroke="#4a3520" stroke-width="1.8" opacity="0.92"/>
+    <circle cx="505" cy="232" r="9" fill="#f5ead0" stroke="#4a3520" stroke-width="1.5"/>
+    <rect x="521" y="232" width="3" height="34" fill="#d4c8a8"/>
+    <ellipse cx="505" cy="272" rx="20" ry="5" fill="#00000066"/>
+  </g>
+  <rect x="433" y="286" width="144" height="17" fill="#4a3625" rx="3"/>
+  <text x="505" y="299" text-anchor="middle" font-size="10.5" fill="#e8d0a8" font-weight="bold">PRISON ECHO · 6–10</text>
+  <text x="505" y="196" text-anchor="middle" font-size="9.5" fill="#f0dcb8">tiles_prison.png</text>
+
+  <!-- SE caves -->
+  <g>
+    <circle cx="505" cy="500" r="34" fill="url(#echoGlow)"/>
+    <path d="M491,523 L495,491 Q505,481 515,491 L519,523 Z" fill="#c9702f" stroke="#4a2a10" stroke-width="1.8" opacity="0.92"/>
+    <circle cx="505" cy="487" r="9" fill="#f5ddc0" stroke="#4a2a10" stroke-width="1.5"/>
+    <rect x="521" y="487" width="3" height="34" fill="#d4c8a8"/>
+    <ellipse cx="505" cy="527" rx="20" ry="5" fill="#00000066"/>
+  </g>
+  <rect x="433" y="541" width="144" height="17" fill="#2e251d" rx="3"/>
+  <text x="505" y="554" text-anchor="middle" font-size="10.5" fill="#e8a878" font-weight="bold">CAVES ECHO · 11–15</text>
+  <text x="505" y="590" text-anchor="middle" font-size="9.5" fill="#c9a078">tiles_caves.png</text>
+
+  <!-- SW city -->
+  <g>
+    <circle cx="235" cy="500" r="34" fill="url(#echoGlow)"/>
+    <path d="M221,523 L225,491 Q235,481 245,491 L249,523 Z" fill="#9a7ac9" stroke="#332448" stroke-width="1.8" opacity="0.92"/>
+    <circle cx="235" cy="487" r="9" fill="#ece0f5" stroke="#332448" stroke-width="1.5"/>
+    <rect x="251" y="487" width="3" height="34" fill="#d4c8a8"/>
+    <ellipse cx="235" cy="527" rx="20" ry="5" fill="#00000066"/>
+  </g>
+  <rect x="163" y="541" width="144" height="17" fill="#3a3050" rx="3"/>
+  <text x="235" y="554" text-anchor="middle" font-size="10.5" fill="#cbb0ec" font-weight="bold">CITY ECHO · 16–20</text>
+  <text x="235" y="590" text-anchor="middle" font-size="9.5" fill="#c0aae0">tiles_city.png</text>
+
+  <!-- approach labels -->
+  <text x="370" y="100" text-anchor="middle" font-size="10" fill="#f5c542">↑ from the dungeon gate</text>
+  <text x="370" y="672" text-anchor="middle" font-size="10" fill="#f5c542">↓ to the tavern &amp; dock</text>
+  <text x="88" y="345" font-size="10" fill="#f5c542">← west wood-path</text>
+  <text x="560" y="345" font-size="10" fill="#f5c542">east wood-path →</text>
+
+  <!-- legend -->
+  <g transform="translate(70, 700)">
+    <rect x="0" y="0" width="620" height="180" fill="#efe6d0" stroke="#8f7f5c" rx="4"/>
+    <text x="14" y="22" font-size="12.5" fill="#1a1310" font-weight="bold">What stands here</text>
+    <text x="14" y="42" font-size="10.5" fill="#2b241f">Five ECHO BOSSES, one per region — the current reigning player-echo for depths 1–5 / 6–10 / 11–15 / 16–20 / 21–25.</text>
+    <text x="14" y="59" font-size="10.5" fill="#2b241f">These are the existing DEPTH_POSTS, relocated from the promenade row onto the altar. Honorable mentions stay at the well.</text>
+    <text x="14" y="82" font-size="12.5" fill="#1a1310" font-weight="bold">How it's built</text>
+    <text x="14" y="102" font-size="10.5" fill="#2b241f">• 4 quarter-wedge CustomTilemaps, each textured with its own region sheet, + a 5th disc for the Halls centre.</text>
+    <text x="14" y="119" font-size="10.5" fill="#2b241f">• Throne = a 6th CustomTilemap on CITY_BOSS over Terrain.CUSTOM_DECO, exactly the CityBossLevel recipe.</text>
+    <text x="14" y="136" font-size="10.5" fill="#2b241f">• Raised dais: ring drawn on the wall layer (customWalls) so it reads as elevated; step treads on all four approaches.</text>
+    <text x="14" y="153" font-size="10.5" fill="#2b241f">• Carpet cross doubles as the walkway — north to the dungeon, south to the tavern, east/west to the wood-paths.</text>
+    <text x="14" y="170" font-size="10.5" fill="#2b241f">• Base terrain under the whole disc stays walkable floor; every region texture is a purely visual overlay.</text>
+  </g>
+</svg>

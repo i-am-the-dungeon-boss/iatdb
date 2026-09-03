@@ -224,9 +224,12 @@ public class VillageLevel extends Level {
 		// gate down to the altar, and altar down to the tavern door
 		Painter.fill(this, px, 7, 1, 3, Terrain.EMPTY_SP);
 		Painter.fill(this, px, 20, 1, 3, Terrain.EMPTY_SP);
-		// tracks east and west, running out of town and into the trees
-		Painter.fill(this, 4, 16, 6, 1, Terrain.EMPTY_SP);
-		Painter.fill(this, 23, 16, 6, 1, Terrain.EMPTY_SP);
+		// tracks east and west, running out of town and into the trees. They
+		// carry one column into the belt and stop: far enough that the woods
+		// close over them, short of the border so the map never ends at the end
+		// of a path the player is being invited to walk toward
+		Painter.fill(this, 3, 16, 7, 1, Terrain.EMPTY_SP);
+		Painter.fill(this, 23, 16, 7, 1, Terrain.EMPTY_SP);
 
 		// where the hero arrives in the village: on the paving in front of the
 		// dungeon mouth, a step short of it. No staircase and no transition —
