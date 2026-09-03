@@ -92,7 +92,7 @@ class EchoAltarTest {
 			for (int i = 0; i < data.length; i++) {
 				int x = EchoAltar.DISC_LEFT + (i % EchoAltar.DISC_SPAN);
 				int y = EchoAltar.DISC_TOP + (i / EchoAltar.DISC_SPAN);
-				boolean mine = EchoAltar.quadrantOf(x, y) == region;
+				boolean mine = EchoAltar.quadrantOf(x, y) == region && !EchoAltar.inBasin(x, y);
 				if (mine) {
 					Assertions.assertThat(data[i])
 							.as("region %d should floor (%d,%d)", region, x, y)
@@ -127,7 +127,8 @@ class EchoAltarTest {
 		for (int i = 0; i < painters.length; i++) {
 			int x = EchoAltar.DISC_LEFT + (i % span);
 			int y = EchoAltar.DISC_TOP + (i / span);
-			int expected = EchoAltar.quadrantOf(x, y) == EchoAltar.NONE ? 0 : 1;
+			int expected = EchoAltar.quadrantOf(x, y) == EchoAltar.NONE
+					|| EchoAltar.inBasin(x, y) ? 0 : 1;
 			Assertions.assertThat(painters[i])
 					.as("(%d,%d) should be drawn by %d quarter(s)", x, y, expected)
 					.isEqualTo(expected);
@@ -194,6 +195,91 @@ class EchoAltarTest {
 				AltarQuadrant.textureFor(EchoAltar.NONE);
 			}
 		}).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	@DisplayName("Every quarter has a basin, sitting on that quarter and nowhere near the throne")
+	void everyQuarterHoldsOneBasin() {
+		int[] regions = {
+				EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY
+		};
+		int[] basinCells = new int[regions.length];
+
+		for (int r = 0; r < regions.length; r++) {
+			int region = regions[r];
+			int left = EchoAltar.basinLeft(region);
+			int top = EchoAltar.basinTop(region);
+			for (int y = top; y < top + EchoAltar.BASIN_SPAN; y++) {
+				for (int x = left; x < left + EchoAltar.BASIN_SPAN; x++) {
+					basinCells[r]++;
+					Assertions.assertThat(EchoAltar.inBasin(x, y))
+							.as("(%d,%d) should be basin", x, y).isTrue();
+					Assertions.assertThat(EchoAltar.quadrantOf(x, y))
+							.as("the basin at (%d,%d) should sit on its own quarter", x, y)
+							.isEqualTo(region);
+				}
+			}
+			Assertions.assertThat(basinCells[r])
+					.isEqualTo(EchoAltar.BASIN_SPAN * EchoAltar.BASIN_SPAN);
+		}
+	}
+
+	@Test
+	@DisplayName("No basin swallows the spot an echo stands on")
+	void noBasinTakesAPost() {
+		for (int i = 0; i < EchoAltar.POST_X.length; i++) {
+			Assertions.assertThat(EchoAltar.inBasin(EchoAltar.POST_X[i], EchoAltar.POST_Y[i]))
+					.as("post %d should stay dry", i)
+					.isFalse();
+		}
+	}
+
+	@Test
+	@DisplayName("Each basin holds its own region's water, and no two hold the same")
+	void eachBasinHoldsItsOwnRegionsWater() {
+		Assertions.assertThat(AltarPool.waterFor(EchoAltar.SEWERS))
+				.isEqualTo(Assets.Environment.WATER_SEWERS);
+		Assertions.assertThat(AltarPool.waterFor(EchoAltar.PRISON))
+				.isEqualTo(Assets.Environment.WATER_PRISON);
+		Assertions.assertThat(AltarPool.waterFor(EchoAltar.CAVES))
+				.isEqualTo(Assets.Environment.WATER_CAVES);
+		Assertions.assertThat(AltarPool.waterFor(EchoAltar.CITY))
+				.isEqualTo(Assets.Environment.WATER_CITY);
+
+		int[] regions = {
+				EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY
+		};
+		for (int i = 0; i < regions.length; i++) {
+			AltarPool pool = new AltarPool(regions[i]);
+			Assertions.assertThat(pool.tileX).isEqualTo(EchoAltar.basinLeft(regions[i]));
+			Assertions.assertThat(pool.tileY).isEqualTo(EchoAltar.basinTop(regions[i]));
+			// the water images are 32x32, so only four tiles exist to index
+			int[] data = pool.tileData();
+			Assertions.assertThat(data).hasSize(4);
+			for (int j = 0; j < data.length; j++) {
+				Assertions.assertThat(data[j]).isBetween(0, 3);
+			}
+			for (int j = i + 1; j < regions.length; j++) {
+				Assertions.assertThat(AltarPool.waterFor(regions[i]))
+						.isNotEqualTo(AltarPool.waterFor(regions[j]));
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("A quarter leaves its basin unfloored rather than paving over the water")
+	void quartersLeaveTheirBasinsOpen() {
+		int region = EchoAltar.SEWERS;
+		int[] data = new AltarQuadrant(region).tileData();
+		for (int i = 0; i < data.length; i++) {
+			int x = EchoAltar.DISC_LEFT + (i % EchoAltar.DISC_SPAN);
+			int y = EchoAltar.DISC_TOP + (i / EchoAltar.DISC_SPAN);
+			if (EchoAltar.inBasin(x, y)) {
+				Assertions.assertThat(data[i])
+						.as("(%d,%d) is basin and should be left to the water", x, y)
+						.isEqualTo(SKIP);
+			}
+		}
 	}
 
 	@Test

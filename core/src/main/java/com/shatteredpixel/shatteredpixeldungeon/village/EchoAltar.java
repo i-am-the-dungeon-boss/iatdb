@@ -91,6 +91,49 @@ public final class EchoAltar {
 				&& (x == CENTRE_X || y == CENTRE_Y);
 	}
 
+	/**
+	 * Basins set into the paving, one to a quarter, each holding that region's
+	 * own water.
+	 *
+	 * <p>Two by two rather than round: these are worked stone basins in a built
+	 * plaza, so a square edge is the honest shape, and it is also the only one
+	 * that survives being drawn as a flat overlay — the sheet's water tiles are
+	 * the translucent edges of a scrolling bed, and there is one bed per level.
+	 *
+	 * <p>The offsets are wider than they are tall because the disc is not: at
+	 * five cells out along both axes at once the corner falls outside it.
+	 */
+	public static final int BASIN_SPAN = 2;
+	private static final int BASIN_NEAR_X = 4;
+	private static final int BASIN_NEAR_Y = 3;
+
+	public static boolean inBasin(int x, int y) {
+		int adx = Math.abs(x - CENTRE_X);
+		int ady = Math.abs(y - CENTRE_Y);
+		return adx >= BASIN_NEAR_X && adx < BASIN_NEAR_X + BASIN_SPAN
+				&& ady >= BASIN_NEAR_Y && ady < BASIN_NEAR_Y + BASIN_SPAN;
+	}
+
+	/** Left edge of a region's basin. */
+	public static int basinLeft(int region) {
+		return isWestern(region) ? CENTRE_X - BASIN_NEAR_X - BASIN_SPAN + 1
+				: CENTRE_X + BASIN_NEAR_X;
+	}
+
+	/** Top edge of a region's basin. */
+	public static int basinTop(int region) {
+		return isNorthern(region) ? CENTRE_Y - BASIN_NEAR_Y - BASIN_SPAN + 1
+				: CENTRE_Y + BASIN_NEAR_Y;
+	}
+
+	private static boolean isWestern(int region) {
+		return region == SEWERS || region == CITY;
+	}
+
+	private static boolean isNorthern(int region) {
+		return region == SEWERS || region == PRISON;
+	}
+
 	/** Which region's ground a cell shows, or {@link #NONE} off the quarters. */
 	public static int quadrantOf(int x, int y) {
 		if (!inDisc(x, y) || inDais(x, y) || onCross(x, y)) {

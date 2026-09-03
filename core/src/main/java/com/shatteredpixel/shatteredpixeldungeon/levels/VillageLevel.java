@@ -36,10 +36,12 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarDais;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarPool;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarQuadrant;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarThrone;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarThroneShadow;
 import com.shatteredpixel.shatteredpixeldungeon.village.EchoAltar;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageDock;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndDungeonMode;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Music;
@@ -76,8 +78,9 @@ public class VillageLevel extends Level {
 	private static final int PATH_X = 16;
 	private static final int GATE_Y = 4;
 
-	/** The dock runs south from the sand on these two columns. */
-	private static final int DOCK_X = 15;
+	/** The dock runs south from the sand on these two columns, east of centre. */
+	public static final int DOCK_X = 21;
+	public static final int DOCK_W = 2;
 
 	/** The well, on the north-west green. */
 	private static final int WELL_X = 7;
@@ -162,7 +165,8 @@ public class VillageLevel extends Level {
 		Painter.fill(this, 4, SIZE - 6, SIZE - 8, 2, Terrain.EMPTY);
 		// the dock stops a row short of the water's edge, so the outermost ring
 		// stays open sea and the planking never reads as the map running out
-		Painter.fill(this, DOCK_X, SIZE - 6, 2, 3, Terrain.EMPTY_SP);
+		Painter.fill(this, DOCK_X, SIZE - 6, DOCK_W, 3, Terrain.EMPTY_SP);
+		customTiles.add(new VillageDock(DOCK_X, SIZE - 6, DOCK_W, 3));
 	}
 
 	/** The gatehouse over the dungeon stair, at the top of the map. */
@@ -231,12 +235,26 @@ public class VillageLevel extends Level {
 		// the throne itself is solid, so the seat is never stood on
 		map[cell(EchoAltar.THRONE_SEAT_X, EchoAltar.THRONE_SEAT_Y)] = Terrain.CUSTOM_DECO;
 
-		// order is draw order: the quarters floor the disc, the dais covers the
-		// middle of them, and the throne sits on top of the dais
-		customTiles.add(new AltarQuadrant(EchoAltar.SEWERS));
-		customTiles.add(new AltarQuadrant(EchoAltar.PRISON));
-		customTiles.add(new AltarQuadrant(EchoAltar.CAVES));
-		customTiles.add(new AltarQuadrant(EchoAltar.CITY));
+		// a basin in each quarter, holding that region's own water. Real water
+		// terrain, so it behaves like water; the region's colour comes from the
+		// AltarPool laid over it, since a level only has one water texture
+		int[] regions = { EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY };
+		for (int y = 1; y < SIZE - 1; y++) {
+			for (int x = 1; x < SIZE - 1; x++) {
+				if (EchoAltar.inBasin(x, y)) {
+					map[cell(x, y)] = Terrain.WATER;
+				}
+			}
+		}
+
+		// order is draw order: the quarters floor the disc, the basins fill the
+		// holes left in them, the dais covers the middle, the throne tops it
+		for (int i = 0; i < regions.length; i++) {
+			customTiles.add(new AltarQuadrant(regions[i]));
+		}
+		for (int i = 0; i < regions.length; i++) {
+			customTiles.add(new AltarPool(regions[i]));
+		}
 		customTiles.add(new AltarDais());
 		customTiles.add(new AltarThrone());
 		customWalls.add(new AltarThroneShadow());

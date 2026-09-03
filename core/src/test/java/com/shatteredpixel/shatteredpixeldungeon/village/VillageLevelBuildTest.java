@@ -142,9 +142,16 @@ class VillageLevelBuildTest {
             if (level.map[cell] != Terrain.WATER) {
                 continue;
             }
+            int x = cell % level.width();
+            int y = cell / level.width();
+            // the altar's basins are the other water in town, and they are not
+            // the sea - EchoAltarTest owns those
+            if (EchoAltar.inBasin(x, y)) {
+                continue;
+            }
             sawWater = true;
-            Assertions.assertThat(cell / level.width())
-                    .as("water at cell %d should be in the south half", cell)
+            Assertions.assertThat(y)
+                    .as("water at (%d,%d) should be in the south half", x, y)
                     .isGreaterThanOrEqualTo(VillageLevel.SIZE / 2);
         }
         Assertions.assertThat(sawWater).as("the village should have a shoreline").isTrue();
@@ -235,6 +242,28 @@ class VillageLevelBuildTest {
     }
 
     @Test
+    @DisplayName("The dock is east of the path down from town, and planked in wood")
+    void theDockIsEastAndWooden() {
+        VillageLevel level = village();
+
+        Assertions.assertThat(VillageLevel.DOCK_X)
+                .as("the dock should sit east of the road down through town")
+                .isGreaterThan(VillageLevel.TRACK_Y);
+
+        VillageDock dock = null;
+        for (int i = 0; i < level.customTiles.size(); i++) {
+            if (level.customTiles.get(i) instanceof VillageDock) {
+                dock = (VillageDock) level.customTiles.get(i);
+            }
+        }
+        Assertions.assertThat(dock).as("the jetty should be planked over").isNotNull();
+        Assertions.assertThat(dock.tileX).isEqualTo(VillageLevel.DOCK_X);
+        // boards, and the city sheet has none - see VillageDock
+        Assertions.assertThat(dock.textureName()).isEqualTo(Assets.Environment.TILES_SEWERS);
+        Assertions.assertThat(dock.tileData()).doesNotContain(-1);
+    }
+
+    @Test
     @DisplayName("The altar is laid over with its four quarters, its dais and its throne")
     void theAltarIsDressedWithItsTilemaps() {
         VillageLevel level = village();
@@ -254,6 +283,14 @@ class VillageLevelBuildTest {
         }
 
         Assertions.assertThat(quarters).as("one quarter per region").isEqualTo(4);
+
+        int basins = 0;
+        for (int i = 0; i < level.customTiles.size(); i++) {
+            if (level.customTiles.get(i) instanceof AltarPool) {
+                basins++;
+            }
+        }
+        Assertions.assertThat(basins).as("one basin per region").isEqualTo(4);
         Assertions.assertThat(dais).as("the raised centre").isTrue();
         Assertions.assertThat(throne).as("the throne").isTrue();
 
@@ -285,7 +322,7 @@ class VillageLevelBuildTest {
 
         // the planking stops one row short of the outermost ring, so open sea
         // still runs past the end of the dock
-        int dockEnd = level.cell(16, VillageLevel.SIZE - 4);
+        int dockEnd = level.cell(VillageLevel.DOCK_X, VillageLevel.SIZE - 4);
         Assertions.assertThat(level.map[dockEnd])
                 .as("the far end of the dock should be walkable planking")
                 .isEqualTo(Terrain.EMPTY_SP);

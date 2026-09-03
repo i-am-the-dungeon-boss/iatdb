@@ -124,9 +124,10 @@ public class AltarQuadrant extends CustomTilemap implements AltarOverlay {
 		for (int i = 0; i < data.length; i++) {
 			int x = tileX + (i % tileW);
 			int y = tileY + (i / tileW);
-			if (EchoAltar.quadrantOf(x, y) != region) {
+			if (EchoAltar.quadrantOf(x, y) != region || EchoAltar.inBasin(x, y)) {
 				// -1 is the engine's skip index (Tilemap.needsRender), which is
-				// what lets a rectangle paint a quarter-disc
+				// what lets a rectangle paint a quarter-disc. The basin is left
+				// out too: flooring it would bury the water under stone
 				data[i] = -1;
 			} else {
 				// no alt-tile variance: FLOOR_ALT_1 and FLOOR_ALT_2 are pixel for
