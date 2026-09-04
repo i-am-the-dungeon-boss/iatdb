@@ -291,6 +291,22 @@ class VillageLevelBuildTest {
             }
         }
         Assertions.assertThat(basins).as("one basin per region").isEqualTo(4);
+
+        // the shore has to come after the water it edges, or the flat patch of
+        // region water is drawn over the top of its own shoreline
+        int shores = 0;
+        int lastPool = -1;
+        for (int i = 0; i < level.customTiles.size(); i++) {
+            Object tiles = level.customTiles.get(i);
+            if (tiles instanceof AltarPool) {
+                lastPool = i;
+            } else if (tiles instanceof AltarShore) {
+                shores++;
+                Assertions.assertThat(i).as("shore %d is laid over the water", shores)
+                        .isGreaterThan(lastPool);
+            }
+        }
+        Assertions.assertThat(shores).as("one shore per basin").isEqualTo(4);
         Assertions.assertThat(dais).as("the raised centre").isTrue();
         Assertions.assertThat(throne).as("the throne").isTrue();
 

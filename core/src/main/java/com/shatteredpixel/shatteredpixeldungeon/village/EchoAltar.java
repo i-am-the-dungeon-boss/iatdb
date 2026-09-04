@@ -96,37 +96,105 @@ public final class EchoAltar {
 
 	/**
 	 * Basins set into the paving, one to a quarter, each holding that region's
-	 * own water.
+	 * own water — and each cut to its own shape.
 	 *
-	 * <p>Two by two rather than round: these are worked stone basins in a built
-	 * plaza, so a square edge is the honest shape, and it is also the only one
-	 * that survives being drawn as a flat overlay — the sheet's water tiles are
-	 * the translucent edges of a scrolling bed, and there is one bed per level.
+	 * <p>Four identical squares said nothing about the four places they stand
+	 * for, so the shape carries the region as much as the water does: the sewers
+	 * get a straight sluice, the prison a walled tank, the caves a stream that
+	 * wanders, the city a formal pool with a spur off one end.
 	 *
-	 * <p>The offsets are wider than they are tall because the disc is not: at
-	 * five cells out along both axes at once the corner falls outside it.
+	 * <p>No cell may have water on all four sides: {@code stitchWaterTile} would
+	 * hand back the bare {@code WATER} index for it, which the terrain layer
+	 * skips outright, and the pool would be drawn with a hole in the middle.
+	 *
+	 * <p>Offsets are from the centre, unsigned — the same shape is mirrored into
+	 * whichever corner its region owns. They are wider than they are tall
+	 * because the disc is: five cells out along both axes at once already falls
+	 * outside it. Nothing here may land on the dais, on an arm of the walkway,
+	 * or on a post, all of which {@code EchoAltarTest} checks.
 	 */
-	public static final int BASIN_SPAN = 2;
-	private static final int BASIN_NEAR_X = 4;
-	private static final int BASIN_NEAR_Y = 3;
+	private static final int[][] BASIN_DX = {
+			{},                          // NONE
+			{ 5, 5, 5, 5 },              // SEWERS — a sluice along the outer arc
+			{ 4, 5, 4, 5, 4, 5 },        // PRISON — a squared-off tank
+			{ 5, 5, 4, 4, 4, 3, 3 },     // CAVES  — a stream working its way out
+			{ 2, 1, 2, 3, 4 }            // CITY   — a formal pool with a spur
+	};
+
+	private static final int[][] BASIN_DY = {
+			{},                          // NONE
+			{ 1, 2, 3, 4 },              // SEWERS
+			{ 2, 2, 3, 3, 4, 4 },        // PRISON
+			{ 1, 2, 2, 3, 4, 4, 5 },     // CAVES
+			{ 4, 5, 5, 5, 5 }            // CITY
+	};
 
 	public static boolean inBasin(int x, int y) {
+		int region = quadrantOf(x, y);
+		if (region == NONE) {
+			return false;
+		}
 		int adx = Math.abs(x - CENTRE_X);
 		int ady = Math.abs(y - CENTRE_Y);
-		return adx >= BASIN_NEAR_X && adx < BASIN_NEAR_X + BASIN_SPAN
-				&& ady >= BASIN_NEAR_Y && ady < BASIN_NEAR_Y + BASIN_SPAN;
+		for (int i = 0; i < BASIN_DX[region].length; i++) {
+			if (BASIN_DX[region][i] == adx && BASIN_DY[region][i] == ady) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	/** Left edge of a region's basin. */
+	/** How many cells of water a region's basin holds. */
+	public static int basinSize(int region) {
+		return BASIN_DX[region].length;
+	}
+
+	/** Left edge of the box a region's basin fits in. */
 	public static int basinLeft(int region) {
-		return isWestern(region) ? CENTRE_X - BASIN_NEAR_X - BASIN_SPAN + 1
-				: CENTRE_X + BASIN_NEAR_X;
+		return isWestern(region) ? CENTRE_X - max(BASIN_DX[region])
+				: CENTRE_X + min(BASIN_DX[region]);
 	}
 
-	/** Top edge of a region's basin. */
+	/** Top edge of the box a region's basin fits in. */
 	public static int basinTop(int region) {
-		return isNorthern(region) ? CENTRE_Y - BASIN_NEAR_Y - BASIN_SPAN + 1
-				: CENTRE_Y + BASIN_NEAR_Y;
+		return isNorthern(region) ? CENTRE_Y - max(BASIN_DY[region])
+				: CENTRE_Y + min(BASIN_DY[region]);
+	}
+
+	/** Width of the box a region's basin fits in. */
+	public static int basinWidth(int region) {
+		return max(BASIN_DX[region]) - min(BASIN_DX[region]) + 1;
+	}
+
+	/** Height of the box a region's basin fits in. */
+	public static int basinHeight(int region) {
+		return max(BASIN_DY[region]) - min(BASIN_DY[region]) + 1;
+	}
+
+	private static int min(int[] values) {
+		if (values.length == 0) {
+			throw new IllegalArgumentException("no basin for that region");
+		}
+		int least = values[0];
+		for (int i = 1; i < values.length; i++) {
+			if (values[i] < least) {
+				least = values[i];
+			}
+		}
+		return least;
+	}
+
+	private static int max(int[] values) {
+		if (values.length == 0) {
+			throw new IllegalArgumentException("no basin for that region");
+		}
+		int most = values[0];
+		for (int i = 1; i < values.length; i++) {
+			if (values[i] > most) {
+				most = values[i];
+			}
+		}
+		return most;
 	}
 
 	private static boolean isWestern(int region) {

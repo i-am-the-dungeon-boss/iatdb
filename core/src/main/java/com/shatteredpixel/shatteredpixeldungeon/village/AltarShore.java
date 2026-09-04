@@ -18,43 +18,42 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
-import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
 import com.watabou.noosa.Tilemap;
 import com.watabou.utils.Bundle;
 
 /**
- * The basin in one quarter of the altar, holding that region's own water.
+ * The worked edge where a basin meets the paving around it.
  *
- * <p>A level has exactly one water texture — {@code GameScene} builds a single
- * scrolling block from {@code Level.waterTex()} and every water cell on the map
- * shows through it. So four different waters cannot be terrain; each basin is
- * instead laid over its water cells as a flat patch of that region's water
- * image, which is what makes the sewers' green and the halls' red sit in the
- * same plaza.
+ * <p>The village lays its basins in a plaza floored with {@code EMPTY_SP}, and
+ * {@code EMPTY_SP} is not in {@link DungeonTileSheet#waterStitcheable} — so the
+ * terrain layer stitches every basin cell against nothing, lands on the bare
+ * {@code WATER} index, and {@code DungeonTerrainTilemap.needsRender} then skips
+ * it outright. The result is water with no shoreline at all: a square hole cut
+ * in the floor. The four-bit stitch is therefore worked out here from the
+ * basin's own shape rather than from terrain.
  *
- * <p>The trade is that these basins do not ripple, since the overlay draws
- * above the scrolling bed. Their shoreline is drawn back on top by
- * {@link AltarShore}, which the terrain layer cannot supply here.
+ * <p>Drawn from the region's own sheet and laid over {@link AltarPool}, so the
+ * shore matches the water it holds — the sewers' brick lip, the caves' raw rock
+ * — instead of borrowing the city's.
  */
-public class AltarPool extends CustomTilemap implements AltarOverlay {
-
-	/** The water images are 32x32 — two tiles by two, repeating. */
-	private static final int TEXTURE_TILES = 2;
+public class AltarShore extends CustomTilemap implements AltarOverlay {
 
 	private int region = EchoAltar.NONE;
 
 	/** For bundle restore, which fills the region in immediately afterwards. */
-	public AltarPool() {
+	public AltarShore() {
 	}
 
-	public AltarPool(int region) {
+	public AltarShore(int region) {
 		region(region);
 	}
 
 	public void region(int region) {
 		this.region = region;
-		texture = waterFor(region);
+		texture = AltarQuadrant.textureFor(region);
 		setRect(EchoAltar.basinLeft(region), EchoAltar.basinTop(region),
 				EchoAltar.basinWidth(region), EchoAltar.basinHeight(region));
 	}
@@ -63,29 +62,9 @@ public class AltarPool extends CustomTilemap implements AltarOverlay {
 		return region;
 	}
 
-	/**
-	 * The water a region fills its basin from. Unknown regions throw rather than
-	 * falling back: a basin quietly showing the wrong region's water says the
-	 * wrong thing about the echo standing beside it, and says it silently.
-	 */
-	public static String waterFor(int region) {
-		switch (region) {
-			case EchoAltar.SEWERS:
-				return Assets.Environment.WATER_SEWERS;
-			case EchoAltar.PRISON:
-				return Assets.Environment.WATER_PRISON;
-			case EchoAltar.CAVES:
-				return Assets.Environment.WATER_CAVES;
-			case EchoAltar.CITY:
-				return Assets.Environment.WATER_CITY;
-			default:
-				throw new IllegalArgumentException("no altar basin water for " + region);
-		}
-	}
-
 	@Override
 	public String textureName() {
-		return waterFor(region);
+		return AltarQuadrant.textureFor(region);
 	}
 
 	/** Pure — no GL. See {@link AltarQuadrant#tileData()}. */
@@ -96,16 +75,23 @@ public class AltarPool extends CustomTilemap implements AltarOverlay {
 			int x = tileX + (i % tileW);
 			int y = tileY + (i / tileW);
 			if (!EchoAltar.inBasin(x, y)) {
-				// the basin is cut to a shape, not a block; the rest of the box
-				// it fits in is paving and must be left to the quarter under it
 				data[i] = -1;
 			} else {
-				// indexed by absolute position, so the water's pattern runs on
-				// across the basin instead of restarting in each cell
-				data[i] = (y % TEXTURE_TILES) * TEXTURE_TILES + (x % TEXTURE_TILES);
+				data[i] = DungeonTileSheet.stitchWaterTile(
+						neighbour(x, y - 1), neighbour(x + 1, y),
+						neighbour(x, y + 1), neighbour(x - 1, y));
 			}
 		}
 		return data;
+	}
+
+	/**
+	 * What the stitch should treat a neighbour as. Anything outside the basin is
+	 * the plaza's floor, which the shore has to be drawn against whatever the
+	 * terrain there happens to be paved with.
+	 */
+	private static int neighbour(int x, int y) {
+		return EchoAltar.inBasin(x, y) ? Terrain.WATER : Terrain.EMPTY;
 	}
 
 	@Override

@@ -203,25 +203,35 @@ class EchoAltarTest {
 		int[] regions = {
 				EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY
 		};
-		int[] basinCells = new int[regions.length];
+		int[] shapes = new int[regions.length];
 
 		for (int r = 0; r < regions.length; r++) {
 			int region = regions[r];
 			int left = EchoAltar.basinLeft(region);
 			int top = EchoAltar.basinTop(region);
-			for (int y = top; y < top + EchoAltar.BASIN_SPAN; y++) {
-				for (int x = left; x < left + EchoAltar.BASIN_SPAN; x++) {
-					basinCells[r]++;
-					Assertions.assertThat(EchoAltar.inBasin(x, y))
-							.as("(%d,%d) should be basin", x, y).isTrue();
+			int found = 0;
+			for (int y = top; y < top + EchoAltar.basinHeight(region); y++) {
+				for (int x = left; x < left + EchoAltar.basinWidth(region); x++) {
+					if (!EchoAltar.inBasin(x, y)) {
+						continue;
+					}
+					found++;
 					Assertions.assertThat(EchoAltar.quadrantOf(x, y))
 							.as("the basin at (%d,%d) should sit on its own quarter", x, y)
 							.isEqualTo(region);
 				}
 			}
-			Assertions.assertThat(basinCells[r])
-					.isEqualTo(EchoAltar.BASIN_SPAN * EchoAltar.BASIN_SPAN);
+			Assertions.assertThat(found)
+					.as("every cell of region %d's basin is inside its own box", region)
+					.isEqualTo(EchoAltar.basinSize(region));
+			Assertions.assertThat(found).as("region %d holds water at all", region)
+					.isGreaterThan(0);
+			shapes[r] = found;
 		}
+
+		// four identical squares told the player nothing about the four places
+		// they stand for, so no two quarters may pool the same amount of water
+		Assertions.assertThat(shapes).doesNotHaveDuplicates();
 	}
 
 	@Test
@@ -231,6 +241,40 @@ class EchoAltarTest {
 			Assertions.assertThat(EchoAltar.inBasin(EchoAltar.POST_X[i], EchoAltar.POST_Y[i]))
 					.as("post %d should stay dry", i)
 					.isFalse();
+		}
+	}
+
+	@Test
+	@DisplayName("Every basin is edged with its own region's shoreline, not cut square")
+	void everyBasinIsEdgedWithItsOwnRegionsShore() {
+		int[] regions = {
+				EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY };
+
+		for (int r = 0; r < regions.length; r++) {
+			AltarShore shore = new AltarShore(regions[r]);
+
+			Assertions.assertThat(shore.textureName())
+					.as("the shore is drawn from the region's own sheet")
+					.isEqualTo(AltarQuadrant.textureFor(regions[r]));
+			Assertions.assertThat(shore.tileW).isEqualTo(EchoAltar.basinWidth(regions[r]));
+			Assertions.assertThat(shore.tileH).isEqualTo(EchoAltar.basinHeight(regions[r]));
+
+			// +1 land above, +2 land right, +4 land below, +8 land left. No basin
+			// cell may land on the bare WATER index: that is the one the terrain
+			// layer skips outright, and it is exactly the square hole this fixes.
+			int[] data = shore.tileData();
+			int water = 0;
+			for (int i = 0; i < data.length; i++) {
+				if (data[i] == -1) {
+					continue;
+				}
+				water++;
+				Assertions.assertThat(data[i])
+						.as("region %d, slot %d is a stitched shore", regions[r], i)
+						.isGreaterThan(DungeonTileSheet.WATER)
+						.isLessThanOrEqualTo(DungeonTileSheet.WATER + 15);
+			}
+			Assertions.assertThat(water).isEqualTo(EchoAltar.basinSize(regions[r]));
 		}
 	}
 
@@ -267,10 +311,17 @@ class EchoAltarTest {
 			Assertions.assertThat(pool.tileY).isEqualTo(EchoAltar.basinTop(regions[i]));
 			// the water images are 32x32, so only four tiles exist to index
 			int[] data = pool.tileData();
-			Assertions.assertThat(data).hasSize(4);
+			int filled = 0;
 			for (int j = 0; j < data.length; j++) {
+				if (data[j] == SKIP) {
+					continue;
+				}
+				filled++;
 				Assertions.assertThat(data[j]).isBetween(0, 3);
 			}
+			Assertions.assertThat(filled)
+					.as("region %d fills exactly its own basin", regions[i])
+					.isEqualTo(EchoAltar.basinSize(regions[i]));
 			for (int j = i + 1; j < regions.length; j++) {
 				Assertions.assertThat(AltarPool.waterFor(regions[i]))
 						.isNotEqualTo(AltarPool.waterFor(regions[j]));

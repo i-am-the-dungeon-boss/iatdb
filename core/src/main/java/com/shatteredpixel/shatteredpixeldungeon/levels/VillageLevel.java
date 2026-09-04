@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarDais;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarPool;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarQuadrant;
+import com.shatteredpixel.shatteredpixeldungeon.village.AltarShore;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarThrone;
 import com.shatteredpixel.shatteredpixeldungeon.village.AltarThroneShadow;
 import com.shatteredpixel.shatteredpixeldungeon.village.EchoAltar;
@@ -245,12 +246,16 @@ public class VillageLevel extends Level {
 		}
 
 		// order is draw order: the quarters floor the disc, the basins fill the
-		// holes left in them, the dais covers the middle, the throne tops it
+		// holes left in them, each basin is then edged with its own region's
+		// shoreline, the dais covers the middle and the throne tops it
 		for (int i = 0; i < regions.length; i++) {
 			customTiles.add(new AltarQuadrant(regions[i]));
 		}
 		for (int i = 0; i < regions.length; i++) {
 			customTiles.add(new AltarPool(regions[i]));
+		}
+		for (int i = 0; i < regions.length; i++) {
+			customTiles.add(new AltarShore(regions[i]));
 		}
 		customTiles.add(new AltarDais());
 		customTiles.add(new AltarThrone());
