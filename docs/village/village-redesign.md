@@ -118,10 +118,18 @@ purely visual overlay on top of it.
   use. `create()` only feeds that array to the tilemap.
 - **Each quarter is floored by colour, not by `FLOOR` everywhere.** The plain floors of the
   sewers and the prison are within a few values of the same grey, and the caves' is dark
-  enough (43,40,38) to read as a hole in the plaza; `FLOOR_ALT_1` and `FLOOR_ALT_2` are
-  pixel-identical to `FLOOR` on all five sheets, so alt-tile variance buys nothing. Sewers
+  enough (43,40,38) to read as a hole in the plaza. Sewers
   and caves take their sheet's `FLOOR_SP`, prison and city their `FLOOR` — the city cannot
   take `FLOOR_SP`, because on that sheet it is the red carpet the walkway is made of.
+- **Each quarter has seven floor slots, not one**, catalogued in
+  [`village-floor-options.png`](village-floor-options.png): `FLOOR`, `FLOOR_ALT_1`,
+  `FLOOR_ALT_2`, `FLOOR_DECO`, `FLOOR_DECO_ALT`, `FLOOR_SP`, `FLOOR_SP_ALT`. An earlier
+  version of this note claimed the `_ALT` floors are pixel-identical to `FLOOR` on all five
+  sheets; that is true only of `tiles_city`. On the other four `FLOOR_ALT_1` is a genuinely
+  different weave, and only the prison and caves fold `FLOOR_ALT_2` back onto it — so real
+  per-quarter variance is available on four sheets of five. The `_DECO` pair is a scatter
+  overlay (sewer moss, prison blood, cave quartz, halls veining) and would read as ground
+  cover rather than as a floor swap.
 - All five `tiles_*.png` share **one 16-column layout, and tile index N is the same terrain on
   every sheet** — `DungeonTerrainTilemap.getTileVisual()` computes indices from
   `DungeonTileSheet` constants with no region branching at all. So `DungeonTileSheet.FLOOR`
