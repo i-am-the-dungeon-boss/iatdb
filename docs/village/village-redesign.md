@@ -130,6 +130,16 @@ purely visual overlay on top of it.
   per-quarter variance is available on four sheets of five. The `_DECO` pair is a scatter
   overlay (sewer moss, prison blood, cave quartz, halls veining) and would read as ground
   cover rather than as a floor swap.
+- **Water and grass have their own catalogues**, in
+  [`village-water-options.png`](village-water-options.png) and
+  [`village-grass-options.png`](village-grass-options.png). Water is the odd one: the
+  animated bed is one texture for the whole level, so the four basin colours can only come
+  from `AltarPool` overlays, while the 16 stitched `WATER+n` slots on each region sheet are
+  transparent in the middle with a painted rim — which is exactly why `WATER+0`, the
+  fully-blank slot, is the one the terrain layer skips. Grass has six slots per sheet
+  (`GRASS`, `GRASS_ALT`, and raised/furrowed tall grass with an alt each), but the village
+  only ever reaches its own `tilesTex()` grass; the other four sheets' grass would need a
+  `CustomTilemap`, the way the quarters do.
 - All five `tiles_*.png` share **one 16-column layout, and tile index N is the same terrain on
   every sheet** — `DungeonTerrainTilemap.getTileVisual()` computes indices from
   `DungeonTileSheet` constants with no region branching at all. So `DungeonTileSheet.FLOOR`
