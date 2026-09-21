@@ -1,0 +1,21 @@
+---
+description: Village hub — separate run state, player echoes only (not dungeon bosses), decoupled avatars
+globs: **/village/**/*.java,**/worldnet/**/*.java,**/scenes/**/*.java
+alwaysApply: true
+---
+
+# Village
+
+## Separate from the dungeon (state, not feel)
+
+The village hub must be **separate in state and lifetime** from a dungeon run: the village figure is not the run hero; the dungeon is created only when the player chooses solo/ranked at the entrance. Nothing crosses from village into a run; the village outlives every run's death.
+
+**Reuse dungeon machinery for presentation and input** (`Level`, `GameScene`, FoW, cell selector, tilemaps) so UX matches the dungeon. Do not quietly make the village "depth 0 of a real run", and do not rebuild a bespoke scene/renderer that feels wrong. Target: dungeon machinery for feel, village-owned persistence underneath.
+
+## Echoes only — not dungeon bosses
+
+Village figures are **player-derived echoes** only (reigning echo bosses per region + honorable mentions). Real dungeon bosses (Goo, Tengu, DM-300, Dwarf King, Yog-Dzewa) never appear there, even as decoration. Evoke a region with that region's **tileset / props**; the occupant is always a player's echo.
+
+## Avatar appearance stays decoupled
+
+Local (`HeroSprite`) and remote (`RemotePlayerSprite`) avatar appearance must stay **independent inputs** — do not share one constant "so they never drift." Per-player avatar choice is the planned end state; today's matching cloth warrior is temporary coincidence.

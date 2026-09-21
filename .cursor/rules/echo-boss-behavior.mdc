@@ -1,0 +1,39 @@
+---
+description: EchoBoss fight behavior — kit-bound power, never idle as fallback, kite/terrain/thresholds from game data
+globs: **/heroechoes/**/*.java,**/actors/mobs/EchoBoss*.java
+alwaysApply: true
+---
+
+# EchoBoss fight behavior
+
+The echo is a replay of a real hero's loadout. Power and options are bounded by that kit.
+
+## Acts through its kit
+
+When the boss needs to affect the world (break a door, clear a plant, etc.), do it by **using an available kit item / playbook role** (`EchoRoleExecutor`, capabilities from the backend), not by calling a free game API (`Level.destroy`, etc.).
+
+**No free fallback.** If the loadout cannot do the thing, the echo does not get to do the thing — keep pressure/state so the action can fire when an item appears; return false otherwise.
+
+## Never idle as a fallback
+
+`WAIT` / `*wait` is only legitimate when a policy **deliberately** chooses it (e.g. stance `HOLD`). It must never be a terminal `default_roles` entry, the tail of an escalation ladder, or a Java "nothing else worked" branch.
+
+Correct terminal fallback: attack matching the build (`RANGED` then `MELEE`, or melee-first for melee kits) — never silent idle.
+
+## Never stalls out of a fight
+
+Avoidance rules (hazardous plants/AoE impassable, LoS gates) must not combine into a state where the echo cannot reach or attack and stands still. Prefer a **last-resort waiver** (drop avoidance only when blocked *and* no alternative) over weakening the rule always. Cells harmful every turn (fire, toxic gas) stay non-waivable; one-shot plants on the path may be waived.
+
+When not closing in, spend the turn shooting/throwing rather than idling. Do not refuse a hero target merely for standing in a DoT the echo seeded; refuse only splash that hits the echo or a shot a wall stops.
+
+## Kiting must outpace the hero
+
+Retreat / `KEEP_DISTANCE` / untouchable `RUN` steps use a clear speed advantage vs the hero's **current** speed (target ~Potion of Haste class; production uses `EchoBoss.KITE_SPEED_ADVANTAGE` ≈ ×2.5 via `kiteStepDelay()`). Parity kiting is useless. Do not silently restore normal move cost on retreat paths.
+
+## Terrain destinations must be safe
+
+When heading for terrain (e.g. water while burning), only choose cells clear of AoE DoT. If none exist, solve another way (e.g. `CLEANSE_BURN` potion) — do not walk into burning/gassed "safety" or stall. Terrain sensing (`terrain_near`) must filter hazardous cells so the playbook stays honest.
+
+## Derive thresholds from game data
+
+Numeric AI thresholds ("big shield", "low HP", "worth a potion") must be **derived** from real applier sites and formulas in the codebase, not invented constants. Show the derivation in the plan and in a comment next to the constant so upstream rebalances can be re-checked.

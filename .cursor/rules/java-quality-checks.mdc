@@ -49,6 +49,16 @@ turning it on does not light up the unannotated base-game sources. Currently sco
   `-PerrorProneErrors`. Do not hard-code `-Xep:NullAway:ERROR`; an explicit severity
   overrides `allErrorsAsWarnings` and breaks the green-compile default.
 
+## Prefer structural enforcement
+
+For recurring bug classes, prefer making the compiler or test suite reject them
+(encapsulation, NullAway/Error Prone scoped packages, source-scanning JUnit like
+`RoboVMUnsupportedApisTest`) over patching call sites alone. Check whether a tool
+supports **scoped** adoption before dismissing it as too invasive. Do not park useful
+hardening in "deferred" — if it is good enough to describe in the plan, include it unless
+the user cuts scope.
+
 ## Concurrent Gradle
 
-Same as other long runs: `./gradlew --status` first; use a worktree if another build is active (see `gradle-worktree` rule).
+Same as other long runs: `./gradlew --status` first; wait when BUSY for sequential work;
+use a worktree only for planned parallel builds (see `gradle-worktree` rule).

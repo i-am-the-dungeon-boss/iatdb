@@ -1,0 +1,22 @@
+---
+description: World chat/presence transport stays behind WorldNetEngine SPI — no engine types in game/UI code
+globs: **/worldnet/**/*.java,**/village/**/*.java,**/scenes/**/*.java,**/ui/**/*.java
+alwaysApply: true
+---
+
+# WorldNet engine isolation
+
+World chat and village presence talk only to the **engine SPI** (`worldnet/WorldNetEngine`, owned by `WorldNet`). Swapping transport (WebSocket, polling, etc.) must be engine selection only.
+
+## Practical consequences
+
+- No transport-specific type, method, or concept in UI, scene, or gameplay code. Neutral methods on `WorldNet` expose what UI needs (display name, composer disabled, …).
+- Capabilities one engine needs become SPI methods — a transport-only public method on a concrete engine is a leak even while only one engine exists.
+- Wire/DTO types shared by more than one engine live in a neutral package, not inside one engine's package.
+- Chat and presence remain independent streams where possible.
+
+Coexists with [no-pass-through-wrappers.mdc](no-pass-through-wrappers.mdc): the SPI is a real polymorphic seam (allowed); a forwarding-only factory around it is not — selection stays a static on the lifecycle owner.
+
+## RoboVM and third-party realtime SDKs
+
+Mainstream realtime SDKs (Nakama, Ably, Pusher) pull gRPC/Netty/OkHttp/Kotlin/Guava and do not AOT cleanly on RoboVM; presence is often socket-only anyway. For `core`/`SPD-classes` networking prefer `HttpURLConnection`, SSE over that, or a hand-rolled RFC 6455 client over blocking `SSLSocket`. Check transitive deps for those stacks before evaluating a library — see also [cross-platform.mdc](cross-platform.mdc).

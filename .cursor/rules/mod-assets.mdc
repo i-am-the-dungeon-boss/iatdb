@@ -1,0 +1,11 @@
+---
+description: New mod-authored assets live under assets/iatdb/, not mixed into upstream SPD folders
+globs: **/assets/**,**/sprites/**/*.java
+alwaysApply: true
+---
+
+# Mod assets live under `iatdb/`
+
+New art for the iatdb mod goes under its own subtree, e.g. `core/src/main/assets/iatdb/sprites/`, not alongside upstream files in `sprites/`, `interfaces/`, `effects/`, etc.
+
+Keeps `master` (untouched upstream) and `main` (mod) separable on asset pull, and makes ownership obvious. Apply the same instinct to other asset categories: new additions under the `iatdb/` prefix. Editing an existing upstream sheet is fine when the change genuinely belongs to that sheet.

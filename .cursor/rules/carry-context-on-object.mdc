@@ -1,0 +1,15 @@
+---
+description: Carry borrowed/foreign context on a throwaway object field, not ambient ThreadLocal scopes; name accessors for the question that varies
+globs: **/*.java
+alwaysApply: true
+---
+
+# Carry context on the object
+
+When rendering or handling data that belongs to someone other than the local player (echo kit, village figure), prefer a **throwaway copy with context stamped on it** over an ambient scope (`ThreadLocal` enter/exit) that surrounding code implicitly reads.
+
+- Ambient scopes are invisible at the call site, need `finally` balancing, and fail globally when they leak.
+- A field on a copy does not mutate the live fight object for display.
+- Concerns with no object to hang on should collapse to the smallest possible thing (one boolean, one call site), not a shared ambient mechanism.
+
+**Name accessors for the question that actually varies.** Prefer `owner()` ("whose item?") over `viewer()` when the reader is always the local player. In base-game-origin code, a latent-bug-style name survives upstream merges better than a mod-flavoured name.

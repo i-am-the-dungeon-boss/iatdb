@@ -98,3 +98,11 @@ not this list, to change rule content.
 @.cursor/rules/gradle-worktree.mdc
 @.cursor/rules/no-pass-through-wrappers.mdc
 @.cursor/rules/keep-module-docs.mdc
+@.cursor/rules/echo-boss-behavior.mdc
+@.cursor/rules/echo-ui.mdc
+@.cursor/rules/carry-context-on-object.mdc
+@.cursor/rules/village.mdc
+@.cursor/rules/always-online.mdc
+@.cursor/rules/anticheat-silent.mdc
+@.cursor/rules/mod-assets.mdc
+@.cursor/rules/worldnet-isolation.mdc

@@ -1,0 +1,18 @@
+---
+description: Echo-viewing UI must never reassign Dungeon.hero or edit Hero/Belongings/Dungeon for display
+globs: **/heroechoes/**/*.java,**/windows/**/*.java,**/ui/**/*.java,**/village/**/*.java
+alwaysApply: true
+---
+
+# Echo UI — never swap `Dungeon.hero`
+
+When UI shows a Hero Echo's kit/stats/inventory (stored echo or live `EchoBoss`):
+
+1. **Never reassign `Dungeon.hero`**, not even temporarily for one synchronous call.
+2. **Never modify** `Hero`, `Belongings`, `Dungeon`, or shared slot widgets hard-wired to the player hero (`InventorySlot`) just to make echo data display.
+
+Accept visual/fidelity sacrifices. Prefer a **mod-side widget** that takes the echo hero as an explicit constructor parameter (e.g. extend `ItemSlot`, own a local background) over editing base-game classes or swapping globals.
+
+`WndEchoDetail`'s `Dungeon.hero = viewHero` for the window lifetime is **legacy to replace**, never a pattern to copy. Read-only reads of `Dungeon.hero` inside base-game `info()` text are tolerated; this rule is about **writes** and editing hero-owned classes.
+
+Related: stamp borrowed context on a throwaway copy (`Item.owner` / preview), not ambient `ThreadLocal` scopes — see [carry-context-on-object.mdc](carry-context-on-object.mdc).

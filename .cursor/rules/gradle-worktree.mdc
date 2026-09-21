@@ -1,5 +1,5 @@
 ---
-description: Isolate concurrent Gradle runs with git worktrees; check daemon status first
+description: Isolate concurrent Gradle runs with git worktrees; check daemon status first; wait when BUSY for sequential work
 alwaysApply: true
 ---
 
@@ -13,7 +13,15 @@ Never run two full Gradle builds in the same checkout — they contend on `build
 ./gradlew --status
 ```
 
-`BUSY` means another build may already be using a daemon. Idle daemons are fine to share across **different** directories.
+`BUSY` means another build may already be using a daemon. Idle daemons are fine to share across **different** checkouts.
+
+## When the daemon is BUSY (sequential agent work)
+
+**Wait for it to finish** — keep doing non-Gradle work (read, edit, write tests), poll `./gradlew --status` until `IDLE`, then run. Do not report the task blocked or skip tests because Gradle was busy.
+
+The worktree escape hatch is for **genuinely parallel long runs planned as such** (e.g. game `:desktop:run` in one tree, tests in another). Do **not** create a worktree just to avoid waiting a couple of minutes on a shared checkout. A worktree run also needs dirty changes copied over — usually more cost than the wait.
+
+Other sessions may modify the same tree: at the end of a task, report only the files you changed; say plainly if other diffs came from elsewhere.
 
 ## Parallel work → separate worktree
 

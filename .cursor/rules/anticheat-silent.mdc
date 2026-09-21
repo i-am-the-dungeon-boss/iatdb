@@ -1,0 +1,17 @@
+---
+description: Cheat/save-tamper detection is silent, sticky, server-reported; never bricks legitimate saves
+globs: **/heroechoes/**/*.java,**/integrity/**/*.java
+alwaysApply: true
+---
+
+# Anti-cheat is silent
+
+When designing cheat or save-tamper detection:
+
+1. **Nothing is surfaced in the client** — no window, log line, badge, or UI hint that a save was flagged. A cheater sees a normal-looking game.
+2. **Detection is permanently sticky** — once flagged, it stays flagged across normal overwrites; clearing the on-disk flag is itself tampering.
+3. **Report to hero-echoes with player identity** (device-auth JWT / device id). Value is operator action and withholding online submissions, not confronting the player.
+4. **Gate only the marked run** — tampered run captures no echo/leaderboard row; an ended run's static must not silence the next untampered run (use a run-scoped predicate).
+5. **No redundant backend boolean** — a non-empty `integrity_flags` array is the flag; do not add a denormalized `flagged` checkbox to keep in sync.
+
+**Hard constraint:** detection must never cost a legitimate player their save. Old-version saves stay playable and unflagged. Verification data is versioned and append-only — never refuse a load.

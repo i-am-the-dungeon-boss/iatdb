@@ -1,0 +1,21 @@
+---
+description: iatdb is always-online — game-version check always runs; never gate network on WiFi/metered
+globs: **/heroechoes/online/**/*.java,**/services/**/*.java,**/SPDSettings.java,**/Update*/*.java
+alwaysApply: true
+---
+
+# Always online
+
+iatdb is an **always-online** game.
+
+## Game-version check always runs
+
+Nothing may disable `GET /v1/game-version`: not `SPDSettings.updates()`, not metered-network checks, not an `UpdateService` that "doesn't support prompts." This check gates outdated clients off echo floors and mismatched wire formats. A preference may control whether a _prompt_ is shown, never whether the request is made. Acceptable skips: genuinely absent update service, existing hourly cache.
+
+## No WiFi / metered gates
+
+Mobile data vs WiFi is irrelevant. Do not reintroduce `SPDSettings.WiFi()`-style gating, `connectedToUnmeteredNetwork()` bails, or toggles for them on updates, news, or other network paths. If a change proposes gating network work behind connection type or a user toggle, surface the conflict with this rule instead of silently adding the gate.
+
+## World chat during runs
+
+`SPDSettings.worldChat()` (`world_chat`) is **on by default** and the player's toggle is **persisted**. Do not resurrect session-scoped consent (off every launch). The village channel is separate and always connects; this setting only gates the dungeon-run channel.
