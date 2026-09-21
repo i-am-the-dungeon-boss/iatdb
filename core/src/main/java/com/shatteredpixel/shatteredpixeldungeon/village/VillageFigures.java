@@ -249,7 +249,8 @@ public final class VillageFigures {
 		}
 		VillageTitle title = VillageFigureTitle.of(body.figure());
 		if (title != null) {
-			VillageFigureTitleCrier crier = new VillageFigureTitleCrier(body.sprite, title);
+			VillageFigureTitleCrier crier =
+					new VillageFigureTitleCrier(body.sprite, title);
 			GameScene.addToMobLayer(crier);
 			raised.add(crier);
 		}

@@ -23,14 +23,19 @@ import java.util.List;
  * A player's echo, standing in the village because it earned a spot on the
  * homepage's depth or honorable-mention lists.
  *
- * <p>Scenery in the {@link com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Villager}
- * mould — passive, immovable, unhittable — but a real {@code Char} rather than a
+ * <p>
+ * Scenery in the
+ * {@link com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Villager}
+ * mould — passive, immovable, unhittable — but a real {@code Char} rather than
+ * a
  * bare sprite, which is the point: {@code GameScene.getObjectsAtCell} finds
- * things through {@code Actor.findChar}, so being a {@code Char} is what makes a
+ * things through {@code Actor.findChar}, so being a {@code Char} is what makes
+ * a
  * figure inspectable and interactable on walk-up. Remote players, which are
  * sprites with no {@code Char}, are exactly the thing that cannot be inspected.
  *
- * <p>The echoed hero arrives late. Standing here needs only appearance and
+ * <p>
+ * The echoed hero arrives late. Standing here needs only appearance and
  * facts; stats, kit and talents need the echo's data bundle, which is requested
  * for this one figure when somebody looks at it. Until it lands
  * {@link #getEchoHero()} is null and the inspect window falls back to the plain
@@ -112,6 +117,9 @@ public class VillageEcho extends NPC implements EchoInspectable {
 
 	@Override
 	public CharSprite sprite() {
+		if (figure.isEmptyPost()) {
+			return VillageEchoSprite.emptyPost();
+		}
 		return new VillageEchoSprite(heroClass, figure.armorTier);
 	}
 
@@ -127,34 +135,34 @@ public class VillageEcho extends NPC implements EchoInspectable {
 	/**
 	 * Who they are and everything the town honours them for.
 	 *
-	 * <p>The flat reading, for anywhere a description is a single string. The
-	 * inspect window draws the same content from {@link #preamble()} and
-	 * {@link #titles()} instead, so each honour keeps its own colour.
+	 * <p>
+	 * The flat reading, for anywhere a description is a single string. The
+	 * inspect window draws the same content from {@link #titles()} instead, so
+	 * each honour keeps its own colour.
 	 */
 	@Override
 	public String description() {
-		StringBuilder text = new StringBuilder(preamble());
+		StringBuilder text = new StringBuilder();
 		List<VillageTitle> titles = titles();
 		for (int i = 0; i < titles.size(); i++) {
 			VillageTitle title = titles.get(i);
 			if (title.description != null) {
+				if (text.length() > 0) {
+					text.append("\n\n");
+				}
 				// Boast first, then what earned it — the same shape the window
 				// draws, minus the colour a flat string cannot carry.
-				text.append("\n\n").append(title.text).append(' ').append(title.description);
+				text.append(title.text).append(' ').append(title.description);
 			}
 		}
 		return text.toString();
 	}
 
-	/** What this body is, before anything it has done. Never an honour. */
-	public String preamble() {
-		return Messages.get(this, "desc");
-	}
-
 	/**
 	 * Every honour the player behind this body holds, this body's own first.
 	 *
-	 * <p>The player's rather than the echo's: somebody can stand in the square
+	 * <p>
+	 * The player's rather than the echo's: somebody can stand in the square
 	 * more than once, and walking up to either body should say the same thing
 	 * about who is being looked at.
 	 */
@@ -166,7 +174,8 @@ public class VillageEcho extends NPC implements EchoInspectable {
 	 * The figures currently standing in town, for looking up the rest of this
 	 * player's honours.
 	 *
-	 * <p>Empty outside a live village — a figure restored from a save and read
+	 * <p>
+	 * Empty outside a live village — a figure restored from a save and read
 	 * before the world channel has sent anything still describes itself, it just
 	 * has nobody to compare against.
 	 */

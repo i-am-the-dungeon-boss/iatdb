@@ -26,11 +26,11 @@ import com.watabou.noosa.Tilemap;
 /**
  * The raised centre of the altar, floored from the halls.
  *
- * <p>The deepest echo the site knows stands here, so the ground under it is the
+ * <p>The deepest echo the site knows sits here, so the ground under it is the
  * deepest ground in the game — the same reasoning as the four quarters, applied
- * to the middle. The four step treads are laid in the same stone one cell
- * further out, where each arm of the walkway meets the platform, so the centre
- * reads as something you step up onto rather than as another patch of floor.
+ * to the middle. Nine cells to a side, and nothing but platform: the walkway
+ * runs up to its edge in the same paving it carries everywhere else in town,
+ * which reads as one road arriving rather than as a stepped approach.
  */
 public class AltarDais extends CustomTilemap implements AltarOverlay {
 
@@ -55,14 +55,10 @@ public class AltarDais extends CustomTilemap implements AltarOverlay {
 		for (int i = 0; i < data.length; i++) {
 			int x = tileX + (i % tileW);
 			int y = tileY + (i / tileW);
-			if (EchoAltar.inDais(x, y) || EchoAltar.isTread(x, y)) {
-				// the halls' worked floor for both. Its plain floor is nearly
-				// black, so a tread laid in it reads as a hole punched in the
-				// walkway rather than as the step up onto the platform
-				data[i] = DungeonTileSheet.FLOOR_SP;
-			} else {
-				data[i] = -1;
-			}
+			// the halls' plain floor, as every quarter takes its own sheet's
+			// plain floor - the centre is the halls quarter and has no reason
+			// to be laid differently from the other four
+			data[i] = EchoAltar.inDais(x, y) ? DungeonTileSheet.FLOOR : -1;
 		}
 		return data;
 	}

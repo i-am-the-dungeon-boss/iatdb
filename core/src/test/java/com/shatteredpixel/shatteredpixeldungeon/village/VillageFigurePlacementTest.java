@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
+import java.util.ArrayDeque;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoPlayMode;
@@ -218,6 +220,52 @@ class VillageFigurePlacementTest {
 	}
 
 	@Test
+	@DisplayName("The mentions gather on a paved court, and the court joins the road")
+	void theMentionsGatherOnAPavedCourt() {
+		VillageLevel level = village();
+
+		int[] posts = VillageFigurePlacement.mentionPosts(level);
+		for (int i = 0; i < posts.length; i++) {
+			Assertions.assertThat(level.map[posts[i]])
+					.as("mention %d stands on the court's paving", i)
+					.isEqualTo(Terrain.EMPTY_SP);
+		}
+
+		// and the court is not an island: from one of its cells the paving runs
+		// unbroken to the avenue that serves the doors along the top of town
+		Assertions.assertThat(pavingReaches(level, posts[0], level.cell(16, 11)))
+				.as("the court's paving joins the avenue")
+				.isTrue();
+	}
+
+	/** Whether paving runs unbroken from one cell to another, four ways. */
+	private boolean pavingReaches(VillageLevel level, int from, int to) {
+		boolean[] seen = new boolean[level.length()];
+		ArrayDeque<Integer> queue = new ArrayDeque<>();
+		queue.add(from);
+		seen[from] = true;
+		int[] step = { -level.width(), level.width(), -1, 1 };
+		while (!queue.isEmpty()) {
+			int cell = queue.remove();
+			if (cell == to) {
+				return true;
+			}
+			for (int i = 0; i < step.length; i++) {
+				int next = cell + step[i];
+				if (next < 0 || next >= level.length() || seen[next]) {
+					continue;
+				}
+				if (level.map[next] != Terrain.EMPTY_SP) {
+					continue;
+				}
+				seen[next] = true;
+				queue.add(next);
+			}
+		}
+		return false;
+	}
+
+	@Test
 	@DisplayName("The deepest echo stands in the throne")
 	void theDeepestEchoStandsInTheThrone() {
 		VillageLevel level = village();
@@ -240,4 +288,5 @@ class VillageFigurePlacementTest {
 		int[] posts = VillageFigurePlacement.depthPosts(level);
 		Assertions.assertThat(VillageFigurePlacement.isFree(level, posts[0])).isTrue();
 	}
+
 }

@@ -10,23 +10,26 @@ import java.util.List;
 /**
  * A village figure's inspect text, with every honour boasted in its own colour.
  *
- * <p>One format for all of them: the boast, coloured, then the sentence behind
+ * <p>
+ * One format for all of them: the boast, coloured, then the sentence behind
  * it in the window's own colour. Only the boast is painted — a whole paragraph
  * in crimson is a wall rather than a label, and the eye needs the plain text to
  * fall back to.
  *
- * <p>{@link RenderedTextBlock} paints one highlight colour per block, so each
+ * <p>
+ * {@link RenderedTextBlock} paints one highlight colour per block, so each
  * honour is a block of its own carrying that honour's colour, and the boast is
  * wrapped in the highlight markers the block already understands. Stacking them
  * rather than flowing one long string is what buys the per-honour colour.
  *
- * <p>Why bother: the square is read by colour before it is read by words, a
+ * <p>
+ * Why bother: the square is read by colour before it is read by words, a
  * crimson Halls Boss against a gold Boss Slayer. Somebody who walks up to a
  * figure and opens it should be reading the same leaderboard.
  */
 public class VillageEchoInfoBlock extends RenderedTextBlock {
 
-	/** The window's own text colour: what the opening sentence is left at. */
+	/** The window's own text colour: what a line with no boast is left at. */
 	public static final int PLAIN = -1;
 
 	/** Blank line between paragraphs, matching the gap a "\n\n" would leave. */
@@ -51,13 +54,13 @@ public class VillageEchoInfoBlock extends RenderedTextBlock {
 	/**
 	 * What the window says about a figure, line by line.
 	 *
-	 * <p>Static and free of any scene so the format — one honour per line, boast
+	 * <p>
+	 * Static and free of any scene so the format — one honour per line, boast
 	 * first, only the boast coloured — can be checked without a window to draw it
 	 * in.
 	 */
 	public static List<Paragraph> paragraphsOf(VillageEcho echo) {
 		ArrayList<Paragraph> lines = new ArrayList<>();
-		lines.add(new Paragraph(echo.preamble(), PLAIN));
 		List<VillageTitle> titles = echo.titles();
 		for (int i = 0; i < titles.size(); i++) {
 			VillageTitle title = titles.get(i);
@@ -111,7 +114,10 @@ public class VillageEchoInfoBlock extends RenderedTextBlock {
 		return wrapWidth;
 	}
 
-	/** Stacked, not flowed: paragraphs are separate blocks with a blank line between. */
+	/**
+	 * Stacked, not flowed: paragraphs are separate blocks with a blank line
+	 * between.
+	 */
 	@Override
 	protected synchronized void layout() {
 		float pos = y;

@@ -205,9 +205,6 @@ public final class VillageMapRenderer {
 		if (EchoAltar.inDais(x, y)) {
 			return 'H';
 		}
-		if (EchoAltar.isTread(x, y)) {
-			return 'h';
-		}
 		int quarter = EchoAltar.quadrantOf(x, y);
 		if (quarter != EchoAltar.NONE) {
 			return quarterChar(quarter);
@@ -262,7 +259,7 @@ public final class VillageMapRenderer {
 			+ "  D  wall decoration  V  villager\n"
 			+ "\n"
 			+ "the altar - all one paving underneath, the letter is what is drawn on it\n"
-			+ "  *  walkway          H  raised dais          h  step tread\n"
+			+ "  *  walkway          H  raised dais (3x3)\n"
 			+ "  @  throne seat - the deepest echo sits here, so it usually reads 5\n"
 			+ "  s  sewers quarter   p  prison   c  caves    y  city\n"
 			+ "  S  sewers basin     P  prison   C  caves    Y  city   - each its own water\n"

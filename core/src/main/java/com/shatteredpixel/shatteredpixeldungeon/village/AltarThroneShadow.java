@@ -25,10 +25,14 @@ import com.watabou.noosa.Tilemap;
 /**
  * The shadow the throne's back casts, one cell above the seat.
  *
- * <p>Separate from {@link AltarThrone} because it belongs on the wall layer:
- * the ground layer draws under everything standing on it, and a shadow that an
- * echo walks over stops reading as a shadow. This is the same split
- * {@code CityBossLevel} makes between its ground and wall visuals.
+ * <p>Separate from {@link AltarThrone} only because it is a different tile on a
+ * different cell; unlike {@code CityBossLevel}, which puts this on its wall
+ * layer, the village keeps it on the ground layer with the rest of the chair.
+ * {@code GameScene} adds {@code customWalls} <em>after</em> the mobs, so on the
+ * wall layer this square is drawn over the name tag of whoever is sitting in
+ * the throne — the chair ends up in front of the label naming its occupant.
+ * Below the mobs the z order is the one the scene wants: throne, then echo,
+ * then the echo's name, then its shouted title above that.
  */
 public class AltarThroneShadow extends CustomTilemap implements AltarOverlay {
 

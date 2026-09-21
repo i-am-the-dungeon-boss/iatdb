@@ -72,16 +72,13 @@ public class AltarQuadrant extends CustomTilemap implements AltarOverlay {
 	public static int floorFor(int region) {
 		switch (region) {
 			case EchoAltar.SEWERS:
-				// the sewers' worked floor: warm brown against the prison's grey
-				return DungeonTileSheet.FLOOR_SP;
 			case EchoAltar.PRISON:
-				return DungeonTileSheet.FLOOR;
 			case EchoAltar.CAVES:
-				// the caves' plain floor is nearly black; its worked one is not
-				return DungeonTileSheet.FLOOR_SP;
 			case EchoAltar.CITY:
-				// the city's special floor is the red carpet the walkway is made
-				// of, so this quarter has to stay on the plain blue-grey stone
+				// every quarter takes its own sheet's plain floor. What tells one
+				// from the next is the sheet, and what separates them is the
+				// walkway between - the city's worked floor, which the disc's own
+				// EMPTY_SP paving already draws as red carpet under no overlay
 				return DungeonTileSheet.FLOOR;
 			default:
 				throw new IllegalArgumentException("no altar region floor for " + region);

@@ -1,7 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
-import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.VillageEchoInfoBlock;
 
 import org.assertj.core.api.Assertions;
@@ -12,7 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.List;
 
 /**
- * The inspect window is the same leaderboard as the square: an honour is read by
+ * The inspect window is the same leaderboard as the square: an honour is read
+ * by
  * its colour before it is read by its words. Only the boast is coloured, though
  * — a whole paragraph in crimson is a wall, not a label.
  */
@@ -32,13 +32,14 @@ class VillageEchoTitleColorsTest {
 	}
 
 	@Test
-	@DisplayName("The opening sentence is the figure's own, not one of its honours")
-	void preambleIsNotAnHonour() {
+	@DisplayName("Inspect text is the honours, with no opening sentence about the figure")
+	void inspectHasNoPreamble() {
 		VillageEcho echo = bossWithMentions();
 
-		Assertions.assertThat(echo.preamble())
-				.isEqualTo(Messages.get(VillageEcho.class, "desc"));
-		Assertions.assertThat(echo.description()).startsWith(echo.preamble());
+		Assertions.assertThat(echo.description())
+				.doesNotContain("standing still in the village");
+		Assertions.assertThat(VillageEchoInfoBlock.paragraphsOf(echo).get(0).text)
+				.startsWith("_" + echo.titles().get(0).text + "_");
 	}
 
 	@Test
@@ -49,12 +50,10 @@ class VillageEchoTitleColorsTest {
 
 		List<VillageEchoInfoBlock.Paragraph> paragraphs = VillageEchoInfoBlock.paragraphsOf(echo);
 
-		Assertions.assertThat(paragraphs).hasSize(titles.size() + 1);
-		Assertions.assertThat(paragraphs.get(0).text).isEqualTo(echo.preamble());
-		Assertions.assertThat(paragraphs.get(0).highlight).isEqualTo(VillageEchoInfoBlock.PLAIN);
+		Assertions.assertThat(paragraphs).hasSize(titles.size());
 		for (int i = 0; i < titles.size(); i++) {
 			VillageTitle title = titles.get(i);
-			VillageEchoInfoBlock.Paragraph paragraph = paragraphs.get(i + 1);
+			VillageEchoInfoBlock.Paragraph paragraph = paragraphs.get(i);
 			Assertions.assertThat(paragraph.text)
 					.isEqualTo("_" + title.text + "_ " + title.description);
 			Assertions.assertThat(paragraph.highlight).isEqualTo(title.color);
@@ -68,7 +67,7 @@ class VillageEchoTitleColorsTest {
 
 		List<VillageEchoInfoBlock.Paragraph> paragraphs = VillageEchoInfoBlock.paragraphsOf(echo);
 
-		for (int i = 1; i < paragraphs.size(); i++) {
+		for (int i = 0; i < paragraphs.size(); i++) {
 			String text = paragraphs.get(i).text;
 			// Exactly two markers, opening the line and closing the boast. A third
 			// would reopen highlighting somewhere inside the description.
@@ -114,7 +113,7 @@ class VillageEchoTitleColorsTest {
 		figure.badges.add(new VillageFigure.Badge("invented-later", 1));
 		VillageEcho echo = new VillageEcho(figure);
 
-		Assertions.assertThat(VillageEchoInfoBlock.paragraphsOf(echo)).hasSize(1);
+		Assertions.assertThat(VillageEchoInfoBlock.paragraphsOf(echo)).isEmpty();
 	}
 
 	private static int countUnderscores(String text) {

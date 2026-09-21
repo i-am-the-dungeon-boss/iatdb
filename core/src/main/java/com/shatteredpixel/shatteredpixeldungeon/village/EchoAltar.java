@@ -24,7 +24,7 @@ public final class EchoAltar {
 	 * a 13-wide disc with clean, symmetrical corners — a true 6.5 radius leaves
 	 * single stray cells sticking out of the diagonals.
 	 */
-	private static final int RADIUS_SQ = 42;
+	private static final int RADIUS_SQ = 20;
 
 	/**
 	 * How far the disc reaches along an axis, and the bounding square that
@@ -32,18 +32,18 @@ public final class EchoAltar {
 	 * disc exactly, so the bound is derived here rather than written out again
 	 * beside a radius it has to agree with.
 	 */
-	public static final int DISC_REACH = 6;
+	public static final int DISC_REACH = 4;
 	public static final int DISC_LEFT = CENTRE_X - DISC_REACH;
 	public static final int DISC_TOP = CENTRE_Y - DISC_REACH;
 	public static final int DISC_SPAN = DISC_REACH * 2 + 1;
 
 	/** The dais is the square of cells within this reach of the centre. */
-	public static final int DAIS_REACH = 2;
+	public static final int DAIS_REACH = 1;
 
-	/** Bounding square of the dais together with the four step treads. */
-	public static final int DAIS_LEFT = CENTRE_X - DAIS_REACH - 1;
-	public static final int DAIS_TOP = CENTRE_Y - DAIS_REACH - 1;
-	public static final int DAIS_SPAN = (DAIS_REACH + 1) * 2 + 1;
+	/** Bounding square of the dais, which is the platform and nothing else. */
+	public static final int DAIS_LEFT = CENTRE_X - DAIS_REACH;
+	public static final int DAIS_TOP = CENTRE_Y - DAIS_REACH;
+	public static final int DAIS_SPAN = DAIS_REACH * 2 + 1;
 
 	/**
 	 * The throne's seat, dead centre of the disc. Walkable: the deepest echo is
@@ -66,8 +66,8 @@ public final class EchoAltar {
 	 * clockwise from the north-west as well, which is a coincidence of the depth
 	 * order and not something to "correct" into geometric order.
 	 */
-	public static final int[] POST_X = { 13, 19, 19, 13, THRONE_SEAT_X };
-	public static final int[] POST_Y = { 13, 13, 19, 19, THRONE_SEAT_Y };
+	public static final int[] POST_X = { 14, 18, 18, 14, THRONE_SEAT_X };
+	public static final int[] POST_Y = { 14, 14, 18, 18, THRONE_SEAT_Y };
 
 	private EchoAltar() {
 	}
@@ -85,9 +85,10 @@ public final class EchoAltar {
 	}
 
 	/**
-	 * The walkway quartering the disc. Deliberately left unpainted by the altar's
-	 * tilemaps: the disc is laid as {@code EMPTY_SP}, which the village's own city
-	 * tileset already draws as carpet, so the cross costs nothing to render.
+	 * The walkway quartering the disc. Left unpainted by the altar's own
+	 * tilemaps, because the village's paving skin covers it instead: a path
+	 * that changed texture at the edge of the plaza would read as two roads
+	 * meeting rather than as one road arriving at the altar.
 	 */
 	public static boolean onCross(int x, int y) {
 		return inDisc(x, y) && !inDais(x, y)
@@ -115,18 +116,18 @@ public final class EchoAltar {
 	 */
 	private static final int[][] BASIN_DX = {
 			{},                          // NONE
-			{ 5, 5, 5, 5 },              // SEWERS — a sluice along the outer arc
-			{ 4, 5, 4, 5, 4, 5 },        // PRISON — a squared-off tank
-			{ 5, 5, 4, 4, 4, 3, 3 },     // CAVES  — a stream working its way out
-			{ 2, 1, 2, 3, 4 }            // CITY   — a formal pool with a spur
+			{ 4, 3, 2 },                 // SEWERS — a sluice along the outer arc
+			{ 4, 3, 3, 2 },              // PRISON — a squared-off tank
+			{ 1, 2, 2, 3, 3 },           // CAVES  — a stream working its way out
+			{ 1, 1, 1, 2, 2, 3 }         // CITY   — a formal pool with a spur
 	};
 
 	private static final int[][] BASIN_DY = {
 			{},                          // NONE
-			{ 1, 2, 3, 4 },              // SEWERS
-			{ 2, 2, 3, 3, 4, 4 },        // PRISON
-			{ 1, 2, 2, 3, 4, 4, 5 },     // CAVES
-			{ 4, 5, 5, 5, 5 }            // CITY
+			{ 1, 1, 1 },                 // SEWERS
+			{ 2, 2, 3, 3 },              // PRISON
+			{ 4, 4, 3, 3, 2 },           // CAVES
+			{ 2, 3, 4, 4, 3, 3 }         // CITY
 	};
 
 	public static boolean inBasin(int x, int y) {
@@ -216,22 +217,6 @@ public final class EchoAltar {
 			return dx < 0 ? SEWERS : PRISON;
 		}
 		return dx < 0 ? CITY : CAVES;
-	}
-
-	/**
-	 * The single step up onto the dais at the head of each approach. Four cells,
-	 * one where each arm of the walkway meets the raised centre.
-	 */
-	public static boolean isTread(int x, int y) {
-		int dx = x - CENTRE_X;
-		int dy = y - CENTRE_Y;
-		if (dx == 0) {
-			return Math.abs(dy) == DAIS_REACH + 1;
-		}
-		if (dy == 0) {
-			return Math.abs(dx) == DAIS_REACH + 1;
-		}
-		return false;
 	}
 
 	public static boolean isThroneSeat(int x, int y) {

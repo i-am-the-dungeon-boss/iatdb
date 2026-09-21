@@ -1,11 +1,15 @@
 package com.shatteredpixel.shatteredpixeldungeon.village;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.VillageEchoSprite;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoBossInfo;
+import com.watabou.gltextures.TextureCache;
 import com.watabou.utils.Bundle;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -123,6 +127,32 @@ class VillageEchoTest {
 
 		Assertions.assertThat(figure.isEmptyPost()).isTrue();
 		Assertions.assertThat(echo.getEchoHero()).isNull();
+	}
+
+	@Test
+	@DisplayName("A filled figure is drawn from its hero class spritesheet")
+	void filledFigureUsesHeroClassSheet() {
+		VillageEcho echo = new VillageEcho(warriorFigure());
+
+		CharSprite sprite = echo.sprite();
+
+		Assertions.assertThat(sprite).isInstanceOf(VillageEchoSprite.class);
+		Assertions.assertThat(sprite.texture)
+				.isSameAs(TextureCache.get(HeroClass.WARRIOR.spritesheet()));
+	}
+
+	@Test
+	@DisplayName("An empty depth post is drawn as the unknown warrior placeholder")
+	void emptyPostUsesUnknownWarriorSheet() {
+		VillageFigure figure = new VillageFigure();
+		figure.post = VillageFigure.Post.DEPTH;
+		figure.depth = 10;
+
+		CharSprite sprite = new VillageEcho(figure).sprite();
+
+		Assertions.assertThat(sprite).isInstanceOf(VillageEchoSprite.class);
+		Assertions.assertThat(sprite.texture)
+				.isSameAs(TextureCache.get(Assets.Sprites.WARRIOR_UNKNOWN));
 	}
 
 	@Test

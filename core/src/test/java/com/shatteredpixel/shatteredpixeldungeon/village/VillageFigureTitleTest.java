@@ -47,9 +47,20 @@ class VillageFigureTitleTest {
 	}
 
 	@Test
-	@DisplayName("An empty post has nobody to title")
-	void emptyPostHasNoTitle() {
-		Assertions.assertThat(VillageFigureTitle.of(depthPost(5, null))).isNull();
+	@DisplayName("An empty post still shouts the region, as unclaimed")
+	void emptyPostShoutsUnclaimed() {
+		VillageTitle sewers = VillageFigureTitle.of(depthPost(5, null));
+		VillageTitle halls = VillageFigureTitle.of(depthPost(25, null));
+		VillageTitle unknown = VillageFigureTitle.of(depthPost(30, null));
+
+		Assertions.assertThat(textOf(sewers)).isEqualTo("Unclaimed Sewers!");
+		Assertions.assertThat(textOf(halls)).isEqualTo("Unclaimed Halls!");
+		Assertions.assertThat(textOf(unknown)).isEqualTo("Unclaimed Depth 30!");
+		Assertions.assertThat(sewers.description)
+				.isEqualTo("The Sewers have no reigning echo. The first hero to hold this depth takes the post.");
+		Assertions.assertThat(unknown.description).isEqualTo("Nobody has claimed this floor yet.");
+		Assertions.assertThat(sewers.color)
+				.isEqualTo(VillageFigureTitle.of(depthPost(5, "5-1")).color);
 	}
 
 	@Test

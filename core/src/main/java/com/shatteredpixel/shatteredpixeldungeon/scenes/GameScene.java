@@ -119,7 +119,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.village.VillageSession;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.WorldNet;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigureTitleCrier;
 import com.shatteredpixel.shatteredpixeldungeon.village.VillageFigures;
+import com.shatteredpixel.shatteredpixeldungeon.village.VillageStairsGuide;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.LocalPlayerTag;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.NameTag;
 import com.shatteredpixel.shatteredpixeldungeon.worldnet.ui.VillageUpdateGate;
@@ -357,7 +359,10 @@ public class GameScene extends PixelScene {
 		// with whatever scene was here before — a resize, or a run the player just
 		// came back from — so this scene raises them over the sprites it just made.
 		if (Dungeon.level instanceof VillageLevel) {
-			VillageFigures.raiseLabels((VillageLevel) Dungeon.level);
+			VillageLevel village = (VillageLevel) Dungeon.level;
+			VillageFigures.raiseLabels(village);
+			addToMobLayer(new VillageFigureTitleCrier(
+					VillageStairsGuide.cell(village), VillageStairsGuide.title()));
 		}
 
 		raisedTerrain = new RaisedTerrainTilemap();

@@ -50,8 +50,9 @@ public final class VillageFigureTitle {
 
 	/**
 	 * The one title a figure shouts, or {@code null} when there is nothing to
-	 * say: an unheld depth post, or a figure whose every badge this build has no
-	 * wording for.
+	 * say: a figure whose every badge this build has no wording for. An unheld
+	 * depth post still shouts — as unclaimed — so the square keeps naming the
+	 * floor.
 	 *
 	 * <p>One, not all: the shout is scenery, and a body cycling through four
 	 * boasts over its own head is noise rather than a leaderboard. The rest are
@@ -76,14 +77,19 @@ public final class VillageFigureTitle {
 	 */
 	public static List<VillageTitle> allOf(VillageFigure figure) {
 		ArrayList<VillageTitle> titles = new ArrayList<>();
-		if (figure == null || figure.isEmptyPost()) {
+		if (figure == null) {
 			return titles;
 		}
 		if (figure.post == VillageFigure.Post.DEPTH) {
-			VillageTitle depth = depthTitle(figure.depth);
+			VillageTitle depth = figure.isEmptyPost()
+					? unclaimedTitle(figure.depth)
+					: depthTitle(figure.depth);
 			if (depth != null) {
 				titles.add(depth);
 			}
+		}
+		if (figure.isEmptyPost()) {
+			return titles;
 		}
 		for (int i = 0; i < figure.badges.size(); i++) {
 			VillageTitle badge = badgeTitle(figure.badges.get(i));
@@ -149,6 +155,18 @@ public final class VillageFigureTitle {
 				Messages.get(VillageFigureTitle.class, "depth", depth),
 				UNCOLOURED,
 				Messages.get(VillageFigureTitle.class, "depth_desc", depth));
+	}
+
+	/** Same floor colour as a held post, different words: nobody owns it yet. */
+	private static VillageTitle unclaimedTitle(int depth) {
+		String region = text("unclaimed_" + depth);
+		if (region != null) {
+			return new VillageTitle(region, depthColor(depth), text("unclaimed_desc_" + depth));
+		}
+		return new VillageTitle(
+				Messages.get(VillageFigureTitle.class, "unclaimed", depth),
+				UNCOLOURED,
+				Messages.get(VillageFigureTitle.class, "unclaimed_desc", depth));
 	}
 
 	private static int depthColor(int depth) {

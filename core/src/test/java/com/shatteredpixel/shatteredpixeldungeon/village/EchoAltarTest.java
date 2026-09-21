@@ -46,13 +46,15 @@ class EchoAltarTest {
 	@Test
 	@DisplayName("The quarters run sewers, prison, caves, city clockwise from the north-west")
 	void quartersRunClockwiseFromTheNorthWest() {
-		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X - 3, EchoAltar.CENTRE_Y - 3))
+		// two out and two along: clear of the three by three dais, clear of
+		// the walkway on both axes, and inside a disc that reaches four
+		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X - 2, EchoAltar.CENTRE_Y - 2))
 				.isEqualTo(EchoAltar.SEWERS);
-		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X + 3, EchoAltar.CENTRE_Y - 3))
+		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X + 2, EchoAltar.CENTRE_Y - 2))
 				.isEqualTo(EchoAltar.PRISON);
-		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X + 3, EchoAltar.CENTRE_Y + 3))
+		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X + 2, EchoAltar.CENTRE_Y + 2))
 				.isEqualTo(EchoAltar.CAVES);
-		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X - 3, EchoAltar.CENTRE_Y + 3))
+		Assertions.assertThat(EchoAltar.quadrantOf(EchoAltar.CENTRE_X - 2, EchoAltar.CENTRE_Y + 2))
 				.isEqualTo(EchoAltar.CITY);
 	}
 
@@ -171,6 +173,25 @@ class EchoAltarTest {
 						.as("regions %d and %d would look identical", regions[i], regions[j])
 						.isFalse();
 			}
+		}
+	}
+
+	/**
+	 * The four quarters are told apart by their sheet, not by the slot on it. Every
+	 * one of them takes its region's plain floor, and what separates them is the
+	 * walkway: the city sheet's worked floor, which is the red carpet the disc's
+	 * own {@code EMPTY_SP} paving already renders as, drawn by no overlay at all.
+	 */
+	@Test
+	@DisplayName("Every quarter is floored with its own sheet's plain floor")
+	void everyQuarterIsFlooredWithItsSheetsPlainFloor() {
+		int[] regions = {
+				EchoAltar.SEWERS, EchoAltar.PRISON, EchoAltar.CAVES, EchoAltar.CITY
+		};
+		for (int region : regions) {
+			Assertions.assertThat(AltarQuadrant.floorFor(region))
+					.as("region %d takes the plain floor", region)
+					.isEqualTo(DungeonTileSheet.FLOOR);
 		}
 	}
 
@@ -346,51 +367,38 @@ class EchoAltarTest {
 	}
 
 	@Test
-	@DisplayName("The dais covers the raised centre and the four steps up to it")
-	void theDaisCoversTheCentreAndItsTreads() {
+	@DisplayName("The dais is a three by three platform of the halls' plain floor")
+	void theDaisCoversTheCentre() {
 		AltarDais dais = new AltarDais();
 		int[] data = dais.tileData();
 
 		Assertions.assertThat(data).hasSize(EchoAltar.DAIS_SPAN * EchoAltar.DAIS_SPAN);
+		Assertions.assertThat(EchoAltar.DAIS_SPAN).as("three cells to a side").isEqualTo(3);
 
 		int platform = 0;
-		int treads = 0;
 		for (int i = 0; i < data.length; i++) {
 			int x = EchoAltar.DAIS_LEFT + (i % EchoAltar.DAIS_SPAN);
 			int y = EchoAltar.DAIS_TOP + (i / EchoAltar.DAIS_SPAN);
-			if (EchoAltar.inDais(x, y)) {
-				Assertions.assertThat(data[i]).isEqualTo(DungeonTileSheet.FLOOR_SP);
-				platform++;
-			} else if (EchoAltar.isTread(x, y)) {
-				Assertions.assertThat(data[i]).isEqualTo(DungeonTileSheet.FLOOR_SP);
-				treads++;
-			} else {
-				Assertions.assertThat(data[i])
-						.as("(%d,%d) is neither platform nor tread", x, y)
-						.isEqualTo(SKIP);
-			}
+			Assertions.assertThat(EchoAltar.inDais(x, y))
+					.as("(%d,%d) is inside the dais rect, so it is dais", x, y)
+					.isTrue();
+			Assertions.assertThat(data[i]).isEqualTo(DungeonTileSheet.FLOOR);
+			platform++;
 		}
 
-		Assertions.assertThat(platform).as("a five by five platform").isEqualTo(25);
-		Assertions.assertThat(treads).as("one step per approach").isEqualTo(4);
+		Assertions.assertThat(platform).as("a three by three platform").isEqualTo(9);
 	}
 
 	@Test
-	@DisplayName("Every step tread sits on the walkway, so the altar is climbed from all four sides")
-	void everyTreadSitsOnAnArmOfTheWalkway() {
-		int found = 0;
-		for (int y = EchoAltar.DISC_TOP; y < EchoAltar.DISC_TOP + EchoAltar.DISC_SPAN; y++) {
-			for (int x = EchoAltar.DISC_LEFT; x < EchoAltar.DISC_LEFT + EchoAltar.DISC_SPAN; x++) {
-				if (!EchoAltar.isTread(x, y)) {
-					continue;
-				}
-				found++;
-				Assertions.assertThat(EchoAltar.onCross(x, y))
-						.as("tread (%d,%d) should sit on the walkway", x, y)
+	@DisplayName("The dais sits inside the disc, so the quarters still ring it")
+	void theDaisFitsInsideTheDisc() {
+		for (int y = EchoAltar.DAIS_TOP; y < EchoAltar.DAIS_TOP + EchoAltar.DAIS_SPAN; y++) {
+			for (int x = EchoAltar.DAIS_LEFT; x < EchoAltar.DAIS_LEFT + EchoAltar.DAIS_SPAN; x++) {
+				Assertions.assertThat(EchoAltar.inDisc(x, y))
+						.as("dais cell (%d,%d) is on the disc", x, y)
 						.isTrue();
 			}
 		}
-		Assertions.assertThat(found).isEqualTo(4);
 	}
 
 	/**
