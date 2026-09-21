@@ -1,3 +1,5 @@
+@../AGENTS.md
+
 # iatdb — Agent notes
 
 Shattered Pixel Dungeon mod (desktop / Android / iOS via RoboVM). Shared gameplay in `core` + `SPD-classes`.
