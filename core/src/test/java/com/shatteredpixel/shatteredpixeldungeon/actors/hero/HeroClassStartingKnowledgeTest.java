@@ -154,10 +154,10 @@ class HeroClassStartingKnowledgeTest {
 
 	@ParameterizedTest(name = "{0} still does not know {1} after loading {2} EchoBoss")
 	@MethodSource("otherClassEchoBossKnowledge")
-	@DisplayName("loading another class EchoBoss does not teach their starting potion")
-	void loadingOtherClassEchoBossDoesNotTeachStartingPotion(
+	@DisplayName("loading another class EchoBoss does not teach their class-kit potion or scroll")
+	void loadingOtherClassEchoBossDoesNotTeachStartingType(
 			HeroClass livingClass,
-			Class<? extends Potion> otherClassPotion,
+			Class<? extends Item> otherClassType,
 			HeroClass echoClass) {
 		Bundle echoBossBundle = captureEchoBossBundle(echoClass);
 
@@ -169,8 +169,8 @@ class HeroClassStartingKnowledgeTest {
 		Dungeon.hero = hero;
 		livingClass.initHero(hero);
 		hero.live();
-		Assertions.assertThat(Reflection.newInstance(otherClassPotion).isKnown())
-				.as("precondition: living %s does not know %s", livingClass, otherClassPotion.getSimpleName())
+		Assertions.assertThat(isTypeKnown(otherClassType))
+				.as("precondition: living %s does not know %s", livingClass, otherClassType.getSimpleName())
 				.isFalse();
 
 		Dungeon.depth = 5;
@@ -178,8 +178,8 @@ class HeroClassStartingKnowledgeTest {
 		restored.restoreFromBundle(echoBossBundle);
 
 		Assertions.assertThat(restored.getEchoHero().heroClass).isEqualTo(echoClass);
-		Assertions.assertThat(Reflection.newInstance(otherClassPotion).isKnown())
-				.as("EchoBoss restore must not teach living hero %s", otherClassPotion.getSimpleName())
+		Assertions.assertThat(isTypeKnown(otherClassType))
+				.as("EchoBoss restore must not teach living hero %s", otherClassType.getSimpleName())
 				.isFalse();
 	}
 
@@ -217,30 +217,30 @@ class HeroClassStartingKnowledgeTest {
 		return bundle;
 	}
 
+	/** Known for every class via {@link HeroClass#initHero}. */
+	@SuppressWarnings("unchecked")
+	static final Class<? extends Item>[] SHARED_KNOWN_TYPES = new Class[] {
+			ScrollOfIdentify.class,
+			PotionOfHealing.class,
+			PotionOfStrength.class,
+			ScrollOfUpgrade.class,
+	};
+
 	/**
-	 * Potion/scroll types marked known via throwaway {@code identify()} in
-	 * {@link HeroClass#initHero}.
+	 * Shared known types × every class, plus each class kit's extra potion/scroll.
 	 */
 	static Stream<Arguments> startingKnownTypes() {
-		return Stream.of(
-				Arguments.of(HeroClass.WARRIOR, ScrollOfIdentify.class),
-				Arguments.of(HeroClass.WARRIOR, PotionOfHealing.class),
+		Stream<Arguments> shared = Stream.of(HeroClass.values())
+				.flatMap(heroClass -> Stream.of(SHARED_KNOWN_TYPES)
+						.map(type -> Arguments.of(heroClass, type)));
+		Stream<Arguments> perClass = Stream.of(
 				Arguments.of(HeroClass.WARRIOR, ScrollOfRage.class),
-				Arguments.of(HeroClass.MAGE, ScrollOfIdentify.class),
 				Arguments.of(HeroClass.MAGE, PotionOfLiquidFlame.class),
-				Arguments.of(HeroClass.MAGE, ScrollOfUpgrade.class),
-				Arguments.of(HeroClass.ROGUE, ScrollOfIdentify.class),
-				Arguments.of(HeroClass.ROGUE, PotionOfInvisibility.class),
 				Arguments.of(HeroClass.ROGUE, ScrollOfMagicMapping.class),
-				Arguments.of(HeroClass.HUNTRESS, ScrollOfIdentify.class),
-				Arguments.of(HeroClass.HUNTRESS, PotionOfMindVision.class),
 				Arguments.of(HeroClass.HUNTRESS, ScrollOfLullaby.class),
-				Arguments.of(HeroClass.DUELIST, ScrollOfIdentify.class),
-				Arguments.of(HeroClass.DUELIST, PotionOfStrength.class),
 				Arguments.of(HeroClass.DUELIST, ScrollOfMirrorImage.class),
-				Arguments.of(HeroClass.CLERIC, ScrollOfIdentify.class),
-				Arguments.of(HeroClass.CLERIC, PotionOfPurity.class),
 				Arguments.of(HeroClass.CLERIC, ScrollOfRemoveCurse.class));
+		return Stream.concat(shared, perClass);
 	}
 
 	/** Instances given to the hero that {@link HeroClass#initHero} identifies. */
@@ -270,35 +270,35 @@ class HeroClassStartingKnowledgeTest {
 		return Stream.of(
 				Arguments.of(HeroClass.WARRIOR, PotionOfHealing.class, ScrollOfRage.class),
 				Arguments.of(HeroClass.MAGE, PotionOfLiquidFlame.class, ScrollOfUpgrade.class),
-				Arguments.of(HeroClass.ROGUE, PotionOfInvisibility.class, ScrollOfMagicMapping.class),
-				Arguments.of(HeroClass.HUNTRESS, PotionOfMindVision.class, ScrollOfLullaby.class),
+				Arguments.of(HeroClass.ROGUE, PotionOfHealing.class, ScrollOfMagicMapping.class),
+				Arguments.of(HeroClass.HUNTRESS, PotionOfHealing.class, ScrollOfLullaby.class),
 				Arguments.of(HeroClass.DUELIST, PotionOfStrength.class, ScrollOfMirrorImage.class),
-				Arguments.of(HeroClass.CLERIC, PotionOfPurity.class, ScrollOfRemoveCurse.class));
+				Arguments.of(HeroClass.CLERIC, PotionOfHealing.class, ScrollOfRemoveCurse.class));
 	}
 
 	static Stream<Arguments> otherClassTypeKnowledge() {
 		return Stream.of(
 				Arguments.of(HeroClass.WARRIOR, PotionOfLiquidFlame.class),
-				Arguments.of(HeroClass.WARRIOR, ScrollOfUpgrade.class),
-				Arguments.of(HeroClass.MAGE, PotionOfHealing.class),
 				Arguments.of(HeroClass.MAGE, ScrollOfRage.class),
-				Arguments.of(HeroClass.ROGUE, PotionOfStrength.class),
+				Arguments.of(HeroClass.ROGUE, PotionOfInvisibility.class),
 				Arguments.of(HeroClass.ROGUE, ScrollOfMirrorImage.class),
-				Arguments.of(HeroClass.HUNTRESS, PotionOfInvisibility.class),
+				Arguments.of(HeroClass.HUNTRESS, PotionOfMindVision.class),
 				Arguments.of(HeroClass.HUNTRESS, ScrollOfMagicMapping.class),
 				Arguments.of(HeroClass.DUELIST, PotionOfMindVision.class),
 				Arguments.of(HeroClass.DUELIST, ScrollOfLullaby.class),
-				Arguments.of(HeroClass.CLERIC, PotionOfHealing.class),
+				Arguments.of(HeroClass.CLERIC, PotionOfPurity.class),
 				Arguments.of(HeroClass.CLERIC, ScrollOfRage.class));
 	}
 
 	static Stream<Arguments> otherClassEchoBossKnowledge() {
+		// Class-kit types that are not the shared core consumables
+		// (healing / strength / upgrade), which every class now knows at start.
 		return Stream.of(
 				Arguments.of(HeroClass.WARRIOR, PotionOfLiquidFlame.class, HeroClass.MAGE),
-				Arguments.of(HeroClass.MAGE, PotionOfHealing.class, HeroClass.WARRIOR),
-				Arguments.of(HeroClass.ROGUE, PotionOfStrength.class, HeroClass.DUELIST),
-				Arguments.of(HeroClass.HUNTRESS, PotionOfInvisibility.class, HeroClass.ROGUE),
-				Arguments.of(HeroClass.DUELIST, PotionOfMindVision.class, HeroClass.HUNTRESS),
-				Arguments.of(HeroClass.CLERIC, PotionOfHealing.class, HeroClass.WARRIOR));
+				Arguments.of(HeroClass.MAGE, ScrollOfRage.class, HeroClass.WARRIOR),
+				Arguments.of(HeroClass.ROGUE, ScrollOfMirrorImage.class, HeroClass.DUELIST),
+				Arguments.of(HeroClass.HUNTRESS, ScrollOfMagicMapping.class, HeroClass.ROGUE),
+				Arguments.of(HeroClass.DUELIST, ScrollOfLullaby.class, HeroClass.HUNTRESS),
+				Arguments.of(HeroClass.CLERIC, ScrollOfRage.class, HeroClass.WARRIOR));
 	}
 }

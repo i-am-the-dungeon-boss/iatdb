@@ -58,10 +58,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
@@ -149,6 +146,11 @@ public enum HeroClass {
 				break;
 		}
 
+		// Core consumables known for every class (mod ease-of-play).
+		new PotionOfHealing().identify();
+		new PotionOfStrength().identify();
+		new ScrollOfUpgrade().identify();
+
 		if (SPDSettings.quickslotWaterskin()) {
 			for (int s = 0; s < QuickSlot.SIZE; s++) {
 				if (Dungeon.quickslot.getItem(s) == null) {
@@ -190,7 +192,6 @@ public enum HeroClass {
 			Catalog.setSeen(BrokenSeal.class); // as it's not added to the inventory
 		}
 
-		new PotionOfHealing().identify();
 		new ScrollOfRage().identify();
 	}
 
@@ -204,7 +205,6 @@ public enum HeroClass {
 
 		Dungeon.quickslot.setSlot(0, staff);
 
-		new ScrollOfUpgrade().identify();
 		new PotionOfLiquidFlame().identify();
 	}
 
@@ -222,7 +222,6 @@ public enum HeroClass {
 		Dungeon.quickslot.setSlot(1, knives);
 
 		new ScrollOfMagicMapping().identify();
-		new PotionOfInvisibility().identify();
 	}
 
 	private static void initHuntress(Hero hero) {
@@ -233,7 +232,6 @@ public enum HeroClass {
 
 		Dungeon.quickslot.setSlot(0, bow);
 
-		new PotionOfMindVision().identify();
 		new ScrollOfLullaby().identify();
 	}
 
@@ -248,7 +246,6 @@ public enum HeroClass {
 		Dungeon.quickslot.setSlot(0, hero.belongings.weapon);
 		Dungeon.quickslot.setSlot(1, spikes);
 
-		new PotionOfStrength().identify();
 		new ScrollOfMirrorImage().identify();
 	}
 
@@ -263,7 +260,6 @@ public enum HeroClass {
 
 		Dungeon.quickslot.setSlot(0, tome);
 
-		new PotionOfPurity().identify();
 		new ScrollOfRemoveCurse().identify();
 	}
 

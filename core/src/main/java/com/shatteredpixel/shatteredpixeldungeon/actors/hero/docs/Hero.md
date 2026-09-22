@@ -132,3 +132,4 @@ What the player sees versus the parent method that produces it:
 - [ ] Focus is in [`Char.hit`](../../Char.java), not here — `defenseSkill` 0 still loses to Focus
 - [ ] Floor is `max(1, …)` except Stone / Illuminated vs Cleric / echo-fight guaranteed hit — those return 0
 - [ ] Echo-fight door surprise is **half**, not Mob’s surprise-0; [`Mob.surprisedBy`](../../mobs/Mob.java) is a different method
+- [ ] [`HeroClass.initHero`](../HeroClass.java) grants run-wide known for Healing / Strength / Upgrade for every class — echo kit paths must still not teach via `Item.grantsPlayerKnowledge()`
