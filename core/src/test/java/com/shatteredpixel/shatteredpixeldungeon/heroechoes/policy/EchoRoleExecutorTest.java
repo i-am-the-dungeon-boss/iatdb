@@ -3,6 +3,9 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.Echo;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Freezing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ParalyticGas;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
@@ -29,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
@@ -402,6 +406,50 @@ class EchoRoleExecutorTest {
 
 		Assertions.assertThat(spent).isTrue();
 		Assertions.assertThat(boss.getEchoHero().belongings.getItem(PotionOfParalyticGas.class)).isNull();
+	}
+
+	@Test
+	@DisplayName("SETUP_CC throws unidentified paralytic gas onto the hero")
+	void setupCcThrowsUnidentifiedParalyticGas() {
+		Potion.initColors();
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfParalyticGas gas = new PotionOfParalyticGas();
+		Assertions.assertThat(gas.isKnown()).isFalse();
+		gas.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, setupCcPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("SETUP_CC")).build(),
+				new EchoPlan("SETUP_CC", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(Blob.volumeAt(hero.pos, ParalyticGas.class)).isEqualTo(1000);
+		Assertions.assertThat(Blob.volumeAt(boss.pos, ParalyticGas.class)).isEqualTo(0);
+	}
+
+	@Test
+	@DisplayName("CLEANSE_BURN drinks unidentified frost onto the boss")
+	void cleanseBurnDrinksUnidentifiedFrost() {
+		Potion.initColors();
+		Hero hero = EchoTestSupport.warriorHero();
+		PotionOfFrost frost = new PotionOfFrost();
+		Assertions.assertThat(frost.isKnown()).isFalse();
+		frost.collect(hero.belongings.backpack);
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, cleansePolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+
+		boolean spent = EchoRoleExecutor.execute(
+				boss,
+				boss.getEchoPolicy(),
+				new EchoPolicyStatus.Builder().rolesReady(java.util.Set.of("CLEANSE_BURN")).build(),
+				new EchoPlan("CLEANSE_BURN", "reactions", null));
+
+		Assertions.assertThat(spent).isTrue();
+		Assertions.assertThat(Blob.volumeAt(boss.pos, Freezing.class)).isEqualTo(10);
+		Assertions.assertThat(Blob.volumeAt(hero.pos, Freezing.class)).isEqualTo(0);
 	}
 
 	@Test

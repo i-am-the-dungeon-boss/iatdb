@@ -251,8 +251,9 @@ public final class EchoRoleExecutor {
 
 	/**
 	 * Self-drink when the role is an explicit drink role (dual-mode / must-throw
-	 * exceptions like CLEANSE_BURN+Frost), or the potion's default action is
-	 * {@link Potion#AC_DRINK} (not must-throw / choose).
+	 * exceptions like CLEANSE_BURN+Frost). Otherwise drink only types that are
+	 * drink-only — must-throw and choose-to-throw shatter whether or not the
+	 * player has identified them.
 	 */
 	private static boolean shouldSelfDrink(Potion potion, String role) {
 		if (isThrowRole(role)) {
@@ -261,7 +262,7 @@ public final class EchoRoleExecutor {
 		if (isSelfDrinkRole(role)) {
 			return true;
 		}
-		return Potion.AC_DRINK.equals(potion.defaultAction());
+		return potion.drinksByDefault();
 	}
 
 	/**

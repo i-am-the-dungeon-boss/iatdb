@@ -236,6 +236,15 @@ public class Potion extends Item {
 		}
 	}
 
+	/**
+	 * Drink-only by type. Must-throw and choose-to-throw potions return false
+	 * even when {@link #isKnown()} is false — the player's handbook stays in
+	 * {@link #defaultAction()}.
+	 */
+	public boolean drinksByDefault() {
+		return !mustThrowPots.contains(getClass()) && !canThrowPots.contains(getClass());
+	}
+
 	@Override
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
