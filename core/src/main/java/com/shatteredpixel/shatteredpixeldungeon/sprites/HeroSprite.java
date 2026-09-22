@@ -75,7 +75,8 @@ public class HeroSprite extends CharSprite {
 	 * The animation film for one armour tier, with no dependency on
 	 * {@code Dungeon.hero}.
 	 *
-	 * <p>Extracted so remote players in the village can be drawn without a
+	 * <p>
+	 * Extracted so remote players in the village can be drawn without a
 	 * local hero to read a tier from — both the constructor and
 	 * {@link #updateArmor()} reach straight into {@code Dungeon.hero}, so
 	 * neither could be reused as-is.
@@ -87,7 +88,8 @@ public class HeroSprite extends CharSprite {
 	/**
 	 * The class this hero is drawn as; by default, the one being played.
 	 *
-	 * <p>Overridable so a subclass can present a different look without this
+	 * <p>
+	 * Overridable so a subclass can present a different look without this
 	 * class knowing anything about why. Called from the constructor, so an
 	 * override must not depend on its own instance fields having been set —
 	 * constants are safe, instance state is not.
@@ -165,6 +167,7 @@ public class HeroSprite extends CharSprite {
 		Camera.main.panFollow(this, 20f);
 	}
 
+	@Override
 	public synchronized void read() {
 		animCallback = new Callback() {
 			@Override

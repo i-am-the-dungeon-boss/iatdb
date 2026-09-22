@@ -1,8 +1,5 @@
 {
   "plugins": {
-    "vercel": {
-      "enabled": true
-    },
     "sentry": {
       "enabled": true
     }

@@ -10,6 +10,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoScrollAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.items.AiItemActions;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.EchoBossSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +31,28 @@ class ScrollEchoReadTest {
 	@AfterEach
 	void cleanup() {
 		TargetHealthIndicator.instance = null;
+	}
+
+	@Test
+	@DisplayName("vanilla readAnimation plays the echo read pose instead of casting to HeroSprite")
+	void vanillaReadAnimationPlaysEchoReadPose() {
+		Hero player = EchoTestSupport.warriorHero();
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(
+				player, EchoTestSupport.healCapabilityPolicy(), 5);
+		EchoTestSupport.installEchoBossLevel(player, boss, 2);
+
+		CountingEchoSprite sprite = new CountingEchoSprite();
+		sprite.ch = boss;
+		boss.sprite = sprite;
+		boss.mirrorKitSprite();
+
+		ScrollOfRecharging scroll = new ScrollOfRecharging();
+		scroll.identify();
+		AiItemActions.withUser(boss.getEchoHero(), scroll, scroll::readAnimation);
+
+		Assertions.assertThat(sprite.readCalls)
+				.as("WndUpgrade calls Scroll.readAnimation while the kit sprite is an EchoBossSprite")
+				.isEqualTo(1);
 	}
 
 	@Test
@@ -345,5 +369,17 @@ class ScrollEchoReadTest {
 				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune.class)).isNotNull();
 		Assertions.assertThat(kit.buff(
 				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune.class)).isNull();
+	}
+
+	/**
+	 * Counts {@link EchoBossSprite#read} without playing the film (headless tests).
+	 */
+	private static final class CountingEchoSprite extends EchoBossSprite {
+		int readCalls;
+
+		@Override
+		public synchronized void read() {
+			readCalls++;
+		}
 	}
 }
