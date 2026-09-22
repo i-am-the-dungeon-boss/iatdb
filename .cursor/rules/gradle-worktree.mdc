@@ -1,11 +1,17 @@
 ---
-description: Isolate concurrent Gradle runs with git worktrees; check daemon status first; wait when BUSY for sequential work
+description: desktop:debug uses build-debug/; tests use build/ — same checkout OK; otherwise worktree or wait
 alwaysApply: true
 ---
 
 # Concurrent Gradle
 
-Never run two full Gradle builds in the same checkout — they contend on `build/` and `.gradle` (especially painful on Windows).
+Never run two full Gradle builds that share the same output dirs — they contend on `build/` and project `.gradle` (especially painful on Windows).
+
+## desktop:debug + tests (same checkout)
+
+`:desktop:debug` redirects all module outputs to `build-debug/` and the project cache to `.gradle-debug/` (see root `settings.gradle` / `build.gradle`). Default `build/` stays free for `:core:test` and other agent builds.
+
+**Do not wait or stop the game** when status is BUSY from `:desktop:debug` — run tests in this same tree. Do not create a worktree only for that case.
 
 ## Before a long run
 
@@ -13,17 +19,13 @@ Never run two full Gradle builds in the same checkout — they contend on `build
 ./gradlew --status
 ```
 
-`BUSY` means another build may already be using a daemon. Idle daemons are fine to share across **different** checkouts.
+Idle daemons are fine to share across different checkouts.
 
-## When the daemon is BUSY (sequential agent work)
+## When BUSY for another reason
 
-**Wait for it to finish** — keep doing non-Gradle work (read, edit, write tests), poll `./gradlew --status` until `IDLE`, then run. Do not report the task blocked or skip tests because Gradle was busy.
+**Short one-shot BUSY** (another `:core:test` / compile that will finish soon): wait and poll until `IDLE`, then run. Do not report blocked or skip tests.
 
-The worktree escape hatch is for **genuinely parallel long runs planned as such** (e.g. game `:desktop:run` in one tree, tests in another). Do **not** create a worktree just to avoid waiting a couple of minutes on a shared checkout. A worktree run also needs dirty changes copied over — usually more cost than the wait.
-
-Other sessions may modify the same tree: at the end of a task, report only the files you changed; say plainly if other diffs came from elsewhere.
-
-## Parallel work → separate worktree
+**Two long jobs that both use default `build/`** (e.g. `:desktop:run` if added later without a slot, or two test runs): use a **git worktree**, or wait. Do not start a second `./gradlew` that writes the same `build/`.
 
 ```bash
 git worktree add ../iatdb-<purpose> <branch>
@@ -31,12 +33,15 @@ cd ../iatdb-<purpose>
 ./gradlew :core:test
 ```
 
-Windows: `gradlew.bat`. Keep the game (`:desktop:run`) in one tree and tests in another.
+Windows: `gradlew.bat`.
+
+Other sessions may modify the same tree: at the end of a task, report only the files you changed; say plainly if other diffs came from elsewhere.
 
 ## Do not
 
-- Start a second `./gradlew` in the same tree while another build or IDE sync is writing `build/`
-- Rely on `--project-cache-dir` alone — it does not isolate `build/` output
+- Start a second `./gradlew` in the same tree while another build writing **the same** `build/` (or same cache) is in progress
+- Kill `:desktop:debug` just so agent tests can run
+- Rely on `--project-cache-dir` alone without also splitting `build/` — incomplete isolation
 - Use a separate `GRADLE_USER_HOME` unless you need daemon isolation (duplicates caches)
 
 `org.gradle.parallel=true` only parallelizes tasks **inside one build**, not multiple CLI runs.

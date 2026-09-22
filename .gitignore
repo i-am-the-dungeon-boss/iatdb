@@ -13,7 +13,9 @@ __pycache__/
 
 # Gradle build files
 .gradle/
+.gradle-debug/
 build/
+build-debug/
 /release/
 /dist/
 

@@ -6,6 +6,15 @@ pluginManagement {
 	}
 }
 
+// :desktop:debug writes under build-debug/ + .gradle-debug so :core:test can use build/ in parallel.
+def desktopDebugRequested = startParameter.taskNames.any { name ->
+	def n = name.toLowerCase(Locale.ROOT)
+	n == 'debug' || n == 'desktop:debug' || n == ':desktop:debug' || n.endsWith(':desktop:debug')
+}
+if (desktopDebugRequested) {
+	startParameter.projectCacheDir = new File(rootDir, '.gradle-debug')
+}
+
 //core game code modules
 include ':SPD-classes'
 include ':core'

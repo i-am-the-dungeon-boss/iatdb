@@ -26,7 +26,7 @@ When matching “master style,” compare against the `master` branch. Implement
 Windows: `gradlew.bat`. Prefer targeted `:core:test` unless a full build is requested.
 Agents always use `-q -PerrorProneOff` for tests; omit those only for PR quality gates or when EP output is requested.
 
-Concurrent Gradle: check `./gradlew --status` first; use a **git worktree** for a second run — never two builds in the same checkout (see `.cursor/rules/gradle-worktree.mdc`).
+Concurrent Gradle: `:desktop:debug` uses `build-debug/`; tests use `build/` in the same checkout. Other overlapping default-`build/` runs need a worktree or a wait (see `.cursor/rules/gradle-worktree.mdc`).
 
 ## Quality checks (Spotless / Error Prone / SpotBugs)
 

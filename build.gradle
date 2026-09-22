@@ -15,6 +15,15 @@ plugins {
     id 'com.github.spotbugs' version '6.5.9' apply false
 }
 
+// :desktop:debug → build-debug/<module>/ so a parallel :core:test can keep using build/.
+def desktopDebugRequested = gradle.startParameter.taskNames.any { name ->
+    def n = name.toLowerCase(Locale.ROOT)
+    n == 'debug' || n == 'desktop:debug' || n == ':desktop:debug' || n.endsWith(':desktop:debug')
+}
+if (desktopDebugRequested) {
+    logger.lifecycle('desktop:debug → outputs under build-debug/ (tests can use build/ in parallel)')
+}
+
 allprojects {
 
     ext {
@@ -44,6 +53,11 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://central.sonatype.com/repository/maven-snapshots/' }
+    }
+
+    if (desktopDebugRequested) {
+        def rel = path == ':' ? '_root' : path.substring(1).replace(':', '/')
+        layout.buildDirectory.set(rootProject.layout.projectDirectory.dir("build-debug/${rel}"))
     }
 
 }
