@@ -61,7 +61,7 @@ public class Guard extends Mob {
 		lootChance = 0.2f; //by default, see lootChance()
 
 		properties.add(Property.UNDEAD);
-		
+
 		HUNTING = new Hunting();
 	}
 
@@ -70,7 +70,7 @@ public class Guard extends Mob {
 		return Random.NormalIntRange(4, 12);
 	}
 
-	private boolean chain(int target){
+	private boolean chain(int target) {
 		if (chainsUsed || enemy.properties().contains(Property.IMMOVABLE))
 			return false;
 
@@ -82,16 +82,16 @@ public class Guard extends Mob {
 			return false;
 		else {
 			int newPos = -1;
-			for (int i : chain.subPath(1, chain.dist)){
+			for (int i : chain.subPath(1, chain.dist)) {
 				//find the closest position to the guard that's open for the target
 				if (!Dungeon.level.solid[i] && Actor.findChar(i) == null
-						&& (Dungeon.level.openSpace[i] || !Char.hasProp(enemy, Property.LARGE))){
+						&& (Dungeon.level.openSpace[i] || !Char.hasProp(enemy, Property.LARGE))) {
 					newPos = i;
 					break;
 				}
 			}
 
-			if (newPos == -1){
+			if (newPos == -1) {
 				return false;
 			} else {
 				final int newPosFinal = newPos;
@@ -105,15 +105,15 @@ public class Guard extends Mob {
 							enemy.sprite.destinationCenter(),
 							Effects.Type.CHAIN,
 							new Callback() {
-						public void call() {
-							Actor.add(new Pushing(enemy, enemy.pos, newPosFinal, new Callback() {
 								public void call() {
-									pullEnemy(enemy, newPosFinal);
+									Actor.add(new Pushing(enemy, enemy.pos, newPosFinal, new Callback() {
+										public void call() {
+											pullEnemy(enemy, newPosFinal);
+										}
+									}));
+									next();
 								}
 							}));
-							next();
-						}
-					}));
 				} else {
 					pullEnemy(enemy, newPos);
 				}
@@ -123,7 +123,7 @@ public class Guard extends Mob {
 		return true;
 	}
 
-	private void pullEnemy( Char enemy, int pullPos ){
+	private void pullEnemy(Char enemy, int pullPos) {
 		enemy.pos = pullPos;
 		enemy.sprite.place(pullPos);
 		Dungeon.level.occupyCell(enemy);
@@ -138,7 +138,7 @@ public class Guard extends Mob {
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 12;
 	}
 
@@ -151,7 +151,7 @@ public class Guard extends Mob {
 	public float lootChance() {
 		//each drop makes future drops 1/3 as likely
 		// so loot chance looks like: 1/5, 1/15, 1/45, 1/135, etc.
-		return super.lootChance() * (float)Math.pow(1/3f, Dungeon.LimitedDrops.GUARD_ARM.count);
+		return super.lootChance() * (float) Math.pow(1 / 3f, Dungeon.LimitedDrops.GUARD_ARM.count);
 	}
 
 	@Override
@@ -173,23 +173,23 @@ public class Guard extends Mob {
 		super.restoreFromBundle(bundle);
 		chainsUsed = bundle.getBoolean(CHAINSUSED);
 	}
-	
-	private class Hunting extends Mob.Hunting{
+
+	private class Hunting extends Mob.Hunting {
 		@Override
-		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 			enemySeen = enemyInFOV;
-			
+
 			if (!chainsUsed
 					&& enemyInFOV
-					&& !isCharmedBy( enemy )
-					&& !canAttack( enemy )
-					&& Dungeon.level.distance( pos, enemy.pos ) < 5
-					&& chain(enemy.pos)){
+					&& !isCharmedBy(enemy)
+					&& !canAttack(enemy)
+					&& Dungeon.level.distance(pos, enemy.pos) < 5
+					&& chain(enemy.pos)) {
 				return !(sprite.visible || enemy.sprite.visible);
 			} else {
-				return super.act( enemyInFOV, justAlerted );
+				return super.act(enemyInFOV, justAlerted);
 			}
-			
+
 		}
 	}
 }

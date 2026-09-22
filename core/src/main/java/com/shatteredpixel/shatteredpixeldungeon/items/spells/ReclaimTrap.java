@@ -52,20 +52,20 @@ public class ReclaimTrap extends TargetedSpell {
 	{
 		image = ItemSpriteSheet.RECLAIM_TRAP;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	//This class has a variety of code for compat with pre-v3.0.0 saves
 	//Stored traps used to be a property of the item itself, but in 3.0.0 this was changed to be
 	//a buff attached to the hero, which is much more resistant to exploits
 
-	private Class<?extends Trap> storedTrap = null;
+	private Class<? extends Trap> storedTrap = null;
 
 	@Override
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
 		//prevents exploits, pre-v3.0.0
-		if (storedTrap != null){
+		if (storedTrap != null) {
 			actions.remove(AC_DROP);
 			actions.remove(AC_THROW);
 		}
@@ -74,13 +74,13 @@ public class ReclaimTrap extends TargetedSpell {
 
 	@Override
 	protected void affectTarget(Ballistica bolt, Hero hero) {
-		Class<?extends Trap> storedTrap = null;
+		Class<? extends Trap> storedTrap = null;
 		//pre-v3.0.0
-		if (this.storedTrap != null){
+		if (this.storedTrap != null) {
 			storedTrap = this.storedTrap;
 			this.storedTrap = null;
 		} else {
-			if (hero.buff(ReclaimedTrap.class) != null){
+			if (hero.buff(ReclaimedTrap.class) != null) {
 				storedTrap = hero.buff(ReclaimedTrap.class).trap;
 				hero.buff(ReclaimedTrap.class).detach();
 			}
@@ -101,7 +101,7 @@ public class ReclaimTrap extends TargetedSpell {
 
 			//spell is not consumed, so doesn't count as a full use
 			Invisibility.dispel();
-			curUser.spendAndNext( timeToCast() );
+			curUser.spendAndNext(timeToCast());
 
 		} else {
 
@@ -120,31 +120,33 @@ public class ReclaimTrap extends TargetedSpell {
 	@Override
 	public String desc() {
 		String desc = super.desc();
-		if (storedTrap != null){
+		if (storedTrap != null) {
 			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(storedTrap, "name"));
-		} else if (owner() != null && owner().belongings.contains(this) && owner().buff(ReclaimedTrap.class) != null){
-			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(owner().buff(ReclaimedTrap.class).trap, "name"));
+		} else if (owner() != null && owner().belongings.contains(this) && owner().buff(ReclaimedTrap.class) != null) {
+			desc += "\n\n"
+					+ Messages.get(this, "desc_trap", Messages.get(owner().buff(ReclaimedTrap.class).trap, "name"));
 		}
 		return desc;
 	}
 
-	private static final ItemSprite.Glowing[] COLORS = new ItemSprite.Glowing[]{
-			new ItemSprite.Glowing( 0xFF0000 ),
-			new ItemSprite.Glowing( 0xFF8000 ),
-			new ItemSprite.Glowing( 0xFFFF00 ),
-			new ItemSprite.Glowing( 0x00FF00 ),
-			new ItemSprite.Glowing( 0x00FFFF ),
-			new ItemSprite.Glowing( 0x8000FF ),
-			new ItemSprite.Glowing( 0xFFFFFF ),
-			new ItemSprite.Glowing( 0x808080 ),
-			new ItemSprite.Glowing( 0x000000 )
+	private static final ItemSprite.Glowing[] COLORS = new ItemSprite.Glowing[] {
+			new ItemSprite.Glowing(0xFF0000),
+			new ItemSprite.Glowing(0xFF8000),
+			new ItemSprite.Glowing(0xFFFF00),
+			new ItemSprite.Glowing(0x00FF00),
+			new ItemSprite.Glowing(0x00FFFF),
+			new ItemSprite.Glowing(0x8000FF),
+			new ItemSprite.Glowing(0xFFFFFF),
+			new ItemSprite.Glowing(0x808080),
+			new ItemSprite.Glowing(0x000000)
 	};
 
 	@Override
 	public ItemSprite.Glowing glowing() {
-		if (storedTrap != null){
+		if (storedTrap != null) {
 			return COLORS[Reflection.newInstance(storedTrap).color];
-		} else if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this) && Dungeon.hero.buff(ReclaimedTrap.class) != null){
+		} else if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this)
+				&& Dungeon.hero.buff(ReclaimedTrap.class) != null) {
 			return COLORS[Reflection.newInstance(Dungeon.hero.buff(ReclaimedTrap.class).trap).color];
 		}
 		return null;
@@ -152,12 +154,12 @@ public class ReclaimTrap extends TargetedSpell {
 
 	@Override
 	public int value() {
-		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (60 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (12 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	private static final String STORED_TRAP = "stored_trap";
@@ -165,13 +167,15 @@ public class ReclaimTrap extends TargetedSpell {
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		if (storedTrap != null) bundle.put(STORED_TRAP, storedTrap);
+		if (storedTrap != null)
+			bundle.put(STORED_TRAP, storedTrap);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (bundle.contains(STORED_TRAP)) storedTrap = bundle.getClass(STORED_TRAP);
+		if (bundle.contains(STORED_TRAP))
+			storedTrap = bundle.getClass(STORED_TRAP);
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
@@ -179,8 +183,8 @@ public class ReclaimTrap extends TargetedSpell {
 		private static final int OUT_QUANTITY = 5;
 
 		{
-			inputs =  new Class[]{ScrollOfMagicMapping.class, MetalShard.class};
-			inQuantity = new int[]{1, 1};
+			inputs = new Class[] { ScrollOfMagicMapping.class, MetalShard.class };
+			inQuantity = new int[] { 1, 1 };
 
 			cost = 8;
 
@@ -201,7 +205,7 @@ public class ReclaimTrap extends TargetedSpell {
 			revivePersists = true;
 		}
 
-		private Class<?extends Trap> trap;
+		private Class<? extends Trap> trap;
 
 		private static final String TRAP = "trap";
 

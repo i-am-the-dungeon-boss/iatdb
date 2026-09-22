@@ -41,67 +41,68 @@ public abstract class ClericSpell {
 
 	public abstract void onCast(HolyTome tome, Hero hero);
 
-	public float chargeUse( Hero hero ){
+	public float chargeUse(Hero hero) {
 		return 1;
 	}
 
-	public boolean canCast( Hero hero ){
+	public boolean canCast(Hero hero) {
 		return true;
 	}
 
-	public String name(){
+	public String name() {
 		return Messages.get(this, "name");
 	}
 
-	public String shortDesc(){
-		return Messages.get(this, "short_desc") + " " + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+	public String shortDesc() {
+		return Messages.get(this, "short_desc") + " "
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
-	public String desc(){
-		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+	public String desc() {
+		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
-	public boolean usesTargeting(){
+	public boolean usesTargeting() {
 		return false;
 	}
 
-	public int targetingFlags(){
+	public int targetingFlags() {
 		return -1; //-1 for no targeting
 	}
 
-	public int icon(){
+	public int icon() {
 		return HeroIcon.NONE;
 	}
 
-	public void onSpellCast(HolyTome tome, Hero hero){
+	public void onSpellCast(HolyTome tome, Hero hero) {
 		Invisibility.dispel();
-		if (hero.hasTalent(Talent.SATIATED_SPELLS) && hero.buff(Talent.SatiatedSpellsTracker.class) != null){
-			int amount = 1 + 2*hero.pointsInTalent(Talent.SATIATED_SPELLS);
+		if (hero.hasTalent(Talent.SATIATED_SPELLS) && hero.buff(Talent.SatiatedSpellsTracker.class) != null) {
+			int amount = 1 + 2 * hero.pointsInTalent(Talent.SATIATED_SPELLS);
 			Buff.affect(hero, Barrier.class).setShield(amount);
 			Char ally = PowerOfMany.getPoweredAlly();
-			if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
+			if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
 				Buff.affect(ally, Barrier.class).setShield(amount);
 			}
 			hero.buff(Talent.SatiatedSpellsTracker.class).detach();
 		}
 		tome.spendCharge(chargeUse(hero));
 		Talent.onArtifactUsed(hero);
-		if (hero.subClass == HeroSubClass.PALADIN){
-			if (this != HolyWeapon.INSTANCE && hero.buff(HolyWeapon.HolyWepBuff.class) != null){
-				hero.buff(HolyWeapon.HolyWepBuff.class).extend(10*chargeUse(hero));
+		if (hero.subClass == HeroSubClass.PALADIN) {
+			if (this != HolyWeapon.INSTANCE && hero.buff(HolyWeapon.HolyWepBuff.class) != null) {
+				hero.buff(HolyWeapon.HolyWepBuff.class).extend(10 * chargeUse(hero));
 			}
-			if (this != HolyWard.INSTANCE && hero.buff(HolyWard.HolyArmBuff.class) != null){
-				hero.buff(HolyWard.HolyArmBuff.class).extend(10*chargeUse(hero));
+			if (this != HolyWard.INSTANCE && hero.buff(HolyWard.HolyArmBuff.class) != null) {
+				hero.buff(HolyWard.HolyArmBuff.class).extend(10 * chargeUse(hero));
 			}
 		}
 
-		if (hero.buff(AscendedForm.AscendBuff.class) != null){
+		if (hero.buff(AscendedForm.AscendBuff.class) != null) {
 			hero.buff(AscendedForm.AscendBuff.class).spellCasts++;
-			hero.buff(AscendedForm.AscendBuff.class).incShield((int)(10*chargeUse(hero)));
+			hero.buff(AscendedForm.AscendBuff.class).incShield((int) (10 * chargeUse(hero)));
 		}
 	}
 
-	public static ArrayList<ClericSpell> getSpellList(Hero cleric, int tier){
+	public static ArrayList<ClericSpell> getSpellList(Hero cleric, int tier) {
 		ArrayList<ClericSpell> spells = new ArrayList<>();
 
 		if (tier == 1) {
@@ -120,11 +121,11 @@ public abstract class ClericSpell {
 
 		} else if (tier == 2) {
 
-			if (cleric.hasTalent(Talent.RECALL_INSCRIPTION)){
+			if (cleric.hasTalent(Talent.RECALL_INSCRIPTION)) {
 				spells.add(RecallInscription.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.SUNRAY)){
+			if (cleric.hasTalent(Talent.SUNRAY)) {
 				spells.add(Sunray.INSTANCE);
 			}
 
@@ -132,72 +133,72 @@ public abstract class ClericSpell {
 				spells.add(DivineSense.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.BLESS)){
+			if (cleric.hasTalent(Talent.BLESS)) {
 				spells.add(BlessSpell.INSTANCE);
 			}
 
-		} else if (tier == 3){
+		} else if (tier == 3) {
 
 			if (cleric.subClass == HeroSubClass.PRIEST) {
 				spells.add(Radiance.INSTANCE);
 
-			} else if (cleric.subClass == HeroSubClass.PALADIN){
+			} else if (cleric.subClass == HeroSubClass.PALADIN) {
 				spells.add(Smite.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.CLEANSE)){
+			if (cleric.hasTalent(Talent.CLEANSE)) {
 				spells.add(Cleanse.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.HOLY_LANCE)){
+			if (cleric.hasTalent(Talent.HOLY_LANCE)) {
 				spells.add(HolyLance.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.HALLOWED_GROUND)){
+			if (cleric.hasTalent(Talent.HALLOWED_GROUND)) {
 				spells.add(HallowedGround.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.MNEMONIC_PRAYER)){
+			if (cleric.hasTalent(Talent.MNEMONIC_PRAYER)) {
 				spells.add(MnemonicPrayer.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.LAY_ON_HANDS)){
+			if (cleric.hasTalent(Talent.LAY_ON_HANDS)) {
 				spells.add(LayOnHands.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.AURA_OF_PROTECTION)){
+			if (cleric.hasTalent(Talent.AURA_OF_PROTECTION)) {
 				spells.add(AuraOfProtection.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.WALL_OF_LIGHT)){
+			if (cleric.hasTalent(Talent.WALL_OF_LIGHT)) {
 				spells.add(WallOfLight.INSTANCE);
 			}
 
-		} else if (tier == 4){
+		} else if (tier == 4) {
 
-			if (cleric.hasTalent(Talent.DIVINE_INTERVENTION)){
+			if (cleric.hasTalent(Talent.DIVINE_INTERVENTION)) {
 				spells.add(DivineIntervention.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.JUDGEMENT)){
+			if (cleric.hasTalent(Talent.JUDGEMENT)) {
 				spells.add(Judgement.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.FLASH)){
+			if (cleric.hasTalent(Talent.FLASH)) {
 				spells.add(Flash.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.BODY_FORM)){
+			if (cleric.hasTalent(Talent.BODY_FORM)) {
 				spells.add(BodyForm.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.MIND_FORM)){
+			if (cleric.hasTalent(Talent.MIND_FORM)) {
 				spells.add(MindForm.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.SPIRIT_FORM)){
+			if (cleric.hasTalent(Talent.SPIRIT_FORM)) {
 				spells.add(SpiritForm.INSTANCE);
 			}
 
-			if (cleric.hasTalent(Talent.BEAMING_RAY)){
+			if (cleric.hasTalent(Talent.BEAMING_RAY)) {
 				spells.add(BeamingRay.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.LIFE_LINK)){
+			if (cleric.hasTalent(Talent.LIFE_LINK)) {
 				spells.add(LifeLinkSpell.INSTANCE);
 			}
-			if (cleric.hasTalent(Talent.STASIS)){
+			if (cleric.hasTalent(Talent.STASIS)) {
 				spells.add(Stasis.INSTANCE);
 			}
 

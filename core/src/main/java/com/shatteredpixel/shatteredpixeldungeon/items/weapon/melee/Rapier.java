@@ -53,13 +53,13 @@ public class Rapier extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  4*(tier+1) +    //8 base, down from 10
-				lvl*(tier+1);   //scaling unchanged
+		return 4 * (tier + 1) + //8 base, down from 10
+				lvl * (tier + 1); //scaling unchanged
 	}
 
 	@Override
-	public int defenseFactor( Char owner ) {
-		return 1;	//1 extra defence
+	public int defenseFactor(Char owner) {
+		return 1; //1 extra defence
 	}
 
 	@Override
@@ -70,27 +70,28 @@ public class Rapier extends MeleeWeapon {
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
 		//+(5+1.5*lvl) damage, roughly +111% base damage, +100% scaling
-		int dmgBoost =  augment.damageFactor(5 + Math.round(1.5f*buffedLvl()));
+		int dmgBoost = augment.damageFactor(5 + Math.round(1.5f * buffedLvl()));
 		lungeAbility(hero, target, 1, dmgBoost, this);
 	}
 
 	@Override
 	public String abilityInfo() {
-		int dmgBoost = levelKnown ? 5 + Math.round(1.5f*buffedLvl()) : 5;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		int dmgBoost = levelKnown ? 5 + Math.round(1.5f * buffedLvl()) : 5;
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
-		int dmgBoost = 5 + Math.round(1.5f*level);
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+	public String upgradeAbilityStat(int level) {
+		int dmgBoost = 5 + Math.round(1.5f * level);
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 
-	public static void lungeAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep){
-		if (target == null){
+	public static void lungeAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep) {
+		if (target == null) {
 			return;
 		}
 
@@ -104,24 +105,26 @@ public class Rapier extends MeleeWeapon {
 		}
 
 		if (hero.rooted || Dungeon.level.distance(hero.pos, target) < 2
-				|| Dungeon.level.distance(hero.pos, target)-1 > wep.reachFactor(hero)){
+				|| Dungeon.level.distance(hero.pos, target) - 1 > wep.reachFactor(hero)) {
 			GLog.w(Messages.get(wep, "ability_target_range"));
-			if (hero.rooted) PixelScene.shake( 1, 1f );
+			if (hero.rooted)
+				PixelScene.shake(1, 1f);
 			return;
 		}
 
 		int lungeCell = -1;
-		for (int i : PathFinder.NEIGHBOURS8){
-			if (Dungeon.level.distance(hero.pos+i, target) <= wep.reachFactor(hero)
-					&& Actor.findChar(hero.pos+i) == null
-					&& (Dungeon.level.passable[hero.pos+i] || (Dungeon.level.avoid[hero.pos+i] && hero.flying))){
-				if (lungeCell == -1 || Dungeon.level.trueDistance(hero.pos + i, target) < Dungeon.level.trueDistance(lungeCell, target)){
+		for (int i : PathFinder.NEIGHBOURS8) {
+			if (Dungeon.level.distance(hero.pos + i, target) <= wep.reachFactor(hero)
+					&& Actor.findChar(hero.pos + i) == null
+					&& (Dungeon.level.passable[hero.pos + i] || (Dungeon.level.avoid[hero.pos + i] && hero.flying))) {
+				if (lungeCell == -1 || Dungeon.level.trueDistance(hero.pos + i, target) < Dungeon.level
+						.trueDistance(lungeCell, target)) {
 					lungeCell = hero.pos + i;
 				}
 			}
 		}
 
-		if (lungeCell == -1){
+		if (lungeCell == -1) {
 			GLog.w(Messages.get(wep, "ability_target_range"));
 			return;
 		}
@@ -134,7 +137,7 @@ public class Rapier extends MeleeWeapon {
 			@Override
 			public void call() {
 				if (Dungeon.level.map[hero.pos] == Terrain.OPEN_DOOR) {
-					Door.leave( hero.pos );
+					Door.leave(hero.pos);
 				}
 				hero.pos = dest;
 				Dungeon.level.occupyCell(hero);
@@ -169,7 +172,7 @@ public class Rapier extends MeleeWeapon {
 					}
 					updateQuickslot();
 					GLog.w(Messages.get(Rapier.class, "ability_no_target"));
-					hero.spendAndNext(1/hero.speed());
+					hero.spendAndNext(1 / hero.speed());
 				}
 			}
 		});

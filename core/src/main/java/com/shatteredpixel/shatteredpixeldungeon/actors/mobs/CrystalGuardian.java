@@ -46,7 +46,7 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
-public class CrystalGuardian extends Mob{
+public class CrystalGuardian extends Mob {
 
 	{
 		spriteClass = CrystalGuardianSprite.class;
@@ -66,24 +66,25 @@ public class CrystalGuardian extends Mob{
 
 	private boolean recovering = false;
 
-	public boolean recovering(){
+	public boolean recovering() {
 		return recovering;
 	}
 
 	@Override
 	protected boolean act() {
-		if (recovering){
-			if (buff(PinCushion.class) != null){
+		if (recovering) {
+			if (buff(PinCushion.class) != null) {
 				buff(PinCushion.class).detach();
 			}
 			throwItems();
-			HP = Math.min(HT, HP+5);
+			HP = Math.min(HT, HP + 5);
 			if (Dungeon.level.heroFOV[pos]) {
 				sprite.showStatusWithIcon(CharSprite.POSITIVE, "5", FloatingText.HEALING);
 			}
-			if (HP == HT){
+			if (HP == HT) {
 				recovering = false;
-				if (sprite instanceof CrystalGuardianSprite) ((CrystalGuardianSprite) sprite).endCrumple();
+				if (sprite instanceof CrystalGuardianSprite)
+					((CrystalGuardianSprite) sprite).endCrumple();
 			}
 			spend(TICK);
 			return true;
@@ -93,24 +94,28 @@ public class CrystalGuardian extends Mob{
 
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 10, 16 );
+		return Random.NormalIntRange(10, 16);
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 20;
 	}
 
 	@Override
 	public int defenseSkill(Char enemy) {
-		if (recovering) return 0;
-		else            return super.defenseSkill(enemy);
+		if (recovering)
+			return 0;
+		else
+			return super.defenseSkill(enemy);
 	}
 
 	@Override
 	public boolean surprisedBy(Char enemy, boolean attacking) {
-		if (recovering) return false;
-		else            return super.surprisedBy(enemy, attacking);
+		if (recovering)
+			return false;
+		else
+			return super.surprisedBy(enemy, attacking);
 	}
 
 	@Override
@@ -126,14 +131,14 @@ public class CrystalGuardian extends Mob{
 	@Override
 	public boolean attack(Char enemy, float dmgMulti, float dmgBonus, float accMulti) {
 		//if enemy is hero, and they aren't currently fighting the spire, -100 points
-		if (enemy == Dungeon.hero){
+		if (enemy == Dungeon.hero) {
 			boolean spireNear = false;
-			for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){
-				if (m instanceof CrystalSpire && m.HP != m.HT && Dungeon.level.distance(pos, m.pos) <= 8){
+			for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])) {
+				if (m instanceof CrystalSpire && m.HP != m.HT && Dungeon.level.distance(pos, m.pos) <= 8) {
 					spireNear = true;
 				}
 			}
-			if (!spireNear){
+			if (!spireNear) {
 				Statistics.questScores[2] -= 100;
 			}
 		}
@@ -142,10 +147,10 @@ public class CrystalGuardian extends Mob{
 
 	@Override
 	public int defenseProc(Char enemy, int damage) {
-		if (recovering){
+		if (recovering) {
 			//this triggers before blocking, so the dmg as block-bypassing
 			sprite.showStatusWithIcon(CharSprite.NEGATIVE, Integer.toString(damage), FloatingText.PHYS_DMG_NO_BLOCK);
-			HP = Math.max(1, HP-damage);
+			HP = Math.max(1, HP - damage);
 			damage = -1;
 		}
 
@@ -154,10 +159,10 @@ public class CrystalGuardian extends Mob{
 
 	@Override
 	public boolean isAlive() {
-		if (HP <= 0){
+		if (HP <= 0) {
 			HP = 1;
 
-			for (Buff b : buffs()){
+			for (Buff b : buffs()) {
 				if (!(b instanceof Doom || b instanceof Cripple)) {
 					b.detach();
 				}
@@ -167,7 +172,8 @@ public class CrystalGuardian extends Mob{
 				recovering = true;
 				Bestiary.setSeen(getClass());
 				Bestiary.countEncounter(getClass());
-				if (sprite != null) ((CrystalGuardianSprite) sprite).crumple();
+				if (sprite != null)
+					((CrystalGuardianSprite) sprite).crumple();
 			}
 		}
 		return super.isAlive();
@@ -175,18 +181,20 @@ public class CrystalGuardian extends Mob{
 
 	@Override
 	public boolean isInvulnerable(Class effect) {
-		if (recovering){
+		if (recovering) {
 			//while recovering, immune to chars that aren't the hero or spire
 			// this is sort of a hack to prevent allies from attacking downed guardians
-			return super.isInvulnerable(effect) || (Char.class.isAssignableFrom(effect) && !Hero.class.isAssignableFrom(effect) && !CrystalSpire.class.isAssignableFrom(effect));
+			return super.isInvulnerable(effect) || (Char.class.isAssignableFrom(effect)
+					&& !Hero.class.isAssignableFrom(effect) && !CrystalSpire.class.isAssignableFrom(effect));
 		}
 		return super.isInvulnerable(effect);
 	}
 
-	public CrystalGuardian(){
+	public CrystalGuardian() {
 		super();
-		switch (Random.Int(3)){
-			case 0: default:
+		switch (Random.Int(3)) {
+			case 0:
+			default:
 				spriteClass = CrystalGuardianSprite.Blue.class;
 				break;
 			case 1:
@@ -215,25 +223,25 @@ public class CrystalGuardian extends Mob{
 	@Override
 	public void move(int step, boolean travelling) {
 		super.move(step, travelling);
-		if (Dungeon.level.map[pos] == Terrain.MINE_CRYSTAL){
+		if (Dungeon.level.map[pos] == Terrain.MINE_CRYSTAL) {
 			Level.set(pos, Terrain.EMPTY);
 			GameScene.updateMap(pos);
-			if (Dungeon.level.heroFOV[pos]){
+			if (Dungeon.level.heroFOV[pos]) {
 				Splash.at(pos, 0xFFFFFF, 5);
-				Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+				Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 			}
 			//breaking a crystal costs an extra move, not affected by enclosed spaces though
-			spend(1/super.speed());
+			spend(1 / super.speed());
 		}
 	}
 
 	@Override
 	public boolean[] modifyPassable(boolean[] passable) {
 		//if we are hunting, we can stomp through crystals, but prefer not to
-		if (state == HUNTING && target != -1){
+		if (state == HUNTING && target != -1) {
 			PathFinder.buildDistanceMap(target, passable);
 
-			if (PathFinder.distance[pos] > 2*Dungeon.level.distance(pos, target)) {
+			if (PathFinder.distance[pos] > 2 * Dungeon.level.distance(pos, target)) {
 				for (int i = 0; i < Dungeon.level.length(); i++) {
 					passable[i] = passable[i] || Dungeon.level.map[i] == Terrain.MINE_CRYSTAL;
 				}
@@ -244,21 +252,21 @@ public class CrystalGuardian extends Mob{
 
 	@Override
 	public void beckon(int cell) {
-		if (state == SLEEPING){
+		if (state == SLEEPING) {
 			//do nothing
 		} else {
 			super.beckon(cell);
 		}
 	}
 
-	protected class Sleeping extends Mob.Sleeping{
+	protected class Sleeping extends Mob.Sleeping {
 
 		@Override
 		protected void awaken(boolean enemyInFOV) {
-			if (enemyInFOV){
+			if (enemyInFOV) {
 				//do not wake up if we see an enemy we can't actually reach
 				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.passable);
-				if (PathFinder.distance[pos] == Integer.MAX_VALUE){
+				if (PathFinder.distance[pos] == Integer.MAX_VALUE) {
 					return;
 				}
 			}

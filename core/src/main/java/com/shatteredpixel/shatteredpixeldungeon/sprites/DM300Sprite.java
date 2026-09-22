@@ -43,30 +43,31 @@ public class DM300Sprite extends MobSprite {
 	private Animation slam;
 
 	private Emitter superchargeSparks;
-	
+
 	public DM300Sprite() {
 		super();
-		
-		texture( Assets.Sprites.DM300 );
-		
+
+		texture(Assets.Sprites.DM300);
+
 		updateChargeState(false);
 	}
 
-	public void updateChargeState( boolean enraged ){
-		if (superchargeSparks != null) superchargeSparks.on = enraged;
+	public void updateChargeState(boolean enraged) {
+		if (superchargeSparks != null)
+			superchargeSparks.on = enraged;
 
 		int c = enraged ? 10 : 0;
 
-		TextureFilm frames = new TextureFilm( texture, 25, 22 );
+		TextureFilm frames = new TextureFilm(texture, 25, 22);
 
-		idle = new Animation( enraged ? 15 : 10, true );
-		idle.frames( frames, c+0, c+1 );
+		idle = new Animation(enraged ? 15 : 10, true);
+		idle.frames(frames, c + 0, c + 1);
 
-		run = new Animation( enraged ? 15 : 10, true );
-		run.frames( frames, c+0, c+2 );
+		run = new Animation(enraged ? 15 : 10, true);
+		run.frames(frames, c + 0, c + 2);
 
-		attack = new Animation( 15, false );
-		attack.frames( frames, c+3, c+4, c+5 );
+		attack = new Animation(15, false);
+		attack.frames(frames, c + 3, c + 4, c + 5);
 
 		//unaffected by enrage state
 
@@ -83,60 +84,62 @@ public class DM300Sprite extends MobSprite {
 			die.frames(frames, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10);
 		}
 
-		if (curAnim != charge) play(idle);
+		if (curAnim != charge)
+			play(idle);
 	}
 
-	public void zap( int cell ) {
+	public void zap(int cell) {
 
-		super.zap( cell );
+		super.zap(cell);
 
-		MagicMissile.boltFromChar( parent,
+		MagicMissile.boltFromChar(parent,
 				MagicMissile.SPECK + Speck.TOXIC,
 				this,
 				cell,
 				new Callback() {
 					@Override
 					public void call() {
-						((DM300)ch).onZapComplete();
+						((DM300) ch).onZapComplete();
 					}
-				} );
-		Sample.INSTANCE.play( Assets.Sounds.GAS );
+				});
+		Sample.INSTANCE.play(Assets.Sounds.GAS);
 	}
 
-	public void charge(){
-		play( charge );
+	public void charge() {
+		play(charge);
 	}
 
-	public void slam( int cell ){
-		turnTo( ch.pos , cell );
-		play( slam );
-		Sample.INSTANCE.play( Assets.Sounds.ROCKS );
-		PixelScene.shake( 3, 0.7f );
+	public void slam(int cell) {
+		turnTo(ch.pos, cell);
+		play(slam);
+		Sample.INSTANCE.play(Assets.Sounds.ROCKS);
+		PixelScene.shake(3, 0.7f);
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 
-		if (anim == zap || anim == slam){
+		if (anim == zap || anim == slam) {
 			idle();
 		}
 
-		if (anim == slam){
-			((DM300)ch).onSlamComplete();
+		if (anim == slam) {
+			((DM300) ch).onSlamComplete();
 		}
 
-		super.onComplete( anim );
-		
+		super.onComplete(anim);
+
 		if (anim == die) {
 			Sample.INSTANCE.play(Assets.Sounds.BLAST);
-			emitter().burst( BlastParticle.FACTORY, 100 );
+			emitter().burst(BlastParticle.FACTORY, 100);
 			killAndErase();
 		}
 	}
 
 	@Override
 	public void place(int cell) {
-		if (parent != null) parent.bringToFront(this);
+		if (parent != null)
+			parent.bringToFront(this);
 		super.place(cell);
 	}
 
@@ -149,7 +152,7 @@ public class DM300Sprite extends MobSprite {
 		superchargeSparks.pour(SparkParticle.STATIC, 0.05f);
 		superchargeSparks.on = false;
 
-		if (ch instanceof DM300 && ((DM300) ch).isSupercharged()){
+		if (ch instanceof DM300 && ((DM300) ch).isSupercharged()) {
 			updateChargeState(true);
 		}
 	}
@@ -158,7 +161,7 @@ public class DM300Sprite extends MobSprite {
 	public void update() {
 		super.update();
 
-		if (superchargeSparks != null){
+		if (superchargeSparks != null) {
 			superchargeSparks.visible = visible;
 		}
 	}
@@ -166,7 +169,7 @@ public class DM300Sprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (superchargeSparks != null){
+		if (superchargeSparks != null) {
 			superchargeSparks.on = false;
 		}
 	}
@@ -174,7 +177,7 @@ public class DM300Sprite extends MobSprite {
 	@Override
 	public void kill() {
 		super.kill();
-		if (superchargeSparks != null){
+		if (superchargeSparks != null) {
 			superchargeSparks.killAndErase();
 		}
 	}

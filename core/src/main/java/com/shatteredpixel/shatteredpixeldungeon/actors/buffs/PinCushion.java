@@ -40,7 +40,7 @@ public class PinCushion extends Buff {
 
 	private ArrayList<MissileWeapon> items = new ArrayList<>();
 
-	public void stick(MissileWeapon projectile){
+	public void stick(MissileWeapon projectile) {
 		for (int i = 0; i < items.size(); i++) {
 			if (projectile.isSimilar(items.get(i))) {
 				projectile.merge(items.get(i));
@@ -57,22 +57,22 @@ public class PinCushion extends Buff {
 		items.add(projectile);
 	}
 
-	public Item grabOne(){
+	public Item grabOne() {
 		Item item = items.remove(0);
-		if (items.isEmpty()){
+		if (items.isEmpty()) {
 			detach();
 		}
 		return item;
 	}
 
-	public ArrayList<MissileWeapon> getStuckItems(){
+	public ArrayList<MissileWeapon> getStuckItems() {
 		return new ArrayList<>(items);
 	}
 
 	@Override
 	public void detach() {
 		for (Item item : items)
-			Dungeon.level.drop( item, target.pos).sprite.drop();
+			Dungeon.level.drop(item, target.pos).sprite.drop();
 		super.detach();
 	}
 
@@ -80,14 +80,14 @@ public class PinCushion extends Buff {
 
 	@Override
 	public void storeInBundle(Bundle bundle) {
-		bundle.put( ITEMS , items );
+		bundle.put(ITEMS, items);
 		super.storeInBundle(bundle);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		items = new ArrayList<>((Collection<MissileWeapon>) ((Collection<?>) bundle.getCollection(ITEMS)));
-		super.restoreFromBundle( bundle );
+		super.restoreFromBundle(bundle);
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class PinCushion extends Buff {
 	@Override
 	public String desc() {
 		String desc = Messages.get(this, "desc");
-		for (Item i : items){
+		for (Item i : items) {
 			desc += "\n" + i.title();
 		}
 		return desc;

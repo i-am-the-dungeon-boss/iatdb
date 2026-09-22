@@ -7,7 +7,8 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 /** Formats backpack contents for echo detail views. */
 public final class EchoBackpackFormatter {
 
-	private EchoBackpackFormatter() {}
+	private EchoBackpackFormatter() {
+	}
 
 	public static void appendTo(StringBuilder sb, Bag backpack) {
 		appendLine(sb, "backpack_header");
@@ -38,12 +39,14 @@ public final class EchoBackpackFormatter {
 	}
 
 	private static void appendRawLine(StringBuilder sb, String line) {
-		if (sb.length() > 0) sb.append('\n');
+		if (sb.length() > 0)
+			sb.append('\n');
 		sb.append(line);
 	}
 
 	private static void appendLine(StringBuilder sb, String key, Object... args) {
-		if (sb.length() > 0) sb.append('\n');
+		if (sb.length() > 0)
+			sb.append('\n');
 		sb.append(Messages.get(WndEchoes.class, key, args));
 	}
 }

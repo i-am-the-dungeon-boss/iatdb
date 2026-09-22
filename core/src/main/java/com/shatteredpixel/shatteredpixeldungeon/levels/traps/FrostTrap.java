@@ -46,17 +46,17 @@ public class FrostTrap extends Trap {
 
 	@Override
 	public void activate() {
-		
-		if (Dungeon.level.heroFOV[ pos ]){
-			Splash.at( pos, 0xFFB2D6FF, 5);
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+
+		if (Dungeon.level.heroFOV[pos]) {
+			Splash.at(pos, 0xFFB2D6FF, 5);
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		}
-		
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				GameScene.add(Blob.seed(i, 20, Freezing.class));
-				if (Actor.findChar(i) instanceof Mob){
+				if (Actor.findChar(i) instanceof Mob) {
 					Buff.prolong(Actor.findChar(i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 				}
 			}

@@ -39,87 +39,87 @@ public class WardSprite extends MobSprite {
 
 	private Animation tierIdles[] = new Animation[7];
 
-	public WardSprite(){
+	public WardSprite() {
 		super();
 
 		texture(Assets.Sprites.WARDS);
 
-		tierIdles[1] = new Animation( 1, true );
+		tierIdles[1] = new Animation(1, true);
 		tierIdles[1].frames(texture.uvRect(0, 0, 9, 10));
 
-		tierIdles[2] = new Animation( 1, true );
+		tierIdles[2] = new Animation(1, true);
 		tierIdles[2].frames(texture.uvRect(10, 0, 21, 12));
 
-		tierIdles[3] = new Animation( 1, true );
+		tierIdles[3] = new Animation(1, true);
 		tierIdles[3].frames(texture.uvRect(22, 0, 37, 16));
 
-		tierIdles[4] = new Animation( 1, true );
+		tierIdles[4] = new Animation(1, true);
 		tierIdles[4].frames(texture.uvRect(38, 0, 44, 13));
 
-		tierIdles[5] = new Animation( 1, true );
+		tierIdles[5] = new Animation(1, true);
 		tierIdles[5].frames(texture.uvRect(45, 0, 51, 15));
 
-		tierIdles[6] = new Animation( 1, true );
+		tierIdles[6] = new Animation(1, true);
 		tierIdles[6].frames(texture.uvRect(52, 0, 60, 15));
 
 	}
 
 	@Override
-	public void zap( int pos ) {
+	public void zap(int pos) {
 		idle();
 		flash();
 		emitter().burst(MagicMissile.WardParticle.UP, 2);
-		if (Actor.findChar(pos) != null){
+		if (Actor.findChar(pos) != null) {
 			parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()));
 		} else {
 			parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)));
 		}
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
-		((WandOfWarding.Ward)ch).onZapComplete();
+		Sample.INSTANCE.play(Assets.Sounds.RAY);
+		((WandOfWarding.Ward) ch).onZapComplete();
 	}
-	
+
 	@Override
 	public void turnTo(int from, int to) {
 		//do nothing
 	}
-	
+
 	@Override
 	public void die() {
 		super.die();
 		//cancels die animation and fades out immediately
 		play(idle, true);
 		emitter().burst(MagicMissile.WardParticle.UP, 10);
-		parent.add( new AlphaTweener( this, 0, 2f ) {
+		parent.add(new AlphaTweener(this, 0, 2f) {
 			@Override
 			protected void onComplete() {
 				WardSprite.this.killAndErase();
-				parent.erase( this );
+				parent.erase(this);
 			}
-		} );
+		});
 	}
 
 	@Override
 	public void resetColor() {
 		super.resetColor();
-		if (ch instanceof WandOfWarding.Ward){
+		if (ch instanceof WandOfWarding.Ward) {
 			WandOfWarding.Ward ward = (WandOfWarding.Ward) ch;
-			if (ward.tier <= 3){
-				brightness(Math.max(0.2f, 1f - (ward.totalZaps / (float)(2*ward.tier-1))));
+			if (ward.tier <= 3) {
+				brightness(Math.max(0.2f, 1f - (ward.totalZaps / (float) (2 * ward.tier - 1))));
 			}
 		}
 	}
 
-	public void linkVisuals(Char ch ){
+	public void linkVisuals(Char ch) {
 
 		if (ch instanceof WandOfWarding.Ward) {
 			updateTier(((WandOfWarding.Ward) ch).tier);
 		} else {
 			updateTier(5); //defaults to 5
 		}
-		
+
 	}
 
-	public void updateTier(int tier){
+	public void updateTier(int tier) {
 
 		idle = tierIdles[tier];
 		run = idle.clone();
@@ -132,15 +132,16 @@ public class WardSprite extends MobSprite {
 		}
 
 		resetColor();
-		if (ch != null) place(ch.pos);
+		if (ch != null)
+			place(ch.pos);
 		idle();
 
-		if (tier <= 3){
-			shadowWidth     = shadowHeight    = 1f;
+		if (tier <= 3) {
+			shadowWidth = shadowHeight = 1f;
 			perspectiveRaise = (16 - height()) / 32f; //center of the cell
 		} else {
-			shadowWidth     = 1.2f;
-			shadowHeight    = 0.25f;
+			shadowWidth = 1.2f;
+			shadowHeight = 0.25f;
 			perspectiveRaise = 6 / 16f; //6 pixels
 		}
 
@@ -158,10 +159,11 @@ public class WardSprite extends MobSprite {
 	public void update() {
 		super.update();
 		//if tier is greater than 3
-		if (perspectiveRaise >= 6 / 16f && !paused){
-			if (Float.isNaN(baseY)) baseY = y;
+		if (perspectiveRaise >= 6 / 16f && !paused) {
+			if (Float.isNaN(baseY))
+				baseY = y;
 			y = baseY + (float) Math.sin(Game.timeTotal);
-			shadowOffset = 0.25f - 0.8f*(float) Math.sin(Game.timeTotal);
+			shadowOffset = 0.25f - 0.8f * (float) Math.sin(Game.timeTotal);
 		}
 	}
 

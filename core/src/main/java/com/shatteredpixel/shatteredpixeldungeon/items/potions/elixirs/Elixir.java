@@ -27,7 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 
 public abstract class Elixir extends Potion {
-	
+
 	@Override
 	public boolean isKnown() {
 		return true;

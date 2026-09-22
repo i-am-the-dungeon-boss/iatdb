@@ -18,34 +18,34 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GdxTestExtension.class)
 class EndToEndWorkflowTest {
 
-    @Test
-    @DisplayName("Boss victory snapshot enables echo boss on next depth-5 visit")
-    void bossEchoEnablesEchoBossOnNextVisit() {
-        EchoStorage storage = new EchoStorage();
-        EchoCaptureTrigger.saveEcho(
-                EchoTestSupport.warriorEchoWithData(5), 5, storage);
+	@Test
+	@DisplayName("Boss victory snapshot enables echo boss on next depth-5 visit")
+	void bossEchoEnablesEchoBossOnNextVisit() {
+		EchoStorage storage = new EchoStorage();
+		EchoCaptureTrigger.saveEcho(
+				EchoTestSupport.warriorEchoWithData(5), 5, storage);
 
-        CompositeEchoLookup.setEchoLookupForTests(storage);
-        Dungeon.depth = 5;
-        Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
-        Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
-        Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
+		CompositeEchoLookup.setEchoLookupForTests(storage);
+		Dungeon.depth = 5;
+		Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
+		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isTrue();
+		Assertions.assertThat(EchoBossSpawner.shouldSpawn()).isTrue();
 
-        Echo pending = Dungeon.getPendingEcho();
-        Assertions.assertThat(pending).isNotNull();
+		Echo pending = Dungeon.getPendingEcho();
+		Assertions.assertThat(pending).isNotNull();
 
-        EchoBoss boss = EchoBossSpawner.create(5);
-        Assertions.assertThat(boss.getEcho()).isEqualTo(pending);
-        Assertions.assertThat(boss.HT).isEqualTo(EchoBoss.scaledHT(pending, 5));
-    }
+		EchoBoss boss = EchoBossSpawner.create(5);
+		Assertions.assertThat(boss.getEcho()).isEqualTo(pending);
+		Assertions.assertThat(boss.HT).isEqualTo(EchoBoss.scaledHT(pending, 5));
+	}
 
-    @Test
-    @DisplayName("Workflow falls back to default boss when no snapshots exist")
-    void workflowFallsBackWithoutSnapshots() {
-        CompositeEchoLookup.setEchoLookupForTests(new EchoStorage());
+	@Test
+	@DisplayName("Workflow falls back to default boss when no snapshots exist")
+	void workflowFallsBackWithoutSnapshots() {
+		CompositeEchoLookup.setEchoLookupForTests(new EchoStorage());
 
-        Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
-        Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isFalse();
-        Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
-    }
+		Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
+		Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(5)).isFalse();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+	}
 }

@@ -76,9 +76,9 @@ public class FungalSentry extends Mob {
 
 	@Override
 	//TODO attack is a little permissive atm?
-	protected boolean canAttack( Char enemy ) {
+	protected boolean canAttack(Char enemy) {
 		return super.canAttack(enemy)
-				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
+				|| new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
 	}
 
 	//TODO if we want to allow them to be literally killed, probably should give them a heal if hero is out of FOV, or similar
@@ -90,19 +90,19 @@ public class FungalSentry extends Mob {
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 50;
 	}
 
 	{
-		immunities.add( ToxicGas.class );
-		immunities.add( Poison.class );
+		immunities.add(ToxicGas.class);
+		immunities.add(Poison.class);
 	}
 
-	private class Waiting extends Mob.Wandering{
+	private class Waiting extends Mob.Wandering {
 
 		@Override
-		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 			//always notices the hero
 			if (enemyInFOV) {
 

@@ -36,43 +36,44 @@ public class SaltCube extends Trinket {
 	@Override
 	protected int upgradeEnergyCost() {
 		//6 -> 8(14) -> 10(24) -> 12(36)
-		return 6+2*level();
+		return 6 + 2 * level();
 	}
 
 	@Override
 	public String statsDesc() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			return Messages.get(this,
 					"stats_desc",
-					Messages.decimalFormat("#.##", 100*((1f/hungerGainMultiplier(buffedLvl()))-1f)),
-					Messages.decimalFormat("#.##", 100*(1f-healthRegenMultiplier(buffedLvl()))));
+					Messages.decimalFormat("#.##", 100 * ((1f / hungerGainMultiplier(buffedLvl())) - 1f)),
+					Messages.decimalFormat("#.##", 100 * (1f - healthRegenMultiplier(buffedLvl()))));
 		} else {
 			return Messages.get(this,
 					"typical_stats_desc",
-					Messages.decimalFormat("#.##", 100*((1f/hungerGainMultiplier(0))-1f)),
-					Messages.decimalFormat("#.##", 100*(1f-healthRegenMultiplier(0))));
+					Messages.decimalFormat("#.##", 100 * ((1f / hungerGainMultiplier(0)) - 1f)),
+					Messages.decimalFormat("#.##", 100 * (1f - healthRegenMultiplier(0))));
 		}
 	}
 
-	public static float hungerGainMultiplier(){
+	public static float hungerGainMultiplier() {
 		return hungerGainMultiplier(trinketLevel(SaltCube.class));
 	}
 
-	public static float hungerGainMultiplier( int level ){
-		if (level == -1){
+	public static float hungerGainMultiplier(int level) {
+		if (level == -1) {
 			return 1;
 		} else {
-			return 1f / (1f + 0.25f*(level+1));
+			return 1f / (1f + 0.25f * (level + 1));
 		}
 	}
 
-	public static float healthRegenMultiplier(){
+	public static float healthRegenMultiplier() {
 		return healthRegenMultiplier(trinketLevel(SaltCube.class));
 	}
 
-	public static float healthRegenMultiplier( int level ){
-		switch (level){
-			case -1: default:
+	public static float healthRegenMultiplier(int level) {
+		switch (level) {
+			case -1:
+			default:
 				return 1;
 			case 0:
 				return 0.84f;

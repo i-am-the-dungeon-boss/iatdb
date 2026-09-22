@@ -46,7 +46,7 @@ public class RitualRoom extends PatchRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{6, 3, 1};
+		return new float[] { 6, 3, 1 };
 	}
 
 	@Override
@@ -56,8 +56,8 @@ public class RitualRoom extends PatchRoom {
 		// large    ~40% to ~50%
 		// giant    ~50% to ~60%
 		// however,  the inner 7x7 is overridden, so overall fill is much lower
-		int scale = Math.min(width()*height(), 18*18);
-		return 0.30f + scale/1024f;
+		int scale = Math.min(width() * height(), 18 * 18);
+		return 0.30f + scale / 1024f;
 	}
 
 	@Override
@@ -77,8 +77,8 @@ public class RitualRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Point c = center();
 
@@ -87,29 +87,29 @@ public class RitualRoom extends PatchRoom {
 
 		Painter.fill(level, c.x - 3, c.y - 3, 7, 7, Terrain.EMPTY);
 
-		Painter.set(level, c.x-2, c.y-1, Terrain.STATUE);
-		Painter.set(level, c.x-1, c.y-2, Terrain.STATUE);
-		Painter.set(level, c.x+2, c.y-1, Terrain.STATUE);
-		Painter.set(level, c.x+1, c.y-2, Terrain.STATUE);
-		Painter.set(level, c.x-2, c.y+1, Terrain.STATUE);
-		Painter.set(level, c.x-1, c.y+2, Terrain.STATUE);
-		Painter.set(level, c.x+2, c.y+1, Terrain.STATUE);
-		Painter.set(level, c.x+1, c.y+2, Terrain.STATUE);
-		Painter.fill(level, c.x-1, c.y-1, 3, 3, Terrain.EMBERS);
+		Painter.set(level, c.x - 2, c.y - 1, Terrain.STATUE);
+		Painter.set(level, c.x - 1, c.y - 2, Terrain.STATUE);
+		Painter.set(level, c.x + 2, c.y - 1, Terrain.STATUE);
+		Painter.set(level, c.x + 1, c.y - 2, Terrain.STATUE);
+		Painter.set(level, c.x - 2, c.y + 1, Terrain.STATUE);
+		Painter.set(level, c.x - 1, c.y + 2, Terrain.STATUE);
+		Painter.set(level, c.x + 2, c.y + 1, Terrain.STATUE);
+		Painter.set(level, c.x + 1, c.y + 2, Terrain.STATUE);
+		Painter.fill(level, c.x - 1, c.y - 1, 3, 3, Terrain.EMBERS);
 		Painter.set(level, c, Terrain.PEDESTAL);
 
 		placeloot(level, c);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 	}
 
-	protected void placeloot(Level level, Point p){
+	protected void placeloot(Level level, Point p) {
 		Item prize = Random.Int(2) == 0 ? level.findPrizeItem() : null;
 
-		if (prize == null){
-			prize = Generator.random( Random.oneOf(Generator.Category.POTION, Generator.Category.SCROLL));
+		if (prize == null) {
+			prize = Generator.random(Random.oneOf(Generator.Category.POTION, Generator.Category.SCROLL));
 		}
 
 		level.drop(prize, level.pointToCell(p));

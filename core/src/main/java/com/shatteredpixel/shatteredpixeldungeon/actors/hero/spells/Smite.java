@@ -57,9 +57,10 @@ public class Smite extends TargetedClericSpell {
 
 	@Override
 	public String desc() {
-		int min = 5 + Dungeon.hero.lvl/2;
+		int min = 5 + Dungeon.hero.lvl / 2;
 		int max = 10 + Dungeon.hero.lvl;
-		return Messages.get(this, "desc", min, max) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", min, max) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -79,7 +80,7 @@ public class Smite extends TargetedClericSpell {
 		}
 
 		Char enemy = Actor.findChar(target);
-		if (enemy == null || enemy == hero){
+		if (enemy == null || enemy == hero) {
 			GLog.w(Messages.get(this, "no_target"));
 			return;
 		}
@@ -99,10 +100,10 @@ public class Smite extends TargetedClericSpell {
 
 				float accMult = 1;
 				if (!(hero.belongings.attackingWeapon() instanceof Weapon)
-						|| ((Weapon) hero.belongings.attackingWeapon()).STRReq() <= hero.STR()){
+						|| ((Weapon) hero.belongings.attackingWeapon()).STRReq() <= hero.STR()) {
 					accMult = Char.INFINITE_ACCURACY;
 				}
-				if (hero.attack(enemy, 1, 0, accMult)){
+				if (hero.attack(enemy, 1, 0, accMult)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 					enemy.sprite.burst(0xFFFFFFFF, 10);
 				}
@@ -117,16 +118,17 @@ public class Smite extends TargetedClericSpell {
 
 	}
 
-	public static int bonusDmg( Hero attacker, Char defender){
-		int min = 5 + attacker.lvl/2;
+	public static int bonusDmg(Hero attacker, Char defender) {
+		int min = 5 + attacker.lvl / 2;
 		int max = 10 + attacker.lvl;
-		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)){
+		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)) {
 			return max;
 		} else {
 			return Hero.heroDamageIntRange(min, max);
 		}
 	}
 
-	public static class SmiteTracker extends FlavourBuff {};
+	public static class SmiteTracker extends FlavourBuff {
+	};
 
 }

@@ -70,9 +70,10 @@ public class ItemButton extends Component {
 		add(slot);
 	}
 
-	protected void onClick() {}
+	protected void onClick() {
+	}
 
-	protected boolean onLongClick(){
+	protected boolean onLongClick() {
 		return false;
 	}
 
@@ -82,7 +83,7 @@ public class ItemButton extends Component {
 
 		bg.x = x;
 		bg.y = y;
-		bg.size( width, height );
+		bg.size(width, height);
 
 		slot.setRect(x, y, width, height);
 		if (width() >= 24 || height >= 24) {
@@ -92,19 +93,19 @@ public class ItemButton extends Component {
 		}
 	}
 
-	public Item item(){
+	public Item item() {
 		return slot.item;
 	}
 
-	public void item( Item item ) {
-		slot.item( item );
+	public void item(Item item) {
+		slot.item(item);
 	}
 
-	public void clear(){
+	public void clear() {
 		slot.clear();
 	}
 
-	public ItemSlot slot(){
+	public ItemSlot slot() {
 		return slot;
 	}
 

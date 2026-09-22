@@ -45,7 +45,7 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 public class PotionOfDivineInspiration extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_DIVINE;
 
@@ -60,7 +60,7 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 
 		if (!isKnown()) {
 			identify();
-			curItem = detach( hero.belongings.backpack );
+			curItem = detach(hero.belongings.backpack);
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
@@ -71,17 +71,17 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 
 		DivineInspirationTracker tracker = hero.buff(DivineInspirationTracker.class);
 
-		if (tracker != null){
+		if (tracker != null) {
 			boolean allBoosted = true;
-			for (int i = 1; i <= 4; i++){
-				if (tracker.isBoosted(i)){
+			for (int i = 1; i <= 4; i++) {
+				if (tracker.isBoosted(i)) {
 					enabled[i] = false;
 				} else {
 					allBoosted = false;
 				}
 			}
 
-			if (allBoosted){
+			if (allBoosted) {
 				GLog.w(Messages.get(this, "no_more_points"));
 				return;
 			}
@@ -94,19 +94,18 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 				Messages.titleCase(Messages.get(TalentsPane.class, "tier", 1)),
 				Messages.titleCase(Messages.get(TalentsPane.class, "tier", 2)),
 				Messages.titleCase(Messages.get(TalentsPane.class, "tier", 3)),
-				Messages.titleCase(Messages.get(TalentsPane.class, "tier", 4))
-		){
+				Messages.titleCase(Messages.get(TalentsPane.class, "tier", 4))) {
 			@Override
 			protected boolean enabled(int index) {
-				return enabled[index+1];
+				return enabled[index + 1];
 			}
 
 			@Override
 			protected void onSelect(int index) {
 				super.onSelect(index);
 
-				if (index != -1){
-					Buff.affect(curUser, DivineInspirationTracker.class).setBoosted(index+1);
+				if (index != -1) {
+					Buff.affect(curUser, DivineInspirationTracker.class).setBoosted(index + 1);
 
 					if (!identifiedByUse) {
 						curItem.detach(curUser.belongings.backpack);
@@ -119,23 +118,23 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 					curUser.spendAndNext(1f);
 
 					boolean unspentTalents = false;
-					for (int i = 1; i <= Dungeon.hero.talents.size(); i++){
-						if (Dungeon.hero.talentPointsAvailable(i) > 0){
+					for (int i = 1; i <= Dungeon.hero.talents.size(); i++) {
+						if (Dungeon.hero.talentPointsAvailable(i) > 0) {
 							unspentTalents = true;
 							break;
 						}
 					}
-					if (unspentTalents){
+					if (unspentTalents) {
 						StatusPane.talentBlink = 10f;
 						WndHero.lastIdx = 1;
 					}
 
 					GameScene.showlevelUpStars();
 
-					Sample.INSTANCE.play( Assets.Sounds.DRINK );
+					Sample.INSTANCE.play(Assets.Sounds.DRINK);
 					Sample.INSTANCE.playDelayed(Assets.Sounds.LEVELUP, 0.3f, 0.7f, 1.2f);
 					Sample.INSTANCE.playDelayed(Assets.Sounds.LEVELUP, 0.6f, 0.7f, 1.2f);
-					new Flare( 6, 32 ).color(0xFFFF00, true).show( curUser.sprite, 2f );
+					new Flare(6, 32).color(0xFFFF00, true).show(curUser.sprite, 2f);
 					GLog.p(Messages.get(PotionOfDivineInspiration.class, "bonus"));
 
 					if (!anonymous) {
@@ -151,7 +150,7 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 			@Override
 			public void onBackPressed() {
 				//window can be closed if potion is already IDed
-				if (!identifiedByUse){
+				if (!identifiedByUse) {
 					super.onBackPressed();
 				}
 			}
@@ -182,14 +181,14 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 			boostedTiers = bundle.getBooleanArray(BOOSTED_TIERS);
 		}
 
-		public void setBoosted( int tier ){
+		public void setBoosted(int tier) {
 			boostedTiers[tier] = true;
 		}
 
-		public boolean isBoosted( int tier ){
+		public boolean isBoosted(int tier) {
 			return boostedTiers[tier];
 		}
 
 	}
-	
+
 }

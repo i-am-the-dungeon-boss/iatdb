@@ -75,13 +75,13 @@ public class RotHeart extends Mob {
 	public int defenseProc(Char enemy, int damage) {
 		//rot heart spreads less gas in enclosed spaces
 		int openNearby = 0;
-		for (int i : PathFinder.NEIGHBOURS8){
-			if (!Dungeon.level.solid[pos+i]){
+		for (int i : PathFinder.NEIGHBOURS8) {
+			if (!Dungeon.level.solid[pos + i]) {
 				openNearby++;
 			}
 		}
 
-		GameScene.add(Blob.seed(pos, 5 + 3*openNearby, ToxicGas.class));
+		GameScene.add(Blob.seed(pos, 5 + 3 * openNearby, ToxicGas.class));
 
 		return super.defenseProc(enemy, damage);
 	}
@@ -100,8 +100,8 @@ public class RotHeart extends Mob {
 	public void destroy() {
 		super.destroy();
 		Bestiary.skipCountingEncounters = true;
-		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[Dungeon.level.mobs.size()])){
-			if (mob instanceof RotLasher){
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[Dungeon.level.mobs.size()])) {
+			if (mob instanceof RotLasher) {
 				mob.die(null);
 			}
 		}
@@ -111,7 +111,7 @@ public class RotHeart extends Mob {
 	@Override
 	public void die(Object cause) {
 		super.die(cause);
-		Dungeon.level.drop( new Rotberry.Seed(), pos ).sprite.drop();
+		Dungeon.level.drop(new Rotberry.Seed(), pos).sprite.drop();
 		//assign score here as player may choose to keep the rotberry seed
 		Statistics.questScores[1] += 2000;
 	}
@@ -127,7 +127,7 @@ public class RotHeart extends Mob {
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 0;
 	}
 
@@ -135,9 +135,9 @@ public class RotHeart extends Mob {
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 5);
 	}
-	
+
 	{
-		immunities.add( ToxicGas.class );
+		immunities.add(ToxicGas.class);
 	}
 
 }

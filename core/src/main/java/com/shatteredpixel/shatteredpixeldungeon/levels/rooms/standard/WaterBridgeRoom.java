@@ -29,11 +29,11 @@ import com.watabou.utils.Point;
 
 public class WaterBridgeRoom extends StandardBridgeRoom {
 
-	protected int maxBridgeWidth( int roomDimension ) {
+	protected int maxBridgeWidth(int roomDimension) {
 		return roomDimension >= 8 ? 3 : 2;
 	}
 
-	protected int spaceTile(){
+	protected int spaceTile() {
 		return Terrain.WATER;
 	}
 

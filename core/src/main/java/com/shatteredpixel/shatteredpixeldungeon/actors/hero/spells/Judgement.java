@@ -65,22 +65,22 @@ public class Judgement extends ClericSpell {
 		hero.sprite.attack(hero.pos, new Callback() {
 			@Override
 			public void call() {
-				GameScene.flash( 0x80FFFFFF );
+				GameScene.flash(0x80FFFFFF);
 				Sample.INSTANCE.play(Assets.Sounds.BLAST);
 
-				int damageBase = 5 + 5*hero.pointsInTalent(Talent.JUDGEMENT);
-				damageBase += Math.round(damageBase*hero.buff(AscendedForm.AscendBuff.class).spellCasts/3f);
+				int damageBase = 5 + 5 * hero.pointsInTalent(Talent.JUDGEMENT);
+				damageBase += Math.round(damageBase * hero.buff(AscendedForm.AscendBuff.class).spellCasts / 3f);
 
-				for (Char ch : Actor.chars()){
-					if (ch.alignment != hero.alignment && Dungeon.level.heroFOV[ch.pos]){
-						ch.damage( Hero.heroDamageIntRange(damageBase, 2*damageBase), Judgement.this);
-						if (hero.subClass == HeroSubClass.PRIEST){
+				for (Char ch : Actor.chars()) {
+					if (ch.alignment != hero.alignment && Dungeon.level.heroFOV[ch.pos]) {
+						ch.damage(Hero.heroDamageIntRange(damageBase, 2 * damageBase), Judgement.this);
+						if (hero.subClass == HeroSubClass.PRIEST) {
 							Buff.affect(ch, GuidingLight.Illuminated.class);
 						}
 					}
 				}
 
-				hero.spendAndNext( 1f );
+				hero.spendAndNext(1f);
 				onSpellCast(tome, hero);
 
 				hero.buff(AscendedForm.AscendBuff.class).spellCasts = 0;
@@ -93,12 +93,13 @@ public class Judgement extends ClericSpell {
 
 	@Override
 	public String desc() {
-		int baseDmg = 5 + 5*Dungeon.hero.pointsInTalent(Talent.JUDGEMENT);
+		int baseDmg = 5 + 5 * Dungeon.hero.pointsInTalent(Talent.JUDGEMENT);
 		int totalBaseDmg = baseDmg;
 		if (Dungeon.hero.buff(AscendedForm.AscendBuff.class) != null) {
-			totalBaseDmg += Math.round(baseDmg*Dungeon.hero.buff(AscendedForm.AscendBuff.class).spellCasts/3f);
+			totalBaseDmg += Math.round(baseDmg * Dungeon.hero.buff(AscendedForm.AscendBuff.class).spellCasts / 3f);
 		}
 
-		return Messages.get(this, "desc", baseDmg, 2*baseDmg, totalBaseDmg, 2*totalBaseDmg) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", baseDmg, 2 * baseDmg, totalBaseDmg, 2 * totalBaseDmg) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 }

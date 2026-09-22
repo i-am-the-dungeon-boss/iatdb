@@ -43,7 +43,7 @@ public class MobSpawner extends Actor {
 
 		if (Dungeon.level.mobCount() < Dungeon.level.mobLimit()) {
 
-			if (Dungeon.level.spawnMob(12)){
+			if (Dungeon.level.spawnMob(12)) {
 				spend(Dungeon.level.respawnCooldown());
 			} else {
 				//try again in 1 turn
@@ -57,13 +57,13 @@ public class MobSpawner extends Actor {
 		return true;
 	}
 
-	public void resetCooldown(){
+	public void resetCooldown() {
 		spend(-cooldown());
 		spend(Dungeon.level.respawnCooldown());
 	}
 
-	public static ArrayList<Class<? extends Mob>> getMobRotation(int depth ){
-		ArrayList<Class<? extends Mob>> mobs = standardMobRotation( depth );
+	public static ArrayList<Class<? extends Mob>> getMobRotation(int depth) {
+		ArrayList<Class<? extends Mob>> mobs = standardMobRotation(depth);
 		addRareMobs(depth, mobs);
 		swapMobAlts(mobs);
 		Random.shuffle(mobs);
@@ -71,11 +71,12 @@ public class MobSpawner extends Actor {
 	}
 
 	//returns a rotation of standard mobs, unshuffled.
-	private static ArrayList<Class<? extends Mob>> standardMobRotation( int depth ){
-		switch(depth){
+	private static ArrayList<Class<? extends Mob>> standardMobRotation(int depth) {
+		switch (depth) {
 
 			// Sewers
-			case 1: default:
+			case 1:
+			default:
 				//3x rat, 1x snake
 				return new ArrayList<>(Arrays.asList(
 						Rat.class, Rat.class, Rat.class,
@@ -92,7 +93,8 @@ public class MobSpawner extends Actor {
 						Gnoll.class, Gnoll.class, Gnoll.class,
 						Swarm.class,
 						Crab.class));
-			case 4: case 5:
+			case 4:
+			case 5:
 				//1x gnoll, 1x swarm, 2x crab, 2x slime
 				return new ArrayList<>(Arrays.asList(Gnoll.class,
 						Swarm.class,
@@ -118,7 +120,8 @@ public class MobSpawner extends Actor {
 						DM100.class, DM100.class,
 						Guard.class, Guard.class,
 						Necromancer.class));
-			case 9: case 10:
+			case 9:
+			case 10:
 				//1x skeleton, 1x thief, 2x DM-100, 2x guard, 2x necromancer
 				return new ArrayList<>(Arrays.asList(Skeleton.class,
 						Thief.class,
@@ -148,7 +151,8 @@ public class MobSpawner extends Actor {
 						Shaman.random(), Shaman.random(),
 						Spinner.class, Spinner.class,
 						DM200.class));
-			case 14: case 15:
+			case 14:
+			case 15:
 				//1x bat, 1x brute, 2x shaman, 2x spinner, 2x DM-300
 				return new ArrayList<>(Arrays.asList(
 						Bat.class,
@@ -179,7 +183,8 @@ public class MobSpawner extends Actor {
 						Warlock.class, Warlock.class,
 						Monk.class, Monk.class,
 						Golem.class));
-			case 19: case 20:
+			case 19:
+			case 20:
 				//1x elemental, 2x warlock, 2x monk, 3x golem
 				return new ArrayList<>(Arrays.asList(
 						Elemental.random(),
@@ -204,7 +209,9 @@ public class MobSpawner extends Actor {
 						Succubus.class,
 						Eye.class, Eye.class,
 						Scorpio.class));
-			case 24: case 25: case 26:
+			case 24:
+			case 25:
+			case 26:
 				//1x succubus, 2x evil eye, 3x scorpio
 				return new ArrayList<>(Arrays.asList(
 						Succubus.class,
@@ -215,36 +222,40 @@ public class MobSpawner extends Actor {
 	}
 
 	//has a chance to add a rarely spawned mobs to the rotation
-	public static void addRareMobs( int depth, ArrayList<Class<?extends Mob>> rotation ){
+	public static void addRareMobs(int depth, ArrayList<Class<? extends Mob>> rotation) {
 
-		switch (depth){
+		switch (depth) {
 
 			// Sewers
 			default:
 				return;
 			case 4:
-				if (Random.Float() < 0.025f) rotation.add(Thief.class);
+				if (Random.Float() < 0.025f)
+					rotation.add(Thief.class);
 				return;
 
 			// Prison
 			case 9:
-				if (Random.Float() < 0.025f) rotation.add(Bat.class);
+				if (Random.Float() < 0.025f)
+					rotation.add(Bat.class);
 				return;
 
 			// Caves
 			case 14:
-				if (Random.Float() < 0.025f) rotation.add(Ghoul.class);
+				if (Random.Float() < 0.025f)
+					rotation.add(Ghoul.class);
 				return;
 
 			// City
 			case 19:
-				if (Random.Float() < 0.025f) rotation.add(Succubus.class);
+				if (Random.Float() < 0.025f)
+					rotation.add(Succubus.class);
 				return;
 		}
 	}
 
 	//switches out regular mobs for their alt versions when appropriate
-	private static void swapMobAlts(ArrayList<Class<?extends Mob>> rotation) {
+	private static void swapMobAlts(ArrayList<Class<? extends Mob>> rotation) {
 		float altChance = 1 / 50f * RatSkull.exoticChanceMultiplier();
 		for (int i = 0; i < rotation.size(); i++) {
 			if (Random.Float() < altChance) {
@@ -257,23 +268,23 @@ public class MobSpawner extends Actor {
 		}
 	}
 
-	public static final HashMap<Class<?extends Mob>, Class<?extends Mob>> RARE_ALTS = new HashMap<>();
+	public static final HashMap<Class<? extends Mob>, Class<? extends Mob>> RARE_ALTS = new HashMap<>();
 	static {
-		RARE_ALTS.put(Rat.class,            Albino.class);
-		RARE_ALTS.put(Gnoll.class,          GnollExile.class);
-		RARE_ALTS.put(Crab.class,           HermitCrab.class);
-		RARE_ALTS.put(Slime.class,          CausticSlime.class);
+		RARE_ALTS.put(Rat.class, Albino.class);
+		RARE_ALTS.put(Gnoll.class, GnollExile.class);
+		RARE_ALTS.put(Crab.class, HermitCrab.class);
+		RARE_ALTS.put(Slime.class, CausticSlime.class);
 
-		RARE_ALTS.put(Thief.class,          Bandit.class);
-		RARE_ALTS.put(Necromancer.class,    SpectralNecromancer.class);
+		RARE_ALTS.put(Thief.class, Bandit.class);
+		RARE_ALTS.put(Necromancer.class, SpectralNecromancer.class);
 
-		RARE_ALTS.put(Brute.class,          ArmoredBrute.class);
-		RARE_ALTS.put(DM200.class,          DM201.class);
+		RARE_ALTS.put(Brute.class, ArmoredBrute.class);
+		RARE_ALTS.put(DM200.class, DM201.class);
 
-		RARE_ALTS.put(Monk.class,           Senior.class);
+		RARE_ALTS.put(Monk.class, Senior.class);
 		//swapping to chaos elemental actually happens in Elemental.random
-		RARE_ALTS.put(Elemental.class,      Elemental.ChaosElemental.class);
+		RARE_ALTS.put(Elemental.class, Elemental.ChaosElemental.class);
 
-		RARE_ALTS.put(Scorpio.class,        Acidic.class);
+		RARE_ALTS.put(Scorpio.class, Acidic.class);
 	}
 }

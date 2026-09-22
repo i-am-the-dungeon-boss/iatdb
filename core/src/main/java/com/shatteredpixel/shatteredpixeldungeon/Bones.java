@@ -43,12 +43,12 @@ import java.util.Iterator;
 
 public class Bones {
 
-	private static final String BONES_FILE	= "bones.dat";
-	
-	private static final String LEVEL	= "level";
-	private static final String BRANCH	= "branch";
-	private static final String ITEM	= "item";
-	private static final String HERO_CLASS	= "hero_class";
+	private static final String BONES_FILE = "bones.dat";
+
+	private static final String LEVEL = "level";
+	private static final String BRANCH = "branch";
+	private static final String ITEM = "item";
+	private static final String HERO_CLASS = "hero_class";
 
 	private static int depth = -1;
 	private static int branch = -1;
@@ -60,7 +60,7 @@ public class Bones {
 
 		//remains will usually drop on the floor the hero died on
 		// but are capped at 5 floors above the lowest depth reached (even when ascending)
-		depth = Math.max(Dungeon.depth, Statistics.deepestFloor-5);
+		depth = Math.max(Dungeon.depth, Statistics.deepestFloor - 5);
 
 		branch = Dungeon.branch;
 
@@ -74,24 +74,24 @@ public class Bones {
 		heroClass = Dungeon.hero.heroClass;
 
 		Bundle bundle = new Bundle();
-		bundle.put( LEVEL, depth );
-		bundle.put( BRANCH, branch );
-		bundle.put( ITEM, item );
-		bundle.put( HERO_CLASS, heroClass );
+		bundle.put(LEVEL, depth);
+		bundle.put(BRANCH, branch);
+		bundle.put(ITEM, item);
+		bundle.put(HERO_CLASS, heroClass);
 
 		try {
-			FileUtils.bundleToFile( BONES_FILE, bundle );
+			FileUtils.bundleToFile(BONES_FILE, bundle);
 		} catch (IOException e) {
 			ShatteredPixelDungeon.reportException(e);
 		}
 	}
 
-	private static Item pickItem(Hero hero){
+	private static Item pickItem(Hero hero) {
 		Item item = null;
 
 		//seeded runs don't leave items
 		//This is to prevent using specific seeds to transport items to regular runs
-		if (!Dungeon.customSeedText.isEmpty()){
+		if (!Dungeon.customSeedText.isEmpty()) {
 			return null;
 		}
 
@@ -101,7 +101,7 @@ public class Bones {
 					item = hero.belongings.weapon;
 					//if the hero has two weapons (champion), pick the stronger one
 					if (hero.belongings.secondWep != null &&
-							(item == null || hero.belongings.secondWep.trueLevel() > item.trueLevel())){
+							(item == null || hero.belongings.secondWep.trueLevel() > item.trueLevel())) {
 						item = hero.belongings.secondWep;
 						break;
 					}
@@ -118,7 +118,8 @@ public class Bones {
 				case 4:
 					item = hero.belongings.ring;
 					break;
-				case 5: case 6:
+				case 5:
+				case 6:
 					item = Dungeon.quickslot.randomNonePlaceholder();
 					break;
 			}
@@ -130,7 +131,7 @@ public class Bones {
 			Iterator<Item> iterator = hero.belongings.backpack.iterator();
 			Item curItem;
 			ArrayList<Item> items = new ArrayList<>();
-			while (iterator.hasNext()){
+			while (iterator.hasNext()) {
 				curItem = iterator.next();
 				if (curItem.bones) {
 					items.add(curItem);
@@ -140,9 +141,9 @@ public class Bones {
 			//if there are few items, there is an increasingly high chance of leaving nothing
 			if (Random.Int(3) < items.size()) {
 				item = Random.element(items);
-				if (item.stackable){
+				if (item.stackable) {
 					item.quantity(Random.NormalIntRange(1, (item.quantity() + 1) / 2));
-					if (item.quantity() > 3){
+					if (item.quantity() > 3) {
 						item.quantity(3);
 					}
 				}
@@ -150,13 +151,13 @@ public class Bones {
 				item = null;
 			}
 		}
-		
+
 		return item;
 	}
 
 	public static ArrayList<Item> get() {
 		//daily runs do not interact with remains
-		if (Dungeon.daily){
+		if (Dungeon.daily) {
 			return null;
 		}
 
@@ -165,15 +166,15 @@ public class Bones {
 			try {
 				Bundle bundle = FileUtils.bundleFromFile(BONES_FILE);
 
-				depth = bundle.getInt( LEVEL );
-				branch = bundle.getInt( BRANCH );
+				depth = bundle.getInt(LEVEL);
+				branch = bundle.getInt(BRANCH);
 				if (depth > 0) {
 					if (bundle.contains(ITEM)) {
 						item = (Item) bundle.get(ITEM);
 					} else {
 						item = null;
 					}
-					if (bundle.contains(HERO_CLASS)){
+					if (bundle.contains(HERO_CLASS)) {
 						heroClass = bundle.getEnum(HERO_CLASS, HeroClass.class);
 					} else {
 						heroClass = null;
@@ -192,31 +193,31 @@ public class Bones {
 				Bundle emptyBones = new Bundle();
 				emptyBones.put(LEVEL, 0);
 				try {
-					FileUtils.bundleToFile( BONES_FILE, emptyBones );
+					FileUtils.bundleToFile(BONES_FILE, emptyBones);
 				} catch (IOException e) {
 					ShatteredPixelDungeon.reportException(e);
 				}
 				depth = 0;
 
 				//challenged or seeded runs don't get items from prior runs
-				if (Dungeon.challenges != 0 || !Dungeon.customSeedText.isEmpty()){
+				if (Dungeon.challenges != 0 || !Dungeon.customSeedText.isEmpty()) {
 					item = null;
 				}
 
 				//Enforces artifact uniqueness
-				if (item instanceof Artifact){
-					if (Generator.removeArtifact(((Artifact)item).getClass())) {
-						
+				if (item instanceof Artifact) {
+					if (Generator.removeArtifact(((Artifact) item).getClass())) {
+
 						//generates a new artifact of the same type, always +0
-						Artifact artifact = Reflection.newInstance(((Artifact)item).getClass());
-						
-						if (artifact != null){
+						Artifact artifact = Reflection.newInstance(((Artifact) item).getClass());
+
+						if (artifact != null) {
 							artifact.cursed = true;
 							artifact.cursedKnown = true;
 						}
 
 						item = artifact;
-						
+
 					} else {
 						item = new Gold(item.value());
 					}
@@ -244,7 +245,7 @@ public class Bones {
 
 				if (heroClass != null) {
 					result.add(RemainsItem.get(heroClass));
-					if (Dungeon.bossLevel()){
+					if (Dungeon.bossLevel()) {
 						Statistics.qualifiedForBossRemainsBadge = true;
 					}
 				}
@@ -260,14 +261,14 @@ public class Bones {
 		}
 	}
 
-	private static boolean lootAtCurLevel(){
+	private static boolean lootAtCurLevel() {
 		if (branch == Dungeon.branch) {
 			if (branch == 0) {
 				//always match depth exactly for main path
 				return depth == Dungeon.depth;
 			} else if (branch == 1) {
 				//just match the region for quest sub-floors
-				return depth/5 == Dungeon.depth/5;
+				return depth / 5 == Dungeon.depth / 5;
 			}
 		}
 		return false;

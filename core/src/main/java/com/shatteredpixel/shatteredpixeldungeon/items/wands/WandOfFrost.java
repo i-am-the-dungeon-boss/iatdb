@@ -50,12 +50,12 @@ public class WandOfFrost extends DamageWand {
 		image = ItemSpriteSheet.WAND_FROST;
 	}
 
-	public int min(int lvl){
-		return 2+lvl;
+	public int min(int lvl) {
+		return 2 + lvl;
 	}
 
-	public int max(int lvl){
-		return 8+5*lvl;
+	public int max(int lvl) {
+		return 8 + 5 * lvl;
 	}
 
 	@Override
@@ -68,44 +68,45 @@ public class WandOfFrost extends DamageWand {
 
 		Fire fire = (Fire) Dungeon.level.blobs.get(Fire.class);
 		if (fire != null && fire.volume > 0) {
-			fire.clear( bolt.collisionPos );
+			fire.clear(bolt.collisionPos);
 		}
 
-		MagicalFireRoom.EternalFire eternalFire = (MagicalFireRoom.EternalFire)Dungeon.level.blobs.get(MagicalFireRoom.EternalFire.class);
+		MagicalFireRoom.EternalFire eternalFire = (MagicalFireRoom.EternalFire) Dungeon.level.blobs
+				.get(MagicalFireRoom.EternalFire.class);
 		if (eternalFire != null && eternalFire.volume > 0) {
-			eternalFire.clear( bolt.collisionPos );
+			eternalFire.clear(bolt.collisionPos);
 			//bolt ends 1 tile short of fire, so check next tile too
-			if (bolt.path.size() > bolt.dist+1){
-				eternalFire.clear( bolt.path.get(bolt.dist+1) );
+			if (bolt.path.size() > bolt.dist + 1) {
+				eternalFire.clear(bolt.path.get(bolt.dist + 1));
 			}
 
 		}
 
 		Char ch = Actor.findChar(bolt.collisionPos);
-		if (ch != null){
+		if (ch != null) {
 
 			int damage = damageRoll();
 
-			if (ch.buff(Frost.class) != null){
+			if (ch.buff(Frost.class) != null) {
 				return; //do nothing, can't affect a frozen target
 			}
-			if (ch.buff(Chill.class) != null){
+			if (ch.buff(Chill.class) != null) {
 				//6.67% less damage per turn of chill remaining, to a max of 10 turns (50% dmg)
 				float chillturns = Math.min(10, ch.buff(Chill.class).cooldown());
-				damage = (int)Math.round(damage * Math.pow(0.9333f, chillturns));
+				damage = (int) Math.round(damage * Math.pow(0.9333f, chillturns));
 			} else {
-				ch.sprite.burst( 0xFF99CCFF, buffedLvl() / 2 + 2 );
+				ch.sprite.burst(0xFF99CCFF, buffedLvl() / 2 + 2);
 			}
 
 			wandProc(ch, chargesPerCast());
 			ch.damage(damage, this);
-			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 1.1f * Random.Float(0.87f, 1.15f) );
+			Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, 1.1f * Random.Float(0.87f, 1.15f));
 
-			if (ch.isAlive()){
+			if (ch.isAlive()) {
 				if (Dungeon.level.water[ch.pos])
-					Buff.affect(ch, Chill.class, 4+buffedLvl());
+					Buff.affect(ch, Chill.class, 4 + buffedLvl());
 				else
-					Buff.affect(ch, Chill.class, 2+buffedLvl());
+					Buff.affect(ch, Chill.class, 2 + buffedLvl());
 			}
 		} else {
 			Dungeon.level.pressCell(bolt.collisionPos);
@@ -134,7 +135,7 @@ public class WandOfFrost extends DamageWand {
 		if (chill != null) {
 
 			//1/9 at 2 turns of chill, scaling to 9/9 at 10 turns
-			float procChance = ((int)Math.floor(chill.cooldown()) - 1)/9f;
+			float procChance = ((int) Math.floor(chill.cooldown()) - 1) / 9f;
 			procChance *= procChanceMultiplier(attacker);
 
 			if (Random.Float() < procChance) {
@@ -162,9 +163,9 @@ public class WandOfFrost extends DamageWand {
 		particle.am = 0.6f;
 		particle.setLifespan(2f);
 		float angle = Random.Float(PointF.PI2);
-		particle.speed.polar( angle, 2f);
-		particle.acc.set( 0f, 1f);
-		particle.setSize( 0f, 1.5f);
+		particle.speed.polar(angle, 2f);
+		particle.acc.set(0f, 1f);
+		particle.setSize(0f, 1.5f);
 		particle.radiateXY(Random.Float(1f));
 	}
 

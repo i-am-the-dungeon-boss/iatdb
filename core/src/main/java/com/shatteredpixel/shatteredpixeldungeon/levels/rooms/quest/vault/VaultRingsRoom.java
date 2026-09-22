@@ -37,21 +37,21 @@ public class VaultRingsRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
-		Painter.fill(level, left+2, top+2, 3, 3, Terrain.WALL);
-		Painter.fill(level, right-4, top+2, 3, 3, Terrain.WALL);
-		Painter.fill(level, left+2, bottom-4, 3, 3, Terrain.WALL);
-		Painter.fill(level, right-4, bottom-4, 3, 3, Terrain.WALL);
+		Painter.fill(level, left + 2, top + 2, 3, 3, Terrain.WALL);
+		Painter.fill(level, right - 4, top + 2, 3, 3, Terrain.WALL);
+		Painter.fill(level, left + 2, bottom - 4, 3, 3, Terrain.WALL);
+		Painter.fill(level, right - 4, bottom - 4, 3, 3, Terrain.WALL);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 
 		VaultRat rat = new VaultRat();
@@ -61,16 +61,16 @@ public class VaultRingsRoom extends StandardRoom {
 		rat.state = rat.WANDERING;
 		level.mobs.add(rat);
 
-		rat.wanderPositions = new int[]{
-				level.pointToCell(new Point(left+1, top+1)),
-				level.pointToCell(new Point(left+1, top+5)),
-				level.pointToCell(new Point(left+1, top+9)),
-				level.pointToCell(new Point(left+5, top+1)),
-				level.pointToCell(new Point(left+5, top+5)),
-				level.pointToCell(new Point(left+5, top+9)),
-				level.pointToCell(new Point(left+9, top+1)),
-				level.pointToCell(new Point(left+9, top+5)),
-				level.pointToCell(new Point(left+9, top+9))
+		rat.wanderPositions = new int[] {
+				level.pointToCell(new Point(left + 1, top + 1)),
+				level.pointToCell(new Point(left + 1, top + 5)),
+				level.pointToCell(new Point(left + 1, top + 9)),
+				level.pointToCell(new Point(left + 5, top + 1)),
+				level.pointToCell(new Point(left + 5, top + 5)),
+				level.pointToCell(new Point(left + 5, top + 9)),
+				level.pointToCell(new Point(left + 9, top + 1)),
+				level.pointToCell(new Point(left + 9, top + 5)),
+				level.pointToCell(new Point(left + 9, top + 9))
 		};
 		Random.shuffle(rat.wanderPositions);
 

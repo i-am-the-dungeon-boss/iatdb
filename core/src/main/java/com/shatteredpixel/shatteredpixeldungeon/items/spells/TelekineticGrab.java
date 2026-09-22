@@ -47,17 +47,17 @@ public class TelekineticGrab extends TargetedSpell {
 	{
 		image = ItemSpriteSheet.TELE_GRAB;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	@Override
 	protected void fx(Ballistica bolt, Callback callback) {
-		MagicMissile.boltFromChar( curUser.sprite.parent,
+		MagicMissile.boltFromChar(curUser.sprite.parent,
 				MagicMissile.BEACON,
 				curUser.sprite,
 				bolt.collisionPos,
 				callback);
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 	}
 
 	@Override
@@ -71,23 +71,23 @@ public class TelekineticGrab extends TargetedSpell {
 		Char ch = Actor.findChar(bolt.collisionPos);
 
 		//special logic for DK when he is on his throne
-		if (ch == null && bolt.path.size() > bolt.dist+1){
-			ch = Actor.findChar(bolt.path.get(bolt.dist+1));
-			if (!(ch instanceof DwarfKing && Dungeon.level.solid[ch.pos])){
+		if (ch == null && bolt.path.size() > bolt.dist + 1) {
+			ch = Actor.findChar(bolt.path.get(bolt.dist + 1));
+			if (!(ch instanceof DwarfKing && Dungeon.level.solid[ch.pos])) {
 				ch = null;
 			}
 		}
 
 		float totalpickupTime = 0;
 
-		if (ch != null && ch.buff(PinCushion.class) != null){
+		if (ch != null && ch.buff(PinCushion.class) != null) {
 
 			while (ch.buff(PinCushion.class) != null) {
 				Item item = ch.buff(PinCushion.class).grabOne();
 
 				if (item.doPickUp(hero, ch.pos)) {
 					totalpickupTime += item.pickupDelay();
-					GLog.i( Messages.capitalize(Messages.get(hero, "you_now_have", item.name())) );
+					GLog.i(Messages.capitalize(Messages.get(hero, "you_now_have", item.name())));
 
 				} else {
 					GLog.w(Messages.get(this, "cant_grab"));
@@ -98,15 +98,15 @@ public class TelekineticGrab extends TargetedSpell {
 			}
 
 			//casting the spell takes at most 1 turn
-			if (totalpickupTime > 1){
-				hero.spend(-(totalpickupTime-1));
+			if (totalpickupTime > 1) {
+				hero.spend(-(totalpickupTime - 1));
 			}
 
-		} else if (Dungeon.level.heaps.get(bolt.collisionPos) != null){
+		} else if (Dungeon.level.heaps.get(bolt.collisionPos) != null) {
 
 			Heap h = Dungeon.level.heaps.get(bolt.collisionPos);
 
-			if (h.type != Heap.Type.HEAP){
+			if (h.type != Heap.Type.HEAP) {
 				GLog.w(Messages.get(this, "cant_grab"));
 				hero.spend(Actor.TICK);
 				h.sprite.drop();
@@ -142,12 +142,12 @@ public class TelekineticGrab extends TargetedSpell {
 
 	@Override
 	public int value() {
-		return (int)(50 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (50 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(10 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (10 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
@@ -155,8 +155,8 @@ public class TelekineticGrab extends TargetedSpell {
 		private static final int OUT_QUANTITY = 8;
 
 		{
-			inputs =  new Class[]{LiquidMetal.class};
-			inQuantity = new int[]{10};
+			inputs = new Class[] { LiquidMetal.class };
+			inQuantity = new int[] { 10 };
 
 			cost = 10;
 

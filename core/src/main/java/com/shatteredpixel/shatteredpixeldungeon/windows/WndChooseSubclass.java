@@ -43,21 +43,21 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Random;
 
 public class WndChooseSubclass extends Window {
-	
-	private static final int WIDTH		= 130;
-	private static final float GAP		= 2;
-	
-	public WndChooseSubclass(final TengusMask tome, final Hero hero ) {
-		
+
+	private static final int WIDTH = 130;
+	private static final float GAP = 2;
+
+	public WndChooseSubclass(final TengusMask tome, final Hero hero) {
+
 		super();
 
 		IconTitle titlebar = new IconTitle();
-		titlebar.icon( new ItemSprite( tome.image(), null ) );
-		titlebar.label( tome.name() );
-		titlebar.setRect( 0, 0, WIDTH-16, 0 );
-		add( titlebar );
+		titlebar.icon(new ItemSprite(tome.image(), null));
+		titlebar.label(tome.name());
+		titlebar.setRect(0, 0, WIDTH - 16, 0);
+		add(titlebar);
 
-		IconButton random = new IconButton(Icons.SHUFFLE.get()){
+		IconButton random = new IconButton(Icons.SHUFFLE.get()) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -65,11 +65,11 @@ public class WndChooseSubclass extends Window {
 						Messages.get(WndChooseSubclass.class, "random_title"),
 						Messages.get(WndChooseSubclass.class, "random_sure"),
 						Messages.get(WndChooseSubclass.class, "yes"),
-						Messages.get(WndChooseSubclass.class, "no")){
+						Messages.get(WndChooseSubclass.class, "no")) {
 					@Override
 					protected void onSelect(int index) {
 						super.onSelect(index);
-						if (index == 0){
+						if (index == 0) {
 							WndChooseSubclass.this.hide();
 							HeroSubClass cls = Random.oneOf(hero.heroClass.subClasses());
 							tome.choose(cls);
@@ -81,8 +81,8 @@ public class WndChooseSubclass extends Window {
 
 			@Override
 			public void update() {
-				if (Statistics.qualifiedForRandomVictoryBadge){
-					icon.tint(1, 1, 1, (float)Math.abs(Math.cos(1.5f*Math.PI* Game.timeTotal)/2f));
+				if (Statistics.qualifiedForRandomVictoryBadge) {
+					icon.tint(1, 1, 1, (float) Math.abs(Math.cos(1.5f * Math.PI * Game.timeTotal) / 2f));
 				}
 				super.update();
 			}
@@ -92,31 +92,31 @@ public class WndChooseSubclass extends Window {
 				return Messages.get(WndChooseSubclass.class, "random_title");
 			}
 		};
-		random.setRect(WIDTH-16, 0, 16, 16);
+		random.setRect(WIDTH - 16, 0, 16, 16);
 		add(random);
 
-		RenderedTextBlock message = PixelScene.renderTextBlock( 6 );
-		message.text( Messages.get(this, "message"), WIDTH );
-		message.setPos( titlebar.left(), titlebar.bottom() + GAP );
-		add( message );
+		RenderedTextBlock message = PixelScene.renderTextBlock(6);
+		message.text(Messages.get(this, "message"), WIDTH);
+		message.setPos(titlebar.left(), titlebar.bottom() + GAP);
+		add(message);
 
-		float pos = message.bottom() + 3*GAP;
+		float pos = message.bottom() + 3 * GAP;
 
-		for (HeroSubClass subCls : hero.heroClass.subClasses()){
-			RedButton btnCls = new RedButton( subCls.shortDesc(), 6 ) {
+		for (HeroSubClass subCls : hero.heroClass.subClasses()) {
+			RedButton btnCls = new RedButton(subCls.shortDesc(), 6) {
 				@Override
 				protected void onClick() {
 					GameScene.show(new WndOptions(new HeroIcon(subCls),
 							Messages.titleCase(subCls.title()),
 							Messages.get(WndChooseSubclass.this, "are_you_sure"),
 							Messages.get(WndChooseSubclass.this, "yes"),
-							Messages.get(WndChooseSubclass.this, "no")){
+							Messages.get(WndChooseSubclass.this, "no")) {
 						@Override
 						protected void onSelect(int index) {
 							hide();
-							if (index == 0 && WndChooseSubclass.this.parent != null){
+							if (index == 0 && WndChooseSubclass.this.parent != null) {
 								WndChooseSubclass.this.hide();
-								tome.choose( subCls );
+								tome.choose(subCls);
 								Statistics.qualifiedForRandomVictoryBadge = false;
 							}
 						}
@@ -125,31 +125,31 @@ public class WndChooseSubclass extends Window {
 			};
 			btnCls.leftJustify = true;
 			btnCls.multiline = true;
-			btnCls.setSize(WIDTH-20, btnCls.reqHeight()+2);
-			btnCls.setRect( 0, pos, WIDTH-20, btnCls.reqHeight()+2);
-			add( btnCls );
+			btnCls.setSize(WIDTH - 20, btnCls.reqHeight() + 2);
+			btnCls.setRect(0, pos, WIDTH - 20, btnCls.reqHeight() + 2);
+			add(btnCls);
 
-			IconButton clsInfo = new IconButton(Icons.get(Icons.INFO)){
+			IconButton clsInfo = new IconButton(Icons.get(Icons.INFO)) {
 				@Override
 				protected void onClick() {
 					GameScene.show(new WndInfoSubclass(Dungeon.hero.heroClass, subCls));
 				}
 			};
-			clsInfo.setRect(WIDTH-20, btnCls.top() + (btnCls.height()-20)/2, 20, 20);
+			clsInfo.setRect(WIDTH - 20, btnCls.top() + (btnCls.height() - 20) / 2, 20, 20);
 			add(clsInfo);
 
 			pos = btnCls.bottom() + GAP;
 		}
 
-		RedButton btnCancel = new RedButton( Messages.get(this, "cancel") ) {
+		RedButton btnCancel = new RedButton(Messages.get(this, "cancel")) {
 			@Override
 			protected void onClick() {
 				hide();
 			}
 		};
-		btnCancel.setRect( 0, pos, WIDTH, 18 );
-		add( btnCancel );
-		
-		resize( WIDTH, (int)btnCancel.bottom() );
+		btnCancel.setRect(0, pos, WIDTH, 18);
+		add(btnCancel);
+
+		resize(WIDTH, (int) btnCancel.bottom());
 	}
 }

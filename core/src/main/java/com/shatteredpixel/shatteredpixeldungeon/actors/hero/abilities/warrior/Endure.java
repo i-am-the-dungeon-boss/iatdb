@@ -54,13 +54,13 @@ public class Endure extends ArmorAbility {
 	@Override
 	protected void activate(ClassArmor armor, Hero hero, Integer target) {
 
-		if (hero.buff(EndureTracker.class) != null){
+		if (hero.buff(EndureTracker.class) != null) {
 			hero.buff(EndureTracker.class).detach();
 		}
 		Buff.prolong(hero, EndureTracker.class, 12f);
 
 		Combo combo = hero.buff(Combo.class);
-		if (combo != null){
+		if (combo != null) {
 			combo.addTime(3f);
 		}
 		hero.sprite.operate(hero.pos);
@@ -102,42 +102,42 @@ public class Endure extends ArmorAbility {
 			return Messages.get(this, "desc", damageBonus, hitsLeft);
 		}
 
-		public float adjustDamageTaken(float damage){
+		public float adjustDamageTaken(float damage) {
 			if (enduring) {
-				damageBonus += damage/2;
+				damageBonus += damage / 2;
 
 				float damageMulti = 0.5f;
-				if (Dungeon.hero.hasTalent(Talent.SHRUG_IT_OFF)){
+				if (Dungeon.hero.hasTalent(Talent.SHRUG_IT_OFF)) {
 					//total damage reduction is 60%/68%/74%/80%, based on points in talent
 					damageMulti *= Math.pow(0.8f, Dungeon.hero.pointsInTalent(Talent.SHRUG_IT_OFF));
 				}
 
-				return damage*damageMulti;
+				return damage * damageMulti;
 			}
 			return damage;
 		}
 
-		public void endEnduring(){
-			if (!enduring){
+		public void endEnduring() {
+			if (!enduring) {
 				return;
 			}
 
 			enduring = false;
-			damageBonus *= 1f + 0.15f*Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
+			damageBonus *= 1f + 0.15f * Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
 
 			int nearby = 0;
-			for (Char ch : Actor.chars()){
-				if (ch.alignment == Char.Alignment.ENEMY && Dungeon.level.distance(target.pos, ch.pos) <= 2){
-					nearby ++;
+			for (Char ch : Actor.chars()) {
+				if (ch.alignment == Char.Alignment.ENEMY && Dungeon.level.distance(target.pos, ch.pos) <= 2) {
+					nearby++;
 				}
 			}
-			damageBonus *= 1f + (nearby*0.05f*Dungeon.hero.pointsInTalent(Talent.EVEN_THE_ODDS));
+			damageBonus *= 1f + (nearby * 0.05f * Dungeon.hero.pointsInTalent(Talent.EVEN_THE_ODDS));
 
-			hitsLeft = 1+Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
+			hitsLeft = 1 + Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
 			damageBonus /= hitsLeft;
 
 			if (damageBonus > 0) {
-				target.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+				target.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
 				Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
 				SpellSprite.show(target, SpellSprite.BERSERK);
 			} else {
@@ -145,23 +145,23 @@ public class Endure extends ArmorAbility {
 			}
 		}
 
-		public float damageFactor(float damage){
-			if (enduring){
+		public float damageFactor(float damage) {
+			if (enduring) {
 				return damage;
 			} else {
 				int bonusDamage = damageBonus;
 				hitsLeft--;
 
-				if (hitsLeft <= 0){
+				if (hitsLeft <= 0) {
 					detach();
 				}
 				return damage + bonusDamage;
 			}
 		}
 
-		public static String ENDURING       = "enduring";
-		public static String DAMAGE_BONUS   = "damage_bonus";
-		public static String HITS_LEFT      = "hits_left";
+		public static String ENDURING = "enduring";
+		public static String DAMAGE_BONUS = "damage_bonus";
+		public static String HITS_LEFT = "hits_left";
 
 		@Override
 		public void storeInBundle(Bundle bundle) {
@@ -187,6 +187,7 @@ public class Endure extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.SUSTAINED_RETRIBUTION, Talent.SHRUG_IT_OFF, Talent.EVEN_THE_ODDS, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.SUSTAINED_RETRIBUTION, Talent.SHRUG_IT_OFF, Talent.EVEN_THE_ODDS,
+				Talent.HEROIC_ENERGY };
 	}
 }

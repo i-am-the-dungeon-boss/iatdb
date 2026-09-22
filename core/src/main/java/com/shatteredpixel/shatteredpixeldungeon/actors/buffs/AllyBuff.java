@@ -45,9 +45,9 @@ public abstract class AllyBuff extends Buff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
+		if (super.attachTo(target)) {
 			target.alignment = Char.Alignment.ALLY;
-			if (target.buff(PinCushion.class) != null){
+			if (target.buff(PinCushion.class) != null) {
 				target.buff(PinCushion.class).detach();
 			}
 			return true;
@@ -58,11 +58,11 @@ public abstract class AllyBuff extends Buff {
 
 	//for when applying an ally buff should also cause that enemy to give exp/loot as if they had died
 	//consider that chars with the ally alignment do not drop items or award exp on death
-	public static void affectAndLoot(Mob enemy, Hero hero, Class<?extends AllyBuff> buffCls){
+	public static void affectAndLoot(Mob enemy, Hero hero, Class<? extends AllyBuff> buffCls) {
 		boolean wasEnemy = enemy.alignment == Char.Alignment.ENEMY || enemy instanceof Mimic;
 		Buff.affect(enemy, buffCls);
 
-		if (enemy.buff(buffCls) != null && wasEnemy){
+		if (enemy.buff(buffCls) != null && wasEnemy) {
 			enemy.rollToDropLoot();
 
 			Statistics.enemiesSlain++;
@@ -79,7 +79,7 @@ public abstract class AllyBuff extends Buff {
 			}
 			hero.earnExp(exp, enemy.getClass());
 
-			if (hero.subClass == HeroSubClass.MONK){
+			if (hero.subClass == HeroSubClass.MONK) {
 				Buff.affect(hero, MonkEnergy.class).gainEnergy(enemy);
 			}
 		}

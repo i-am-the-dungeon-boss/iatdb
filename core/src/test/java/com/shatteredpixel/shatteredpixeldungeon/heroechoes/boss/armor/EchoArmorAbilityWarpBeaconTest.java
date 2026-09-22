@@ -40,7 +40,6 @@ class EchoArmorAbilityWarpBeaconTest {
 			this.boss = boss;
 		}
 
-
 		Hero kit() {
 			return boss.getEchoHero();
 		}

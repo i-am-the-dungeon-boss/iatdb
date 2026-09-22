@@ -49,24 +49,29 @@ import java.util.Comparator;
 public class CrystalPathRoom extends SpecialRoom {
 
 	@Override
-	public int minWidth() { return 7; }
-	public int minHeight() { return 7; }
+	public int minWidth() {
+		return 7;
+	}
+
+	public int minHeight() {
+		return 7;
+	}
 
 	@Override
 	public void paint(Level level) {
 
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
 		//rooms are ordered from closest to furthest from the entrance
 		EmptyRoom[] rooms = new EmptyRoom[6];
-		for( int i=0; i<rooms.length; i++){
+		for (int i = 0; i < rooms.length; i++) {
 			rooms[i] = new EmptyRoom();
 		}
 
 		Point entry = new Point(entrance());
 
 		int prize1 = 0, prize2 = 0;
-		if (entry.x == left || entry.x == right){
+		if (entry.x == left || entry.x == right) {
 
 			Painter.drawInside(level, this, entry, width() > 8 ? 5 : 3, Terrain.EMPTY);
 
@@ -74,39 +79,39 @@ public class CrystalPathRoom extends SpecialRoom {
 			int roomW2 = width() % 2 == 0 ? 2 : 1;
 			int roomH = height() >= 9 ? 2 : 1;
 
-			if (entry.x == left){
-				rooms[0].setPos(left+1, entry.y-roomH-1).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[0].left, rooms[0].bottom+1, Terrain.CRYSTAL_DOOR);
-				rooms[1].setPos(left+1, entry.y+2).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[1].left, rooms[1].top-1, Terrain.CRYSTAL_DOOR);
+			if (entry.x == left) {
+				rooms[0].setPos(left + 1, entry.y - roomH - 1).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[0].left, rooms[0].bottom + 1, Terrain.CRYSTAL_DOOR);
+				rooms[1].setPos(left + 1, entry.y + 2).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[1].left, rooms[1].top - 1, Terrain.CRYSTAL_DOOR);
 
-				rooms[2].setPos(rooms[1].right+2, entry.y-roomH-1).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[2].left, rooms[2].bottom+1, Terrain.CRYSTAL_DOOR);
-				rooms[3].setPos(rooms[1].right+2, entry.y+2).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[3].left, rooms[3].top-1, Terrain.CRYSTAL_DOOR);
+				rooms[2].setPos(rooms[1].right + 2, entry.y - roomH - 1).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[2].left, rooms[2].bottom + 1, Terrain.CRYSTAL_DOOR);
+				rooms[3].setPos(rooms[1].right + 2, entry.y + 2).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[3].left, rooms[3].top - 1, Terrain.CRYSTAL_DOOR);
 
-				rooms[4].setPos(rooms[3].right+2, entry.y-roomH-1).resize(roomW2-1, roomH);
-				Painter.set(level, rooms[4].left-1, rooms[4].bottom-1, Terrain.CRYSTAL_DOOR);
-				rooms[5].setPos(rooms[3].right+2, entry.y+1).resize(roomW2-1, roomH);
-				Painter.set(level, rooms[5].left-1, rooms[5].top+1, Terrain.CRYSTAL_DOOR);
+				rooms[4].setPos(rooms[3].right + 2, entry.y - roomH - 1).resize(roomW2 - 1, roomH);
+				Painter.set(level, rooms[4].left - 1, rooms[4].bottom - 1, Terrain.CRYSTAL_DOOR);
+				rooms[5].setPos(rooms[3].right + 2, entry.y + 1).resize(roomW2 - 1, roomH);
+				Painter.set(level, rooms[5].left - 1, rooms[5].top + 1, Terrain.CRYSTAL_DOOR);
 
 				prize1 = level.pointToCell(new Point(rooms[4].left, rooms[4].bottom));
 				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].top));
 			} else {
-				rooms[0].setPos(right-roomW1, entry.y-roomH-1).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[0].right, rooms[0].bottom+1, Terrain.CRYSTAL_DOOR);
-				rooms[1].setPos(right-roomW1, entry.y+2).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[1].right, rooms[1].top-1, Terrain.CRYSTAL_DOOR);
+				rooms[0].setPos(right - roomW1, entry.y - roomH - 1).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[0].right, rooms[0].bottom + 1, Terrain.CRYSTAL_DOOR);
+				rooms[1].setPos(right - roomW1, entry.y + 2).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[1].right, rooms[1].top - 1, Terrain.CRYSTAL_DOOR);
 
-				rooms[2].setPos(rooms[1].left-roomW1-1, entry.y-roomH-1).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[2].right, rooms[2].bottom+1, Terrain.CRYSTAL_DOOR);
-				rooms[3].setPos(rooms[1].left-roomW1-1, entry.y+2).resize(roomW1-1, roomH-1);
-				Painter.set(level, rooms[3].right, rooms[3].top-1, Terrain.CRYSTAL_DOOR);
+				rooms[2].setPos(rooms[1].left - roomW1 - 1, entry.y - roomH - 1).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[2].right, rooms[2].bottom + 1, Terrain.CRYSTAL_DOOR);
+				rooms[3].setPos(rooms[1].left - roomW1 - 1, entry.y + 2).resize(roomW1 - 1, roomH - 1);
+				Painter.set(level, rooms[3].right, rooms[3].top - 1, Terrain.CRYSTAL_DOOR);
 
-				rooms[4].setPos(rooms[3].left-roomW2-1, entry.y-roomH-1).resize(roomW2-1, roomH);
-				Painter.set(level, rooms[4].right+1, rooms[4].bottom-1, Terrain.CRYSTAL_DOOR);
-				rooms[5].setPos(rooms[3].left-roomW2-1, entry.y+1).resize(roomW2-1, roomH);
-				Painter.set(level, rooms[5].right+1, rooms[5].top+1, Terrain.CRYSTAL_DOOR);
+				rooms[4].setPos(rooms[3].left - roomW2 - 1, entry.y - roomH - 1).resize(roomW2 - 1, roomH);
+				Painter.set(level, rooms[4].right + 1, rooms[4].bottom - 1, Terrain.CRYSTAL_DOOR);
+				rooms[5].setPos(rooms[3].left - roomW2 - 1, entry.y + 1).resize(roomW2 - 1, roomH);
+				Painter.set(level, rooms[5].right + 1, rooms[5].top + 1, Terrain.CRYSTAL_DOOR);
 
 				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].bottom));
 				prize2 = level.pointToCell(new Point(rooms[5].right, rooms[5].top));
@@ -119,39 +124,39 @@ public class CrystalPathRoom extends SpecialRoom {
 			int roomH1 = height() >= 9 ? 2 : 1;
 			int roomH2 = height() % 2 == 0 ? 2 : 1;
 
-			if (entry.y == top){
-				rooms[0].setPos(entry.x-roomW-1, top+1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[0].right+1, rooms[0].top, Terrain.CRYSTAL_DOOR);
-				rooms[1].setPos(entry.x+2, top+1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[1].left-1, rooms[1].top, Terrain.CRYSTAL_DOOR);
+			if (entry.y == top) {
+				rooms[0].setPos(entry.x - roomW - 1, top + 1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[0].right + 1, rooms[0].top, Terrain.CRYSTAL_DOOR);
+				rooms[1].setPos(entry.x + 2, top + 1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[1].left - 1, rooms[1].top, Terrain.CRYSTAL_DOOR);
 
-				rooms[2].setPos(entry.x-roomW-1, rooms[1].bottom+2).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[2].right+1, rooms[2].top, Terrain.CRYSTAL_DOOR);
-				rooms[3].setPos(entry.x+2,  rooms[1].bottom+2).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[3].left-1, rooms[3].top, Terrain.CRYSTAL_DOOR);
+				rooms[2].setPos(entry.x - roomW - 1, rooms[1].bottom + 2).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[2].right + 1, rooms[2].top, Terrain.CRYSTAL_DOOR);
+				rooms[3].setPos(entry.x + 2, rooms[1].bottom + 2).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[3].left - 1, rooms[3].top, Terrain.CRYSTAL_DOOR);
 
-				rooms[4].setPos(entry.x-roomW-1, rooms[3].bottom+2).resize(roomW, roomH2-1);
-				Painter.set(level, rooms[4].right-1, rooms[4].top-1, Terrain.CRYSTAL_DOOR);
-				rooms[5].setPos(entry.x+1, rooms[3].bottom+2).resize(roomW, roomH2-1);
-				Painter.set(level, rooms[5].left+1, rooms[5].top-1, Terrain.CRYSTAL_DOOR);
+				rooms[4].setPos(entry.x - roomW - 1, rooms[3].bottom + 2).resize(roomW, roomH2 - 1);
+				Painter.set(level, rooms[4].right - 1, rooms[4].top - 1, Terrain.CRYSTAL_DOOR);
+				rooms[5].setPos(entry.x + 1, rooms[3].bottom + 2).resize(roomW, roomH2 - 1);
+				Painter.set(level, rooms[5].left + 1, rooms[5].top - 1, Terrain.CRYSTAL_DOOR);
 
 				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].top));
 				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].top));
 			} else {
-				rooms[0].setPos(entry.x-roomW-1, bottom-roomH1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[0].right+1, rooms[0].bottom, Terrain.CRYSTAL_DOOR);
-				rooms[1].setPos(entry.x+2, bottom-roomH1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[1].left-1, rooms[1].bottom, Terrain.CRYSTAL_DOOR);
+				rooms[0].setPos(entry.x - roomW - 1, bottom - roomH1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[0].right + 1, rooms[0].bottom, Terrain.CRYSTAL_DOOR);
+				rooms[1].setPos(entry.x + 2, bottom - roomH1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[1].left - 1, rooms[1].bottom, Terrain.CRYSTAL_DOOR);
 
-				rooms[2].setPos(entry.x-roomW-1, rooms[1].top-roomH1-1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[2].right+1, rooms[2].bottom, Terrain.CRYSTAL_DOOR);
-				rooms[3].setPos(entry.x+2, rooms[1].top-roomH1-1).resize(roomW-1, roomH1-1);
-				Painter.set(level, rooms[3].left-1, rooms[3].bottom, Terrain.CRYSTAL_DOOR);
+				rooms[2].setPos(entry.x - roomW - 1, rooms[1].top - roomH1 - 1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[2].right + 1, rooms[2].bottom, Terrain.CRYSTAL_DOOR);
+				rooms[3].setPos(entry.x + 2, rooms[1].top - roomH1 - 1).resize(roomW - 1, roomH1 - 1);
+				Painter.set(level, rooms[3].left - 1, rooms[3].bottom, Terrain.CRYSTAL_DOOR);
 
-				rooms[4].setPos(entry.x-roomW-1, rooms[3].top-roomH2-1).resize(roomW, roomH2-1);
-				Painter.set(level, rooms[4].right-1, rooms[4].bottom+1, Terrain.CRYSTAL_DOOR);
-				rooms[5].setPos(entry.x+1,  rooms[3].top-roomH2-1).resize(roomW, roomH2-1);
-				Painter.set(level, rooms[5].left+1, rooms[5].bottom+1, Terrain.CRYSTAL_DOOR);
+				rooms[4].setPos(entry.x - roomW - 1, rooms[3].top - roomH2 - 1).resize(roomW, roomH2 - 1);
+				Painter.set(level, rooms[4].right - 1, rooms[4].bottom + 1, Terrain.CRYSTAL_DOOR);
+				rooms[5].setPos(entry.x + 1, rooms[3].top - roomH2 - 1).resize(roomW, roomH2 - 1);
+				Painter.set(level, rooms[5].left + 1, rooms[5].bottom + 1, Terrain.CRYSTAL_DOOR);
 
 				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].bottom));
 				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].bottom));
@@ -171,13 +176,15 @@ public class CrystalPathRoom extends SpecialRoom {
 
 		ArrayList<Item> duplicates = new ArrayList<>();
 
-		if (Random.Int(2) == 0){
+		if (Random.Int(2) == 0) {
 			addRewardItem(Generator.Category.POTION, potions, duplicates);
 			scrolls.add(Random.Float() < ExoticCrystals.consumableExoticChance()
-					? new ScrollOfMetamorphosis() : new ScrollOfTransmutation());
+					? new ScrollOfMetamorphosis()
+					: new ScrollOfTransmutation());
 		} else {
 			potions.add(Random.Float() < ExoticCrystals.consumableExoticChance()
-					? new PotionOfDivineInspiration() : new PotionOfExperience());
+					? new PotionOfDivineInspiration()
+					: new PotionOfExperience());
 			addRewardItem(Generator.Category.SCROLL, scrolls, duplicates);
 		}
 		addRewardItem(Generator.Category.POTION, potions, duplicates);
@@ -186,10 +193,10 @@ public class CrystalPathRoom extends SpecialRoom {
 		addRewardItem(Generator.Category.SCROLL, scrolls, duplicates);
 
 		//need to undo the changes to spawn chances that the duplicates created
-		for (Item i : duplicates){
-			if (i instanceof ExoticPotion){
+		for (Item i : duplicates) {
+			if (i instanceof ExoticPotion) {
 				Generator.undoDrop(ExoticPotion.exoToReg.get(i.getClass()));
-			} else if (i instanceof ExoticScroll){
+			} else if (i instanceof ExoticScroll) {
 				Generator.undoDrop(ExoticScroll.exoToReg.get(i.getClass()));
 			} else {
 				Generator.undoDrop(i);
@@ -202,15 +209,17 @@ public class CrystalPathRoom extends SpecialRoom {
 			public int compare(Item a, Item b) {
 				int aVal = 0, bVal = 0;
 				Class aCls = a.getClass(), bCls = b.getClass();
-				if (a instanceof ExoticPotion){
+				if (a instanceof ExoticPotion) {
 					aCls = ExoticPotion.exoToReg.get(aCls);
 				}
-				if (b instanceof ExoticPotion){
+				if (b instanceof ExoticPotion) {
 					bCls = ExoticPotion.exoToReg.get(bCls);
 				}
-				for (int i = 0; i < Generator.Category.POTION.classes.length; i++){
-					if (aCls == Generator.Category.POTION.classes[i]) aVal = (int)Generator.Category.POTION.defaultProbsTotal[i];
-					if (bCls == Generator.Category.POTION.classes[i]) bVal = (int)Generator.Category.POTION.defaultProbsTotal[i];
+				for (int i = 0; i < Generator.Category.POTION.classes.length; i++) {
+					if (aCls == Generator.Category.POTION.classes[i])
+						aVal = (int) Generator.Category.POTION.defaultProbsTotal[i];
+					if (bCls == Generator.Category.POTION.classes[i])
+						bVal = (int) Generator.Category.POTION.defaultProbsTotal[i];
 				}
 				return bVal - aVal;
 			}
@@ -220,15 +229,17 @@ public class CrystalPathRoom extends SpecialRoom {
 			public int compare(Item a, Item b) {
 				int aVal = 0, bVal = 0;
 				Class aCls = a.getClass(), bCls = b.getClass();
-				if (a instanceof ExoticScroll){
+				if (a instanceof ExoticScroll) {
 					aCls = ExoticScroll.exoToReg.get(aCls);
 				}
-				if (b instanceof ExoticScroll){
+				if (b instanceof ExoticScroll) {
 					bCls = ExoticScroll.exoToReg.get(bCls);
 				}
-				for (int i = 0; i < Generator.Category.SCROLL.classes.length; i++){
-					if (aCls == Generator.Category.SCROLL.classes[i]) aVal = (int)Generator.Category.SCROLL.defaultProbsTotal[i];
-					if (bCls == Generator.Category.SCROLL.classes[i]) bVal = (int)Generator.Category.SCROLL.defaultProbsTotal[i];
+				for (int i = 0; i < Generator.Category.SCROLL.classes.length; i++) {
+					if (aCls == Generator.Category.SCROLL.classes[i])
+						aVal = (int) Generator.Category.SCROLL.defaultProbsTotal[i];
+					if (bCls == Generator.Category.SCROLL.classes[i])
+						bVal = (int) Generator.Category.SCROLL.defaultProbsTotal[i];
 				}
 				return bVal - aVal;
 			}
@@ -246,43 +257,43 @@ public class CrystalPathRoom extends SpecialRoom {
 		level.drop(potions.remove(0), shuffle == 1 ? prize1 : prize2).autoExplored = true;
 		level.drop(scrolls.remove(0), shuffle == 1 ? prize2 : prize1).autoExplored = true;
 
-		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );
-		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );
-		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );
+		level.addItemToSpawn(new CrystalKey(Dungeon.depth));
+		level.addItemToSpawn(new CrystalKey(Dungeon.depth));
+		level.addItemToSpawn(new CrystalKey(Dungeon.depth));
 
-		entrance().set( Door.Type.REGULAR );
+		entrance().set(Door.Type.REGULAR);
 
 	}
 
 	//this prevents duplicates
-	public void addRewardItem(Generator.Category cat, ArrayList<Item> items, ArrayList<Item> dupes){
+	public void addRewardItem(Generator.Category cat, ArrayList<Item> items, ArrayList<Item> dupes) {
 		while (true) {
 			Item reward = Generator.random(cat);
 
 			//we have to de-exotify for comparison here to weed out duplicates
 			Class rewardClass = reward.getClass();
-			if (reward instanceof ExoticPotion){
+			if (reward instanceof ExoticPotion) {
 				rewardClass = ExoticPotion.exoToReg.get(rewardClass);
-			} else if (reward instanceof ExoticScroll){
+			} else if (reward instanceof ExoticScroll) {
 				rewardClass = ExoticScroll.exoToReg.get(rewardClass);
 			}
 
 			boolean dupe = false;
-			for (Item i : items){
+			for (Item i : items) {
 				Class iClass = i.getClass();
-				if (i instanceof ExoticPotion){
+				if (i instanceof ExoticPotion) {
 					iClass = ExoticPotion.exoToReg.get(iClass);
-				} else if (i instanceof ExoticScroll){
+				} else if (i instanceof ExoticScroll) {
 					iClass = ExoticScroll.exoToReg.get(iClass);
 				}
-				if (iClass == rewardClass){
+				if (iClass == rewardClass) {
 					dupes.add(reward);
 					dupe = true;
 					break;
 				}
 			}
 
-			if (!dupe){
+			if (!dupe) {
 				items.add(reward);
 				return;
 			}
@@ -291,14 +302,14 @@ public class CrystalPathRoom extends SpecialRoom {
 
 	@Override
 	public boolean canConnect(Point p) {
-		if (!super.canConnect(p)){
+		if (!super.canConnect(p)) {
 			return false;
 		}
 		//only place doors in the center
-		if (Math.abs(p.x - (right - (width()-1)/2f)) < 1f){
+		if (Math.abs(p.x - (right - (width() - 1) / 2f)) < 1f) {
 			return true;
 		}
-		if (Math.abs(p.y - (bottom - (height()-1)/2f)) < 1f){
+		if (Math.abs(p.y - (bottom - (height() - 1) / 2f)) < 1f) {
 			return true;
 		}
 		return false;

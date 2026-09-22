@@ -47,13 +47,13 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class ForceCube extends MissileWeapon {
-	
+
 	{
 		image = ItemSpriteSheet.FORCE_CUBE;
-		
+
 		tier = 5;
 		baseUses = 5;
-		
+
 		sticky = false;
 	}
 
@@ -65,8 +65,8 @@ public class ForceCube extends MissileWeapon {
 	@Override
 	public float castDelay(Char user, int cell) {
 		//special rules as throwing this onto empty space or yourself does trigger it
-		if (!Dungeon.level.pit[cell] && Actor.findChar(cell) == null){
-			return delayFactor( user );
+		if (!Dungeon.level.pit[cell] && Actor.findChar(cell) == null) {
+			return delayFactor(user);
 		} else {
 			return super.castDelay(user, cell);
 		}
@@ -74,17 +74,17 @@ public class ForceCube extends MissileWeapon {
 
 	@Override
 	protected void onThrow(int cell) {
-		if ((Dungeon.level.pit[cell] && Actor.findChar(cell) == null)){
+		if ((Dungeon.level.pit[cell] && Actor.findChar(cell) == null)) {
 			super.onThrow(cell);
 			return;
 		}
 
 		//keep the parent reference for things like IDing
 		MissileWeapon parentTemp = parent;
-		rangedHit( null, cell );
+		rangedHit(null, cell);
 		parent = parentTemp;
 		Dungeon.level.pressCell(cell);
-		
+
 		ArrayList<Char> targets = new ArrayList<>();
 		Char primaryTarget;
 		if (Actor.findChar(cell) != null) {
@@ -94,22 +94,25 @@ public class ForceCube extends MissileWeapon {
 			primaryTarget = null;
 		}
 
-		for (int i : PathFinder.NEIGHBOURS8){
-			if (!(Dungeon.level.traps.get(cell+i) instanceof TenguDartTrap)) Dungeon.level.pressCell(cell+i);
-			if (Actor.findChar(cell + i) != null) targets.add(Actor.findChar(cell + i));
+		for (int i : PathFinder.NEIGHBOURS8) {
+			if (!(Dungeon.level.traps.get(cell + i) instanceof TenguDartTrap))
+				Dungeon.level.pressCell(cell + i);
+			if (Actor.findChar(cell + i) != null)
+				targets.add(Actor.findChar(cell + i));
 		}
 
 		//furthest to closest, mainly for elastic
 		Collections.sort(targets, new Comparator<Char>() {
 			@Override
 			public int compare(Char a, Char b) {
-				return Float.compare(Dungeon.level.trueDistance(b.pos, curUser.pos), Dungeon.level.trueDistance(a.pos, curUser.pos));
+				return Float.compare(Dungeon.level.trueDistance(b.pos, curUser.pos),
+						Dungeon.level.trueDistance(a.pos, curUser.pos));
 			}
 		});
-		
-		for (Char target : targets){
+
+		for (Char target : targets) {
 			curUser.shoot(target, this);
-			if (target == Dungeon.hero && !target.isAlive()){
+			if (target == Dungeon.hero && !target.isAlive()) {
 				Badges.validateDeathFromFriendlyMagic();
 				Dungeon.fail(this);
 				GLog.n(Messages.get(this, "ondeath"));
@@ -117,17 +120,17 @@ public class ForceCube extends MissileWeapon {
 		}
 
 		//if we're applying sniper's mark, prioritize giving it to the primary target of the attack
-		if (curUser.subClass == HeroSubClass.SNIPER && primaryTarget != null && primaryTarget.isActive()){
+		if (curUser.subClass == HeroSubClass.SNIPER && primaryTarget != null && primaryTarget.isActive()) {
 			Actor.add(new Actor() {
 
 				{
-					actPriority = VFX_PRIO-1;
+					actPriority = VFX_PRIO - 1;
 				}
 
 				@Override
 				protected boolean act() {
 					SnipersMark mark = Dungeon.hero.buff(SnipersMark.class);
-					if (mark != null && primaryTarget.isActive()){
+					if (mark != null && primaryTarget.isActive()) {
 						mark.object = primaryTarget.id();
 					}
 					Actor.remove(this);
@@ -135,8 +138,8 @@ public class ForceCube extends MissileWeapon {
 				}
 			});
 		}
-		
+
 		WandOfBlastWave.BlastWave.blast(cell);
-		Sample.INSTANCE.play( Assets.Sounds.BLAST );
+		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 	}
 }

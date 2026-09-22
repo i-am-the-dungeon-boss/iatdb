@@ -36,32 +36,32 @@ public class ScrollingListPane extends ScrollPane {
 
 	private ArrayList<Component> items = new ArrayList<>();
 
-	private static final int ITEM_HEIGHT	= 18;
+	private static final int ITEM_HEIGHT = 18;
 
-	public ScrollingListPane(){
+	public ScrollingListPane() {
 		super(new Component());
 	}
 
 	@Override
 	public void onClick(float x, float y) {
 		for (Component item : items) {
-			if ((item instanceof ListItem) && ((ListItem) item).onClick( x, y )) {
+			if ((item instanceof ListItem) && ((ListItem) item).onClick(x, y)) {
 				break;
 			}
 		}
 	}
 
-	public void addItem( Image icon, String iconText, String text ){
-		addItem( new ListItem(icon, iconText, text) );
+	public void addItem(Image icon, String iconText, String text) {
+		addItem(new ListItem(icon, iconText, text));
 	}
 
-	public void addItem( ListItem item ){
+	public void addItem(ListItem item) {
 		content.add(item);
 		items.add(item);
 		layout();
 	}
 
-	public void addTitle( String text ){
+	public void addTitle(String text) {
 		ListTitle title = new ListTitle(text);
 		content.add(title);
 		items.add(title);
@@ -79,7 +79,7 @@ public class ScrollingListPane extends ScrollPane {
 		super.layout();
 
 		float pos = 0;
-		for (Component item : items){
+		for (Component item : items) {
 			item.setRect(0, pos, width, ITEM_HEIGHT);
 			pos += item.height();
 		}
@@ -94,11 +94,11 @@ public class ScrollingListPane extends ScrollPane {
 		protected RenderedTextBlock label;
 		protected ColorBlock line;
 
-		public ListItem( Image icon, String text ) {
+		public ListItem(Image icon, String text) {
 			this(icon, null, text);
 		}
 
-		public ListItem( Image icon, String iconText, String text ) {
+		public ListItem(Image icon, String iconText, String text) {
 			super();
 
 			if (icon != null) {
@@ -109,7 +109,7 @@ public class ScrollingListPane extends ScrollPane {
 				add(label);
 			}
 
-			label.text( text );
+			label.text(text);
 
 			if (iconText != null) {
 				iconLabel.text(iconText);
@@ -117,31 +117,31 @@ public class ScrollingListPane extends ScrollPane {
 			}
 		}
 
-		public boolean onClick( float x, float y ){
+		public boolean onClick(float x, float y) {
 			return false;
 		}
 
-		public void hardlight( int color ){
+		public void hardlight(int color) {
 			iconLabel.hardlight(color);
 			label.hardlight(color);
 		}
 
-		public void hardlightIcon( int color ){
+		public void hardlightIcon(int color) {
 			icon.hardlight(color);
 		}
 
 		@Override
 		protected void createChildren() {
 			icon = new Image();
-			add( icon );
+			add(icon);
 
-			iconLabel = new BitmapText( PixelScene.pixelFont);
-			add( iconLabel );
+			iconLabel = new BitmapText(PixelScene.pixelFont);
+			add(iconLabel);
 
-			label = PixelScene.renderTextBlock( 7 );
-			add( label );
+			label = PixelScene.renderTextBlock(7);
+			add(label);
 
-			line = new ColorBlock( 1, 1, 0xFF222222);
+			line = new ColorBlock(1, 1, 0xFF222222);
 			add(line);
 
 		}
@@ -150,7 +150,7 @@ public class ScrollingListPane extends ScrollPane {
 		protected void layout() {
 
 			icon.y = y + 1 + (height() - 1 - icon.height()) / 2f;
-			icon.x = x + (16 - icon.width())/2f;
+			icon.x = x + (16 - icon.width()) / 2f;
 			PixelScene.align(icon);
 
 			iconLabel.x = icon.x + (icon.width - iconLabel.width()) / 2f;
@@ -161,7 +161,7 @@ public class ScrollingListPane extends ScrollPane {
 			line.x = x;
 			line.y = y;
 
-			label.maxWidth((int)(width - 16 - 1));
+			label.maxWidth((int) (width - 16 - 1));
 			label.setPos(x + 17, y + (height() - label.height()) / 2f);
 			PixelScene.align(label);
 		}
@@ -172,18 +172,18 @@ public class ScrollingListPane extends ScrollPane {
 		protected RenderedTextBlock label;
 		protected ColorBlock line;
 
-		public ListTitle (String title){
+		public ListTitle(String title) {
 			super();
 			label.text(title);
 		}
 
 		@Override
 		protected void createChildren() {
-			label = PixelScene.renderTextBlock( 9 );
+			label = PixelScene.renderTextBlock(9);
 			label.hardlight(Window.TITLE_COLOR);
-			add( label );
+			add(label);
 
-			line = new ColorBlock( 1, 1, 0xFF222222);
+			line = new ColorBlock(1, 1, 0xFF222222);
 			add(line);
 
 		}
@@ -195,13 +195,12 @@ public class ScrollingListPane extends ScrollPane {
 			line.x = x;
 			line.y = y;
 
-			label.maxWidth((int)(width - 1));
-			label.setPos((width-label.width())/2f,
+			label.maxWidth((int) (width - 1));
+			label.setPos((width - label.width()) / 2f,
 					y + (height() - label.height()) / 2f);
 			PixelScene.align(label);
 		}
 
 	}
-
 
 }

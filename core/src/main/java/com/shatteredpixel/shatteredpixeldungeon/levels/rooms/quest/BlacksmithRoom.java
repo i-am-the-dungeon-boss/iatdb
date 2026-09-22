@@ -42,52 +42,52 @@ import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
 public class BlacksmithRoom extends StandardRoom {
-	
+
 	@Override
 	public int minWidth() {
 		return Math.max(super.minWidth(), 6);
 	}
-	
+
 	@Override
 	public int minHeight() {
 		return Math.max(super.minHeight(), 6);
 	}
-	
-	public void paint(Level level ) {
 
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.TRAP );
+	public void paint(Level level) {
+
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.TRAP);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
-			Painter.drawInside( level, this, door, 2, Terrain.EMPTY );
+			door.set(Door.Type.REGULAR);
+			Painter.drawInside(level, this, door, 2, Terrain.EMPTY);
 		}
 
-		Painter.fill( level, this, 2, Terrain.EMPTY_SP );
-		
-		for (int i=0; i < 2; i++) {
+		Painter.fill(level, this, 2, Terrain.EMPTY_SP);
+
+		for (int i = 0; i < 2; i++) {
 			int pos;
 			do {
 				pos = level.pointToCell(random());
 			} while (level.map[pos] != Terrain.EMPTY_SP);
 			level.drop(
-				Generator.random( Random.oneOf(
-					Generator.Category.ARMOR,
-					Generator.Category.WEAPON,
-					Generator.Category.MISSILE
-				) ), pos );
+					Generator.random(Random.oneOf(
+							Generator.Category.ARMOR,
+							Generator.Category.WEAPON,
+							Generator.Category.MISSILE)),
+					pos);
 		}
-		
+
 		Blacksmith npc = new Blacksmith();
 		do {
-			npc.pos = level.pointToCell(random( 2 ));
-		} while (level.heaps.get( npc.pos ) != null);
-		level.mobs.add( npc );
+			npc.pos = level.pointToCell(random(2));
+		} while (level.heaps.get(npc.pos) != null);
+		level.mobs.add(npc);
 
 		int entrancePos;
 		do {
-			entrancePos = level.pointToCell(random( 2 ));
-		} while (level.heaps.get( npc.pos ) != null || entrancePos == npc.pos);
+			entrancePos = level.pointToCell(random(2));
+		} while (level.heaps.get(npc.pos) != null || entrancePos == npc.pos);
 
 		QuestEntrance vis = new QuestEntrance();
 		vis.pos(entrancePos, level);
@@ -101,9 +101,9 @@ public class BlacksmithRoom extends StandardRoom {
 				LevelTransition.Type.BRANCH_ENTRANCE));
 		Painter.set(level, entrancePos, Terrain.EXIT);
 
-		for(Point p : getPoints()) {
+		for (Point p : getPoints()) {
 			int cell = level.pointToCell(p);
-			if (level.map[cell] == Terrain.TRAP){
+			if (level.map[cell] == Terrain.TRAP) {
 				level.setTrap(new BurningTrap().reveal(), cell);
 			}
 		}
@@ -111,7 +111,7 @@ public class BlacksmithRoom extends StandardRoom {
 
 	@Override
 	public boolean canConnect(Room r) {
-		if (r.isExit()){
+		if (r.isExit()) {
 			//prevents confusion where smith exit and floor exit are very close to each other.
 			return false;
 		}
@@ -120,7 +120,7 @@ public class BlacksmithRoom extends StandardRoom {
 
 	@Override
 	public boolean canPlaceCharacter(Point p, Level l) {
-		if (l.map[l.pointToCell(p)] == Terrain.EXIT){
+		if (l.map[l.pointToCell(p)] == Terrain.EXIT) {
 			return false;
 		} else {
 			return super.canPlaceCharacter(p, l);
@@ -138,7 +138,7 @@ public class BlacksmithRoom extends StandardRoom {
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
-			v.map( new int[]{0}, 1 );
+			v.map(new int[] { 0 }, 1);
 			return v;
 		}
 

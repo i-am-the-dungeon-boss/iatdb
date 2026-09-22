@@ -40,25 +40,25 @@ public class FungalSpinnerSprite extends MobSprite {
 
 		perspectiveRaise = 0f;
 
-		texture( Assets.Sprites.FUNGAL_SPINNER );
+		texture(Assets.Sprites.FUNGAL_SPINNER);
 
-		TextureFilm frames = new TextureFilm( texture, 16, 16 );
+		TextureFilm frames = new TextureFilm(texture, 16, 16);
 
-		idle = new MovieClip.Animation( 10, true );
-		idle.frames( frames, 0, 0, 0, 0, 0, 1, 0, 1 );
+		idle = new MovieClip.Animation(10, true);
+		idle.frames(frames, 0, 0, 0, 0, 0, 1, 0, 1);
 
-		run = new MovieClip.Animation( 15, true );
-		run.frames( frames, 0, 2, 0, 3 );
+		run = new MovieClip.Animation(15, true);
+		run.frames(frames, 0, 2, 0, 3);
 
-		attack = new MovieClip.Animation( 12, false );
-		attack.frames( frames, 0, 4, 5, 0 );
+		attack = new MovieClip.Animation(12, false);
+		attack.frames(frames, 0, 4, 5, 0);
 
 		zap = attack.clone();
 
-		die = new MovieClip.Animation( 12, false );
-		die.frames( frames, 6, 7, 8, 9 );
+		die = new MovieClip.Animation(12, false);
+		die.frames(frames, 6, 7, 8, 9);
 
-		play( idle );
+		play(idle);
 	}
 
 	@Override
@@ -66,36 +66,36 @@ public class FungalSpinnerSprite extends MobSprite {
 		super.link(ch);
 		if (parent != null) {
 			parent.sendToBack(this);
-			if (aura != null){
+			if (aura != null) {
 				parent.sendToBack(aura);
 			}
 		}
 		renderShadow = false;
 	}
 
-	public void zap( int cell ) {
+	public void zap(int cell) {
 
-		super.zap( cell );
+		super.zap(cell);
 
-		MagicMissile.boltFromChar( parent,
+		MagicMissile.boltFromChar(parent,
 				MagicMissile.FOLIAGE,
 				this,
 				cell,
 				new Callback() {
 					@Override
 					public void call() {
-						((Spinner)ch).shootWeb();
+						((Spinner) ch).shootWeb();
 					}
-				} );
-		Sample.INSTANCE.play( Assets.Sounds.MISS );
+				});
+		Sample.INSTANCE.play(Assets.Sounds.MISS);
 	}
 
 	@Override
-	public void onComplete( MovieClip.Animation anim ) {
+	public void onComplete(MovieClip.Animation anim) {
 		if (anim == zap) {
-			play( run );
+			play(run);
 		}
-		super.onComplete( anim );
+		super.onComplete(anim);
 	}
 
 	@Override

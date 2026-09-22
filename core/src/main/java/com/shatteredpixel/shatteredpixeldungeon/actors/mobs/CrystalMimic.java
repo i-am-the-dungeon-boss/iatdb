@@ -60,7 +60,7 @@ public class CrystalMimic extends Mimic {
 
 	@Override
 	public String name() {
-		if (alignment == Alignment.NEUTRAL){
+		if (alignment == Alignment.NEUTRAL) {
 			return Messages.get(Heap.class, "crystal_chest");
 		} else {
 			return super.name();
@@ -69,16 +69,16 @@ public class CrystalMimic extends Mimic {
 
 	@Override
 	public String description() {
-		if (alignment == Alignment.NEUTRAL){
+		if (alignment == Alignment.NEUTRAL) {
 			String desc = null;
-			for (Item i : items){
-				if (i instanceof Artifact){
+			for (Item i : items) {
+				if (i instanceof Artifact) {
 					desc = Messages.get(Heap.class, "crystal_chest_desc", Messages.get(Heap.class, "artifact"));
 					break;
-				} else if (i instanceof Ring){
+				} else if (i instanceof Ring) {
 					desc = Messages.get(Heap.class, "crystal_chest_desc", Messages.get(Heap.class, "ring"));
 					break;
-				} else if (i instanceof Wand){
+				} else if (i instanceof Wand) {
 					desc = Messages.get(Heap.class, "crystal_chest_desc", Messages.get(Heap.class, "wand"));
 					break;
 				}
@@ -86,7 +86,7 @@ public class CrystalMimic extends Mimic {
 			if (desc == null) {
 				desc = Messages.get(Heap.class, "locked_chest_desc");
 			}
-			if (!MimicTooth.stealthyMimics()){
+			if (!MimicTooth.stealthyMimics()) {
 				desc += "\n\n" + Messages.get(this, "hidden_hint");
 			}
 			return desc;
@@ -108,11 +108,12 @@ public class CrystalMimic extends Mimic {
 		}
 	}
 
-	public void stopHiding(){
+	public void stopHiding() {
 		state = FLEEING;
-		if (sprite != null) sprite.idle();
+		if (sprite != null)
+			sprite.idle();
 		//haste for 2 turns if attacking
-		if (alignment == Alignment.NEUTRAL){
+		if (alignment == Alignment.NEUTRAL) {
 			Buff.affect(this, Haste.class, 2f);
 		} else {
 			Buff.affect(this, Haste.class, 1f);
@@ -120,7 +121,7 @@ public class CrystalMimic extends Mimic {
 		if (Actor.chars().contains(this) && Dungeon.level.heroFOV[pos]) {
 			enemy = Dungeon.hero;
 			target = Dungeon.hero.pos;
-			GLog.w(Messages.get(this, "reveal") );
+			GLog.w(Messages.get(this, "reveal"));
 			CellEmitter.get(pos).burst(Speck.factory(Speck.STAR), 10);
 			Sample.INSTANCE.play(Assets.Sounds.MIMIC, 1, 1.25f);
 		}
@@ -128,27 +129,28 @@ public class CrystalMimic extends Mimic {
 
 	@Override
 	public int attackProc(Char enemy, int damage) {
-		if (alignment == Alignment.NEUTRAL && enemy == Dungeon.hero){
-			steal( Dungeon.hero );
+		if (alignment == Alignment.NEUTRAL && enemy == Dungeon.hero) {
+			steal(Dungeon.hero);
 
 		} else {
 			ArrayList<Integer> candidates = new ArrayList<>();
-			for (int i : PathFinder.NEIGHBOURS8){
-				if (Dungeon.level.passable[pos+i] && Actor.findChar(pos+i) == null){
+			for (int i : PathFinder.NEIGHBOURS8) {
+				if (Dungeon.level.passable[pos + i] && Actor.findChar(pos + i) == null) {
 					candidates.add(pos + i);
 				}
 			}
 
-			if (!candidates.isEmpty()){
+			if (!candidates.isEmpty()) {
 				ScrollOfTeleportation.appear(enemy, Random.element(candidates));
 			}
 
-			if (alignment == Alignment.ENEMY) state = FLEEING;
+			if (alignment == Alignment.ENEMY)
+				state = FLEEING;
 		}
 		return super.attackProc(enemy, damage);
 	}
 
-	protected void steal( Hero hero ) {
+	protected void steal(Hero hero) {
 
 		int tries = 10;
 		Item item;
@@ -156,30 +158,30 @@ public class CrystalMimic extends Mimic {
 			item = hero.belongings.randomUnequipped();
 		} while (tries-- > 0 && (item == null || item.unique || item.level() > 0));
 
-		if (item != null && !item.unique && item.level() < 1 ) {
+		if (item != null && !item.unique && item.level() < 1) {
 
-			GLog.w( Messages.get(this, "ate", item.name()) );
+			GLog.w(Messages.get(this, "ate", item.name()));
 			if (!item.stackable) {
 				Dungeon.quickslot.convertToPlaceholder(item);
 			}
 			item.updateQuickslot();
 
-			if (item instanceof Honeypot){
-				items.add(((Honeypot)item).shatter(this, this.pos));
-				item.detach( hero.belongings.backpack );
+			if (item instanceof Honeypot) {
+				items.add(((Honeypot) item).shatter(this, this.pos));
+				item.detach(hero.belongings.backpack);
 			} else {
-				items.add(item.detach( hero.belongings.backpack ));
-				if ( item instanceof Honeypot.ShatteredPot)
-					((Honeypot.ShatteredPot)item).pickupPot(this);
+				items.add(item.detach(hero.belongings.backpack));
+				if (item instanceof Honeypot.ShatteredPot)
+					((Honeypot.ShatteredPot) item).pickupPot(this);
 			}
 
 		}
 	}
 
 	@Override
-	protected void generatePrize( boolean useDecks ) {
+	protected void generatePrize(boolean useDecks) {
 		//Crystal mimic already contains a prize item. Just guarantee it isn't cursed.
-		for (Item i : items){
+		for (Item i : items) {
 			i.cursed = false;
 			i.cursedKnown = true;
 		}
@@ -200,7 +202,7 @@ public class CrystalMimic extends Mimic {
 		@Override
 		protected void nowhereToRun() {
 			super.nowhereToRun();
-			if (state == HUNTING){
+			if (state == HUNTING) {
 				spend(-TICK); //crystal mimics are fast!
 			}
 		}

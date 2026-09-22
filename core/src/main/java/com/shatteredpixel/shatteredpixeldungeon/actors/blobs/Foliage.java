@@ -48,15 +48,15 @@ public class Foliage extends Blob {
 	protected void evolve() {
 
 		int[] map = Dungeon.level.map;
-		
+
 		boolean seen = false;
 
-		Fire fire = (Fire)Dungeon.level.blobs.get( Fire.class );
+		Fire fire = (Fire) Dungeon.level.blobs.get(Fire.class);
 
 		int cell;
 		for (int i = area.left; i < area.right; i++) {
 			for (int j = area.top; j < area.bottom; j++) {
-				cell = i + j*Dungeon.level.width();
+				cell = i + j * Dungeon.level.width();
 				if (cur[cell] > 0) {
 
 					off[cell] = cur[cell];
@@ -67,7 +67,7 @@ public class Foliage extends Blob {
 						boolean valid = true;
 						if (fire != null && fire.volume > 0) {
 							for (int k : PathFinder.NEIGHBOURS9) {
-								if (fire.cur[cell + k] > 0){
+								if (fire.cur[cell + k] > 0) {
 									valid = false;
 								}
 							}
@@ -85,22 +85,22 @@ public class Foliage extends Blob {
 				}
 			}
 		}
-		
+
 		Hero hero = Dungeon.hero;
 		if (hero.isAlive() && cur[hero.pos] > 0) {
-			Shadows s = Buff.affect( hero, Shadows.class );
-			if (s != null){
+			Shadows s = Buff.affect(hero, Shadows.class);
+			if (s != null) {
 				s.prolong();
 			}
 		}
 	}
-	
+
 	@Override
-	public void use( BlobEmitter emitter ) {
-		super.use( emitter );
-		emitter.start( ShaftParticle.FACTORY, 0.9f, 0 );
+	public void use(BlobEmitter emitter) {
+		super.use(emitter);
+		emitter.start(ShaftParticle.FACTORY, 0.9f, 0);
 	}
-	
+
 	@Override
 	public String tileDesc() {
 		return Messages.get(this, "desc");

@@ -64,8 +64,8 @@ public class ElixirOfMight extends Elixir {
 		HTBoost boost = Buff.affect(hero, HTBoost.class);
 		boost.reset();
 
-		hero.updateHT( true );
-		GLog.p( Messages.get(this, "msg", hero.STR()) );
+		hero.updateHT(true);
+		GLog.p(Messages.get(this, "msg", hero.STR()));
 
 		Badges.validateStrengthAttained();
 		Badges.validateDuelistUnlock();
@@ -78,8 +78,8 @@ public class ElixirOfMight extends Elixir {
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
 
 		{
-			inputs =  new Class[]{PotionOfStrength.class};
-			inQuantity = new int[]{1};
+			inputs = new Class[] { PotionOfStrength.class };
+			inQuantity = new int[] { 1 };
 
 			cost = 16;
 
@@ -97,21 +97,21 @@ public class ElixirOfMight extends Elixir {
 
 		private int left;
 
-		public void reset(){
+		public void reset() {
 			left = 5;
 		}
 
-		public int boost(){
-			return Math.round(left*boost(15 + 5*((Hero)target).lvl)/5f);
+		public int boost() {
+			return Math.round(left * boost(15 + 5 * ((Hero) target).lvl) / 5f);
 		}
 
-		public static int boost(int HT){
-			return Math.round(4 + HT/20f);
+		public static int boost(int HT) {
+			return Math.round(4 + HT / 20f);
 		}
 
-		public void onLevelUp(){
-			left --;
-			if (left <= 0){
+		public void onLevelUp() {
+			left--;
+			if (left <= 0) {
 				detach();
 			}
 		}
@@ -146,7 +146,7 @@ public class ElixirOfMight extends Elixir {
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
-			bundle.put( LEFT, left );
+			bundle.put(LEFT, left);
 		}
 
 		@Override

@@ -60,7 +60,7 @@ public class WandOfCorrosion extends Wand {
 	@Override
 	public void onZap(Ballistica bolt) {
 		CorrosiveGas gas = Blob.seed(bolt.collisionPos, 50 + 10 * buffedLvl(), CorrosiveGas.class);
-		CellEmitter.get(bolt.collisionPos).burst(Speck.factory(Speck.CORROSION), 10 );
+		CellEmitter.get(bolt.collisionPos).burst(Speck.factory(Speck.CORROSION), 10);
 		gas.setStrength(2 + buffedLvl(), getClass());
 		GameScene.add(gas);
 		Sample.INSTANCE.play(Assets.Sounds.GAS);
@@ -70,13 +70,13 @@ public class WandOfCorrosion extends Wand {
 			if (ch != null) {
 				wandProc(ch, chargesPerCast());
 
-				if (i == 0 && ch instanceof DwarfKing){
+				if (i == 0 && ch instanceof DwarfKing) {
 					Statistics.qualifiedForBossChallengeBadge = false;
 				}
 			}
 		}
-		
-		if (Actor.findChar(bolt.collisionPos) == null){
+
+		if (Actor.findChar(bolt.collisionPos) == null) {
 			Dungeon.level.pressCell(bolt.collisionPos);
 		}
 	}
@@ -94,47 +94,47 @@ public class WandOfCorrosion extends Wand {
 
 	@Override
 	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
-		int level = Math.max( 0, buffedLvl() );
+		int level = Math.max(0, buffedLvl());
 
 		// lvl 0 - 33%
 		// lvl 1 - 50%
 		// lvl 2 - 60%
-		float procChance = (level+1f)/(level+3f) * procChanceMultiplier(attacker);
+		float procChance = (level + 1f) / (level + 3f) * procChanceMultiplier(attacker);
 		if (Random.Float() < procChance) {
 
 			float powerMulti = Math.max(1f, procChance);
-			
-			Buff.affect( defender, Ooze.class ).set( Ooze.DURATION * powerMulti );
-			CellEmitter.center(defender.pos).burst( CorrosionParticle.SPLASH, 5 );
-			
+
+			Buff.affect(defender, Ooze.class).set(Ooze.DURATION * powerMulti);
+			CellEmitter.center(defender.pos).burst(CorrosionParticle.SPLASH, 5);
+
 		}
 	}
 
 	@Override
 	public void staffFx(MagesStaff.StaffParticle particle) {
-		particle.color( ColorMath.random( 0xAAAAAA, 0xFF8800) );
+		particle.color(ColorMath.random(0xAAAAAA, 0xFF8800));
 		particle.am = 0.6f;
-		particle.setLifespan( 1f );
+		particle.setLifespan(1f);
 		particle.acc.set(0, 20);
-		particle.setSize( 0.5f, 3f );
-		particle.shuffleXY( 1f );
+		particle.setSize(0.5f, 3f);
+		particle.shuffleXY(1f);
 	}
 
 	@Override
 	public String statsDesc() {
 		if (levelKnown)
-			return Messages.get(this, "stats_desc", 2+buffedLvl());
+			return Messages.get(this, "stats_desc", 2 + buffedLvl());
 		else
 			return Messages.get(this, "stats_desc", 2);
 	}
 
 	@Override
 	public String upgradeStat1(int level) {
-		return Integer.toString(level+2);
+		return Integer.toString(level + 2);
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		return Messages.decimalFormat("#.##x", 1+.2f*level);
+		return Messages.decimalFormat("#.##x", 1 + .2f * level);
 	}
 }

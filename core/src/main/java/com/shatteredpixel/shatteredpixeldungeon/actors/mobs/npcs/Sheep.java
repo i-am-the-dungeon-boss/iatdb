@@ -38,7 +38,7 @@ import com.watabou.utils.Random;
 
 public class Sheep extends NPC {
 
-	private static final String[] LINE_KEYS = {"Baa!", "Baa?", "Baa.", "Baa..."};
+	private static final String[] LINE_KEYS = { "Baa!", "Baa?", "Baa.", "Baa..." };
 
 	{
 		spriteClass = SheepSprite.class;
@@ -48,7 +48,7 @@ public class Sheep extends NPC {
 
 	@Override
 	protected boolean act() {
-		if (Dungeon.level.heroFOV[pos]){
+		if (Dungeon.level.heroFOV[pos]) {
 			Bestiary.setSeen(getClass());
 		}
 		HP = 0;
@@ -58,9 +58,9 @@ public class Sheep extends NPC {
 		return true;
 	}
 
-	public void initialize(float lifespan){
+	public void initialize(float lifespan) {
 		this.lifespan = lifespan;
-		spend( lifespan + Random.Float(-2, 2) );
+		spend(lifespan + Random.Float(-2, 2));
 	}
 
 	@Override
@@ -69,24 +69,24 @@ public class Sheep extends NPC {
 	}
 
 	@Override
-	public void damage( int dmg, Object src ) {
+	public void damage(int dmg, Object src) {
 		//do nothing
 	}
 
 	@Override
-	public boolean add( Buff buff ) {
+	public boolean add(Buff buff) {
 		return false;
 	}
 
 	@Override
 	public boolean interact(Char c) {
 		Bestiary.setSeen(getClass());
-		sprite.showStatus( CharSprite.NEUTRAL, Messages.get(this, Random.element( LINE_KEYS )) );
+		sprite.showStatus(CharSprite.NEUTRAL, Messages.get(this, Random.element(LINE_KEYS)));
 		if (c == Dungeon.hero) {
 			Dungeon.hero.spendAndNext(1f);
 			Sample.INSTANCE.play(Assets.Sounds.SHEEP, 1, Random.Float(0.91f, 1.1f));
 			//sheep summoned by woolly bomb can be dispelled by interacting
-			if (lifespan >= 20){
+			if (lifespan >= 20) {
 				spend(-cooldown());
 			}
 		}

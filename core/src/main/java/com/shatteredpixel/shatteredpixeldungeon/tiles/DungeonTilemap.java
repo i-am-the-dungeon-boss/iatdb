@@ -41,7 +41,7 @@ public abstract class DungeonTilemap extends Tilemap {
 	protected int[] map;
 
 	public DungeonTilemap(String tex) {
-		super(tex, new TextureFilm( tex, SIZE, SIZE ) );
+		super(tex, new TextureFilm(tex, SIZE, SIZE));
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public abstract class DungeonTilemap extends Tilemap {
 	@Override
 	public synchronized void updateMap() {
 		for (int i = 0; i < data.length; i++)
-			data[i] = getTileVisual(i ,map[i], false);
+			data[i] = getTileVisual(i, map[i], false);
 		super.updateMap();
 	}
 
@@ -69,7 +69,7 @@ public abstract class DungeonTilemap extends Tilemap {
 			super.updateMapCell(cell - mapWidth - 1);
 			super.updateMapCell(cell + mapWidth + 1);
 
-		//unless we're at the level's edge, then just do the one tile.
+			//unless we're at the level's edge, then just do the one tile.
 		} else {
 			data[cell] = getTileVisual(cell, map[cell], false);
 			super.updateMapCell(cell);
@@ -78,31 +78,29 @@ public abstract class DungeonTilemap extends Tilemap {
 
 	protected abstract int getTileVisual(int pos, int tile, boolean flat);
 
-	public int screenToTile(int x, int y ){
+	public int screenToTile(int x, int y) {
 		return screenToTile(x, y, false);
 	}
 
-	public int screenToTile(int x, int y, boolean wallAssist ) {
-		PointF p = camera().screenToCamera( x, y ).
-			offset( this.point().negate() ).
-			invScale( SIZE );
-		
-		//snap to the edges of the tilemap
-		p.x = GameMath.gate(0, p.x, Dungeon.level.width()-0.001f);
-		p.y = GameMath.gate(0, p.y, Dungeon.level.height()-0.001f);
+	public int screenToTile(int x, int y, boolean wallAssist) {
+		PointF p = camera().screenToCamera(x, y).offset(this.point().negate()).invScale(SIZE);
 
-		int cell = (int)p.x + (int)p.y * Dungeon.level.width();
+		//snap to the edges of the tilemap
+		p.x = GameMath.gate(0, p.x, Dungeon.level.width() - 0.001f);
+		p.y = GameMath.gate(0, p.y, Dungeon.level.height() - 0.001f);
+
+		int cell = (int) p.x + (int) p.y * Dungeon.level.width();
 
 		//wall assist is used to make raised perspective tapping a bit easier.
 		// If the pressed tile is a wall tile, the tap can be 'bumped' down into a none-wall tile.
 		// currently this happens if the bottom 1/4 of the wall tile is pressed.
 		if (wallAssist
 				&& map != null
-				&& isWallAssistable(cell)){
+				&& isWallAssistable(cell)) {
 
 			if (cell + mapWidth < size
 					&& p.y % 1 >= 0.75f
-					&& !isWallAssistable(cell + mapWidth)){
+					&& !isWallAssistable(cell + mapWidth)) {
 				cell += mapWidth;
 			}
 
@@ -111,12 +109,12 @@ public abstract class DungeonTilemap extends Tilemap {
 		return cell;
 	}
 
-	private boolean isWallAssistable(int cell){
-		if (map == null || cell >= size){
+	private boolean isWallAssistable(int cell) {
+		if (map == null || cell >= size) {
 			return false;
 		}
 
-		if (DungeonTileSheet.wallStitcheable(map[cell])){
+		if (DungeonTileSheet.wallStitcheable(map[cell])) {
 			return true;
 		}
 
@@ -128,53 +126,54 @@ public abstract class DungeonTilemap extends Tilemap {
 
 		return false;
 	}
-	
+
 	@Override
-	public boolean overlapsPoint( float x, float y ) {
+	public boolean overlapsPoint(float x, float y) {
 		return true;
 	}
-	
-	public void discover( int pos, int oldValue ) {
-		
-		int visual = getTileVisual( pos, oldValue, false);
-		if (visual < 0) return;
-		
-		final Image tile = new Image( texture );
-		tile.frame( tileset.get( getTileVisual( pos, oldValue, false)));
-		tile.point( tileToWorld( pos ) );
 
-		parent.add( tile );
-		
-		parent.add( new AlphaTweener( tile, 0, 0.6f ) {
+	public void discover(int pos, int oldValue) {
+
+		int visual = getTileVisual(pos, oldValue, false);
+		if (visual < 0)
+			return;
+
+		final Image tile = new Image(texture);
+		tile.frame(tileset.get(getTileVisual(pos, oldValue, false)));
+		tile.point(tileToWorld(pos));
+
+		parent.add(tile);
+
+		parent.add(new AlphaTweener(tile, 0, 0.6f) {
 			protected void onComplete() {
 				tile.killAndErase();
 				killAndErase();
 			}
-		} );
-	}
-	
-	public static PointF tileToWorld( int pos ) {
-		return new PointF( pos % Dungeon.level.width(), pos / Dungeon.level.width()  ).scale( SIZE );
-	}
-	
-	public static PointF tileCenterToWorld( int pos ) {
-		return new PointF(
-			(pos % Dungeon.level.width() + 0.5f) * SIZE,
-			(pos / Dungeon.level.width() + 0.5f) * SIZE );
+		});
 	}
 
-	public static PointF raisedTileCenterToWorld( int pos ) {
+	public static PointF tileToWorld(int pos) {
+		return new PointF(pos % Dungeon.level.width(), pos / Dungeon.level.width()).scale(SIZE);
+	}
+
+	public static PointF tileCenterToWorld(int pos) {
 		return new PointF(
 				(pos % Dungeon.level.width() + 0.5f) * SIZE,
-				(pos / Dungeon.level.width() + 0.1f) * SIZE );
+				(pos / Dungeon.level.width() + 0.5f) * SIZE);
 	}
 
-	public static int worldToTile( float x, float y, int width){
-		return (int)(x / SIZE) + ((int)(y / SIZE) * width);
+	public static PointF raisedTileCenterToWorld(int pos) {
+		return new PointF(
+				(pos % Dungeon.level.width() + 0.5f) * SIZE,
+				(pos / Dungeon.level.width() + 0.1f) * SIZE);
 	}
-	
+
+	public static int worldToTile(float x, float y, int width) {
+		return (int) (x / SIZE) + ((int) (y / SIZE) * width);
+	}
+
 	@Override
-	public boolean overlapsScreenPoint( int x, int y ) {
+	public boolean overlapsScreenPoint(int x, int y) {
 		return true;
 	}
 

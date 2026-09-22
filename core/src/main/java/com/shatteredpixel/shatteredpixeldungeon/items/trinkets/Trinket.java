@@ -48,14 +48,14 @@ public abstract class Trinket extends Item {
 
 	protected abstract int upgradeEnergyCost();
 
-	protected static int trinketLevel(Class<? extends Trinket> trinketType ){
-		if (Dungeon.hero == null || Dungeon.hero.belongings == null){
+	protected static int trinketLevel(Class<? extends Trinket> trinketType) {
+		if (Dungeon.hero == null || Dungeon.hero.belongings == null) {
 			return -1;
 		}
 
 		Trinket trinket = Dungeon.hero.belongings.getItem(trinketType);
 
-		if (trinket != null){
+		if (trinket != null) {
 			return trinket.buffedLvl();
 		} else {
 			return -1;
@@ -99,8 +99,8 @@ public abstract class Trinket extends Item {
 
 		@Override
 		public String info() {
-				return "";
-			}
+			return "";
+		}
 
 		@Override
 		public String statsDesc() {
@@ -118,7 +118,7 @@ public abstract class Trinket extends Item {
 
 		@Override
 		public int cost(ArrayList<Item> ingredients) {
-			return ((Trinket)ingredients.get(0)).upgradeEnergyCost();
+			return ((Trinket) ingredients.get(0)).upgradeEnergyCost();
 		}
 
 		@Override

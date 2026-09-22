@@ -43,7 +43,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Random;
 
 public class PotionOfMastery extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_MASTERY;
 
@@ -60,7 +60,7 @@ public class PotionOfMastery extends ExoticPotion {
 
 		if (!isKnown()) {
 			identify();
-			curItem = detach( hero.belongings.backpack );
+			curItem = detach(hero.belongings.backpack);
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
@@ -78,22 +78,21 @@ public class PotionOfMastery extends ExoticPotion {
 
 		@Override
 		public boolean itemSelectable(Item item) {
-			return
-					(item instanceof Weapon && !(item instanceof SpiritBow) && !((Weapon) item).masteryPotionBonus)
+			return (item instanceof Weapon && !(item instanceof SpiritBow) && !((Weapon) item).masteryPotionBonus)
 					|| (item instanceof Armor && !((Armor) item).masteryPotionBonus);
 		}
 
 		@Override
 		public void onSelect(Item item) {
 
-			if (item == null && identifiedByUse){
-				GameScene.show( new WndOptions(new ItemSprite(PotionOfMastery.this),
+			if (item == null && identifiedByUse) {
+				GameScene.show(new WndOptions(new ItemSprite(PotionOfMastery.this),
 						Messages.titleCase(name()),
 						Messages.get(ExoticPotion.class, "warning"),
 						Messages.get(ExoticPotion.class, "yes"),
-						Messages.get(ExoticPotion.class, "no") ) {
+						Messages.get(ExoticPotion.class, "no")) {
 					@Override
-					protected void onSelect( int index ) {
+					protected void onSelect(int index) {
 						switch (index) {
 							case 0:
 								curUser.spendAndNext(1f);
@@ -104,20 +103,22 @@ public class PotionOfMastery extends ExoticPotion {
 								break;
 						}
 					}
-					public void onBackPressed() {}
-				} );
+
+					public void onBackPressed() {
+					}
+				});
 			} else if (item != null) {
 
 				if (item instanceof Weapon) {
 					((Weapon) item).masteryPotionBonus = true;
-					GLog.p( Messages.get(PotionOfMastery.class, "weapon_easier") );
+					GLog.p(Messages.get(PotionOfMastery.class, "weapon_easier"));
 				} else if (item instanceof Armor) {
 					((Armor) item).masteryPotionBonus = true;
-					GLog.p( Messages.get(PotionOfMastery.class, "armor_easier") );
+					GLog.p(Messages.get(PotionOfMastery.class, "armor_easier"));
 				}
 				updateQuickslot();
 
-				Sample.INSTANCE.play( Assets.Sounds.DRINK );
+				Sample.INSTANCE.play(Assets.Sounds.DRINK);
 				curUser.sprite.operate(curUser.pos);
 
 				if (!identifiedByUse) {
@@ -135,5 +136,5 @@ public class PotionOfMastery extends ExoticPotion {
 
 		}
 	};
-	
+
 }

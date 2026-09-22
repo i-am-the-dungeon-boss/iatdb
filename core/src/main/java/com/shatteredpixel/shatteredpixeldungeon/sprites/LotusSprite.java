@@ -40,40 +40,40 @@ public class LotusSprite extends MobSprite {
 
 	private ArrayList<Emitter> grassVfx;
 
-	public LotusSprite(){
+	public LotusSprite() {
 		super();
 
 		perspectiveRaise = 0f;
 
-		texture( Assets.Sprites.LOTUS );
+		texture(Assets.Sprites.LOTUS);
 
-		TextureFilm frames = new TextureFilm( texture, 19, 16 );
+		TextureFilm frames = new TextureFilm(texture, 19, 16);
 
-		idle = new MovieClip.Animation( 1, true );
-		idle.frames( frames, 0 );
+		idle = new MovieClip.Animation(1, true);
+		idle.frames(frames, 0);
 
-		run = new MovieClip.Animation( 1, true );
-		run.frames( frames, 0 );
+		run = new MovieClip.Animation(1, true);
+		run.frames(frames, 0);
 
-		attack = new MovieClip.Animation( 1, false );
-		attack.frames( frames, 0 );
+		attack = new MovieClip.Animation(1, false);
+		attack.frames(frames, 0);
 
-		die = new MovieClip.Animation( 1, false );
-		die.frames( frames, 0 );
+		die = new MovieClip.Animation(1, false);
+		die.frames(frames, 0);
 
-		play( idle );
+		play(idle);
 	}
 
 	@Override
-	public void link( Char ch ) {
-		super.link( ch );
+	public void link(Char ch) {
+		super.link(ch);
 
 		renderShadow = false;
 
-		if (grassVfx == null && ch instanceof WandOfRegrowth.Lotus){
+		if (grassVfx == null && ch instanceof WandOfRegrowth.Lotus) {
 			WandOfRegrowth.Lotus l = (WandOfRegrowth.Lotus) ch;
 			grassVfx = new ArrayList<>();
-			for (int i = 0; i < Dungeon.level.length(); i++){
+			for (int i = 0; i < Dungeon.level.length(); i++) {
 				if (!Dungeon.level.solid[i] && l.inRange(i)) {
 					Emitter e = CellEmitter.get(i);
 					e.pour(LeafParticle.LEVEL_SPECIFIC, 0.5f);
@@ -85,7 +85,8 @@ public class LotusSprite extends MobSprite {
 
 	@Override
 	public void place(int cell) {
-		if (parent != null) parent.sendToBack(this);
+		if (parent != null)
+			parent.sendToBack(this);
 		super.place(cell);
 	}
 
@@ -104,8 +105,8 @@ public class LotusSprite extends MobSprite {
 	public void die() {
 		super.die();
 
-		if (grassVfx != null){
-			for (Emitter e : grassVfx){
+		if (grassVfx != null) {
+			for (Emitter e : grassVfx) {
 				e.on = false;
 			}
 			grassVfx = null;
@@ -116,8 +117,8 @@ public class LotusSprite extends MobSprite {
 	public void kill() {
 		super.kill();
 
-		if (grassVfx != null){
-			for (Emitter e : grassVfx){
+		if (grassVfx != null) {
+			for (Emitter e : grassVfx) {
 				e.on = false;
 			}
 			grassVfx = null;

@@ -38,33 +38,33 @@ public class PylonSprite extends MobSprite {
 	public PylonSprite() {
 		super();
 
-		perspectiveRaise = 5/16f; //1 pixel less
+		perspectiveRaise = 5 / 16f; //1 pixel less
 		renderShadow = false;
 
-		texture( Assets.Sprites.PYLON );
+		texture(Assets.Sprites.PYLON);
 
-		TextureFilm frames = new TextureFilm( texture, 10, 20 );
+		TextureFilm frames = new TextureFilm(texture, 10, 20);
 
-		idle = new Animation( 1, false );
-		idle.frames( frames, 0 );
+		idle = new Animation(1, false);
+		idle.frames(frames, 0);
 
-		activeIdle = new Animation( 1, false );
-		activeIdle.frames( frames, 1 );
+		activeIdle = new Animation(1, false);
+		activeIdle.frames(frames, 1);
 
 		run = idle.clone();
 
 		attack = idle.clone();
 
-		die = new Animation( 1, false );
-		die.frames( frames, 2 );
+		die = new Animation(1, false);
+		die.frames(frames, 2);
 
-		play( idle );
+		play(idle);
 	}
 
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
-		if (ch instanceof Pylon && ch.alignment == Char.Alignment.ENEMY){
+		if (ch instanceof Pylon && ch.alignment == Char.Alignment.ENEMY) {
 			activate();
 		}
 		renderShadow = false;
@@ -72,19 +72,20 @@ public class PylonSprite extends MobSprite {
 
 	@Override
 	public void place(int cell) {
-		if (parent != null) parent.bringToFront(this);
+		if (parent != null)
+			parent.bringToFront(this);
 		super.place(cell);
 	}
 
-	public void activate(){
+	public void activate() {
 		idle = activeIdle.clone();
 		idle();
 	}
 
 	@Override
 	public void play(Animation anim) {
-		if (anim == die){
-			turnTo(ch.pos, ch.pos+1); //always face right to merge with custom tiles
+		if (anim == die) {
+			turnTo(ch.pos, ch.pos + 1); //always face right to merge with custom tiles
 			emitter().burst(BlastParticle.FACTORY, 20);
 			Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		}
@@ -93,7 +94,7 @@ public class PylonSprite extends MobSprite {
 
 	@Override
 	public void onComplete(Animation anim) {
-		if (anim == attack){
+		if (anim == attack) {
 			flash();
 		}
 		super.onComplete(anim);

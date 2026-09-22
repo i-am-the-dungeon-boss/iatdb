@@ -549,8 +549,7 @@ class EchoBossMovementTest {
 		linkTrackingSprite(boss);
 		boss.aggro(hero);
 		boss.HP = boss.HT / 2;
-		com.shatteredpixel.shatteredpixeldungeon.items.Item potion =
-				new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing();
+		com.shatteredpixel.shatteredpixeldungeon.items.Item potion = new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing();
 		potion.identify();
 		potion.collect(boss.getEchoHero().belongings.backpack);
 		Buff.affect(hero, Invulnerability.class, 3f);

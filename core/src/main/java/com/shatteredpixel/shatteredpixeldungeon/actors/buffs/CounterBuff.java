@@ -31,15 +31,15 @@ public class CounterBuff extends Buff {
 
 	private float count = 0;
 
-	public void countUp( float inc ){
+	public void countUp(float inc) {
 		count += inc;
 	}
 
-	public void countDown( float inc ){
+	public void countDown(float inc) {
 		count -= inc;
 	}
 
-	public float count(){
+	public float count() {
 		return count;
 	}
 

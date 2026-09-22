@@ -211,11 +211,7 @@ public class Combo extends Buff implements ActionIndicator.Action {
 	}
 
 	public enum ComboMove {
-		CLOBBER(2, 0x00FF00),
-		SLAM(4, 0xCCFF00),
-		PARRY(6, 0xFFFF00),
-		CRUSH(8, 0xFFCC00),
-		FURY(10, 0xFF0000);
+		CLOBBER(2, 0x00FF00), SLAM(4, 0xCCFF00), PARRY(6, 0xFFFF00), CRUSH(8, 0xFFCC00), FURY(10, 0xFF0000);
 
 		public int comboReq, tintColor;
 

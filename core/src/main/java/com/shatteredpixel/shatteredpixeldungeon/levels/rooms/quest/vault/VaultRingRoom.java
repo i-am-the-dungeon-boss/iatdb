@@ -37,18 +37,18 @@ public class VaultRingRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Painter.fill(level, this, 4, Terrain.WALL);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 
 		VaultRat rat = new VaultRat();
@@ -57,18 +57,18 @@ public class VaultRingRoom extends StandardRoom {
 		} while (level.solid[rat.pos]);
 
 		if (Random.Int(2) == 0) {
-			rat.wanderPositions = new int[]{
-					level.pointToCell(new Point(left+2, top+2)),
-					level.pointToCell(new Point(right-2, top+2)),
-					level.pointToCell(new Point(right-2, bottom-2)),
-					level.pointToCell(new Point(left+2, bottom-2))
+			rat.wanderPositions = new int[] {
+					level.pointToCell(new Point(left + 2, top + 2)),
+					level.pointToCell(new Point(right - 2, top + 2)),
+					level.pointToCell(new Point(right - 2, bottom - 2)),
+					level.pointToCell(new Point(left + 2, bottom - 2))
 			};
 		} else {
-			rat.wanderPositions = new int[]{
-					level.pointToCell(new Point(left+2, bottom-2)),
-					level.pointToCell(new Point(right-2, bottom-2)),
-					level.pointToCell(new Point(right-2, top+2)),
-					level.pointToCell(new Point(left+2, top+2))
+			rat.wanderPositions = new int[] {
+					level.pointToCell(new Point(left + 2, bottom - 2)),
+					level.pointToCell(new Point(right - 2, bottom - 2)),
+					level.pointToCell(new Point(right - 2, top + 2)),
+					level.pointToCell(new Point(left + 2, top + 2))
 			};
 		}
 		rat.wanderPosIdx = Random.Int(4);

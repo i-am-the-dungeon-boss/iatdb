@@ -40,7 +40,7 @@ public class ItemJournalButton extends IconButton {
 	Item item;
 	Window parentWnd;
 
-	public ItemJournalButton(Item item, Window parentWnd){
+	public ItemJournalButton(Item item, Window parentWnd) {
 		super(Icons.JOURNAL.get());
 		this.item = item;
 		this.parentWnd = parentWnd;
@@ -53,15 +53,15 @@ public class ItemJournalButton extends IconButton {
 
 	}
 
-	private void customNote(){
+	private void customNote() {
 		Notes.CustomRecord note = null;
-		if (item instanceof EquipableItem || item instanceof Wand || item instanceof Trinket){
+		if (item instanceof EquipableItem || item instanceof Wand || item instanceof Trinket) {
 			note = Notes.findCustomRecord(item.customNoteID);
 		} else {
 			note = Notes.findCustomRecord(item.getClass());
 		}
-		if (note == null){
-			if (Notes.getRecords(Notes.CustomRecord.class).size() >= Notes.customRecordLimit()){
+		if (note == null) {
+			if (Notes.getRecords(Notes.CustomRecord.class).size() >= Notes.customRecordLimit()) {
 				GameScene.show(new WndTitledMessage(Icons.INFO.get(),
 						Messages.get(CustomNoteButton.class, "limit_title"),
 						Messages.get(CustomNoteButton.class, "limit_text")));
@@ -84,17 +84,17 @@ public class ItemJournalButton extends IconButton {
 		}
 	}
 
-	private static void addNote(Window parentWindow, Notes.CustomRecord note, String promptTitle, String prompttext){
+	private static void addNote(Window parentWindow, Notes.CustomRecord note, String promptTitle, String prompttext) {
 		GameScene.show(new WndTextInput(promptTitle,
 				prompttext,
 				"",
 				50,
 				false,
 				Messages.get(CustomNoteButton.CustomNoteWindow.class, "confirm"),
-				Messages.get(CustomNoteButton.CustomNoteWindow.class, "cancel")){
+				Messages.get(CustomNoteButton.CustomNoteWindow.class, "cancel")) {
 			@Override
 			public void onSelect(boolean positive, String text) {
-				if (positive && !text.isEmpty()){
+				if (positive && !text.isEmpty()) {
 					Notes.add(note);
 					note.editText(text, "");
 					if (parentWindow != null) {
@@ -102,8 +102,10 @@ public class ItemJournalButton extends IconButton {
 					}
 
 					hide();
-					if (parentWindow instanceof WndUseItem){
-						GameScene.show(new WndUseItem(((WndUseItem) parentWindow).owner, ((WndUseItem) parentWindow).item));
+					if (parentWindow instanceof WndUseItem) {
+						GameScene
+								.show(new WndUseItem(((WndUseItem) parentWindow).owner,
+										((WndUseItem) parentWindow).item));
 					}
 				}
 			}

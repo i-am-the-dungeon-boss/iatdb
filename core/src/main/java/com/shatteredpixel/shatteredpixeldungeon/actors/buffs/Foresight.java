@@ -37,7 +37,7 @@ public class Foresight extends FlavourBuff {
 	{
 		type = buffType.POSITIVE;
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.FORESIGHT;
@@ -45,9 +45,9 @@ public class Foresight extends FlavourBuff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
+		if (super.attachTo(target)) {
 			//this way we get a nice VFX sweep on initial activation
-			if (target == Dungeon.hero){
+			if (target == Dungeon.hero) {
 				Dungeon.level.mapped[target.pos] = false;
 				Dungeon.hero.search(false);
 			}

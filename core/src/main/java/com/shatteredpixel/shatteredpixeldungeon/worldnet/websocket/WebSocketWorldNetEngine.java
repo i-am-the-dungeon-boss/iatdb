@@ -71,9 +71,7 @@ public final class WebSocketWorldNetEngine implements WorldNetEngine {
 	private static final String MUTED_CODE = "muted";
 
 	private enum Signal {
-		OPENED,
-		TEXT,
-		CLOSED
+		OPENED, TEXT, CLOSED
 	}
 
 	/**

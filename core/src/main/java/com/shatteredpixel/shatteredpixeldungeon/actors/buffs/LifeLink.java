@@ -36,7 +36,7 @@ public class LifeLink extends FlavourBuff {
 
 	public int object = 0;
 
-	private static final String OBJECT    = "object";
+	private static final String OBJECT = "object";
 
 	{
 		type = buffType.POSITIVE;
@@ -46,10 +46,10 @@ public class LifeLink extends FlavourBuff {
 	@Override
 	public void detach() {
 		super.detach();
-		Char ch = (Char)Actor.findById(object);
-		if (!target.isActive() && ch != null){
-			for (LifeLink l : ch.buffs(LifeLink.class)){
-				if (l.object == target.id()){
+		Char ch = (Char) Actor.findById(object);
+		if (!target.isActive() && ch != null) {
+			for (LifeLink l : ch.buffs(LifeLink.class)) {
+				if (l.object == target.id()) {
 					l.detach();
 				}
 			}
@@ -57,15 +57,15 @@ public class LifeLink extends FlavourBuff {
 	}
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( OBJECT, object );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(OBJECT, object);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		object = bundle.getInt( OBJECT );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		object = bundle.getInt(OBJECT);
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class LifeLink extends FlavourBuff {
 
 	@Override
 	public float iconFadePercent() {
-		int duration = Math.round(6.67f + 3.33f*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
+		int duration = Math.round(6.67f + 3.33f * Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
 		return Math.max(0, (duration - visualcooldown()) / duration);
 	}
 

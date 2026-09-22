@@ -48,8 +48,7 @@ class ItemOwnerEnforcementTest {
 			"Item.java"
 	};
 
-	private static final String PACKAGE_ROOT =
-			"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon";
+	private static final String PACKAGE_ROOT = "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon";
 
 	/** The methods whose output is description text shown to a viewer. */
 	private static final Pattern DESCRIPTION_METHOD = Pattern.compile(

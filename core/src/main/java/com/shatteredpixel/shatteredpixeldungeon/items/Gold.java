@@ -45,20 +45,20 @@ public class Gold extends Item {
 		image = ItemSpriteSheet.GOLD;
 		stackable = true;
 	}
-	
+
 	public Gold() {
-		this( 1 );
+		this(1);
 	}
-	
-	public Gold( int value ) {
+
+	public Gold(int value) {
 		this.quantity = value;
 	}
-	
+
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
+	public ArrayList<String> actions(Hero hero) {
 		return new ArrayList<>();
 	}
-	
+
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
 
@@ -69,29 +69,29 @@ public class Gold extends Item {
 		Statistics.goldCollected += quantity;
 		Badges.validateGoldCollected();
 
-		GameScene.pickUp( this, pos );
-		hero.sprite.showStatusWithIcon( CharSprite.NEUTRAL, Integer.toString(quantity), FloatingText.GOLD );
-		hero.spendAndNext( pickupDelay() );
-		
-		Sample.INSTANCE.play( Assets.Sounds.GOLD, 1, 1, Random.Float( 0.9f, 1.1f ) );
+		GameScene.pickUp(this, pos);
+		hero.sprite.showStatusWithIcon(CharSprite.NEUTRAL, Integer.toString(quantity), FloatingText.GOLD);
+		hero.spendAndNext(pickupDelay());
+
+		Sample.INSTANCE.play(Assets.Sounds.GOLD, 1, 1, Random.Float(0.9f, 1.1f));
 		updateQuickslot();
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	@Override
 	public Item random() {
-		quantity = Random.IntRange( 30 + Dungeon.depth * 10, 60 + Dungeon.depth * 20 );
+		quantity = Random.IntRange(30 + Dungeon.depth * 10, 60 + Dungeon.depth * 20);
 		return this;
 	}
 

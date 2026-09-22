@@ -36,22 +36,27 @@ import com.watabou.utils.Random;
 public class MineSecretRoom extends SecretRoom {
 
 	@Override
-	public int maxWidth() { return 7; }
+	public int maxWidth() {
+		return 7;
+	}
 
 	@Override
-	public int maxHeight() { return 7; }
+	public int maxHeight() {
+		return 7;
+	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
-		entrance().set( Door.Type.HIDDEN );
+		entrance().set(Door.Type.HIDDEN);
 
 		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL) {
 			Painter.fill(level, this, 1, Terrain.MINE_CRYSTAL);
 		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL) {
-			Painter.fill( level, this, 1, Terrain.EMPTY_SP );
-			level.drop(new DarkGold().quantity(Random.NormalIntRange(4, 5)), level.pointToCell(center())).type = Heap.Type.CHEST;
+			Painter.fill(level, this, 1, Terrain.EMPTY_SP);
+			level.drop(new DarkGold().quantity(Random.NormalIntRange(4, 5)),
+					level.pointToCell(center())).type = Heap.Type.CHEST;
 			return;
 		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI) {
 			Painter.fill(level, this, 1, Terrain.HIGH_GRASS);
@@ -64,7 +69,7 @@ public class MineSecretRoom extends SecretRoom {
 
 		int goldAmount = Random.NormalIntRange(4, 5);
 
-		for (int i = 0; i < goldAmount; i++){
+		for (int i = 0; i < goldAmount; i++) {
 			int cell;
 			do {
 				cell = level.pointToCell(random(1));

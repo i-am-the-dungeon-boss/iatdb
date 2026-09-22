@@ -35,21 +35,21 @@ import com.watabou.noosa.Visual;
 public class Wound extends Image {
 
 	private static final float TIME_TO_FADE = 1f;
-	
+
 	private float time;
-	
+
 	public Wound() {
-		super( Effects.get( Effects.Type.WOUND ) );
+		super(Effects.get(Effects.Type.WOUND));
 		hardlight(1f, 0f, 0f);
-		origin.set( width / 2, height / 2 );
+		origin.set(width / 2, height / 2);
 	}
-	
-	public void reset( int p ) {
+
+	public void reset(int p) {
 		revive();
 
 		x = (p % Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - width) / 2;
 		y = (p / Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - height) / 2;
-		
+
 		time = TIME_TO_FADE;
 	}
 
@@ -60,11 +60,11 @@ public class Wound extends Image {
 
 		time = TIME_TO_FADE;
 	}
-	
+
 	@Override
 	public void update() {
 		super.update();
-		
+
 		if ((time -= Game.elapsed) <= 0) {
 			kill();
 		} else {
@@ -73,12 +73,12 @@ public class Wound extends Image {
 			scale.x = 1 + p;
 		}
 	}
-	
-	public static void hit( Char ch ) {
-		hit( ch, 0 );
+
+	public static void hit(Char ch) {
+		hit(ch, 0);
 	}
-	
-	public static void hit( Char ch, float angle ) {
+
+	public static void hit(Char ch, float angle) {
 		if (ch.sprite.parent != null) {
 			Wound w = (Wound) ch.sprite.parent.recycle(Wound.class);
 			ch.sprite.parent.bringToFront(w);
@@ -86,16 +86,16 @@ public class Wound extends Image {
 			w.angle = angle;
 		}
 	}
-	
-	public static void hit( int pos ) {
-		hit( pos, 0 );
+
+	public static void hit(int pos) {
+		hit(pos, 0);
 	}
-	
-	public static void hit( int pos, float angle ) {
+
+	public static void hit(int pos, float angle) {
 		Group parent = Dungeon.hero.sprite.parent;
-		Wound w = (Wound)parent.recycle( Wound.class );
-		parent.bringToFront( w );
-		w.reset( pos );
+		Wound w = (Wound) parent.recycle(Wound.class);
+		parent.bringToFront(w);
+		w.reset(pos);
 		w.angle = angle;
 	}
 }

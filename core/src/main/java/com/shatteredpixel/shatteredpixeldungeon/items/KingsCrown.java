@@ -45,9 +45,9 @@ import com.watabou.noosa.audio.Sample;
 import java.util.ArrayList;
 
 public class KingsCrown extends Item {
-	
+
 	private static final String AC_WEAR = "WEAR";
-	
+
 	{
 		image = ItemSpriteSheet.CROWN;
 
@@ -55,53 +55,53 @@ public class KingsCrown extends Item {
 
 		unique = true;
 	}
-	
+
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		actions.add( AC_WEAR );
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		actions.add(AC_WEAR);
 		return actions;
 	}
-	
-	@Override
-	public void execute( Hero hero, String action ) {
 
-		super.execute( hero, action );
+	@Override
+	public void execute(Hero hero, String action) {
+
+		super.execute(hero, action);
 
 		if (action.equals(AC_WEAR)) {
 
 			curUser = hero;
-			if (hero.belongings.armor() != null){
-				GameScene.show( new WndChooseAbility(this, hero.belongings.armor(), hero));
+			if (hero.belongings.armor() != null) {
+				GameScene.show(new WndChooseAbility(this, hero.belongings.armor(), hero));
 			} else {
-				GLog.w( Messages.get(this, "naked"));
+				GLog.w(Messages.get(this, "naked"));
 			}
-			
+
 		}
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	public void upgradeArmor(Hero hero, Armor armor, ArmorAbility ability) {
 
 		detach(hero.belongings.backpack);
-		Catalog.countUse( getClass() );
+		Catalog.countUse(getClass());
 
-		hero.sprite.emitter().burst( Speck.factory( Speck.CROWN), 12 );
+		hero.sprite.emitter().burst(Speck.factory(Speck.CROWN), 12);
 		hero.spend(Actor.TICK);
 		hero.busy();
 
-		if (armor != null){
+		if (armor != null) {
 
-			if (ability instanceof Ratmogrify){
+			if (ability instanceof Ratmogrify) {
 				GLog.p(Messages.get(this, "ratgraded"));
 			} else {
 				GLog.p(Messages.get(this, "upgraded"));
@@ -125,8 +125,8 @@ public class KingsCrown extends Item {
 		hero.armorAbility = ability;
 		Talent.initArmorTalents(hero);
 
-		hero.sprite.operate( hero.pos );
-		Sample.INSTANCE.play( Assets.Sounds.MASTERY );
+		hero.sprite.operate(hero.pos);
+		Sample.INSTANCE.play(Assets.Sounds.MASTERY);
 	}
 
 }

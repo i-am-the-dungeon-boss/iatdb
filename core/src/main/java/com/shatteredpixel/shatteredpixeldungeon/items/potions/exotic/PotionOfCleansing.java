@@ -41,51 +41,51 @@ import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
 
 public class PotionOfCleansing extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_CLEANSE;
 	}
-	
+
 	@Override
-	public void apply( Char ch ) {
+	public void apply(Char ch) {
 		if (ch instanceof Hero) {
 			identify();
 			if (curUser != null && curUser.sprite != null) {
-				new Flare( 6, 32 ).color(0xFF4CD2, true).show( curUser.sprite, 2f );
+				new Flare(6, 32).color(0xFF4CD2, true).show(curUser.sprite, 2f);
 			}
 		}
-		cleanse( ch );
+		cleanse(ch);
 	}
-	
+
 	@Override
 	public void shatter(int cell) {
-		if (Actor.findChar(cell) == null){
+		if (Actor.findChar(cell) == null) {
 			super.shatter(cell);
 		} else {
-			splash( cell );
+			splash(cell);
 			if (Dungeon.level.heroFOV[cell]) {
 				Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 				identify();
 			}
-			
-			if (Actor.findChar(cell) != null){
+
+			if (Actor.findChar(cell) != null) {
 				cleanse(Actor.findChar(cell));
 			}
 		}
 	}
 
-	public static void cleanse(Char ch){
+	public static void cleanse(Char ch) {
 		cleanse(ch, Cleanse.DURATION);
 	}
 
-	public static void cleanse(Char ch, float duration){
-		for (Buff b : ch.buffs()){
+	public static void cleanse(Char ch, float duration) {
+		for (Buff b : ch.buffs()) {
 			if (b.type == Buff.buffType.NEGATIVE
 					&& !(b instanceof AllyBuff)
-					&& !(b instanceof LostInventory)){
+					&& !(b instanceof LostInventory)) {
 				b.detach();
 			}
-			if (b instanceof Hunger){
+			if (b instanceof Hunger) {
 				((Hunger) b).satisfy(Hunger.STARVING);
 			}
 		}

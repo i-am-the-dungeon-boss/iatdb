@@ -21,8 +21,7 @@ public final class EchoLeaderboardEntry {
 			int damageDealt,
 			int damageTaken,
 			int turns,
-			float winRateProxy
-	) {
+			float winRateProxy) {
 		this.rank = rank;
 		this.echoId = echoId;
 		this.bossWin = bossWin;
@@ -44,7 +43,6 @@ public final class EchoLeaderboardEntry {
 				result.damageDealt,
 				result.damageTaken,
 				result.turns,
-				result.bossWin ? 1f : 0f
-		);
+				result.bossWin ? 1f : 0f);
 	}
 }

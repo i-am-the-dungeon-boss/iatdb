@@ -46,7 +46,7 @@ public class Drowsy extends FlavourBuff {
 		return Math.max(0, (DURATION - visualcooldown()) / DURATION);
 	}
 
-	public boolean attachTo(Char target ) {
+	public boolean attachTo(Char target) {
 		if (!target.isImmune(Sleep.class) && super.attachTo(target)) {
 			return true;
 		}
@@ -54,7 +54,7 @@ public class Drowsy extends FlavourBuff {
 	}
 
 	@Override
-	public boolean act(){
+	public boolean act() {
 		Buff.affect(target, MagicalSleep.class);
 
 		return super.act();

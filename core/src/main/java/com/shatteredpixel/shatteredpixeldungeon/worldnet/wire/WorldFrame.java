@@ -47,16 +47,11 @@ public final class WorldFrame {
 	 * with the {@code muted} code.
 	 */
 	public enum Kind {
-		HELLO,
-		CHAT,
-		ROSTER,
+		HELLO, CHAT, ROSTER,
 		/** The whole set of village bodies, appearance and facts only. */
 		FIGURES,
 		/** The inspect-tier bundle for the one body that was asked about. */
-		ECHO,
-		ERROR,
-		PONG,
-		UNKNOWN
+		ECHO, ERROR, PONG, UNKNOWN
 	}
 
 	public final Kind kind;

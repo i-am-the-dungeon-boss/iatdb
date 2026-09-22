@@ -43,25 +43,25 @@ public class Sorrowmoss extends Plant {
 		image = 6;
 		seedClass = Seed.class;
 	}
-	
+
 	@Override
-	public void activate( Char ch ) {
-		if (ch instanceof Hero && ((Hero) ch).subClass == HeroSubClass.WARDEN){
-			Buff.affect(ch, ToxicImbue.class).set(ToxicImbue.DURATION*0.3f);
+	public void activate(Char ch) {
+		if (ch instanceof Hero && ((Hero) ch).subClass == HeroSubClass.WARDEN) {
+			Buff.affect(ch, ToxicImbue.class).set(ToxicImbue.DURATION * 0.3f);
 		}
-		
+
 		if (ch != null) {
-			if (ch instanceof Mob){
+			if (ch instanceof Mob) {
 				Buff.prolong(ch, Trap.HazardAssistTracker.class, Trap.HazardAssistTracker.DURATION);
 			}
-			Buff.affect( ch, Poison.class ).set( 5 + Math.round(2*Dungeon.scalingDepth() / 3f) );
+			Buff.affect(ch, Poison.class).set(5 + Math.round(2 * Dungeon.scalingDepth() / 3f));
 		}
-		
+
 		if (Dungeon.level.heroFOV[pos]) {
-			CellEmitter.center( pos ).burst( PoisonParticle.SPLASH, 3 );
+			CellEmitter.center(pos).burst(PoisonParticle.SPLASH, 3);
 		}
 	}
-	
+
 	public static class Seed extends Plant.Seed {
 		{
 			image = ItemSpriteSheet.SEED_SORROWMOSS;

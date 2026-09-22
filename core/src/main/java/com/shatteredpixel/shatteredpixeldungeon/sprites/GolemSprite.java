@@ -37,29 +37,29 @@ import com.watabou.utils.Callback;
 public class GolemSprite extends MobSprite {
 
 	private Emitter teleParticles;
-	
+
 	public GolemSprite() {
 		super();
-		
-		texture( Assets.Sprites.GOLEM );
-		
-		TextureFilm frames = new TextureFilm( texture, 17, 19 );
-		
-		idle = new Animation( 4, true );
-		idle.frames( frames, 0, 1 );
-		
-		run = new Animation( 12, true );
-		run.frames( frames, 2, 3, 4, 5 );
-		
-		attack = new Animation( 10, false );
-		attack.frames( frames, 6, 7, 8 );
+
+		texture(Assets.Sprites.GOLEM);
+
+		TextureFilm frames = new TextureFilm(texture, 17, 19);
+
+		idle = new Animation(4, true);
+		idle.frames(frames, 0, 1);
+
+		run = new Animation(12, true);
+		run.frames(frames, 2, 3, 4, 5);
+
+		attack = new Animation(10, false);
+		attack.frames(frames, 6, 7, 8);
 
 		zap = attack.clone();
-		
-		die = new Animation( 15, false );
-		die.frames( frames, 9, 10, 11, 12, 13 );
-		
-		play( idle );
+
+		die = new Animation(15, false);
+		die.frames(frames, 9, 10, 11, 12, 13);
+
+		play(idle);
 	}
 
 	@Override
@@ -75,8 +75,8 @@ public class GolemSprite extends MobSprite {
 	@Override
 	public void update() {
 		super.update();
-		if (teleParticles != null){
-			teleParticles.pos( this );
+		if (teleParticles != null) {
+			teleParticles.pos(this);
 			teleParticles.visible = visible;
 		}
 	}
@@ -90,13 +90,15 @@ public class GolemSprite extends MobSprite {
 		}
 	}
 
-	public void teleParticles(boolean value){
-		if (teleParticles != null) teleParticles.on = value;
+	public void teleParticles(boolean value) {
+		if (teleParticles != null)
+			teleParticles.on = value;
 	}
 
 	@Override
 	public synchronized void play(Animation anim, boolean force) {
-		if (teleParticles != null) teleParticles.on = false;
+		if (teleParticles != null)
+			teleParticles.on = false;
 		super.play(anim, force);
 	}
 
@@ -105,34 +107,34 @@ public class GolemSprite extends MobSprite {
 		return 0xFF80706c;
 	}
 
-	public void zap( int cell ) {
+	public void zap(int cell) {
 
-		super.zap( cell );
+		super.zap(cell);
 
-		MagicMissile.boltFromChar( parent,
+		MagicMissile.boltFromChar(parent,
 				MagicMissile.ELMO,
 				this,
 				cell,
 				new Callback() {
 					@Override
 					public void call() {
-						((Golem)ch).onZapComplete();
+						((Golem) ch).onZapComplete();
 					}
-				} );
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
+				});
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 	}
 
 	private boolean died = false;
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 		if (anim == die && !died) {
 			died = true;
-			emitter().burst( ElmoParticle.FACTORY, 4 );
+			emitter().burst(ElmoParticle.FACTORY, 4);
 		}
 		if (anim == zap) {
 			idle();
 		}
-		super.onComplete( anim );
+		super.onComplete(anim);
 	}
 }

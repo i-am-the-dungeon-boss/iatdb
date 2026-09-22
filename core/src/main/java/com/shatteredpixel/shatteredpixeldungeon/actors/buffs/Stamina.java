@@ -30,11 +30,11 @@ import com.watabou.noosa.Image;
 public class Stamina extends FlavourBuff {
 
 	public static final float DURATION = 100f;
-	
+
 	{
 		type = buffType.POSITIVE;
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.HASTE;

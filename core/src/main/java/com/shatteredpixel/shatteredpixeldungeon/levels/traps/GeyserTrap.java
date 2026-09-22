@@ -56,51 +56,52 @@ public class GeyserTrap extends Trap {
 
 	@Override
 	public void activate() {
-		Splash.at( DungeonTilemap.tileCenterToWorld( pos ), -PointF.PI/2, PointF.PI/2, 0x5bc1e3, 100, 0.01f);
+		Splash.at(DungeonTilemap.tileCenterToWorld(pos), -PointF.PI / 2, PointF.PI / 2, 0x5bc1e3, 100, 0.01f);
 		Sample.INSTANCE.play(Assets.Sounds.GAS, 1f, 0.75f);
 
 		Fire fire = (Fire) Dungeon.level.blobs.get(Fire.class);
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
-			if (PathFinder.distance[i] == 2 && Random.Int(3) > 0){
+			if (PathFinder.distance[i] == 2 && Random.Int(3) > 0) {
 				Dungeon.level.setCellToWater(true, i);
-				if (fire != null){
+				if (fire != null) {
 					fire.clear(i);
 				}
-			} else if (PathFinder.distance[i] < 2){
+			} else if (PathFinder.distance[i] < 2) {
 				Dungeon.level.setCellToWater(true, i);
-				if (fire != null){
+				if (fire != null) {
 					fire.clear(i);
 				}
 			}
 		}
 
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			Char ch = Actor.findChar(pos + i);
-			if (ch != null){
+			if (ch != null) {
 
-				if (source == this && ch instanceof Mob){
+				if (source == this && ch instanceof Mob) {
 					Buff.prolong(ch, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 				}
 
 				//does the equivalent of a bomb's damage against fiery enemies.
-				if (Char.hasProp(ch, Char.Property.FIERY)){
-					int dmg = Random.NormalIntRange(5 + scalingDepth(), 10 + scalingDepth()*2);
+				if (Char.hasProp(ch, Char.Property.FIERY)) {
+					int dmg = Random.NormalIntRange(5 + scalingDepth(), 10 + scalingDepth() * 2);
 					dmg *= 0.67f;
-					if (!ch.isImmune(GeyserTrap.class)){
+					if (!ch.isImmune(GeyserTrap.class)) {
 						ch.damage(dmg, this);
 					}
 				}
 
 				if (ch.isAlive()) {
-					if (ch.buff(Burning.class) != null){
+					if (ch.buff(Burning.class) != null) {
 						ch.buff(Burning.class).detach();
 					}
 
 					//trace a ballistica to our target (which will also extend past them)
 					Ballistica trajectory = new Ballistica(pos, ch.pos, Ballistica.STOP_TARGET);
 					//trim it to just be the part that goes past them
-					trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);
+					trajectory = new Ballistica(trajectory.collisionPos,
+							trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);
 					//knock them back along that ballistica
 					WandOfBlastWave.throwChar(ch, trajectory, 2, true, true, source);
 				}
@@ -108,23 +109,23 @@ public class GeyserTrap extends Trap {
 		}
 
 		Char ch = Actor.findChar(pos);
-		if (ch != null){
-			if (source == this && ch instanceof Mob){
+		if (ch != null) {
+			if (source == this && ch instanceof Mob) {
 				Buff.prolong(ch, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 			}
 			int targetpos = -1;
-			if (centerKnockBackDirection != -1){
+			if (centerKnockBackDirection != -1) {
 				targetpos = centerKnockBackDirection;
-			} else if (ch == Dungeon.hero){
+			} else if (ch == Dungeon.hero) {
 				//if it is the hero, random direction that isn't into a hazard
 				ArrayList<Integer> candidates = new ArrayList<>();
-				for (int i : PathFinder.NEIGHBOURS8){
+				for (int i : PathFinder.NEIGHBOURS8) {
 					//add as a candidate if both cells on the trajectory are safe
-					if (!Dungeon.level.avoid[pos + i] && !Dungeon.level.avoid[pos + i + i]){
+					if (!Dungeon.level.avoid[pos + i] && !Dungeon.level.avoid[pos + i + i]) {
 						candidates.add(pos + i);
 					}
 				}
-				if (!candidates.isEmpty()){
+				if (!candidates.isEmpty()) {
 					targetpos = Random.element(candidates);
 				}
 			} else {
@@ -133,15 +134,15 @@ public class GeyserTrap extends Trap {
 			}
 
 			//does the equivalent of a bomb's damage against fiery enemies.
-			if (Char.hasProp(ch, Char.Property.FIERY)){
-				int dmg = Random.NormalIntRange(5 + scalingDepth(), 10 + scalingDepth()*2);
-				if (!ch.isImmune(GeyserTrap.class)){
+			if (Char.hasProp(ch, Char.Property.FIERY)) {
+				int dmg = Random.NormalIntRange(5 + scalingDepth(), 10 + scalingDepth() * 2);
+				if (!ch.isImmune(GeyserTrap.class)) {
 					ch.damage(dmg, this);
 				}
 			}
 
-			if (ch.isAlive() && targetpos != -1){
-				if (ch.buff(Burning.class) != null){
+			if (ch.isAlive() && targetpos != -1) {
+				if (ch.buff(Burning.class) != null) {
 					ch.buff(Burning.class).detach();
 				}
 				//trace a ballistica in the direction of our target

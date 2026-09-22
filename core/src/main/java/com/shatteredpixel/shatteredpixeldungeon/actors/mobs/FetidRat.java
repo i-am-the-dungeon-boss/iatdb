@@ -55,7 +55,7 @@ public class FetidRat extends Rat {
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 12;
 	}
 
@@ -65,12 +65,12 @@ public class FetidRat extends Rat {
 	}
 
 	@Override
-	public int attackProc( Char enemy, int damage ) {
-		damage = super.attackProc( enemy, damage );
+	public int attackProc(Char enemy, int damage) {
+		damage = super.attackProc(enemy, damage);
 		if (Random.Int(3) == 0) {
-			Buff.affect(enemy, Ooze.class).set( Ooze.DURATION );
+			Buff.affect(enemy, Ooze.class).set(Ooze.DURATION);
 			//score loss is on-hit instead of on-attack because it's tied to ooze
-			if (enemy == Dungeon.hero && !Dungeon.level.water[enemy.pos]){
+			if (enemy == Dungeon.hero && !Dungeon.level.water[enemy.pos]) {
 				Statistics.questScores[0] -= 50;
 			}
 		}
@@ -79,7 +79,7 @@ public class FetidRat extends Rat {
 	}
 
 	@Override
-	public int defenseProc( Char enemy, int damage ) {
+	public int defenseProc(Char enemy, int damage) {
 
 		GameScene.add(Blob.seed(pos, 20, StenchGas.class));
 
@@ -87,28 +87,28 @@ public class FetidRat extends Rat {
 	}
 
 	@Override
-	public void die( Object cause ) {
-		super.die( cause );
+	public void die(Object cause) {
+		super.die(cause);
 
 		Ghost.Quest.process();
 	}
 
-	protected class Wandering extends Mob.Wandering{
+	protected class Wandering extends Mob.Wandering {
 		@Override
 		protected int randomDestination() {
 			//of two potential wander positions, picks the one closest to the hero
 			int pos1 = super.randomDestination();
 			int pos2 = super.randomDestination();
 			PathFinder.buildDistanceMap(Dungeon.hero.pos, Dungeon.level.passable);
-			if (PathFinder.distance[pos2] < PathFinder.distance[pos1]){
+			if (PathFinder.distance[pos2] < PathFinder.distance[pos1]) {
 				return pos2;
 			} else {
 				return pos1;
 			}
 		}
 	}
-	
+
 	{
-		immunities.add( StenchGas.class );
+		immunities.add(StenchGas.class);
 	}
 }

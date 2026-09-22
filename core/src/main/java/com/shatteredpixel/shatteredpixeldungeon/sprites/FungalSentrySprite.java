@@ -34,58 +34,58 @@ public class FungalSentrySprite extends MobSprite {
 
 	private int cellToAttack;
 
-	public FungalSentrySprite(){
+	public FungalSentrySprite() {
 		super();
 
-		texture( Assets.Sprites.FUNGAL_SENTRY );
+		texture(Assets.Sprites.FUNGAL_SENTRY);
 
-		TextureFilm frames = new TextureFilm( texture, 18, 18 );
+		TextureFilm frames = new TextureFilm(texture, 18, 18);
 
-		idle = new Animation( 0, true );
-		idle.frames( frames, 0);
+		idle = new Animation(0, true);
+		idle.frames(frames, 0);
 
-		run = new Animation( 0, true );
-		run.frames( frames, 0);
+		run = new Animation(0, true);
+		run.frames(frames, 0);
 
-		attack = new Animation( 24, false );
-		attack.frames( frames, 0 );
+		attack = new Animation(24, false);
+		attack.frames(frames, 0);
 
 		zap = attack.clone();
 
-		die = new Animation( 12, false );
-		die.frames( frames, 0 );
+		die = new Animation(12, false);
+		die.frames(frames, 0);
 
-		play( idle );
+		play(idle);
 
 	}
 
 	@Override
-	public void attack( int cell ) {
-		if (!Dungeon.level.adjacent( cell, ch.pos )) {
+	public void attack(int cell) {
+		if (!Dungeon.level.adjacent(cell, ch.pos)) {
 
 			cellToAttack = cell;
 			zap(cell);
 
 		} else {
 
-			super.attack( cell );
+			super.attack(cell);
 
 		}
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 		if (anim == zap) {
 			idle();
 
 			MagicMissile.boltFromChar(parent, MagicMissile.POISON, this, cellToAttack, new Callback() {
-						@Override
-						public void call() {
-							ch.onAttackComplete();
-						}
-					} );
+				@Override
+				public void call() {
+					ch.onAttackComplete();
+				}
+			});
 		} else {
-			super.onComplete( anim );
+			super.onComplete(anim);
 		}
 	}
 

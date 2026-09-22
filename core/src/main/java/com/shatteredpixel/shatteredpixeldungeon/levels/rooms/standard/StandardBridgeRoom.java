@@ -70,33 +70,33 @@ public abstract class StandardBridgeRoom extends StandardRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		//prefer to place the bridge space to segment the most doors, or the most space in the room
 		int doorsXY = 0;
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
-			if (door.x == left || door.x == right){
+			door.set(Door.Type.REGULAR);
+			if (door.x == left || door.x == right) {
 				doorsXY++;
 			} else {
 				doorsXY--;
 			}
 		}
-		doorsXY += (width() - height())/2;
+		doorsXY += (width() - height()) / 2;
 
-		if (doorsXY > 0 || (doorsXY == 0 && Random.Int(2) == 0)){
+		if (doorsXY > 0 || (doorsXY == 0 && Random.Int(2) == 0)) {
 
 			ArrayList<Point> spacePoints = new ArrayList<>();
 			for (Door door : connected.values()) {
-				if (door.y == top || door.y == bottom){
+				if (door.y == top || door.y == bottom) {
 					spacePoints.add(door);
 				}
 			}
 
 			//add fake doors for very left/right
-			spacePoints.add(new Point(left+1, 0));
-			spacePoints.add(new Point(right-1, 0));
+			spacePoints.add(new Point(left + 1, 0));
+			spacePoints.add(new Point(right - 1, 0));
 
 			Collections.sort(spacePoints, new Comparator<Point>() {
 				@Override
@@ -107,38 +107,38 @@ public abstract class StandardBridgeRoom extends StandardRoom {
 
 			int spaceStart = -1;
 			int spaceEnd = -1;
-			for (int i = 0; i < spacePoints.size()-1; i++){
-				if (spaceEnd - spaceStart < spacePoints.get(i+1).x - spacePoints.get(i).x){
+			for (int i = 0; i < spacePoints.size() - 1; i++) {
+				if (spaceEnd - spaceStart < spacePoints.get(i + 1).x - spacePoints.get(i).x) {
 					spaceStart = spacePoints.get(i).x;
-					spaceEnd = spacePoints.get(i+1).x;
+					spaceEnd = spacePoints.get(i + 1).x;
 				}
 			}
 
-			while (spaceEnd - spaceStart > maxBridgeWidth(width())+1){
-				if (Random.Int(2) == 0){
+			while (spaceEnd - spaceStart > maxBridgeWidth(width()) + 1) {
+				if (Random.Int(2) == 0) {
 					spaceStart++;
 				} else {
 					spaceEnd--;
 				}
 			}
 
-			spaceRect = new Rect(spaceStart+1, top+1, spaceEnd, bottom);
+			spaceRect = new Rect(spaceStart + 1, top + 1, spaceEnd, bottom);
 
-			int bridgeY = Random.NormalIntRange(spaceRect.top+1, spaceRect.bottom-2);
-			bridgeRect = new Rect(spaceRect.left, bridgeY, spaceRect.right, bridgeY+1);
+			int bridgeY = Random.NormalIntRange(spaceRect.top + 1, spaceRect.bottom - 2);
+			bridgeRect = new Rect(spaceRect.left, bridgeY, spaceRect.right, bridgeY + 1);
 
 		} else {
 
 			ArrayList<Point> spacePoints = new ArrayList<>();
 			for (Door door : connected.values()) {
-				if (door.x == left || door.x == right){
+				if (door.x == left || door.x == right) {
 					spacePoints.add(door);
 				}
 			}
 
 			//add fake doors for very top/bottom
-			spacePoints.add(new Point(0, top+1));
-			spacePoints.add(new Point(0, bottom-1));
+			spacePoints.add(new Point(0, top + 1));
+			spacePoints.add(new Point(0, bottom - 1));
 
 			Collections.sort(spacePoints, new Comparator<Point>() {
 				@Override
@@ -149,25 +149,25 @@ public abstract class StandardBridgeRoom extends StandardRoom {
 
 			int spaceStart = -1;
 			int spaceEnd = -1;
-			for (int i = 0; i < spacePoints.size()-1; i++){
-				if (spaceEnd - spaceStart < spacePoints.get(i+1).y - spacePoints.get(i).y){
+			for (int i = 0; i < spacePoints.size() - 1; i++) {
+				if (spaceEnd - spaceStart < spacePoints.get(i + 1).y - spacePoints.get(i).y) {
 					spaceStart = spacePoints.get(i).y;
-					spaceEnd = spacePoints.get(i+1).y;
+					spaceEnd = spacePoints.get(i + 1).y;
 				}
 			}
 
-			while (spaceEnd - spaceStart > maxBridgeWidth(height())+1){
-				if (Random.Int(2) == 0){
+			while (spaceEnd - spaceStart > maxBridgeWidth(height()) + 1) {
+				if (Random.Int(2) == 0) {
 					spaceStart++;
 				} else {
 					spaceEnd--;
 				}
 			}
 
-			spaceRect = new Rect(left+1, spaceStart+1, right, spaceEnd);
+			spaceRect = new Rect(left + 1, spaceStart + 1, right, spaceEnd);
 
-			int bridgeX = Random.NormalIntRange(spaceRect.left+1, spaceRect.right-2);
-			bridgeRect = new Rect(bridgeX, spaceRect.top, bridgeX+1, spaceRect.bottom);
+			int bridgeX = Random.NormalIntRange(spaceRect.left + 1, spaceRect.right - 2);
+			bridgeRect = new Rect(bridgeX, spaceRect.top, bridgeX + 1, spaceRect.bottom);
 
 		}
 
@@ -176,12 +176,12 @@ public abstract class StandardBridgeRoom extends StandardRoom {
 
 	}
 
-	protected abstract int maxBridgeWidth( int roomDimension );
+	protected abstract int maxBridgeWidth(int roomDimension);
 
 	protected abstract int spaceTile();
 
 	//defaults to special terrain
-	protected int bridgeTile(){
+	protected int bridgeTile() {
 		return Terrain.EMPTY_SP;
 	}
 

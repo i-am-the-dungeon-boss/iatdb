@@ -35,15 +35,15 @@ import com.watabou.utils.Random;
 
 public class Wayward extends Weapon.Enchantment {
 
-	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );
+	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing(0x000000);
 
 	@Override
-	public int proc( Weapon weapon, Char attacker, Char defender, int damage ) {
-		float procChance = 1/4f * procChanceMultiplier(attacker);
+	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
+		float procChance = 1 / 4f * procChanceMultiplier(attacker);
 
-		if (attacker.buff(WaywardBuff.class) != null){
+		if (attacker.buff(WaywardBuff.class) != null) {
 			Buff.detach(attacker, WaywardBuff.class);
-		} else if (Random.Float() < procChance){
+		} else if (Random.Float() < procChance) {
 			Buff.prolong(attacker, WaywardBuff.class, WaywardBuff.DURATION);
 		}
 
@@ -68,7 +68,7 @@ public class Wayward extends Weapon.Enchantment {
 			announced = true;
 		}
 
-		public static final float DURATION	= 10f;
+		public static final float DURATION = 10f;
 
 		@Override
 		public int icon() {

@@ -70,7 +70,7 @@ public class Surprise extends Image {
 			float p = time / TIME_TO_FADE;
 			alpha((float) Math.sqrt(p));
 			scale.y = 1f + p;
-			scale.x = 1f + p/4f;
+			scale.x = 1f + p / 4f;
 		}
 	}
 

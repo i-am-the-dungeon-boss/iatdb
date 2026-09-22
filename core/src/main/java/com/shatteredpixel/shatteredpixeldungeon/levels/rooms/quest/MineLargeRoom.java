@@ -47,7 +47,7 @@ public class MineLargeRoom extends CaveRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class MineLargeRoom extends CaveRoom {
 	public void paint(Level level) {
 		super.paint(level);
 
-		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){
+		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL) {
 			Painter.fillEllipse(level, this, 3, Terrain.MINE_CRYSTAL);
 			Painter.fillEllipse(level, this, 4, Terrain.EMPTY);
 
@@ -85,16 +85,16 @@ public class MineLargeRoom extends CaveRoom {
 			findInternalCells(level, level.pointToCell(p), internalcells);
 
 			//we want to ensure that every internal cell has no way out, even diagonally
-			for (int i : internalcells){
-				for (int j : PathFinder.CIRCLE8){
-					if (!internalcells.contains(i+j) && level.map[i+j] != Terrain.MINE_CRYSTAL){
+			for (int i : internalcells) {
+				for (int j : PathFinder.CIRCLE8) {
+					if (!internalcells.contains(i + j) && level.map[i + j] != Terrain.MINE_CRYSTAL) {
 						level.map[i] = Terrain.MINE_CRYSTAL;
 						break;
 					}
 				}
 			}
 
-			for (int i = 0; i < width()*height()/4; i ++){
+			for (int i = 0; i < width() * height() / 4; i++) {
 				Point r = random(1);
 				if (level.map[level.pointToCell(r)] != Terrain.WALL) {
 					Painter.set(level, r, Terrain.MINE_CRYSTAL);
@@ -106,13 +106,13 @@ public class MineLargeRoom extends CaveRoom {
 			level.mobs.add(m);
 			Painter.set(level, p, Terrain.EMPTY);
 
-		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL){
+		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL) {
 			Painter.fillEllipse(level, this, 3, Terrain.EMPTY);
 
 			//connections to non-secret rooms have a 9/10 chance to become empty, otherwise wall
-			for (Room n : connected.keySet()){
-				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR){
-					if (Random.Int(10) == 0){
+			for (Room n : connected.keySet()) {
+				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR) {
+					if (Random.Int(10) == 0) {
 						connected.get(n).set(Door.Type.EMPTY);
 					} else {
 						connected.get(n).set(Door.Type.WALL);
@@ -122,8 +122,8 @@ public class MineLargeRoom extends CaveRoom {
 			}
 
 			ArrayList<Door> doors = new ArrayList<>();
-			for (Door d : connected.values()){
-				if (d.type == Door.Type.WALL){
+			for (Door d : connected.values()) {
+				if (d.type == Door.Type.WALL) {
 					doors.add(d);
 				}
 			}
@@ -136,7 +136,7 @@ public class MineLargeRoom extends CaveRoom {
 
 			int guardPos;
 			do {
-				guardPos = sapperPos+PathFinder.NEIGHBOURS8[Random.Int(8)];
+				guardPos = sapperPos + PathFinder.NEIGHBOURS8[Random.Int(8)];
 			} while (level.map[guardPos] != Terrain.EMPTY);
 			GnollGuard g = new GnollGuard();
 			g.pos = guardPos;
@@ -144,9 +144,9 @@ public class MineLargeRoom extends CaveRoom {
 			s.linkPartner(g);
 
 			int barricades = Random.Int(2) == 0 ? 2 : 1;
-			for (int i = 0; i < barricades; i ++){
-				int barricadePos = sapperPos+PathFinder.NEIGHBOURS8[Random.Int(8)];
-				if (level.map[barricadePos] == Terrain.EMPTY && barricadePos != guardPos){
+			for (int i = 0; i < barricades; i++) {
+				int barricadePos = sapperPos + PathFinder.NEIGHBOURS8[Random.Int(8)];
+				if (level.map[barricadePos] == Terrain.EMPTY && barricadePos != guardPos) {
 					Painter.set(level, barricadePos, Terrain.BARRICADE);
 				} else {
 					i--;
@@ -154,7 +154,7 @@ public class MineLargeRoom extends CaveRoom {
 			}
 
 			int traps = square() > 150 ? 3 : 2;
-			for (int i = 0; i < traps; i ++){
+			for (int i = 0; i < traps; i++) {
 				Point r;
 				do {
 					r = random(2);
@@ -165,29 +165,29 @@ public class MineLargeRoom extends CaveRoom {
 				level.setTrap(new GnollRockfallTrap().reveal(), level.pointToCell(r));
 			}
 
-			for (Point p : getPoints()){
+			for (Point p : getPoints()) {
 				int cell = level.pointToCell(p);
 				if (level.map[cell] == Terrain.EMPTY
 						&& cell != sapperPos
-						&& cell != guardPos){
+						&& cell != guardPos) {
 					float dist = 1000;
-					for (Door d : doors){
+					for (Door d : doors) {
 						dist = Math.min(dist, Point.distance(p, d));
 					}
-					dist = GameMath.gate(1f, dist-0.5f, 4f);
+					dist = GameMath.gate(1f, dist - 0.5f, 4f);
 					float val = Random.Float((float) Math.pow(dist, 2));
 					if (val <= 0.75f || dist <= 1) {
 						Painter.set(level, cell, Terrain.MINE_BOULDER);
-					} else if (val <= 5f && dist <= 3){
+					} else if (val <= 5f && dist <= 3) {
 						Painter.set(level, cell, Terrain.EMPTY_DECO);
 					}
 				}
 			}
-		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI){
+		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI) {
 
-			for (Point p : getPoints()){
+			for (Point p : getPoints()) {
 				int cell = level.pointToCell(p);
-				if (level.map[cell] == Terrain.EMPTY){
+				if (level.map[cell] == Terrain.EMPTY) {
 					level.map[cell] = Terrain.HIGH_GRASS;
 				}
 			}
@@ -217,11 +217,11 @@ public class MineLargeRoom extends CaveRoom {
 
 	}
 
-	private void findInternalCells(Level level, int cell, ArrayList<Integer> internalCells){
-		for (int i : PathFinder.NEIGHBOURS4){
-			if (!internalCells.contains(cell+i) && level.map[cell+i] != Terrain.MINE_CRYSTAL){
-				internalCells.add(cell+i);
-				findInternalCells(level, cell+i, internalCells);
+	private void findInternalCells(Level level, int cell, ArrayList<Integer> internalCells) {
+		for (int i : PathFinder.NEIGHBOURS4) {
+			if (!internalCells.contains(cell + i) && level.map[cell + i] != Terrain.MINE_CRYSTAL) {
+				internalCells.add(cell + i);
+				findInternalCells(level, cell + i, internalCells);
 			}
 		}
 	}

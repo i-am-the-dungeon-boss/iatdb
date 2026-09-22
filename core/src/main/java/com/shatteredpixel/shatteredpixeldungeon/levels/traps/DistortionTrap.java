@@ -53,7 +53,7 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class DistortionTrap extends Trap{
+public class DistortionTrap extends Trap {
 
 	private static final float DELAY = 2f;
 
@@ -66,9 +66,9 @@ public class DistortionTrap extends Trap{
 	public void activate() {
 
 		int nMobs = 3;
-		if (Random.Int( 2 ) == 0) {
+		if (Random.Int(2) == 0) {
 			nMobs++;
-			if (Random.Int( 2 ) == 0) {
+			if (Random.Int(2) == 0) {
 				nMobs++;
 			}
 		}
@@ -77,17 +77,17 @@ public class DistortionTrap extends Trap{
 
 		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 			int p = pos + PathFinder.NEIGHBOURS8[i];
-			if (Actor.findChar( p ) == null && (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {
-				candidates.add( p );
+			if (Actor.findChar(p) == null && (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {
+				candidates.add(p);
 			}
 		}
 
 		ArrayList<Integer> respawnPoints = new ArrayList<>();
 
 		while (nMobs > 0 && candidates.size() > 0) {
-			int index = Random.index( candidates );
+			int index = Random.index(candidates);
 
-			respawnPoints.add( candidates.remove( index ) );
+			respawnPoints.add(candidates.remove(index));
 			nMobs--;
 		}
 
@@ -97,22 +97,25 @@ public class DistortionTrap extends Trap{
 		for (Integer point : respawnPoints) {
 			summoned++;
 			Mob mob;
-			switch (summoned){
+			switch (summoned) {
 				case 1:
-					if (Dungeon.depth != 5 && Random.Int(100) == 0){
+					if (Dungeon.depth != 5 && Random.Int(100) == 0) {
 						mob = new RatKing();
 						break;
 					}
-				case 3: case 5 : default:
+				case 3:
+				case 5:
+				default:
 					int floor;
 					do {
 						floor = Random.Int(25);
-					} while( Dungeon.bossLevel(floor));
+					} while (Dungeon.bossLevel(floor));
 					mob = Reflection.newInstance(MobSpawner.getMobRotation(floor).get(0));
 					break;
 				case 2:
-					switch (Random.Int(4)){
-						case 0: default:
+					switch (Random.Int(4)) {
+						case 0:
+						default:
 							Wraith.spawnAt(point);
 							continue; //wraiths spawn themselves, no need to do more
 						case 1:
@@ -121,7 +124,7 @@ public class DistortionTrap extends Trap{
 							break;
 						case 2:
 							mob = Mimic.spawnAt(point, false);
-							((Mimic)mob).stopHiding();
+							((Mimic) mob).stopHiding();
 							mob.alignment = Char.Alignment.ENEMY;
 							break;
 						case 3:
@@ -134,11 +137,11 @@ public class DistortionTrap extends Trap{
 					break;
 			}
 
-			if (Char.hasProp(mob, Char.Property.LARGE) && !Dungeon.level.openSpace[point]){
+			if (Char.hasProp(mob, Char.Property.LARGE) && !Dungeon.level.openSpace[point]) {
 				continue;
 			}
 
-			mob.maxLvl = Hero.MAX_LEVEL-1;
+			mob.maxLvl = Hero.MAX_LEVEL - 1;
 			if (mob.state != mob.PASSIVE) {
 				mob.state = mob.WANDERING;
 			}
@@ -149,10 +152,11 @@ public class DistortionTrap extends Trap{
 
 		//important to process the visuals and pressing of cells last, so spawned mobs have a chance to occupy cells first
 		Trap t;
-		for (Mob mob : mobs){
+		for (Mob mob : mobs) {
 			//manually trigger traps first to avoid sfx spam
-			if ((t = Dungeon.level.traps.get(mob.pos)) != null && t.active){
-				if (t.disarmedByActivation) t.disarm();
+			if ((t = Dungeon.level.traps.get(mob.pos)) != null && t.active) {
+				if (t.disarmedByActivation)
+					t.disarm();
 				t.reveal();
 				Bestiary.setSeen(t.getClass());
 				Bestiary.countEncounter(t.getClass());

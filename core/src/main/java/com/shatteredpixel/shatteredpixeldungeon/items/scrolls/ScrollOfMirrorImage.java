@@ -45,49 +45,49 @@ public class ScrollOfMirrorImage extends Scroll {
 		icon = ItemSpriteSheet.Icons.SCROLL_MIRRORIMG;
 	}
 
-	private static final int NIMAGES	= 2;
+	private static final int NIMAGES = 2;
 
 	@Override
 	public void doRead() {
 		detach(curUser.belongings.backpack);
-		if ( spawnImages(curUser, NIMAGES) > 0){
+		if (spawnImages(curUser, NIMAGES) > 0) {
 			GLog.i(Messages.get(this, "copies"));
 		} else {
 			GLog.i(Messages.get(this, "no_copies"));
 		}
 		identify();
 
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 
 		readAnimation();
 	}
 
-	public static int spawnImages( Hero hero, int nImages ){
-		return spawnImages( hero, hero.pos, nImages);
+	public static int spawnImages(Hero hero, int nImages) {
+		return spawnImages(hero, hero.pos, nImages);
 	}
 
 	//returns the number of images spawned
-	public static int spawnImages( Hero hero, int pos, int nImages ){
+	public static int spawnImages(Hero hero, int pos, int nImages) {
 
 		ArrayList<Integer> respawnPoints = new ArrayList<>();
 
 		for (int i = 0; i < PathFinder.NEIGHBOURS9.length; i++) {
 			int p = pos + PathFinder.NEIGHBOURS9[i];
-			if (Actor.findChar( p ) == null && Dungeon.level.passable[p]) {
-				respawnPoints.add( p );
+			if (Actor.findChar(p) == null && Dungeon.level.passable[p]) {
+				respawnPoints.add(p);
 			}
 		}
 
 		int spawned = 0;
 		while (nImages > 0 && respawnPoints.size() > 0) {
-			int index = Random.index( respawnPoints );
+			int index = Random.index(respawnPoints);
 
 			MirrorImage mob = new MirrorImage();
-			mob.duplicate( hero );
-			GameScene.add( mob );
-			ScrollOfTeleportation.appear( mob, respawnPoints.get( index ) );
+			mob.duplicate(hero);
+			GameScene.add(mob);
+			ScrollOfTeleportation.appear(mob, respawnPoints.get(index));
 
-			respawnPoints.remove( index );
+			respawnPoints.remove(index);
 			nImages--;
 			spawned++;
 		}

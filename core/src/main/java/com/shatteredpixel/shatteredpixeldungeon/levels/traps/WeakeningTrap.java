@@ -33,7 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 
-public class WeakeningTrap extends Trap{
+public class WeakeningTrap extends Trap {
 
 	{
 		color = GREEN;
@@ -42,18 +42,18 @@ public class WeakeningTrap extends Trap{
 
 	@Override
 	public void activate() {
-		if (Dungeon.level.heroFOV[ pos ]){
+		if (Dungeon.level.heroFOV[pos]) {
 			CellEmitter.get(pos).burst(ShadowParticle.UP, 5);
 		}
 
-		Char ch = Actor.findChar( pos );
-		if (ch != null){
+		Char ch = Actor.findChar(pos);
+		if (ch != null) {
 			if (ch.properties().contains(Char.Property.BOSS)
-				|| ch.properties().contains(Char.Property.MINIBOSS)){
-				Buff.prolong( ch, Weakness.class, Weakness.DURATION/2f );
+					|| ch.properties().contains(Char.Property.MINIBOSS)) {
+				Buff.prolong(ch, Weakness.class, Weakness.DURATION / 2f);
 			}
-			Buff.prolong( ch, Weakness.class, Weakness.DURATION*3f );
-			if (ch instanceof Mob){
+			Buff.prolong(ch, Weakness.class, Weakness.DURATION * 3f);
+			if (ch instanceof Mob) {
 				Buff.prolong(ch, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 			}
 		}

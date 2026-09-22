@@ -34,9 +34,9 @@ public class ImpShopkeeper extends Shopkeeper {
 	{
 		spriteClass = ImpSprite.class;
 	}
-	
+
 	private boolean seenBefore = false;
-	
+
 	@Override
 	protected boolean act() {
 

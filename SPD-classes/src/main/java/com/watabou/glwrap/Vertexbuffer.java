@@ -38,7 +38,7 @@ public class Vertexbuffer {
 
 	private static final ArrayList<Vertexbuffer> buffers = new ArrayList<>();
 
-	public Vertexbuffer( FloatBuffer vertices ) {
+	public Vertexbuffer(FloatBuffer vertices) {
 		synchronized (buffers) {
 			id = Gdx.gl.glGenBuffer();
 
@@ -51,17 +51,17 @@ public class Vertexbuffer {
 	}
 
 	//For flagging the buffer for a full update without changing anything
-	public void updateVertices(){
+	public void updateVertices() {
 		updateVertices(vertices);
 	}
 
 	//For flagging an update with a full set of new data
-	public void updateVertices( FloatBuffer vertices ){
+	public void updateVertices(FloatBuffer vertices) {
 		updateVertices(vertices, 0, vertices.limit());
 	}
 
 	//For flagging an update with a subset of data changed
-	public void updateVertices( FloatBuffer vertices, int start, int end){
+	public void updateVertices(FloatBuffer vertices, int start, int end) {
 		this.vertices = vertices;
 
 		if (updateStart == -1)
@@ -75,38 +75,39 @@ public class Vertexbuffer {
 			updateEnd = Math.max(end, updateEnd);
 	}
 
-	public void updateGLData(){
-		if (updateStart == -1) return;
+	public void updateGLData() {
+		if (updateStart == -1)
+			return;
 
-		((Buffer)vertices).position(updateStart);
+		((Buffer) vertices).position(updateStart);
 		bind();
 
-		if (updateStart == 0 && updateEnd == vertices.limit()){
-			Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, vertices.limit()*4, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
+		if (updateStart == 0 && updateEnd == vertices.limit()) {
+			Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, vertices.limit() * 4, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
 		} else {
-			Gdx.gl.glBufferSubData(Gdx.gl.GL_ARRAY_BUFFER, updateStart*4, (updateEnd - updateStart)*4, vertices);
+			Gdx.gl.glBufferSubData(Gdx.gl.GL_ARRAY_BUFFER, updateStart * 4, (updateEnd - updateStart) * 4, vertices);
 		}
 
 		release();
 		updateStart = updateEnd = -1;
 	}
 
-	public void bind(){
+	public void bind() {
 		Gdx.gl.glBindBuffer(Gdx.gl.GL_ARRAY_BUFFER, id);
 	}
 
-	public void release(){
+	public void release() {
 		Gdx.gl.glBindBuffer(Gdx.gl.GL_ARRAY_BUFFER, 0);
 	}
 
-	public void delete(){
+	public void delete() {
 		synchronized (buffers) {
-			Gdx.gl.glDeleteBuffer( id );
+			Gdx.gl.glDeleteBuffer(id);
 			buffers.remove(this);
 		}
 	}
 
-	public static void clear(){
+	public static void clear() {
 		synchronized (buffers) {
 			for (Vertexbuffer buf : buffers.toArray(new Vertexbuffer[0])) {
 				buf.delete();
@@ -114,7 +115,7 @@ public class Vertexbuffer {
 		}
 	}
 
-	public static void reload(){
+	public static void reload() {
 		synchronized (buffers) {
 			for (Vertexbuffer buf : buffers) {
 				buf.updateVertices();

@@ -52,8 +52,8 @@ import com.watabou.utils.SparseArray;
 
 public class JournalScene extends PixelScene {
 
-	public static final int WIDTH_P     = 126;
-	public static final int WIDTH_L     = 216;
+	public static final int WIDTH_P = 126;
+	public static final int WIDTH_L = 216;
 
 	private static int lastIDX = 0;
 
@@ -74,8 +74,8 @@ public class JournalScene extends PixelScene {
 		new TerrainFeaturesTilemap(new SparseArray<>(), new SparseArray<>());
 
 		Music.INSTANCE.playTracks(
-				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
-				new float[]{1, 1},
+				new String[] { Assets.Music.THEME_1, Assets.Music.THEME_2 },
+				new float[] { 1, 1 },
 				false);
 
 		uiCamera.visible = false;
@@ -93,12 +93,11 @@ public class JournalScene extends PixelScene {
 
 		float top = 20;
 
-		IconTitle title = new IconTitle( Icons.JOURNAL.get(), Messages.get(this, "title") );
+		IconTitle title = new IconTitle(Icons.JOURNAL.get(), Messages.get(this, "title"));
 		title.setSize(200, 0);
 		title.setPos(
 				insets.left + (w - title.reqWidth()) / 2f,
-				insets.top + (top - title.height()) / 2f
-		);
+				insets.top + (top - title.height()) / 2f);
 		align(title);
 		add(title);
 
@@ -112,8 +111,9 @@ public class JournalScene extends PixelScene {
 		panel.y = insets.top + top;
 		add(panel);
 
-		switch (lastIDX){
-			case 0: default:
+		switch (lastIDX) {
+			case 0:
+			default:
 				WndJournal.BadgesTab badges = new WndJournal.BadgesTab();
 				add(badges);
 				badges.setRect(panel.x + panel.marginLeft(),
@@ -149,7 +149,7 @@ public class JournalScene extends PixelScene {
 				break;
 		}
 
-		StyledButton btnBadges =  new StyledButton(Chrome.Type.GREY_BUTTON_TR, ""){
+		StyledButton btnBadges = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
 			protected void onClick() {
 				if (lastIDX != 0) {
@@ -165,12 +165,13 @@ public class JournalScene extends PixelScene {
 			}
 		};
 		btnBadges.icon(Icons.BADGES.get());
-		btnBadges.setRect(panel.x, panel.y + ph - 3, pw/4f + 1.5f, lastIDX == 0 ? 25 : 20);
+		btnBadges.setRect(panel.x, panel.y + ph - 3, pw / 4f + 1.5f, lastIDX == 0 ? 25 : 20);
 		align(btnBadges);
-		if (lastIDX != 0) btnBadges.icon().brightness(0.6f);
+		if (lastIDX != 0)
+			btnBadges.icon().brightness(0.6f);
 		addToBack(btnBadges);
 
-		StyledButton btnCatalog =  new StyledButton(Chrome.Type.GREY_BUTTON_TR, ""){
+		StyledButton btnCatalog = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
 			protected void onClick() {
 				if (lastIDX != 1) {
@@ -179,18 +180,20 @@ public class JournalScene extends PixelScene {
 				ShatteredPixelDungeon.seamlessResetScene();
 				super.onClick();
 			}
+
 			@Override
 			protected String hoverText() {
 				return Messages.get(WndJournal.CatalogTab.class, "title");
 			}
 		};
 		btnCatalog.icon(Icons.CATALOG.get());
-		btnCatalog.setRect(btnBadges.right()-2, btnBadges.top(), pw/4f + 1.5f, lastIDX == 1 ? 25 : 20);
+		btnCatalog.setRect(btnBadges.right() - 2, btnBadges.top(), pw / 4f + 1.5f, lastIDX == 1 ? 25 : 20);
 		align(btnCatalog);
-		if (lastIDX != 1) btnCatalog.icon().brightness(0.6f);
+		if (lastIDX != 1)
+			btnCatalog.icon().brightness(0.6f);
 		addToBack(btnCatalog);
 
-		StyledButton btnGuide =  new StyledButton(Chrome.Type.GREY_BUTTON_TR, ""){
+		StyledButton btnGuide = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
 			protected void onClick() {
 				if (lastIDX != 2) {
@@ -199,18 +202,20 @@ public class JournalScene extends PixelScene {
 				ShatteredPixelDungeon.seamlessResetScene();
 				super.onClick();
 			}
+
 			@Override
 			protected String hoverText() {
 				return Messages.get(WndJournal.GuideTab.class, "title");
 			}
 		};
 		btnGuide.icon(new ItemSprite(ItemSpriteSheet.MASTERY));
-		btnGuide.setRect(btnCatalog.right()-2, btnBadges.top(), pw/4f + 1.5f, lastIDX == 2 ? 25 : 20);
+		btnGuide.setRect(btnCatalog.right() - 2, btnBadges.top(), pw / 4f + 1.5f, lastIDX == 2 ? 25 : 20);
 		align(btnGuide);
-		if (lastIDX != 2) btnGuide.icon().brightness(0.6f);
+		if (lastIDX != 2)
+			btnGuide.icon().brightness(0.6f);
 		addToBack(btnGuide);
 
-		StyledButton btnAlchemy =  new StyledButton(Chrome.Type.GREY_BUTTON_TR, ""){
+		StyledButton btnAlchemy = new StyledButton(Chrome.Type.GREY_BUTTON_TR, "") {
 			@Override
 			protected void onClick() {
 				if (lastIDX != 3) {
@@ -219,22 +224,24 @@ public class JournalScene extends PixelScene {
 				ShatteredPixelDungeon.seamlessResetScene();
 				super.onClick();
 			}
+
 			@Override
 			protected String hoverText() {
 				return Messages.get(WndJournal.AlchemyTab.class, "title");
 			}
 		};
 		btnAlchemy.icon(Icons.ALCHEMY.get());
-		btnAlchemy.setRect(btnGuide.right()-2, btnBadges.top(), pw/4f + 1.5f, lastIDX == 3 ? 25 : 20);
+		btnAlchemy.setRect(btnGuide.right() - 2, btnBadges.top(), pw / 4f + 1.5f, lastIDX == 3 ? 25 : 20);
 		align(btnAlchemy);
-		if (lastIDX != 3) btnAlchemy.icon().brightness(0.6f);
+		if (lastIDX != 3)
+			btnAlchemy.icon().brightness(0.6f);
 		addToBack(btnAlchemy);
 
 		addToBack(BG);
 
 		ExitButton btnExit = new ExitButton();
-		btnExit.setPos( insets.left + w - btnExit.width(), insets.top );
-		add( btnExit );
+		btnExit.setPos(insets.left + w - btnExit.width(), insets.top);
+		add(btnExit);
 
 		fadeIn();
 	}
@@ -249,7 +256,7 @@ public class JournalScene extends PixelScene {
 
 	@Override
 	protected void onBackPressed() {
-		ShatteredPixelDungeon.switchNoFade( TitleScene.class );
+		ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 	}
 
 }

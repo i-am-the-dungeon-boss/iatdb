@@ -46,40 +46,40 @@ public abstract class CrystalWispSprite extends MobSprite {
 
 		int c = texOffset();
 
-		texture( Assets.Sprites.CRYSTAL_WISP );
+		texture(Assets.Sprites.CRYSTAL_WISP);
 
-		TextureFilm frames = new TextureFilm( texture, 12, 14 );
+		TextureFilm frames = new TextureFilm(texture, 12, 14);
 
-		idle = new Animation( 1, true );
-		idle.frames( frames, c+0 );
+		idle = new Animation(1, true);
+		idle.frames(frames, c + 0);
 
-		run = new Animation( 12, true );
-		run.frames( frames, c+0, c+0, c+0, c+1 );
+		run = new Animation(12, true);
+		run.frames(frames, c + 0, c + 0, c + 0, c + 1);
 
-		attack = new Animation( 16, false );
-		attack.frames( frames, c+2, c+3, c+4, c+5 );
+		attack = new Animation(16, false);
+		attack.frames(frames, c + 2, c + 3, c + 4, c + 5);
 
 		zap = attack.clone();
 
-		die = new Animation( 15, false );
-		die.frames( frames, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+11 );
+		die = new Animation(15, false);
+		die.frames(frames, c + 6, c + 7, c + 8, c + 9, c + 10, c + 11, c + 12, c + 11);
 
-		play( idle );
+		play(idle);
 	}
 
-	public void zap( int cell ) {
+	public void zap(int cell) {
 
-		super.zap( cell );
+		super.zap(cell);
 
 		parent.add(new AlphaTweener(light, 1f, 0.2f) {
 			@Override
 			public void onComplete() {
 				light.alpha(0.3f);
-				((CrystalWisp)ch).onZapComplete();
+				((CrystalWisp) ch).onZapComplete();
 				Beam ray = new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell));
-				Sample.INSTANCE.play( Assets.Sounds.RAY );
+				Sample.INSTANCE.play(Assets.Sounds.RAY);
 				ray.hardlight(blood() & 0x00FFFFFF);
-				parent.add( ray );
+				parent.add(ray);
 			}
 		});
 
@@ -99,7 +99,7 @@ public abstract class CrystalWispSprite extends MobSprite {
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
-		light = new TorchHalo( this );
+		light = new TorchHalo(this);
 		light.hardlight(blood() & 0x00FFFFFF);
 		light.alpha(0.3f);
 		light.radius(10);
@@ -110,7 +110,7 @@ public abstract class CrystalWispSprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (light != null){
+		if (light != null) {
 			light.putOut();
 		}
 	}
@@ -118,17 +118,17 @@ public abstract class CrystalWispSprite extends MobSprite {
 	@Override
 	public void kill() {
 		super.kill();
-		if (light != null){
+		if (light != null) {
 			light.killAndErase();
 		}
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 		if (anim == zap) {
 			idle();
 		}
-		super.onComplete( anim );
+		super.onComplete(anim);
 	}
 
 	private float baseY = Float.NaN;
@@ -155,13 +155,14 @@ public abstract class CrystalWispSprite extends MobSprite {
 	public void update() {
 		super.update();
 
-		if (!paused && curAnim != die){
-			if (Float.isNaN(baseY)) baseY = y;
-			y = baseY + Math.abs((float)Math.sin(Game.timeTotal));
-			shadowOffset = 0.25f - 0.8f*Math.abs((float)Math.sin(Game.timeTotal));
+		if (!paused && curAnim != die) {
+			if (Float.isNaN(baseY))
+				baseY = y;
+			y = baseY + Math.abs((float) Math.sin(Game.timeTotal));
+			shadowOffset = 0.25f - 0.8f * Math.abs((float) Math.sin(Game.timeTotal));
 		}
 
-		if (light != null){
+		if (light != null) {
 			light.visible = visible;
 			light.point(center());
 
@@ -180,6 +181,7 @@ public abstract class CrystalWispSprite extends MobSprite {
 		protected int texOffset() {
 			return 0;
 		}
+
 		@Override
 		public int blood() {
 			return 0xFF66B3FF;
@@ -191,6 +193,7 @@ public abstract class CrystalWispSprite extends MobSprite {
 		protected int texOffset() {
 			return 13;
 		}
+
 		@Override
 		public int blood() {
 			return 0xFF2EE62E;
@@ -202,6 +205,7 @@ public abstract class CrystalWispSprite extends MobSprite {
 		protected int texOffset() {
 			return 26;
 		}
+
 		@Override
 		public int blood() {
 			return 0xFFFF7F00;

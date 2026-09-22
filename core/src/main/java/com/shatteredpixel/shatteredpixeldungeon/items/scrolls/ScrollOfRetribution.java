@@ -48,27 +48,27 @@ public class ScrollOfRetribution extends Scroll {
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		GameScene.flash( 0x80FFFFFF );
+		GameScene.flash(0x80FFFFFF);
 
 		//scales from 0x to 1x power, maxing at ~10% HP
-		float hpPercent = (curUser.HT - curUser.HP)/(float)(curUser.HT);
-		float power = Math.min( 4f, 4.45f*hpPercent);
+		float hpPercent = (curUser.HT - curUser.HP) / (float) (curUser.HT);
+		float power = Math.min(4f, 4.45f * hpPercent);
 
-		Sample.INSTANCE.play( Assets.Sounds.BLAST );
+		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		GLog.i(Messages.get(this, "blast"));
 
 		ArrayList<Mob> targets = new ArrayList<>();
 
 		//calculate targets first, in case damaging/blinding a target affects hero vision
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (Dungeon.level.heroFOV[mob.pos]) {
 				targets.add(mob);
 			}
 		}
 
-		for (Mob mob : targets){
+		for (Mob mob : targets) {
 			//deals 10%HT, plus 0-90%HP based on scaling
-			mob.damage(Math.round(mob.HT/10f + (mob.HP * power * 0.225f)), this);
+			mob.damage(Math.round(mob.HT / 10f + (mob.HP * power * 0.225f)), this);
 			if (mob.isAlive()) {
 				Buff.prolong(mob, Blindness.class, Blindness.DURATION);
 			}

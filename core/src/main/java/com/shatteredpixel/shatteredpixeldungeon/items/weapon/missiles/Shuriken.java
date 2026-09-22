@@ -37,15 +37,15 @@ public class Shuriken extends MissileWeapon {
 		image = ItemSpriteSheet.SHURIKEN;
 		hitSound = Assets.Sounds.HIT_STAB;
 		hitSoundPitch = 1.2f;
-		
+
 		tier = 2;
 		baseUses = 5;
 	}
-	
+
 	@Override
 	public int max(int lvl) {
-		return  4 * tier +                      //8 base, down from 10
-				(tier == 1 ? 2*lvl : tier*lvl); //scaling unchanged
+		return 4 * tier + //8 base, down from 10
+				(tier == 1 ? 2 * lvl : tier * lvl); //scaling unchanged
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class Shuriken extends MissileWeapon {
 		super.onThrow(cell);
 		if (curUser.buff(ShurikenInstantTracker.class) == null) {
 			//1 less turn as the attack will be instant
-			FlavourBuff.affect(curUser, ShurikenInstantTracker.class, ShurikenInstantTracker.DURATION-1);
+			FlavourBuff.affect(curUser, ShurikenInstantTracker.class, ShurikenInstantTracker.DURATION - 1);
 		}
 	}
 

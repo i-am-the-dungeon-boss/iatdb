@@ -49,11 +49,12 @@ public class LayOnHands extends TargetedClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 10 + 5*Dungeon.hero.pointsInTalent(Talent.LAY_ON_HANDS)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", 10 + 5 * Dungeon.hero.pointsInTalent(Talent.LAY_ON_HANDS)) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
-	public int targetingFlags(){
+	public int targetingFlags() {
 		return -1; //auto-targeting behaviour is often wrong, so we don't use it
 	}
 
@@ -68,13 +69,13 @@ public class LayOnHands extends TargetedClericSpell {
 			return;
 		}
 
-		if (Dungeon.level.distance(hero.pos, target) > 1){
+		if (Dungeon.level.distance(hero.pos, target) > 1) {
 			GLog.w(Messages.get(this, "invalid_target"));
 			return;
 		}
 
 		Char ch = Actor.findChar(target);
-		if (ch == null){
+		if (ch == null) {
 			GLog.w(Messages.get(this, "no_target"));
 			return;
 		}
@@ -83,7 +84,7 @@ public class LayOnHands extends TargetedClericSpell {
 
 		affectChar(hero, ch);
 
-		if (ch == hero){
+		if (ch == hero) {
 			hero.sprite.operate(ch.pos);
 			hero.next();
 		} else {
@@ -92,8 +93,8 @@ public class LayOnHands extends TargetedClericSpell {
 		}
 
 		Char ally = PowerOfMany.getPoweredAlly();
-		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
-			if (ch == hero){
+		if (ally != null && ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null) {
+			if (ch == hero) {
 				affectChar(hero, ally); //if cast on hero, duplicate to ally
 			} else if (ally == ch) {
 				affectChar(hero, hero); //if cast on ally, duplicate to hero
@@ -104,22 +105,23 @@ public class LayOnHands extends TargetedClericSpell {
 
 	}
 
-	private void affectChar(Hero hero, Char ch){
-		int totalHeal = 10 + 5*hero.pointsInTalent(Talent.LAY_ON_HANDS);
+	private void affectChar(Hero hero, Char ch) {
+		int totalHeal = 10 + 5 * hero.pointsInTalent(Talent.LAY_ON_HANDS);
 		int totalBarrier = 0;
-		if (ch == hero){
+		if (ch == hero) {
 			Barrier barrier = Buff.affect(ch, Barrier.class);
 			totalBarrier = totalHeal;
-			totalBarrier = Math.min(3*totalHeal - barrier.shielding(), totalBarrier);
+			totalBarrier = Math.min(3 * totalHeal - barrier.shielding(), totalBarrier);
 			totalBarrier = Math.max(0, totalBarrier);
 			Buff.affect(ch, Barrier.class).incShield(totalBarrier);
-			ch.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(totalBarrier), FloatingText.SHIELDING );
+			ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalBarrier), FloatingText.SHIELDING);
 		} else {
-			if (ch.HT - ch.HP < totalHeal){
+			if (ch.HT - ch.HP < totalHeal) {
 				totalBarrier = totalHeal - (ch.HT - ch.HP);
 				if (ch.HP != ch.HT) {
 					ch.HP = ch.HT;
-					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalHeal - totalBarrier), FloatingText.HEALING);
+					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalHeal - totalBarrier),
+							FloatingText.HEALING);
 				}
 				if (totalBarrier > 0) {
 					Barrier barrier = Buff.affect(ch, Barrier.class);
@@ -127,12 +129,13 @@ public class LayOnHands extends TargetedClericSpell {
 					totalBarrier = Math.max(0, totalBarrier);
 					if (totalBarrier > 0) {
 						barrier.incShield(totalBarrier);
-						ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalBarrier), FloatingText.SHIELDING);
+						ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalBarrier),
+								FloatingText.SHIELDING);
 					}
 				}
 			} else {
 				ch.HP = ch.HP + totalHeal;
-				ch.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(totalHeal), FloatingText.HEALING );
+				ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalHeal), FloatingText.HEALING);
 			}
 		}
 	}

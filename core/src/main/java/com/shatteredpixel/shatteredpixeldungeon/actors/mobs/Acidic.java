@@ -36,24 +36,25 @@ public class Acidic extends Scorpio {
 
 	{
 		spriteClass = AcidicSprite.class;
-		
+
 		properties.add(Property.ACIDIC);
 
 		loot = PotionOfExperience.class;
 		lootChance = 1f;
 	}
+
 	@Override
 	public int attackProc(Char enemy, int damage) {
-		Buff.affect(enemy, Ooze.class).set( Ooze.DURATION );
+		Buff.affect(enemy, Ooze.class).set(Ooze.DURATION);
 		return super.attackProc(enemy, damage);
 	}
 
 	@Override
-	public int defenseProc( Char enemy, int damage ) {
-		if (Dungeon.level.adjacent(pos, enemy.pos)){
-			Buff.affect(enemy, Ooze.class).set( Ooze.DURATION );
+	public int defenseProc(Char enemy, int damage) {
+		if (Dungeon.level.adjacent(pos, enemy.pos)) {
+			Buff.affect(enemy, Ooze.class).set(Ooze.DURATION);
 		}
-		return super.defenseProc( enemy, damage );
+		return super.defenseProc(enemy, damage);
 	}
 
 	@Override

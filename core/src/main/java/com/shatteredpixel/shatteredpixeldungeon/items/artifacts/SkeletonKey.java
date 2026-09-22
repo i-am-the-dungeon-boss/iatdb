@@ -71,9 +71,9 @@ public class SkeletonKey extends Artifact {
 
 		levelCap = 10;
 
-		charge = 3+level()/2;
+		charge = 3 + level() / 2;
 		partialCharge = 0;
-		chargeCap = 3+level()/2;
+		chargeCap = 3 + level() / 2;
 
 		defaultAction = AC_INSERT;
 	}
@@ -95,17 +95,18 @@ public class SkeletonKey extends Artifact {
 	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 
-		if (hero.buff(MagicImmune.class) != null) return;
+		if (hero.buff(MagicImmune.class) != null)
+			return;
 
-		if (action.equals(AC_INSERT)){
+		if (action.equals(AC_INSERT)) {
 
 			curUser = hero;
 
-			if (!isEquipped( hero )) {
-				GLog.i( Messages.get(Artifact.class, "need_to_equip") );
+			if (!isEquipped(hero)) {
+				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
 
 			} else if (cursed) {
-				GLog.w( Messages.get(this, "cursed") );
+				GLog.w(Messages.get(this, "cursed"));
 
 			} else {
 				GameScene.selectCell(targeter);
@@ -115,14 +116,14 @@ public class SkeletonKey extends Artifact {
 	}
 
 	//levels when used, with bonus xp for opening locks that could be opened with keys
-	public void gainExp( int xpGain ){
-		if (level() == levelCap){
+	public void gainExp(int xpGain) {
+		if (level() == levelCap) {
 			return;
 		}
 
 		exp += xpGain;
-		if (exp > 4+level()){
-			exp -= 4+level();
+		if (exp > 4 + level()) {
+			exp -= 4 + level();
 			upgrade();
 			GLog.p(Messages.get(this, "levelup"));
 			Catalog.countUse(SkeletonKey.class);
@@ -130,30 +131,30 @@ public class SkeletonKey extends Artifact {
 
 	}
 
-	public CellSelector.Listener targeter = new CellSelector.Listener(){
+	public CellSelector.Listener targeter = new CellSelector.Listener() {
 
 		@Override
 		public void onSelect(Integer target) {
 
-			if (target != null && (Dungeon.level.visited[target] || Dungeon.level.mapped[target])){
+			if (target != null && (Dungeon.level.visited[target] || Dungeon.level.mapped[target])) {
 
-				if (target == curUser.pos){
+				if (target == curUser.pos) {
 					GLog.w(Messages.get(SkeletonKey.class, "invalid_target"));
 					return;
 				}
 
 				if (Dungeon.level.adjacent(target, curUser.pos)) {
-					if (Dungeon.level.map[target] == Terrain.LOCKED_EXIT){
+					if (Dungeon.level.map[target] == Terrain.LOCKED_EXIT) {
 						GLog.w(Messages.get(SkeletonKey.class, "wont_open"));
 						return;
 					}
-					if (Dungeon.level.map[target] == Terrain.LOCKED_DOOR){
-						if (Dungeon.level.locked){
+					if (Dungeon.level.map[target] == Terrain.LOCKED_DOOR) {
+						if (Dungeon.level.locked) {
 							GLog.w(Messages.get(SkeletonKey.class, "wont_open"));
 							return;
 						}
-						if (charge < 1){
-							GLog.i( Messages.get(SkeletonKey.class, "iron_charges") );
+						if (charge < 1) {
+							GLog.i(Messages.get(SkeletonKey.class, "iron_charges"));
 							return;
 						}
 						Sample.INSTANCE.play(Assets.Sounds.UNLOCK);
@@ -205,17 +206,18 @@ public class SkeletonKey extends Artifact {
 								gainExp(2 + 5);
 								Talent.onArtifactUsed(Dungeon.hero);
 								Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-								CellEmitter.get( target ).start( Speck.factory( Speck.DISCOVER ), 0.025f, 20 );
+								CellEmitter.get(target).start(Speck.factory(Speck.DISCOVER), 0.025f, 20);
 								curUser.spendAndNext(Actor.TICK);
 								curUser.sprite.idle();
 
 								//if there is a distant well landmark above, remove it, as we just opened the door
-								Notes.remove(Notes.Landmark.DISTANT_WELL, Dungeon.depth-1);
+								Notes.remove(Notes.Landmark.DISTANT_WELL, Dungeon.depth - 1);
 							}
 						});
 						curUser.busy();
 						return;
-					} else if (Dungeon.level.map[target] == Terrain.DOOR || Dungeon.level.map[target] == Terrain.OPEN_DOOR){
+					} else if (Dungeon.level.map[target] == Terrain.DOOR
+							|| Dungeon.level.map[target] == Terrain.OPEN_DOOR) {
 
 						if (charge < 2) {
 							GLog.i(Messages.get(SkeletonKey.class, "lock_charges"));
@@ -223,23 +225,26 @@ public class SkeletonKey extends Artifact {
 						}
 
 						//attempt to knock back char
-						if (Actor.findChar(target) != null){
+						if (Actor.findChar(target) != null) {
 
 							Char toMove = Actor.findChar(target);
 
 							int pushCell = -1;
 							//push to the closest open cell that's further than the door
-							for (int i : PathFinder.NEIGHBOURS8){
-								if (!Dungeon.level.solid[target+i]
-										&& Actor.findChar(target+i) == null
-										&& (Dungeon.level.openSpace[target+i] || !Char.hasProp(toMove, Char.Property.LARGE))
-										&& Dungeon.level.trueDistance(curUser.pos, target+i) > Dungeon.level.trueDistance(curUser.pos, target)
-										&& (pushCell == -1 || Dungeon.level.trueDistance(curUser.pos, pushCell) > Dungeon.level.trueDistance(curUser.pos, target + i))){
+							for (int i : PathFinder.NEIGHBOURS8) {
+								if (!Dungeon.level.solid[target + i]
+										&& Actor.findChar(target + i) == null
+										&& (Dungeon.level.openSpace[target + i]
+												|| !Char.hasProp(toMove, Char.Property.LARGE))
+										&& Dungeon.level.trueDistance(curUser.pos, target + i) > Dungeon.level
+												.trueDistance(curUser.pos, target)
+										&& (pushCell == -1 || Dungeon.level.trueDistance(curUser.pos,
+												pushCell) > Dungeon.level.trueDistance(curUser.pos, target + i))) {
 									pushCell = target + i;
 								}
 							}
 
-							if (pushCell != -1 && !Char.hasProp(toMove, Char.Property.IMMOVABLE)){
+							if (pushCell != -1 && !Char.hasProp(toMove, Char.Property.IMMOVABLE)) {
 								Ballistica push = new Ballistica(target, pushCell, Ballistica.PROJECTILE);
 								WandOfBlastWave.throwChar(toMove, push, 1, false, false, this);
 								artifactProc(toMove, visiblyUpgraded(), 2);
@@ -262,17 +267,18 @@ public class SkeletonKey extends Artifact {
 								curUser.sprite.idle();
 
 								//throw items inside the door in random directions
-								if (Dungeon.level.heaps.get(target) != null){
+								if (Dungeon.level.heaps.get(target) != null) {
 									ArrayList<Integer> candidates = new ArrayList<>();
-									for (int n : PathFinder.NEIGHBOURS8){
-										if (Dungeon.level.passable[target+n]){
-											candidates.add(target+n);
+									for (int n : PathFinder.NEIGHBOURS8) {
+										if (Dungeon.level.passable[target + n]) {
+											candidates.add(target + n);
 										}
 									}
-									if (!candidates.isEmpty()){
+									if (!candidates.isEmpty()) {
 										Heap heap = Dungeon.level.heaps.get(target);
 										while (!heap.isEmpty()) {
-											Dungeon.level.drop(heap.pickUp(), Random.element(candidates)).sprite.drop(target);
+											Dungeon.level.drop(heap.pickUp(), Random.element(candidates)).sprite
+													.drop(target);
 										}
 									}
 								}
@@ -281,7 +287,8 @@ public class SkeletonKey extends Artifact {
 						curUser.busy();
 						return;
 
-					} else if (Dungeon.level.heaps.get(target) != null && Dungeon.level.heaps.get(target).type == Heap.Type.LOCKED_CHEST){
+					} else if (Dungeon.level.heaps.get(target) != null
+							&& Dungeon.level.heaps.get(target).type == Heap.Type.LOCKED_CHEST) {
 						if (charge < 2) {
 							GLog.i(Messages.get(SkeletonKey.class, "gold_charges"));
 							return;
@@ -302,7 +309,8 @@ public class SkeletonKey extends Artifact {
 						curUser.busy();
 						return;
 
-					} else if (Dungeon.level.heaps.get(target) != null && Dungeon.level.heaps.get(target).type == Heap.Type.CRYSTAL_CHEST){
+					} else if (Dungeon.level.heaps.get(target) != null
+							&& Dungeon.level.heaps.get(target).type == Heap.Type.CRYSTAL_CHEST) {
 						if (charge < 5) {
 							GLog.i(Messages.get(SkeletonKey.class, "crystal_charges"));
 							return;
@@ -326,7 +334,7 @@ public class SkeletonKey extends Artifact {
 					}
 				}
 
-				if (charge < 2){
+				if (charge < 2) {
 					GLog.i(Messages.get(SkeletonKey.class, "wall_charges"));
 					return;
 				}
@@ -334,17 +342,18 @@ public class SkeletonKey extends Artifact {
 				int closest = curUser.pos;
 				int closestIdx = -1;
 
-				for (int i = 0; i < PathFinder.CIRCLE8.length; i++){
+				for (int i = 0; i < PathFinder.CIRCLE8.length; i++) {
 					int ofs = PathFinder.CIRCLE8[i];
-					if (Dungeon.level.trueDistance(target, curUser.pos+ofs) < Dungeon.level.trueDistance(target, closest)){
-						closest = curUser.pos+ofs;
+					if (Dungeon.level.trueDistance(target, curUser.pos + ofs) < Dungeon.level.trueDistance(target,
+							closest)) {
+						closest = curUser.pos + ofs;
 						closestIdx = i;
 					}
 				}
 
 				int knockBackDir = PathFinder.CIRCLE8[closestIdx];
 
-				if (Dungeon.level.solid[closest]){
+				if (Dungeon.level.solid[closest]) {
 					GLog.w(Messages.get(SkeletonKey.class, "invalid_target"));
 					return;
 				}
@@ -354,14 +363,14 @@ public class SkeletonKey extends Artifact {
 				curUser.sprite.operate(target, new Callback() {
 					@Override
 					public void call() {
-						placeWall(curUser.pos+PathFinder.CIRCLE8[finalClosestIdx], knockBackDir);
-						placeWall(curUser.pos+PathFinder.CIRCLE8[(finalClosestIdx +7)%8], knockBackDir);
-						placeWall(curUser.pos+PathFinder.CIRCLE8[(finalClosestIdx +1)%8], knockBackDir);
+						placeWall(curUser.pos + PathFinder.CIRCLE8[finalClosestIdx], knockBackDir);
+						placeWall(curUser.pos + PathFinder.CIRCLE8[(finalClosestIdx + 7) % 8], knockBackDir);
+						placeWall(curUser.pos + PathFinder.CIRCLE8[(finalClosestIdx + 1) % 8], knockBackDir);
 
 						//if we're in a diagonal direction
-						if (finalClosestIdx % 2 == 0){
-							placeWall(curUser.pos+2*PathFinder.CIRCLE8[(finalClosestIdx +7)%8], knockBackDir);
-							placeWall(curUser.pos+2*PathFinder.CIRCLE8[(finalClosestIdx +1)%8], knockBackDir);
+						if (finalClosestIdx % 2 == 0) {
+							placeWall(curUser.pos + 2 * PathFinder.CIRCLE8[(finalClosestIdx + 7) % 8], knockBackDir);
+							placeWall(curUser.pos + 2 * PathFinder.CIRCLE8[(finalClosestIdx + 1) % 8], knockBackDir);
 						}
 
 						charge -= 2;
@@ -395,13 +404,13 @@ public class SkeletonKey extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null){
-			partialCharge += 0.133f*amount;
-			while (partialCharge >= 1){
+		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null) {
+			partialCharge += 0.133f * amount;
+			while (partialCharge >= 1) {
 				partialCharge--;
 				charge++;
 			}
-			if (charge >= chargeCap){
+			if (charge >= chargeCap) {
 				partialCharge = 0;
 			}
 			updateQuickslot();
@@ -412,8 +421,8 @@ public class SkeletonKey extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if ( isEquipped (owner()) ){
-			if (cursed){
+		if (isEquipped(owner())) {
+			if (cursed) {
 				desc += "\n\n" + Messages.get(this, "desc_cursed");
 			} else {
 				desc += "\n\n" + Messages.get(this, "desc_worn");
@@ -431,15 +440,15 @@ public class SkeletonKey extends Artifact {
 					&& target.buff(MagicImmune.class) == null
 					&& Regeneration.regenOn()) {
 				//120 turns to charge at full, 60 turns to charge at 0/8
-				float chargeGain = 1 / (120f - (chargeCap - charge)*7.5f);
+				float chargeGain = 1 / (120f - (chargeCap - charge) * 7.5f);
 				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);
 				partialCharge += chargeGain;
 
 				while (partialCharge >= 1) {
-					partialCharge --;
-					charge ++;
+					partialCharge--;
+					charge++;
 
-					if (charge == chargeCap){
+					if (charge == chargeCap) {
 						partialCharge = 0;
 					}
 				}
@@ -447,7 +456,7 @@ public class SkeletonKey extends Artifact {
 
 			updateQuickslot();
 
-			spend( TICK );
+			spend(TICK);
 
 			return true;
 		}
@@ -455,18 +464,19 @@ public class SkeletonKey extends Artifact {
 
 	@Override
 	public Item upgrade() {
-		chargeCap = 3 + (level()+1)/2;
+		chargeCap = 3 + (level() + 1) / 2;
 		return super.upgrade();
 	}
 
-	private void placeWall(int pos, int knockbackDIR ){
+	private void placeWall(int pos, int knockbackDIR) {
 		Blob wall = Dungeon.level.blobs.get(KeyWall.class);
 		if (!Dungeon.level.solid[pos] || (wall != null && wall.cur[pos] > 0)) {
 			GameScene.add(Blob.seed(pos, 10, KeyWall.class));
 
 			Char ch = Actor.findChar(pos);
-			if (ch != null && ch.alignment == Char.Alignment.ENEMY){
-				WandOfBlastWave.throwChar(ch, new Ballistica(pos, pos+knockbackDIR, Ballistica.PROJECTILE), 1, false, false, this);
+			if (ch != null && ch.alignment == Char.Alignment.ENEMY) {
+				WandOfBlastWave.throwChar(ch, new Ballistica(pos, pos + knockbackDIR, Ballistica.PROJECTILE), 1, false,
+						false, this);
 				artifactProc(ch, visiblyUpgraded(), 2);
 			}
 		}
@@ -485,12 +495,12 @@ public class SkeletonKey extends Artifact {
 			boolean cellEnded = false;
 
 			Level l = Dungeon.level;
-			for (int i = area.left; i < area.right; i++){
-				for (int j = area.top; j < area.bottom; j++){
-					cell = i + j*l.width();
+			for (int i = area.left; i < area.right; i++) {
+				for (int j = area.top; j < area.bottom; j++) {
+					cell = i + j * l.width();
 					off[cell] = cur[cell] > 0 ? cur[cell] - 1 : 0;
 
-					if (cur[cell] > 0 && off[cell] == 0){
+					if (cur[cell] > 0 && off[cell] == 0) {
 						cellEnded = true;
 					}
 
@@ -499,13 +509,13 @@ public class SkeletonKey extends Artifact {
 
 					volume += off[cell];
 
-					if (off[cell] == 0 && cur[cell] > 0){
+					if (off[cell] == 0 && cur[cell] > 0) {
 						cellsToFlagUpdate.add(cell);
 					}
 				}
 			}
 
-			if (cellEnded){
+			if (cellEnded) {
 				Dungeon.observe();
 			}
 		}
@@ -519,7 +529,8 @@ public class SkeletonKey extends Artifact {
 		@Override
 		public void clear(int cell) {
 			super.clear(cell);
-			if (cur == null) return;
+			if (cur == null)
+				return;
 			Dungeon.level.updateCellFlags(cell);
 		}
 
@@ -531,8 +542,8 @@ public class SkeletonKey extends Artifact {
 
 		@Override
 		public void onBuildFlagMaps(Level l) {
-			if (volume > 0){
-				for (int i=0; i < l.length(); i++) {
+			if (volume > 0) {
+				for (int i = 0; i < l.length(); i++) {
 					onUpdateCellFlags(l, i);
 				}
 			}
@@ -541,7 +552,7 @@ public class SkeletonKey extends Artifact {
 		@Override
 		public void onUpdateCellFlags(Level l, int cell) {
 			if (volume > 0 && cur[cell] > 0) {
-				l.losBlocking[cell] =  true;
+				l.losBlocking[cell] = true;
 				l.solid[cell] = true;
 				l.passable[cell] = false;
 				l.avoid[cell] = false;
@@ -551,8 +562,8 @@ public class SkeletonKey extends Artifact {
 
 		@Override
 		public void use(BlobEmitter emitter) {
-			super.use( emitter );
-			emitter.pour(SpectralWallParticle.FACTORY, 0.02f );
+			super.use(emitter);
+			emitter.pour(SpectralWallParticle.FACTORY, 0.02f);
 		}
 
 		@Override
@@ -576,60 +587,60 @@ public class SkeletonKey extends Artifact {
 			Arrays.fill(crystalKeysNeeded, -1);
 		}
 
-		public void setupKeysForDepth(){
+		public void setupKeysForDepth() {
 			ironKeysNeeded[Dungeon.depth] = 0;
 			goldenKeysNeeded[Dungeon.depth] = 0;
 			crystalKeysNeeded[Dungeon.depth] = 0;
 
-			for (Heap h : Dungeon.level.heaps.valueList()){
-				if (h.type == Heap.Type.LOCKED_CHEST){
+			for (Heap h : Dungeon.level.heaps.valueList()) {
+				if (h.type == Heap.Type.LOCKED_CHEST) {
 					goldenKeysNeeded[Dungeon.depth]++;
-				} else if (h.type == Heap.Type.CRYSTAL_CHEST){
+				} else if (h.type == Heap.Type.CRYSTAL_CHEST) {
 					crystalKeysNeeded[Dungeon.depth]++;
 				}
 			}
 
-			for (int i = 0; i < Dungeon.level.length(); i++){
-				if (Dungeon.level.map[i] == Terrain.LOCKED_DOOR){
+			for (int i = 0; i < Dungeon.level.length(); i++) {
+				if (Dungeon.level.map[i] == Terrain.LOCKED_DOOR) {
 					ironKeysNeeded[Dungeon.depth]++;
-				} else if (Dungeon.level.map[i] == Terrain.CRYSTAL_DOOR){
+				} else if (Dungeon.level.map[i] == Terrain.CRYSTAL_DOOR) {
 					crystalKeysNeeded[Dungeon.depth]++;
 				}
 			}
 		}
 
 		//used if a level was reset, e.g. via unblessed ankh vs. boss
-		public void clearDepth(){
+		public void clearDepth() {
 			ironKeysNeeded[Dungeon.depth] = -1;
 			goldenKeysNeeded[Dungeon.depth] = -1;
 			crystalKeysNeeded[Dungeon.depth] = -1;
 		}
 
-		public void processIronLockOpened(){
-			if (ironKeysNeeded[Dungeon.depth] == -1){
+		public void processIronLockOpened() {
+			if (ironKeysNeeded[Dungeon.depth] == -1) {
 				setupKeysForDepth();
 			}
 			ironKeysNeeded[Dungeon.depth] -= 1;
 			processExcessKeys();
 		}
 
-		public void processGoldLockOpened(){
-			if (goldenKeysNeeded[Dungeon.depth] == -1){
+		public void processGoldLockOpened() {
+			if (goldenKeysNeeded[Dungeon.depth] == -1) {
 				setupKeysForDepth();
 			}
 			goldenKeysNeeded[Dungeon.depth] -= 1;
 			processExcessKeys();
 		}
 
-		public void processCrystalLockOpened(){
-			if (crystalKeysNeeded[Dungeon.depth] == -1){
+		public void processCrystalLockOpened() {
+			if (crystalKeysNeeded[Dungeon.depth] == -1) {
 				setupKeysForDepth();
 			}
 			crystalKeysNeeded[Dungeon.depth] -= 1;
 			processExcessKeys();
 		}
 
-		public void processExcessKeys(){
+		public void processExcessKeys() {
 			int keysNeeded = ironKeysNeeded[Dungeon.depth];
 			boolean removed = false;
 			if (keysNeeded >= 0) {
@@ -652,7 +663,7 @@ public class SkeletonKey extends Artifact {
 					removed = true;
 				}
 			}
-			if (removed){
+			if (removed) {
 				GameScene.updateKeyDisplay();
 				GLog.i(Messages.get(SkeletonKey.class, "discard"));
 			}

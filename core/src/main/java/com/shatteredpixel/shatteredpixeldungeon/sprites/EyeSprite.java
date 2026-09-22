@@ -41,50 +41,51 @@ public class EyeSprite extends MobSprite {
 
 	private Animation charging;
 	private Emitter chargeParticles;
-	
+
 	public EyeSprite() {
 		super();
-		
-		texture( Assets.Sprites.EYE );
-		
-		TextureFilm frames = new TextureFilm( texture, 16, 18 );
-		
-		idle = new Animation( 8, true );
-		idle.frames( frames, 0, 1, 2 );
 
-		charging = new Animation( 12, true);
-		charging.frames( frames, 3, 4 );
-		
-		run = new Animation( 12, true );
-		run.frames( frames, 5, 6 );
-		
-		attack = new Animation( 8, false );
-		attack.frames( frames, 4, 3 );
+		texture(Assets.Sprites.EYE);
+
+		TextureFilm frames = new TextureFilm(texture, 16, 18);
+
+		idle = new Animation(8, true);
+		idle.frames(frames, 0, 1, 2);
+
+		charging = new Animation(12, true);
+		charging.frames(frames, 3, 4);
+
+		run = new Animation(12, true);
+		run.frames(frames, 5, 6);
+
+		attack = new Animation(8, false);
+		attack.frames(frames, 4, 3);
 		zap = attack.clone();
-		
-		die = new Animation( 8, false );
-		die.frames( frames, 7, 8, 9 );
-		
-		play( idle );
+
+		die = new Animation(8, false);
+		die.frames(frames, 7, 8, 9);
+
+		play(idle);
 	}
 
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
-		
+
 		chargeParticles = centerEmitter();
 		chargeParticles.autoKill = false;
 		chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f);
 		chargeParticles.on = false;
-		
-		if (((Eye)ch).beamCharged) play(charging);
+
+		if (((Eye) ch).beamCharged)
+			play(charging);
 	}
 
 	@Override
 	public void update() {
 		super.update();
-		if (chargeParticles != null){
-			chargeParticles.pos( center() );
+		if (chargeParticles != null) {
+			chargeParticles.pos(center());
 			chargeParticles.visible = visible;
 		}
 	}
@@ -92,7 +93,7 @@ public class EyeSprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (chargeParticles != null){
+		if (chargeParticles != null) {
 			chargeParticles.on = false;
 		}
 	}
@@ -100,44 +101,46 @@ public class EyeSprite extends MobSprite {
 	@Override
 	public void kill() {
 		super.kill();
-		if (chargeParticles != null){
+		if (chargeParticles != null) {
 			chargeParticles.killAndErase();
 		}
 	}
 
-	public void charge( int pos ){
+	public void charge(int pos) {
 		turnTo(ch.pos, pos);
 		play(charging);
-		if (visible) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );
+		if (visible)
+			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
 	}
 
 	@Override
 	public void play(Animation anim) {
-		if (chargeParticles != null) chargeParticles.on = anim == charging;
+		if (chargeParticles != null)
+			chargeParticles.on = anim == charging;
 		super.play(anim);
 	}
 
 	@Override
-	public void zap( int pos ) {
+	public void zap(int pos) {
 		zapPos = pos;
-		super.zap( pos );
+		super.zap(pos);
 	}
-	
+
 	@Override
-	public void onComplete( Animation anim ) {
-		super.onComplete( anim );
-		
+	public void onComplete(Animation anim) {
+		super.onComplete(anim);
+
 		if (anim == zap) {
 			idle();
-			if (Actor.findChar(zapPos) != null){
+			if (Actor.findChar(zapPos) != null) {
 				parent.add(new Beam.DeathRay(center(), Actor.findChar(zapPos).sprite.center()));
 			} else {
 				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(zapPos)));
 			}
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
-			((Eye)ch).deathGaze();
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
+			((Eye) ch).deathGaze();
 			ch.next();
-		} else if (anim == die){
+		} else if (anim == die) {
 			chargeParticles.killAndErase();
 		}
 	}

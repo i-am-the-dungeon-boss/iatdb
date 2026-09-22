@@ -38,9 +38,9 @@ public class VaultSingleEnemyTreasureRoom extends VaultTreasureRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
-		Painter.fillEllipse( level, this, 3, Terrain.EMPTY );
+		Painter.fillEllipse(level, this, 3, Terrain.EMPTY);
 
 		Painter.drawInside(level, this, entrance(), 3, Terrain.EMPTY);
 
@@ -49,20 +49,20 @@ public class VaultSingleEnemyTreasureRoom extends VaultTreasureRoom {
 		level.mobs.add(rat);
 
 		int treasurePos;
-		if (entrance().x == left){
-			treasurePos = rat.pos+2;
-		} else if (entrance().y == top){
-			treasurePos = rat.pos+2*level.width();
-		} else if (entrance().x == right){
-			treasurePos = rat.pos-2;
+		if (entrance().x == left) {
+			treasurePos = rat.pos + 2;
+		} else if (entrance().y == top) {
+			treasurePos = rat.pos + 2 * level.width();
+		} else if (entrance().x == right) {
+			treasurePos = rat.pos - 2;
 		} else {
-			treasurePos = rat.pos-2*level.width();
+			treasurePos = rat.pos - 2 * level.width();
 		}
 
 		Item treasureItem = Generator.randomUsingDefaults(Generator.Category.WEP_T4);
-		if (treasureItem.cursed){
+		if (treasureItem.cursed) {
 			treasureItem.cursed = false;
-			if (((MeleeWeapon) treasureItem).hasCurseEnchant()){
+			if (((MeleeWeapon) treasureItem).hasCurseEnchant()) {
 				((MeleeWeapon) treasureItem).enchant(null);
 			}
 		}

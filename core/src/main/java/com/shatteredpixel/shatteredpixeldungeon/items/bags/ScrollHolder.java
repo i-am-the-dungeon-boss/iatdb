@@ -40,21 +40,21 @@ public class ScrollHolder extends Bag {
 	}
 
 	@Override
-	public boolean canHold( Item item ) {
+	public boolean canHold(Item item) {
 		if (item instanceof Scroll || item instanceof Spell
-				|| item instanceof ArcaneResin || item instanceof Stylus){
+				|| item instanceof ArcaneResin || item instanceof Stylus) {
 			return super.canHold(item);
 		} else {
 			return false;
 		}
 	}
 
-	public int capacity(){
+	public int capacity() {
 		return 19;
 	}
-	
+
 	@Override
-	public void onDetach( ) {
+	public void onDetach() {
 		super.onDetach();
 		for (Item item : items) {
 			if (item instanceof BeaconOfReturning && ((BeaconOfReturning) item).returnDepth != -1) {
@@ -63,7 +63,7 @@ public class ScrollHolder extends Bag {
 			}
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return 40;

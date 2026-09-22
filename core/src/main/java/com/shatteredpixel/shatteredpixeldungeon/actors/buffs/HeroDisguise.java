@@ -42,7 +42,7 @@ public class HeroDisguise extends FlavourBuff {
 
 	public static float DURATION = 1000f;
 
-	public HeroClass getDisguise(){
+	public HeroClass getDisguise() {
 		return cls;
 	}
 
@@ -58,15 +58,17 @@ public class HeroDisguise extends FlavourBuff {
 
 	@Override
 	public void fx(boolean on) {
-		if (target instanceof Hero && target.sprite instanceof HeroSprite){
+		if (target instanceof Hero && target.sprite instanceof HeroSprite) {
 			if (cls == null) {
 				do {
 					cls = Random.oneOf(HeroClass.values());
 				} while (cls == ((Hero) target).heroClass);
 			}
 
-			if (on) ((HeroSprite)target.sprite).disguise(cls);
-			else    ((HeroSprite)target.sprite).disguise(((Hero) target).heroClass);
+			if (on)
+				((HeroSprite) target.sprite).disguise(cls);
+			else
+				((HeroSprite) target.sprite).disguise(((Hero) target).heroClass);
 			GameScene.updateAvatar();
 		}
 	}

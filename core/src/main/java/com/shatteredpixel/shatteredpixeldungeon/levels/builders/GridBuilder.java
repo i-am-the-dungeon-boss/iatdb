@@ -47,22 +47,22 @@ public class GridBuilder extends Builder {
 
 	@Override
 	public ArrayList<Room> build(ArrayList<Room> rooms) {
-		for(Room r : rooms){
+		for (Room r : rooms) {
 			r.setEmpty();
 		}
 
 		Room entrance = null;
 		Room exit = null;
 
-		for (Room r : rooms){
-			if (r.isEntrance()){
+		for (Room r : rooms) {
+			if (r.isEntrance()) {
 				entrance = r;
-			} else if (r.isExit()){
+			} else if (r.isExit()) {
 				exit = r;
 			}
 		}
 
-		if (!entrance.forceSize(ROOM_SIZE, ROOM_SIZE)){
+		if (!entrance.forceSize(ROOM_SIZE, ROOM_SIZE)) {
 			throw new RuntimeException("rigid room sizes for now!");
 		}
 		entrance.setPos(0, 0);
@@ -72,21 +72,27 @@ public class GridBuilder extends Builder {
 		//we try to interleave things so we get though a few normal rooms for every special room
 		ArrayList<Room> multis = new ArrayList<>();
 		ArrayList<Room> singles = new ArrayList<>();
-		for (Room r : rooms){
-			if (r.maxConnections(Room.ALL) == 1){
+		for (Room r : rooms) {
+			if (r.maxConnections(Room.ALL) == 1) {
 				singles.add(r);
 			} else {
 				multis.add(r);
 			}
 		}
 
-		if (!multis.isEmpty()) toPlace.add(multis.remove(0));
-		if (!multis.isEmpty()) toPlace.add(multis.remove(0));
-		while (!multis.isEmpty() || !singles.isEmpty()){
-			if (!multis.isEmpty()) toPlace.add(multis.remove(0));
-			if (!multis.isEmpty()) toPlace.add(multis.remove(0));
-			if (!multis.isEmpty()) toPlace.add(multis.remove(0));
-			if (!singles.isEmpty()) toPlace.add(singles.remove(0));
+		if (!multis.isEmpty())
+			toPlace.add(multis.remove(0));
+		if (!multis.isEmpty())
+			toPlace.add(multis.remove(0));
+		while (!multis.isEmpty() || !singles.isEmpty()) {
+			if (!multis.isEmpty())
+				toPlace.add(multis.remove(0));
+			if (!multis.isEmpty())
+				toPlace.add(multis.remove(0));
+			if (!multis.isEmpty())
+				toPlace.add(multis.remove(0));
+			if (!singles.isEmpty())
+				toPlace.add(singles.remove(0));
 		}
 		toPlace.remove(entrance);
 
@@ -113,17 +119,19 @@ public class GridBuilder extends Builder {
 			int cellWidth = 1;
 			int cellHeight = 1;
 			//TODO this works on rigid multiples atm, would be nicer to buffer rooms that don't work on that
-			if (!r.forceSize(ROOM_SIZE, ROOM_SIZE)){
+			if (!r.forceSize(ROOM_SIZE, ROOM_SIZE)) {
 				//TODO tries larger width first, perhaps randomize that?
-				if (!r.forceSize(2*ROOM_SIZE-1, 2*ROOM_SIZE-1)) {
-					if (!r.forceSize(ROOM_SIZE, 2*ROOM_SIZE-1)) {
-						if (!r.forceSize(2*ROOM_SIZE-1, ROOM_SIZE)) {
+				if (!r.forceSize(2 * ROOM_SIZE - 1, 2 * ROOM_SIZE - 1)) {
+					if (!r.forceSize(ROOM_SIZE, 2 * ROOM_SIZE - 1)) {
+						if (!r.forceSize(2 * ROOM_SIZE - 1, ROOM_SIZE)) {
 							throw new RuntimeException("rigid room sizes for now!");
 						} else {
-							cellWidth = 2; cellHeight = 1;
+							cellWidth = 2;
+							cellHeight = 1;
 						}
 					} else {
-						cellWidth = 1; cellHeight = 2;
+						cellWidth = 1;
+						cellHeight = 2;
 					}
 				} else {
 					cellWidth = cellHeight = 2;
@@ -139,14 +147,14 @@ public class GridBuilder extends Builder {
 
 					//if we're consistently failing to place a room, then restart
 					roomPlacementFailures++;
-					if (roomPlacementFailures > 100){
+					if (roomPlacementFailures > 100) {
 						return null;
 					}
 					break;
 				}
 				int[] keys = gridCells.keyArray();
 				int nIdx = keys[Random.Int(keys.length)];
-				Room n =  gridCells.get(nIdx, null);
+				Room n = gridCells.get(nIdx, null);
 				int rIdx = nIdx;
 				float xDiff = aimCenter.x - ((rIdx % 1000) - 100);
 				float yDiff = aimCenter.y - ((rIdx / 1000) - 100);
@@ -154,9 +162,9 @@ public class GridBuilder extends Builder {
 				//farther out from the center = more likely to pull to center
 				// 67-100% chance to pull to center at 0-4 tiles of distance
 				//also always go toward center on first room placement
-				if (Random.Float(12) < 8+dist || (placed.size() == 1)){
-					if (Math.abs(xDiff) >= Math.abs(yDiff)){
-						if (xDiff > 0){
+				if (Random.Float(12) < 8 + dist || (placed.size() == 1)) {
+					if (Math.abs(xDiff) >= Math.abs(yDiff)) {
+						if (xDiff > 0) {
 							//move right
 							rIdx += 1;
 						} else {
@@ -164,7 +172,7 @@ public class GridBuilder extends Builder {
 							rIdx -= 1;
 						}
 					} else {
-						if (yDiff > 0){
+						if (yDiff > 0) {
 							//move down
 							rIdx += 1000;
 						} else {
@@ -194,10 +202,10 @@ public class GridBuilder extends Builder {
 				boolean valid;
 
 				if (!gridCells.containsKey(rIdx)) {
-					if (cellWidth == 1 && cellHeight == 1){
+					if (cellWidth == 1 && cellHeight == 1) {
 						valid = true;
 
-					//more complex check for larger rooms
+						//more complex check for larger rooms
 					} else {
 						Rect space = findFreeGridSpace(new Point(x, y), gridCells, cellWidth, cellHeight);
 						//add 1 to width/height as it's inclusive
@@ -207,8 +215,8 @@ public class GridBuilder extends Builder {
 						if (valid) {
 							//randomly place the room within available space.
 							// We could do more with this probably, e.g. preferred DIR
-							x = space.left + Random.Int(excessWidth+1);
-							y = space.top + Random.Int(excessHeight+1);
+							x = space.left + Random.Int(excessWidth + 1);
+							y = space.top + Random.Int(excessHeight + 1);
 							rIdx = getIdx(x, y);
 						}
 					}
@@ -216,13 +224,13 @@ public class GridBuilder extends Builder {
 					valid = false;
 				}
 
-				if (valid){
-					r.setPos(x*(ROOM_SIZE-1), y*(ROOM_SIZE-1));
+				if (valid) {
+					r.setPos(x * (ROOM_SIZE - 1), y * (ROOM_SIZE - 1));
 					if (r.connect(n)) {
 						placed.add(r);
-						for (int i = 0; i < cellWidth; i++){
-							for (int j = 0; j < cellHeight; j++){
-								gridCells.put(rIdx + i + j*1000, r);
+						for (int i = 0; i < cellWidth; i++) {
+							for (int j = 0; j < cellHeight; j++) {
+								gridCells.put(rIdx + i + j * 1000, r);
 							}
 						}
 					}
@@ -232,10 +240,10 @@ public class GridBuilder extends Builder {
 
 		findNeighbours(rooms);
 
-		for (Room r : rooms){
-			for (Room n : r.neigbours){
+		for (Room r : rooms) {
+			for (Room n : r.neigbours) {
 				if (!n.connected.containsKey(r)
-						&& Random.Float() < extraConnectionChance){
+						&& Random.Float() < extraConnectionChance) {
 					r.connect(n);
 				}
 			}
@@ -246,65 +254,65 @@ public class GridBuilder extends Builder {
 
 	//same as Builder.findFreeSpace, but using grid coordination and collision
 	//assumes the starting cell is open
-	public Rect findFreeGridSpace(Point start, SparseArray<Room> collision, int maxWidth, int maxHeight){
+	public Rect findFreeGridSpace(Point start, SparseArray<Room> collision, int maxWidth, int maxHeight) {
 		Rect space = new Rect(start.x, start.y, start.x, start.y);
 
 		//expand one at a time in each direction, so as to prioritize a more square shape
 		boolean expanded = true;
-		while (expanded){
+		while (expanded) {
 			expanded = false;
 			//left
-			if (space.left > start.x-(maxWidth-1)) {
+			if (space.left > start.x - (maxWidth - 1)) {
 				boolean valid = true;
 				for (int y = space.top; y <= space.bottom; y++) {
-					if (collision.containsKey(getIdx(space.left-1, y))) {
+					if (collision.containsKey(getIdx(space.left - 1, y))) {
 						valid = false;
 						break;
 					}
 				}
-				if (valid){
+				if (valid) {
 					space.left--;
 					expanded = true;
 				}
 			}
 			//top
-			if (space.top > start.y-(maxHeight-1)){
+			if (space.top > start.y - (maxHeight - 1)) {
 				boolean valid = true;
 				for (int x = space.left; x <= space.right; x++) {
-					if (collision.containsKey(getIdx(x, space.top-1))) {
+					if (collision.containsKey(getIdx(x, space.top - 1))) {
 						valid = false;
 						break;
 					}
 				}
-				if (valid){
+				if (valid) {
 					space.top--;
 					expanded = true;
 				}
 			}
 			//right
-			if (space.right < start.x+(maxWidth-1)) {
+			if (space.right < start.x + (maxWidth - 1)) {
 				boolean valid = true;
 				for (int y = space.top; y <= space.bottom; y++) {
-					if (collision.containsKey(getIdx(space.right+1, y))) {
+					if (collision.containsKey(getIdx(space.right + 1, y))) {
 						valid = false;
 						break;
 					}
 				}
-				if (valid){
+				if (valid) {
 					space.right++;
 					expanded = true;
 				}
 			}
 			//bottom
-			if (space.bottom < start.y+(maxHeight-1)){
+			if (space.bottom < start.y + (maxHeight - 1)) {
 				boolean valid = true;
 				for (int x = space.left; x <= space.right; x++) {
-					if (collision.containsKey(getIdx(x, space.bottom+1))) {
+					if (collision.containsKey(getIdx(x, space.bottom + 1))) {
 						valid = false;
 						break;
 					}
 				}
-				if (valid){
+				if (valid) {
 					space.bottom++;
 					expanded = true;
 				}
@@ -314,12 +322,12 @@ public class GridBuilder extends Builder {
 		return space;
 	}
 
-	private int getIdx(Point p){
-		return p.x + 1000*p.y + 100;
+	private int getIdx(Point p) {
+		return p.x + 1000 * p.y + 100;
 	}
 
-	private int getIdx(int x, int y){
-		return (x+100) + 1000*(y+100);
+	private int getIdx(int x, int y) {
+		return (x + 100) + 1000 * (y + 100);
 	}
 
 }

@@ -47,7 +47,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class ArcaneBomb extends Bomb {
-	
+
 	{
 		image = ItemSpriteSheet.ARCANE_BOMB;
 	}
@@ -70,31 +70,31 @@ public class ArcaneBomb extends Bomb {
 	@Override
 	public void explode(int cell) {
 		super.explode(cell);
-		
+
 		ArrayList<Char> affected = new ArrayList<>();
-		
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange() );
+
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), explosionRange());
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				CellEmitter.get(i).burst(ElmoParticle.FACTORY, 10);
 				Char ch = Actor.findChar(i);
-				if (ch != null){
+				if (ch != null) {
 					affected.add(ch);
 				}
 			}
 		}
-		
-		for (Char ch : affected){
+
+		for (Char ch : affected) {
 			//pierces armor, and damage in 5x5 instead of 3x3
-			int damage = Math.round(Random.NormalIntRange( 4 + Dungeon.scalingDepth(), 12 + 3*Dungeon.scalingDepth() ));
+			int damage = Math.round(Random.NormalIntRange(4 + Dungeon.scalingDepth(), 12 + 3 * Dungeon.scalingDepth()));
 			ch.damage(damage, this);
-			if (ch == Dungeon.hero && !ch.isAlive()){
+			if (ch == Dungeon.hero && !ch.isAlive()) {
 				Badges.validateDeathFromFriendlyMagic();
 				Dungeon.fail(this);
 			}
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		//prices of ingredients
@@ -111,7 +111,10 @@ public class ArcaneBomb extends Bomb {
 		public Fuse ignite(Bomb bomb) {
 			super.ignite(bomb);
 			Actor.add(new Actor() {
-				{ actPriority = VFX_PRIO; }
+				{
+					actPriority = VFX_PRIO;
+				}
+
 				@Override
 				protected boolean act() {
 					int bombPos = -1;
@@ -121,7 +124,8 @@ public class ArcaneBomb extends Bomb {
 						}
 					}
 					if (bombPos != -1) {
-						PathFinder.buildDistanceMap(bombPos, BArray.not(Dungeon.level.solid, null), bomb.explosionRange());
+						PathFinder.buildDistanceMap(bombPos, BArray.not(Dungeon.level.solid, null),
+								bomb.explosionRange());
 						for (int i = 0; i < PathFinder.distance.length; i++) {
 							if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 								Emitter e = CellEmitter.get(i);

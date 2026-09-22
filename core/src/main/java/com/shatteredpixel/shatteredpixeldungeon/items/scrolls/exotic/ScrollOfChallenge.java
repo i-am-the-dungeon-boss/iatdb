@@ -46,29 +46,28 @@ import com.watabou.utils.Point;
 import java.util.ArrayList;
 
 public class ScrollOfChallenge extends ExoticScroll {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.SCROLL_CHALLENGE;
 	}
-	
+
 	@Override
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
-			mob.beckon( curUser.pos );
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+			mob.beckon(curUser.pos);
 		}
 
 		Buff.affect(curUser, ChallengeArena.class).setup(curUser.pos);
 
 		identify();
-		
-		curUser.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
-		Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );
-		
+
+		curUser.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+		Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
+
 		readAnimation();
 	}
-
 
 	public static class ChallengeArena extends Buff {
 
@@ -107,22 +106,23 @@ public class ScrollOfChallenge extends ExoticScroll {
 			return Messages.get(this, "desc", left);
 		}
 
-		public void setup(int pos){
+		public void setup(int pos) {
 
 			int dist;
-			if (Dungeon.depth == 5 || Dungeon.depth == 10 || Dungeon.depth == 20){
+			if (Dungeon.depth == 5 || Dungeon.depth == 10 || Dungeon.depth == 20) {
 				dist = 1; //smaller boss arenas
 			} else {
 
 				boolean[] visibleCells = new boolean[Dungeon.level.length()];
 				Point c = Dungeon.level.cellToPoint(pos);
 				ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), visibleCells, Dungeon.level.losBlocking, 8);
-				int count=0;
-				for (boolean b : visibleCells){
-					if (b) count++;
+				int count = 0;
+				for (boolean b : visibleCells) {
+					if (b)
+						count++;
 				}
 
-				if (count < 30){
+				if (count < 30) {
 					dist = 1;
 				} else if (count >= 100) {
 					dist = 3;
@@ -131,7 +131,7 @@ public class ScrollOfChallenge extends ExoticScroll {
 				}
 			}
 
-			PathFinder.buildDistanceMap( pos, BArray.or( Dungeon.level.passable, Dungeon.level.avoid, null ), dist );
+			PathFinder.buildDistanceMap(pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), dist);
 			for (int i = 0; i < PathFinder.distance.length; i++) {
 				if (PathFinder.distance[i] < Integer.MAX_VALUE && !arenaPositions.contains(i)) {
 					arenaPositions.add(i);
@@ -146,20 +146,20 @@ public class ScrollOfChallenge extends ExoticScroll {
 
 		}
 
-		public void extend( float duration ) {
+		public void extend(float duration) {
 			left += duration;
 		}
 
 		@Override
 		public boolean act() {
 
-			if (!arenaPositions.contains(target.pos)){
+			if (!arenaPositions.contains(target.pos)) {
 				detach();
 			}
 
 			left--;
 			BuffIndicator.refreshHero();
-			if (left <= 0){
+			if (left <= 0) {
 				detach();
 			}
 
@@ -169,14 +169,14 @@ public class ScrollOfChallenge extends ExoticScroll {
 
 		@Override
 		public void fx(boolean on) {
-			if (on){
-				for (int i : arenaPositions){
+			if (on) {
+				for (int i : arenaPositions) {
 					Emitter e = CellEmitter.get(i);
 					e.pour(ChallengeParticle.FACTORY, 0.05f);
 					arenaEmitters.add(e);
 				}
 			} else {
-				for (Emitter e : arenaEmitters){
+				for (Emitter e : arenaEmitters) {
 					e.on = false;
 				}
 				arenaEmitters.clear();
@@ -191,7 +191,7 @@ public class ScrollOfChallenge extends ExoticScroll {
 			super.storeInBundle(bundle);
 
 			int[] values = new int[arenaPositions.size()];
-			for (int i = 0; i < values.length; i ++)
+			for (int i = 0; i < values.length; i++)
 				values[i] = arenaPositions.get(i);
 			bundle.put(ARENA_POSITIONS, values);
 
@@ -202,7 +202,7 @@ public class ScrollOfChallenge extends ExoticScroll {
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
 
-			int[] values = bundle.getIntArray( ARENA_POSITIONS );
+			int[] values = bundle.getIntArray(ARENA_POSITIONS);
 			for (int value : values) {
 				arenaPositions.add(value);
 			}
@@ -210,5 +210,5 @@ public class ScrollOfChallenge extends ExoticScroll {
 			left = bundle.getInt(LEFT);
 		}
 	}
-	
+
 }

@@ -115,19 +115,19 @@ public final class EchoAltar {
 	 * or on a post, all of which {@code EchoAltarTest} checks.
 	 */
 	private static final int[][] BASIN_DX = {
-			{},                          // NONE
-			{ 4, 3, 2 },                 // SEWERS — a sluice along the outer arc
-			{ 4, 3, 3, 2 },              // PRISON — a squared-off tank
-			{ 1, 2, 2, 3, 3 },           // CAVES  — a stream working its way out
-			{ 1, 1, 1, 2, 2, 3 }         // CITY   — a formal pool with a spur
+			{}, // NONE
+			{ 4, 3, 2 }, // SEWERS — a sluice along the outer arc
+			{ 4, 3, 3, 2 }, // PRISON — a squared-off tank
+			{ 1, 2, 2, 3, 3 }, // CAVES  — a stream working its way out
+			{ 1, 1, 1, 2, 2, 3 } // CITY   — a formal pool with a spur
 	};
 
 	private static final int[][] BASIN_DY = {
-			{},                          // NONE
-			{ 1, 1, 1 },                 // SEWERS
-			{ 2, 2, 3, 3 },              // PRISON
-			{ 4, 4, 3, 3, 2 },           // CAVES
-			{ 2, 3, 4, 4, 3, 3 }         // CITY
+			{}, // NONE
+			{ 1, 1, 1 }, // SEWERS
+			{ 2, 2, 3, 3 }, // PRISON
+			{ 4, 4, 3, 3, 2 }, // CAVES
+			{ 2, 3, 4, 4, 3, 3 } // CITY
 	};
 
 	public static boolean inBasin(int x, int y) {
@@ -152,13 +152,15 @@ public final class EchoAltar {
 
 	/** Left edge of the box a region's basin fits in. */
 	public static int basinLeft(int region) {
-		return isWestern(region) ? CENTRE_X - max(BASIN_DX[region])
+		return isWestern(region)
+				? CENTRE_X - max(BASIN_DX[region])
 				: CENTRE_X + min(BASIN_DX[region]);
 	}
 
 	/** Top edge of the box a region's basin fits in. */
 	public static int basinTop(int region) {
-		return isNorthern(region) ? CENTRE_Y - max(BASIN_DY[region])
+		return isNorthern(region)
+				? CENTRE_Y - max(BASIN_DY[region])
 				: CENTRE_Y + min(BASIN_DY[region]);
 	}
 

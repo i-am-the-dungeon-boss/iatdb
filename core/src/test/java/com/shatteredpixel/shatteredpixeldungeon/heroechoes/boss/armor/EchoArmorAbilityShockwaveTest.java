@@ -138,8 +138,7 @@ class EchoArmorAbilityShockwaveTest {
 	@DisplayName("Echo Shockwave adapter activate fires cone MagicMissile when the body sprite has a parent")
 	void shockwaveFiresMagicMissileWhenParentLive() {
 		Fight f = fight();
-		EchoTestSupport.InstantProjectileGroup fx =
-				EchoTestSupport.attachInstantProjectileParent(f.boss);
+		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 		WarriorArmor armor = new WarriorArmor();
 		armor.charge = 100;
 		f.player.invisible = 1;

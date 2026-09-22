@@ -59,11 +59,11 @@ public class WaterBridgeExitRoom extends WaterBridgeRoom {
 
 		} while (spaceRect.inside(level.cellToPoint(exit)) || level.findMob(exit) != null);
 
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			Painter.set(level, exit + i, Terrain.EMPTY);
 		}
 
-		Painter.set( level, exit, Terrain.EXIT );
+		Painter.set(level, exit, Terrain.EXIT);
 		level.transitions.add(new LevelTransition(level, exit, LevelTransition.Type.REGULAR_EXIT));
 	}
 

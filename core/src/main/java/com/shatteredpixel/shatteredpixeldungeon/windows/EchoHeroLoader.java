@@ -8,7 +8,8 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHeroSnapshot;
 /** Restores a {@link Hero} view model from echo metadata for UI display. */
 public final class EchoHeroLoader {
 
-	private EchoHeroLoader() {}
+	private EchoHeroLoader() {
+	}
 
 	public static Hero load(Echo snapshot) {
 		if (snapshot == null) {

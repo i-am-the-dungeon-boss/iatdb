@@ -50,7 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class ScrollOfMetamorphosis extends ExoticScroll {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.SCROLL_METAMORPH;
 
@@ -58,7 +58,7 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 	}
 
 	protected static boolean identifiedByUse = false;
-	
+
 	@Override
 	public void doRead() {
 		if (!isKnown()) {
@@ -71,7 +71,7 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 		GameScene.show(new WndMetamorphChoose());
 	}
 
-	public static void onMetamorph( Talent oldTalent, Talent newTalent ){
+	public static void onMetamorph(Talent oldTalent, Talent newTalent) {
 		if (curItem instanceof ScrollOfMetamorphosis) {
 			((ScrollOfMetamorphosis) curItem).readAnimation();
 			Sample.INSTANCE.play(Assets.Sounds.READ);
@@ -84,17 +84,19 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 		}
 	}
 
-	private void confirmCancelation( Window chooseWindow, boolean byID ) {
-		GameScene.show( new WndOptions(new ItemSprite(this),
+	private void confirmCancelation(Window chooseWindow, boolean byID) {
+		GameScene.show(new WndOptions(new ItemSprite(this),
 				Messages.titleCase(name()),
-				byID ? Messages.get(InventoryScroll.class, "warning") : Messages.get(ScrollOfMetamorphosis.class, "cancel_warn"),
+				byID
+						? Messages.get(InventoryScroll.class, "warning")
+						: Messages.get(ScrollOfMetamorphosis.class, "cancel_warn"),
 				Messages.get(InventoryScroll.class, "yes"),
-				Messages.get(InventoryScroll.class, "no") ) {
+				Messages.get(InventoryScroll.class, "no")) {
 			@Override
-			protected void onSelect( int index ) {
+			protected void onSelect(int index) {
 				switch (index) {
 					case 0:
-						curUser.spendAndNext( TIME_TO_READ );
+						curUser.spendAndNext(TIME_TO_READ);
 						identifiedByUse = false;
 						chooseWindow.hide();
 						break;
@@ -103,8 +105,10 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 						break;
 				}
 			}
-			public void onBackPressed() {}
-		} );
+
+			public void onBackPressed() {
+			}
+		});
 	}
 
 	public static class WndMetamorphChoose extends Window {
@@ -113,21 +117,22 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 
 		TalentsPane pane;
 
-		public WndMetamorphChoose(){
+		public WndMetamorphChoose() {
 			super();
 
 			INSTANCE = this;
 
 			float top = 0;
 
-			IconTitle title = new IconTitle( curItem );
-			title.color( TITLE_COLOR );
+			IconTitle title = new IconTitle(curItem);
+			title.color(TITLE_COLOR);
 			title.setRect(0, 0, 120, 0);
 			add(title);
 
 			top = title.bottom() + 2;
 
-			RenderedTextBlock text = PixelScene.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, "choose_desc"), 6);
+			RenderedTextBlock text = PixelScene
+					.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, "choose_desc"), 6);
 			text.maxWidth(120);
 			text.setPos(0, top);
 			add(text);
@@ -137,8 +142,8 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 			ArrayList<LinkedHashMap<Talent, Integer>> talents = new ArrayList<>();
 			Talent.initClassTalents(Dungeon.hero.heroClass, talents, Dungeon.hero.metamorphedTalents);
 
-			for (LinkedHashMap<Talent, Integer> tier : talents){
-				for (Talent talent : tier.keySet()){
+			for (LinkedHashMap<Talent, Integer> tier : talents) {
+				for (Talent talent : tier.keySet()) {
 					tier.put(talent, Dungeon.hero.pointsInTalent(talent));
 				}
 			}
@@ -147,7 +152,7 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 			add(pane);
 			pane.setPos(0, top);
 			pane.setSize(120, pane.content().height());
-			resize((int)pane.width(), (int)pane.bottom());
+			resize((int) pane.width(), (int) pane.bottom());
 			pane.setPos(0, top);
 		}
 
@@ -160,8 +165,8 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 		@Override
 		public void onBackPressed() {
 
-			if (identifiedByUse){
-				((ScrollOfMetamorphosis)curItem).confirmCancelation(this, true);
+			if (identifiedByUse) {
+				((ScrollOfMetamorphosis) curItem).confirmCancelation(this, true);
 			} else {
 				super.onBackPressed();
 			}
@@ -183,10 +188,10 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 		LinkedHashMap<Talent, Integer> replaceOptions;
 
 		//for window restoring
-		public WndMetamorphReplace(){
+		public WndMetamorphReplace() {
 			super();
 
-			if (INSTANCE != null){
+			if (INSTANCE != null) {
 				replacing = INSTANCE.replacing;
 				tier = INSTANCE.tier;
 				replaceOptions = INSTANCE.replaceOptions;
@@ -197,7 +202,7 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 			}
 		}
 
-		public WndMetamorphReplace(Talent replacing, int tier){
+		public WndMetamorphReplace(Talent replacing, int tier) {
 			super();
 
 			if (!identifiedByUse && curItem instanceof ScrollOfMetamorphosis) {
@@ -211,21 +216,21 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 			this.tier = tier;
 
 			LinkedHashMap<Talent, Integer> options = new LinkedHashMap<>();
-			Set<Talent> curTalentsAtTier = Dungeon.hero.talents.get(tier-1).keySet();
+			Set<Talent> curTalentsAtTier = Dungeon.hero.talents.get(tier - 1).keySet();
 
-			for (HeroClass cls : HeroClass.values()){
+			for (HeroClass cls : HeroClass.values()) {
 
 				ArrayList<LinkedHashMap<Talent, Integer>> clsTalents = new ArrayList<>();
 				Talent.initClassTalents(cls, clsTalents);
 
-				Set<Talent> clsTalentsAtTier = clsTalents.get(tier-1).keySet();
+				Set<Talent> clsTalentsAtTier = clsTalents.get(tier - 1).keySet();
 				boolean replacingIsInSet = false;
-				for (Talent talent : clsTalentsAtTier.toArray(new Talent[0])){
-					if (talent == replacing){
+				for (Talent talent : clsTalentsAtTier.toArray(new Talent[0])) {
+					if (talent == replacing) {
 						replacingIsInSet = true;
 						break;
 					} else {
-						if (curTalentsAtTier.contains(talent)){
+						if (curTalentsAtTier.contains(talent)) {
 							clsTalentsAtTier.remove(talent);
 						}
 					}
@@ -239,31 +244,33 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 			setup(replacing, tier, options);
 		}
 
-		private void setup(Talent replacing, int tier, LinkedHashMap<Talent, Integer> replaceOptions){
+		private void setup(Talent replacing, int tier, LinkedHashMap<Talent, Integer> replaceOptions) {
 			float top = 0;
 
-			IconTitle title = new IconTitle( curItem );
-			title.color( TITLE_COLOR );
+			IconTitle title = new IconTitle(curItem);
+			title.color(TITLE_COLOR);
 			title.setRect(0, 0, 120, 0);
 			add(title);
 
 			top = title.bottom() + 2;
 
-			RenderedTextBlock text = PixelScene.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, "replace_desc"), 6);
+			RenderedTextBlock text = PixelScene
+					.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, "replace_desc"), 6);
 			text.maxWidth(120);
 			text.setPos(0, top);
 			add(text);
 
 			top = text.bottom() + 2;
 
-			TalentsPane.TalentTierPane optionsPane = new TalentsPane.TalentTierPane(replaceOptions, tier, TalentButton.Mode.METAMORPH_REPLACE);
+			TalentsPane.TalentTierPane optionsPane = new TalentsPane.TalentTierPane(replaceOptions, tier,
+					TalentButton.Mode.METAMORPH_REPLACE);
 			add(optionsPane);
 			optionsPane.title.text(" ");
 			optionsPane.setPos(0, top);
 			optionsPane.setSize(120, optionsPane.height());
-			resize((int)optionsPane.width(), (int)optionsPane.bottom());
+			resize((int) optionsPane.width(), (int) optionsPane.bottom());
 
-			resize(120, (int)optionsPane.bottom());
+			resize(120, (int) optionsPane.bottom());
 		}
 
 		@Override

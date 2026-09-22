@@ -91,46 +91,46 @@ public class SandalsOfNature extends Artifact {
 
 	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedColors = new HashMap<>();
 	static {
-		seedColors.put(Rotberry.Seed.class,     0xCC0022);
-		seedColors.put(Firebloom.Seed.class,    0xFF7F00);
+		seedColors.put(Rotberry.Seed.class, 0xCC0022);
+		seedColors.put(Firebloom.Seed.class, 0xFF7F00);
 		seedColors.put(Swiftthistle.Seed.class, 0xCCBB00);
-		seedColors.put(Sungrass.Seed.class,     0x2EE62E);
-		seedColors.put(Icecap.Seed.class,       0x66B3FF);
-		seedColors.put(Stormvine.Seed.class,    0x195D80);
-		seedColors.put(Sorrowmoss.Seed.class,   0xA15CE5);
-		seedColors.put(Mageroyal.Seed.class,    0xFF4CD2);
-		seedColors.put(Earthroot.Seed.class,    0x67583D);
-		seedColors.put(Starflower.Seed.class,   0x404040);
-		seedColors.put(Fadeleaf.Seed.class,     0x919999);
-		seedColors.put(Blindweed.Seed.class,    0XD9D9D9);
+		seedColors.put(Sungrass.Seed.class, 0x2EE62E);
+		seedColors.put(Icecap.Seed.class, 0x66B3FF);
+		seedColors.put(Stormvine.Seed.class, 0x195D80);
+		seedColors.put(Sorrowmoss.Seed.class, 0xA15CE5);
+		seedColors.put(Mageroyal.Seed.class, 0xFF4CD2);
+		seedColors.put(Earthroot.Seed.class, 0x67583D);
+		seedColors.put(Starflower.Seed.class, 0x404040);
+		seedColors.put(Fadeleaf.Seed.class, 0x919999);
+		seedColors.put(Blindweed.Seed.class, 0XD9D9D9);
 	}
 
 	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedChargeReqs = new HashMap<>();
 	static {
-		seedChargeReqs.put(Rotberry.Seed.class,     8);
-		seedChargeReqs.put(Firebloom.Seed.class,    20);
+		seedChargeReqs.put(Rotberry.Seed.class, 8);
+		seedChargeReqs.put(Firebloom.Seed.class, 20);
 		seedChargeReqs.put(Swiftthistle.Seed.class, 20);
-		seedChargeReqs.put(Sungrass.Seed.class,     80);
-		seedChargeReqs.put(Icecap.Seed.class,       20);
-		seedChargeReqs.put(Stormvine.Seed.class,    20);
-		seedChargeReqs.put(Sorrowmoss.Seed.class,   20);
-		seedChargeReqs.put(Mageroyal.Seed.class,    12);
-		seedChargeReqs.put(Earthroot.Seed.class,    40);
-		seedChargeReqs.put(Starflower.Seed.class,   40);
-		seedChargeReqs.put(Fadeleaf.Seed.class,     12);
-		seedChargeReqs.put(Blindweed.Seed.class,    12);
+		seedChargeReqs.put(Sungrass.Seed.class, 80);
+		seedChargeReqs.put(Icecap.Seed.class, 20);
+		seedChargeReqs.put(Stormvine.Seed.class, 20);
+		seedChargeReqs.put(Sorrowmoss.Seed.class, 20);
+		seedChargeReqs.put(Mageroyal.Seed.class, 12);
+		seedChargeReqs.put(Earthroot.Seed.class, 40);
+		seedChargeReqs.put(Starflower.Seed.class, 40);
+		seedChargeReqs.put(Fadeleaf.Seed.class, 12);
+		seedChargeReqs.put(Blindweed.Seed.class, 12);
 	}
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (hero.buff(MagicImmune.class) != null){
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (hero.buff(MagicImmune.class) != null) {
 			return actions;
 		}
-		if (isEquipped( hero ) && !cursed) {
+		if (isEquipped(hero) && !cursed) {
 			actions.add(AC_FEED);
 		}
-		if (isEquipped( hero )
+		if (isEquipped(hero)
 				&& !cursed
 				&& curSeedEffect != null
 				&& charge >= seedChargeReqs.get(curSeedEffect)) {
@@ -140,20 +140,24 @@ public class SandalsOfNature extends Artifact {
 	}
 
 	@Override
-	public void execute( Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 
-		if (hero.buff(MagicImmune.class) != null) return;
+		if (hero.buff(MagicImmune.class) != null)
+			return;
 
-		if (action.equals(AC_FEED)){
+		if (action.equals(AC_FEED)) {
 
 			GameScene.selectItem(itemSelector);
 
-		} else if (action.equals(AC_ROOT) && !cursed){
+		} else if (action.equals(AC_ROOT) && !cursed) {
 
-			if (!isEquipped( hero ))                                GLog.i( Messages.get(Artifact.class, "need_to_equip") );
-			else if (curSeedEffect == null)                         GLog.i( Messages.get(this, "no_effect") );
-			else if (charge < seedChargeReqs.get(curSeedEffect))    GLog.i( Messages.get(this, "low_charge") );
+			if (!isEquipped(hero))
+				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
+			else if (curSeedEffect == null)
+				GLog.i(Messages.get(this, "no_effect"));
+			else if (charge < seedChargeReqs.get(curSeedEffect))
+				GLog.i(Messages.get(this, "low_charge"));
 			else {
 				GameScene.selectCell(cellSelector);
 			}
@@ -167,10 +171,11 @@ public class SandalsOfNature extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (cursed || target.buff(MagicImmune.class) != null) return;
+		if (cursed || target.buff(MagicImmune.class) != null)
+			return;
 		if (charge < chargeCap) {
-			partialCharge += 2*amount;
-			while (partialCharge >= 1f){
+			partialCharge += 2 * amount;
+			while (partialCharge >= 1f) {
 				charge++;
 				partialCharge--;
 			}
@@ -184,7 +189,7 @@ public class SandalsOfNature extends Artifact {
 
 	@Override
 	public ItemSprite.Glowing glowing() {
-		if (curSeedEffect != null){
+		if (curSeedEffect != null) {
 			return new ItemSprite.Glowing(seedColors.get(curSeedEffect));
 		}
 		return null;
@@ -192,15 +197,17 @@ public class SandalsOfNature extends Artifact {
 
 	@Override
 	public String name() {
-		if (level() == 0)   return super.name();
-		else                return Messages.get(this, "name_" + level());
+		if (level() == 0)
+			return super.name();
+		else
+			return Messages.get(this, "name_" + level());
 	}
 
 	@Override
 	public String desc() {
-		String desc = Messages.get(this, "desc_" + (level()+1));
+		String desc = Messages.get(this, "desc_" + (level() + 1));
 
-		if ( isEquipped ( owner() ) ) {
+		if (isEquipped(owner())) {
 			desc += "\n\n";
 
 			if (!cursed) {
@@ -211,13 +218,13 @@ public class SandalsOfNature extends Artifact {
 
 		}
 
-		if (curSeedEffect != null){
-				desc += "\n\n" + Messages.get(this, "desc_ability",
+		if (curSeedEffect != null) {
+			desc += "\n\n" + Messages.get(this, "desc_ability",
 					Messages.titleCase(Messages.get(curSeedEffect, "name")),
 					seedChargeReqs.get(curSeedEffect));
 		}
 
-		if (!seeds.isEmpty()){
+		if (!seeds.isEmpty()) {
 			desc += "\n\n" + Messages.get(this, "desc_seeds", seeds.size());
 		}
 
@@ -226,14 +233,18 @@ public class SandalsOfNature extends Artifact {
 
 	@Override
 	public Item upgrade() {
-		if (level() < 0)        image = ItemSpriteSheet.ARTIFACT_SANDALS;
-		else if (level() == 0)  image = ItemSpriteSheet.ARTIFACT_SHOES;
-		else if (level() == 1)  image = ItemSpriteSheet.ARTIFACT_BOOTS;
-		else if (level() >= 2)  image = ItemSpriteSheet.ARTIFACT_GREAVES;
+		if (level() < 0)
+			image = ItemSpriteSheet.ARTIFACT_SANDALS;
+		else if (level() == 0)
+			image = ItemSpriteSheet.ARTIFACT_SHOES;
+		else if (level() == 1)
+			image = ItemSpriteSheet.ARTIFACT_BOOTS;
+		else if (level() >= 2)
+			image = ItemSpriteSheet.ARTIFACT_GREAVES;
 		return super.upgrade();
 	}
 
-	public boolean canUseSeed(Item item){
+	public boolean canUseSeed(Item item) {
 		return item instanceof Plant.Seed
 				&& !seeds.contains(item.getClass())
 				&& (level() < 3 || curSeedEffect != item.getClass());
@@ -249,37 +260,42 @@ public class SandalsOfNature extends Artifact {
 	private static final String CUR_SEED_EFFECT = "cur_seed_effect";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
+	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(SEEDS, seeds.toArray(new Class[0]));
 		bundle.put(CUR_SEED_EFFECT, curSeedEffect);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
+	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		seeds.clear();
 		if (bundle.contains(SEEDS) && bundle.getClassArray(SEEDS) != null) {
 			for (Class<?> seed : bundle.getClassArray(SEEDS)) {
-				if (seed != null) seeds.add(seed);
+				if (seed != null)
+					seeds.add(seed);
 			}
 		}
 		curSeedEffect = bundle.getClass(CUR_SEED_EFFECT);
 
-		if (level() == 1)  image = ItemSpriteSheet.ARTIFACT_SHOES;
-		else if (level() == 2)  image = ItemSpriteSheet.ARTIFACT_BOOTS;
-		else if (level() >= 3)  image = ItemSpriteSheet.ARTIFACT_GREAVES;
+		if (level() == 1)
+			image = ItemSpriteSheet.ARTIFACT_SHOES;
+		else if (level() == 2)
+			image = ItemSpriteSheet.ARTIFACT_BOOTS;
+		else if (level() >= 3)
+			image = ItemSpriteSheet.ARTIFACT_GREAVES;
 	}
 
-	public class Naturalism extends ArtifactBuff{
+	public class Naturalism extends ArtifactBuff {
 		public void charge() {
-			if (cursed || target.buff(MagicImmune.class) != null) return;
-			if (charge < chargeCap){
+			if (cursed || target.buff(MagicImmune.class) != null)
+				return;
+			if (charge < chargeCap) {
 				//0.5 charge per grass at +0, up to 1 at +10
-				float chargeGain = (3f + level())/6f;
+				float chargeGain = (3f + level()) / 6f;
 				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);
 				partialCharge += Math.max(0, chargeGain);
-				while (partialCharge >= 1){
+				while (partialCharge >= 1) {
 					charge++;
 					partialCharge--;
 				}
@@ -297,7 +313,7 @@ public class SandalsOfNature extends Artifact {
 		}
 
 		@Override
-		public Class<?extends Bag> preferredBag(){
+		public Class<? extends Bag> preferredBag() {
 			return VelvetPouch.class;
 		}
 
@@ -307,56 +323,58 @@ public class SandalsOfNature extends Artifact {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
+		public void onSelect(Item item) {
 			if (item != null && item instanceof Plant.Seed) {
-				if (level() < 3) seeds.add(0, item.getClass());
+				if (level() < 3)
+					seeds.add(0, item.getClass());
 				curSeedEffect = item.getClass();
 
 				Hero hero = Dungeon.hero;
-				hero.sprite.operate( hero.pos );
-				Sample.INSTANCE.play( Assets.Sounds.PLANT );
+				hero.sprite.operate(hero.pos);
+				Sample.INSTANCE.play(Assets.Sounds.PLANT);
 				hero.busy();
-				hero.spend( Actor.TICK );
-				if (seeds.size() >= 3+(level()*3)){
+				hero.spend(Actor.TICK);
+				if (seeds.size() >= 3 + (level() * 3)) {
 					seeds.clear();
 					upgrade();
 					Catalog.countUses(SandalsOfNature.class, level() == 3 ? 4 : 3);
 					if (level() >= 1 && level() <= 3) {
-						GLog.p( Messages.get(SandalsOfNature.class, "levelup") );
+						GLog.p(Messages.get(SandalsOfNature.class, "levelup"));
 					}
 
 				} else {
-					GLog.i( Messages.get(SandalsOfNature.class, "absorb_seed") );
+					GLog.i(Messages.get(SandalsOfNature.class, "absorb_seed"));
 				}
 				item.detach(hero.belongings.backpack);
 			}
 		}
 	};
 
-	public CellSelector.Listener cellSelector = new CellSelector.Listener(){
+	public CellSelector.Listener cellSelector = new CellSelector.Listener() {
 
 		@Override
 		public void onSelect(Integer cell) {
-			if (cell != null){
+			if (cell != null) {
 
-				if (!Dungeon.level.heroFOV[cell] || Dungeon.level.distance(curUser.pos, cell) > 3){
+				if (!Dungeon.level.heroFOV[cell] || Dungeon.level.distance(curUser.pos, cell) > 3) {
 					GLog.w(Messages.get(SandalsOfNature.class, "out_of_range"));
 				} else {
 
 					Ballistica aim = new Ballistica(curUser.pos, cell, Ballistica.STOP_TARGET);
-					for (int c : aim.subPath(0, aim.dist)){
-						CellEmitter.get( c ).burst( LeafParticle.GENERAL, 6 );
+					for (int c : aim.subPath(0, aim.dist)) {
+						CellEmitter.get(c).burst(LeafParticle.GENERAL, 6);
 					}
 
-					Splash.at(DungeonTilemap.tileCenterToWorld( cell ), -PointF.PI/2, PointF.PI/2, seedColors.get(curSeedEffect), 6);
+					Splash.at(DungeonTilemap.tileCenterToWorld(cell), -PointF.PI / 2, PointF.PI / 2,
+							seedColors.get(curSeedEffect), 6);
 					Invisibility.dispel(curUser);
 
 					Plant plant = ((Plant.Seed) Reflection.newInstance(curSeedEffect)).couch(cell, null);
 					plant.activate(Actor.findChar(cell));
 					Sample.INSTANCE.play(Assets.Sounds.PLANT);
-					Sample.INSTANCE.playDelayed(Assets.Sounds.TRAMPLE, 0.25f, 1, Random.Float( 0.96f, 1.05f ) );
+					Sample.INSTANCE.playDelayed(Assets.Sounds.TRAMPLE, 0.25f, 1, Random.Float(0.96f, 1.05f));
 
-					if (Actor.findChar(cell) != null){
+					if (Actor.findChar(cell) != null) {
 						artifactProc(Actor.findChar(cell), visiblyUpgraded(), seedChargeReqs.get(curSeedEffect));
 					}
 

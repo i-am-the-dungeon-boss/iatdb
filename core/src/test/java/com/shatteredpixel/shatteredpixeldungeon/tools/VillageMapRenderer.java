@@ -117,7 +117,8 @@ public final class VillageMapRenderer {
 
 		Random.popGenerator();
 
-		File out = options.out != null ? options.out
+		File out = options.out != null
+				? options.out
 				: new File(dirProperty(ROOT_DIR), "docs/village/village-map.png");
 		if (out.getParentFile() != null) {
 			out.getParentFile().mkdirs();
@@ -214,32 +215,53 @@ public final class VillageMapRenderer {
 		}
 
 		switch (level.map[cell]) {
-			case Terrain.WALL:           return '#';
-			case Terrain.WALL_DECO:      return 'D';
-			case Terrain.HIGH_GRASS:     return 'T';
-			case Terrain.FURROWED_GRASS: return 't';
-			case Terrain.GRASS:          return ',';
-			case Terrain.EMPTY:          return '.';
-			case Terrain.EMPTY_SP:       return '=';
-			case Terrain.WATER:          return '~';
-			case Terrain.DOOR:           return '+';
-			case Terrain.EXIT:           return '>';
-			case Terrain.WELL:           return 'o';
-			case Terrain.STATUE:         return 'I';
-			case Terrain.EMBERS:         return 'e';
-			case Terrain.BARRICADE:      return 'X';
-			case Terrain.CUSTOM_DECO:    return '@';
-			default:                     return '?';
+			case Terrain.WALL:
+				return '#';
+			case Terrain.WALL_DECO:
+				return 'D';
+			case Terrain.HIGH_GRASS:
+				return 'T';
+			case Terrain.FURROWED_GRASS:
+				return 't';
+			case Terrain.GRASS:
+				return ',';
+			case Terrain.EMPTY:
+				return '.';
+			case Terrain.EMPTY_SP:
+				return '=';
+			case Terrain.WATER:
+				return '~';
+			case Terrain.DOOR:
+				return '+';
+			case Terrain.EXIT:
+				return '>';
+			case Terrain.WELL:
+				return 'o';
+			case Terrain.STATUE:
+				return 'I';
+			case Terrain.EMBERS:
+				return 'e';
+			case Terrain.BARRICADE:
+				return 'X';
+			case Terrain.CUSTOM_DECO:
+				return '@';
+			default:
+				return '?';
 		}
 	}
 
 	private static char quarterChar(int region) {
 		switch (region) {
-			case EchoAltar.SEWERS: return 's';
-			case EchoAltar.PRISON: return 'p';
-			case EchoAltar.CAVES:  return 'c';
-			case EchoAltar.CITY:   return 'y';
-			default: throw new IllegalArgumentException("no chart character for " + region);
+			case EchoAltar.SEWERS:
+				return 's';
+			case EchoAltar.PRISON:
+				return 'p';
+			case EchoAltar.CAVES:
+				return 'c';
+			case EchoAltar.CITY:
+				return 'y';
+			default:
+				throw new IllegalArgumentException("no chart character for " + region);
 		}
 	}
 

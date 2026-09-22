@@ -52,8 +52,8 @@ public class PitfallTrap extends Trap {
 
 	@Override
 	public void activate() {
-		
-		if( Dungeon.bossLevel() || Dungeon.depth > 25 || Dungeon.branch != 0){
+
+		if (Dungeon.bossLevel() || Dungeon.depth > 25 || Dungeon.branch != 0) {
 			GLog.w(Messages.get(this, "no_pit"));
 			return;
 		}
@@ -63,17 +63,17 @@ public class PitfallTrap extends Trap {
 		p.branch = Dungeon.branch;
 
 		ArrayList<Integer> positions = new ArrayList<>();
-		for (int i : PathFinder.NEIGHBOURS9){
-			if (!Dungeon.level.solid[pos+i] || Dungeon.level.passable[pos+i]){
-				CellEmitter.floor(pos+i).burst(PitfallParticle.FACTORY4, 8);
-				positions.add(pos+i);
+		for (int i : PathFinder.NEIGHBOURS9) {
+			if (!Dungeon.level.solid[pos + i] || Dungeon.level.passable[pos + i]) {
+				CellEmitter.floor(pos + i).burst(PitfallParticle.FACTORY4, 8);
+				positions.add(pos + i);
 			}
 		}
 		p.setPositions(positions);
 
-		if (pos == Dungeon.hero.pos){
+		if (pos == Dungeon.hero.pos) {
 			GLog.n(Messages.get(this, "triggered_hero"));
-		} else if (Dungeon.level.heroFOV[pos]){
+		} else if (Dungeon.level.heroFOV[pos]) {
 			GLog.n(Messages.get(this, "triggered"));
 		}
 
@@ -99,7 +99,7 @@ public class PitfallTrap extends Trap {
 				for (int cell : positions) {
 
 					if (!Dungeon.level.insideMap(cell)
-							|| (Dungeon.level.solid[cell] && !Dungeon.level.passable[cell])){
+							|| (Dungeon.level.solid[cell] && !Dungeon.level.passable[cell])) {
 						continue;
 					}
 
@@ -135,7 +135,7 @@ public class PitfallTrap extends Trap {
 			}
 
 			//process hero falling last
-			if (herofell){
+			if (herofell) {
 				Chasm.heroFall(Dungeon.hero.pos);
 			}
 
@@ -143,9 +143,9 @@ public class PitfallTrap extends Trap {
 			return !herofell;
 		}
 
-		public void setPositions(ArrayList<Integer> positions){
+		public void setPositions(ArrayList<Integer> positions) {
 			this.positions = new int[positions.size()];
-			for (int i = 0; i < this.positions.length; i++){
+			for (int i = 0; i < this.positions.length; i++) {
 				this.positions[i] = positions.get(i);
 			}
 		}

@@ -298,8 +298,8 @@ class EchoPolicyGatesTest {
 		EchoPolicyStatus lockedOut = new EchoPolicyStatus.Builder()
 				.enemyStatuses(java.util.Set.of("paralysis_immunity"))
 				.build();
-		java.util.Set<String> available =
-				java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze", "StoneOfShock");
+		java.util.Set<String> available = java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze",
+				"StoneOfShock");
 
 		JSONObject narrowed = EchoRoleExecutor.capForEnemy("SETUP_CC", cap, lockedOut);
 
@@ -316,8 +316,7 @@ class EchoPolicyGatesTest {
 						.put("PotionOfParalyticGas")
 						.put("PotionOfSnapFreeze"));
 		EchoPolicyStatus plain = new EchoPolicyStatus.Builder().build();
-		java.util.Set<String> available =
-				java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze");
+		java.util.Set<String> available = java.util.Set.of("PotionOfParalyticGas", "PotionOfSnapFreeze");
 
 		JSONObject narrowed = EchoRoleExecutor.capForEnemy("SETUP_CC", cap, plain);
 
@@ -330,8 +329,7 @@ class EchoPolicyGatesTest {
 	 * {@code hero}, so no adjacent step increases distance from the hero.
 	 */
 	private static void wallOffEverySideExceptTowardHero(Hero hero, EchoBoss boss) {
-		com.shatteredpixel.shatteredpixeldungeon.levels.Level level =
-				com.shatteredpixel.shatteredpixeldungeon.Dungeon.level;
+		com.shatteredpixel.shatteredpixeldungeon.levels.Level level = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level;
 		int current = level.distance(boss.pos, hero.pos);
 		for (int i = 0; i < com.watabou.utils.PathFinder.NEIGHBOURS8.length; i++) {
 			int cell = boss.pos + com.watabou.utils.PathFinder.NEIGHBOURS8[i];
@@ -356,8 +354,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPlan choice =
-				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("BLINK")).isTrue();
 		Assertions.assertThat(choice).isNotNull();
@@ -376,8 +373,7 @@ class EchoPolicyGatesTest {
 		// No FOV filled: enemy_in_los reads false, same as an occluded hero.
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPlan choice =
-				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
 		Assertions.assertThat(status.isRoleReady("BLINK")).isFalse();
@@ -407,8 +403,7 @@ class EchoPolicyGatesTest {
 	void untouchableNeverChoosesADamageRole() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = untouchableLadderPolicy();
-		java.util.Set<String> damageRoles =
-				java.util.Set.of("MELEE", "RANGED", "FINISHER", "PAYOFF_AOE");
+		java.util.Set<String> damageRoles = java.util.Set.of("MELEE", "RANGED", "FINISHER", "PAYOFF_AOE");
 
 		EchoBoss boss = untouchableLadderBoss(hero, policy, false);
 		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink());
@@ -417,8 +412,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPlan choice =
-				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.RUN);
 		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
@@ -439,8 +433,7 @@ class EchoPolicyGatesTest {
 		Buff.affect(hero, Invulnerability.class, 3f);
 
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
-		EchoPlan choice =
-				EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
 
 		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);
 		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();

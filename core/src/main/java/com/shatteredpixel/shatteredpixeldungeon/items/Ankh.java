@@ -50,49 +50,48 @@ public class Ankh extends Item {
 	}
 
 	private boolean blessed = false;
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
+	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
 		Waterskin waterskin = hero.belongings.getItem(Waterskin.class);
 		if (waterskin != null && waterskin.isFull() && !blessed)
-			actions.add( AC_BLESS );
+			actions.add(AC_BLESS);
 		return actions;
 	}
 
 	@Override
-	public void execute( final Hero hero, String action ) {
+	public void execute(final Hero hero, String action) {
 
-		super.execute( hero, action );
+		super.execute(hero, action);
 
-		if (action.equals( AC_BLESS )) {
+		if (action.equals(AC_BLESS)) {
 
 			Waterskin waterskin = hero.belongings.getItem(Waterskin.class);
-			if (waterskin != null){
+			if (waterskin != null) {
 				blessed = true;
 				waterskin.empty();
-				GLog.p( Messages.get(this, "bless") );
-				hero.spend( 1f );
+				GLog.p(Messages.get(this, "bless"));
+				hero.spend(1f);
 				hero.busy();
 
-
-				Sample.INSTANCE.play( Assets.Sounds.DRINK );
+				Sample.INSTANCE.play(Assets.Sounds.DRINK);
 				CellEmitter.get(hero.pos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);
-				hero.sprite.operate( hero.pos );
+				hero.sprite.operate(hero.pos);
 			}
 		}
 	}
-	
+
 	@Override
 	public String desc() {
 		if (blessed)
@@ -101,15 +100,15 @@ public class Ankh extends Item {
 			return super.desc();
 	}
 
-	public boolean isBlessed(){
+	public boolean isBlessed() {
 		return blessed;
 	}
 
-	public void bless(){
+	public void bless() {
 		blessed = true;
 	}
 
-	private static final Glowing WHITE = new Glowing( 0xFFFFCC );
+	private static final Glowing WHITE = new Glowing(0xFFFFCC);
 
 	@Override
 	public Glowing glowing() {
@@ -119,17 +118,17 @@ public class Ankh extends Item {
 	private static final String BLESSED = "blessed";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( BLESSED, blessed );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(BLESSED, blessed);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		blessed	= bundle.getBoolean( BLESSED );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		blessed = bundle.getBoolean(BLESSED);
 	}
-	
+
 	@Override
 	public int value() {
 		return 50 * quantity;

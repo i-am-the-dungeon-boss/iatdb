@@ -41,7 +41,6 @@ class EchoArmorAbilityElementalBlastTest {
 			this.boss = boss;
 		}
 
-
 		void imbueMagicMissileStaff() {
 			boss.getEchoHero().belongings.weapon = new MagesStaff(new WandOfMagicMissile());
 		}
@@ -96,7 +95,9 @@ class EchoArmorAbilityElementalBlastTest {
 		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalBlast(), f.player.pos))
+		Assertions
+				.assertThatCode(
+						() -> EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalBlast(), f.player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);
@@ -117,7 +118,9 @@ class EchoArmorAbilityElementalBlastTest {
 		armor.charge = 100;
 		int hpBefore = f.player.HP;
 
-		Assertions.assertThatCode(() -> EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalBlast(), f.player.pos))
+		Assertions
+				.assertThatCode(
+						() -> EchoArmorAbilityAdapter.activate(f.boss, armor, new ElementalBlast(), f.player.pos))
 				.doesNotThrowAnyException();
 		Assertions.assertThat(armor.charge).isLessThan(100);
 		Assertions.assertThat(f.player.HP).isLessThan(hpBefore);

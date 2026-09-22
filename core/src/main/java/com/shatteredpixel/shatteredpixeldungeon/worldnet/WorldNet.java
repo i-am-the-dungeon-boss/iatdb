@@ -304,7 +304,7 @@ public final class WorldNet {
 		heroClass = localHeroClass != null ? localHeroClass : "";
 		if (!engine().isConnected()) {
 			history.clear();
-		unshown.clear();
+			unshown.clear();
 			unshown.clear();
 			engine().connect(identity(), LISTENER);
 		}

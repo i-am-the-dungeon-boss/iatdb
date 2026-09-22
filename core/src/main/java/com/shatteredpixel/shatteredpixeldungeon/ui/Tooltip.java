@@ -39,7 +39,7 @@ public class Tooltip extends Component {
 	private static float tooltipAlpha = -5f;
 	private static float lastUsedTime = -1;
 
-	public static void resetLastUsedTime(){
+	public static void resetLastUsedTime() {
 		lastUsedTime = -1;
 		tooltipAlpha = -5;
 	}
@@ -50,7 +50,7 @@ public class Tooltip extends Component {
 	private NinePatch bg;
 	private RenderedTextBlock text;
 
-	public Tooltip(Component parent, String msg, int maxWidth){
+	public Tooltip(Component parent, String msg, int maxWidth) {
 		super();
 		text.text(msg, maxWidth);
 		layout();
@@ -58,12 +58,12 @@ public class Tooltip extends Component {
 		this.parent = parent;
 		parentDims = new RectF(parent.left(), parent.top(), parent.right(), parent.bottom());
 
-		if (lastUsedTime == -1 || lastUsedTime > Game.timeTotal){
+		if (lastUsedTime == -1 || lastUsedTime > Game.timeTotal) {
 			tooltipAlpha = -5f;
 
 		} else {
 			float elapsed = Game.timeTotal - lastUsedTime;
-			if (elapsed >= 0.25f || tooltipAlpha < 1f){
+			if (elapsed >= 0.25f || tooltipAlpha < 1f) {
 				tooltipAlpha = -5f;
 			}
 		}
@@ -92,13 +92,13 @@ public class Tooltip extends Component {
 				parentDims.left != parent.left() ||
 				parentDims.top != parent.top() ||
 				parentDims.right != parent.right() ||
-				parentDims.bottom != parent.bottom()){
+				parentDims.bottom != parent.bottom()) {
 			killAndErase();
 			return;
 		}
 
 		super.update();
-		tooltipAlpha = Math.min(1f, tooltipAlpha + 10f*Game.elapsed);
+		tooltipAlpha = Math.min(1f, tooltipAlpha + 10f * Game.elapsed);
 		lastUsedTime = Game.timeTotal;
 
 		bg.alpha(GameMath.gate(0, tooltipAlpha, 1));
@@ -111,7 +111,7 @@ public class Tooltip extends Component {
 		text.setPos(x + bg.marginLeft(), y + bg.marginTop());
 		bg.x = x;
 		bg.y = y;
-		bg.size(text.width()+bg.marginHor(), text.height()+bg.marginVer());
+		bg.size(text.width() + bg.marginHor(), text.height() + bg.marginVer());
 
 		width = bg.width;
 		height = bg.height;

@@ -48,8 +48,8 @@ public class Sword extends MeleeWeapon {
 	}
 
 	@Override
-	protected int baseChargeUse(Hero hero, Char target){
-		if (hero.buff(Sword.CleaveTracker.class) != null){
+	protected int baseChargeUse(Hero hero, Char target) {
+		if (hero.buff(Sword.CleaveTracker.class) != null) {
 			return 0;
 		} else {
 			return 1;
@@ -71,19 +71,20 @@ public class Sword extends MeleeWeapon {
 	@Override
 	public String abilityInfo() {
 		int dmgBoost = levelKnown ? 5 + buffedLvl() : 5;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		int dmgBoost = 5 + level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 
-	public static void cleaveAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep){
+	public static void cleaveAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep) {
 		if (target == null) {
 			return;
 		}
@@ -95,7 +96,7 @@ public class Sword extends MeleeWeapon {
 		}
 
 		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(wep, "ability_target_range"));
 			hero.belongings.abilityWeapon = null;
 			return;
@@ -107,13 +108,13 @@ public class Sword extends MeleeWeapon {
 			public void call() {
 				wep.beforeAbilityUsed(hero, enemy);
 				AttackIndicator.target(enemy);
-				if (hero.attack(enemy, dmgMulti, dmgBoost, Char.INFINITE_ACCURACY)){
+				if (hero.attack(enemy, dmgMulti, dmgBoost, Char.INFINITE_ACCURACY)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
 
 				Invisibility.dispel();
 
-				if (!enemy.isAlive()){
+				if (!enemy.isAlive()) {
 					hero.next();
 					wep.onAbilityKill(hero, enemy);
 					if (hero.buff(CleaveTracker.class) != null) {

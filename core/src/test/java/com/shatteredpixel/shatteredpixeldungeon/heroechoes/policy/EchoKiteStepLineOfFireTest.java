@@ -149,11 +149,10 @@ class EchoKiteStepLineOfFireTest {
 	/** Mirrors the echo's own line-of-fire rule: no solid and no sight blocker between. */
 	private static boolean hasLine(int from, int to) {
 		Level level = Dungeon.level;
-		com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica line =
-				new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(
-						from, to,
-						com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.STOP_TARGET
-								| com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.STOP_SOLID);
+		com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica line = new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(
+				from, to,
+				com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.STOP_TARGET
+						| com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.STOP_SOLID);
 		if (line.collisionPos != to) {
 			return false;
 		}

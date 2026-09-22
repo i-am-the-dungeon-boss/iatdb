@@ -22,233 +22,233 @@ import java.util.regex.Pattern;
 
 public final class EchoStorage implements EchoReplacementDecider.EchoLookup {
 
-    /** One persisted echo per boss depth within the active play mode. */
-    public static final int MAX_ECHOES_PER_DEPTH = 1;
-    public static final String POLICY_BUNDLE_KEY = "echo_policy";
-    private static final Pattern DEPTH_FILE = Pattern.compile("^depth-(\\d+)(?:-\\d+)?\\.dat$");
+	/** One persisted echo per boss depth within the active play mode. */
+	public static final int MAX_ECHOES_PER_DEPTH = 1;
+	public static final String POLICY_BUNDLE_KEY = "echo_policy";
+	private static final Pattern DEPTH_FILE = Pattern.compile("^depth-(\\d+)(?:-\\d+)?\\.dat$");
 
-    public static File getEchoesDir() {
-        ensureEchoesDir();
-        return FileUtils.getFileHandle(EchoPlayModePaths.echoesDir()).file();
-    }
+	public static File getEchoesDir() {
+		ensureEchoesDir();
+		return FileUtils.getFileHandle(EchoPlayModePaths.echoesDir()).file();
+	}
 
-    public void save(Echo echo) {
-        save(echo, EchoPolicy.fallback());
-    }
+	public void save(Echo echo) {
+		save(echo, EchoPolicy.fallback());
+	}
 
-    public void save(Echo echo, EchoPolicy policy) {
-        if (echo == null)
-            return;
-        if (policy == null) {
-            throw new IllegalArgumentException("echo_policy is required");
-        }
-        try {
-            ensureEchoesDir();
-            if (echo.timestamp <= 0) {
-                echo.timestamp = System.currentTimeMillis();
-            }
-            if (echo.echoId == null) {
-                echo.echoId = echo.depth + "-" + echo.timestamp;
-            }
+	public void save(Echo echo, EchoPolicy policy) {
+		if (echo == null)
+			return;
+		if (policy == null) {
+			throw new IllegalArgumentException("echo_policy is required");
+		}
+		try {
+			ensureEchoesDir();
+			if (echo.timestamp <= 0) {
+				echo.timestamp = System.currentTimeMillis();
+			}
+			if (echo.echoId == null) {
+				echo.echoId = echo.depth + "-" + echo.timestamp;
+			}
 
-            clearDepth(echo.depth);
-            Bundle fileBundle = echo.toFileBundle();
-            fileBundle.put(POLICY_BUNDLE_KEY, policy.toBundle());
-            FileUtils.bundleToFile(canonicalPath(echo.depth), fileBundle);
-        } catch (IOException ignored) {
-        }
-    }
+			clearDepth(echo.depth);
+			Bundle fileBundle = echo.toFileBundle();
+			fileBundle.put(POLICY_BUNDLE_KEY, policy.toBundle());
+			FileUtils.bundleToFile(canonicalPath(echo.depth), fileBundle);
+		} catch (IOException ignored) {
+		}
+	}
 
-    /**
-     * @return loaded echo, or {@code null} if none / invalid (RoboVM has no
-     *         Optional).
-     */
-    public Echo loadForDepth(int depth, String currentGameVersion) {
-        EchoFetchResult result = loadResultForDepth(depth);
-        return result != null ? result.echo : null;
-    }
+	/**
+	 * @return loaded echo, or {@code null} if none / invalid (RoboVM has no
+	 *         Optional).
+	 */
+	public Echo loadForDepth(int depth, String currentGameVersion) {
+		EchoFetchResult result = loadResultForDepth(depth);
+		return result != null ? result.echo : null;
+	}
 
-    @Override
-    public EchoLookupOutcome findEchoForDepth(int depth) {
-        EchoFetchResult result = loadResultForDepth(depth);
-        return result != null ? EchoLookupOutcome.found(result) : EchoLookupOutcome.notFound();
-    }
+	@Override
+	public EchoLookupOutcome findEchoForDepth(int depth) {
+		EchoFetchResult result = loadResultForDepth(depth);
+		return result != null ? EchoLookupOutcome.found(result) : EchoLookupOutcome.notFound();
+	}
 
-    public static final class EchoEntry {
-        public final File file;
-        public final Echo echo;
+	public static final class EchoEntry {
+		public final File file;
+		public final Echo echo;
 
-        public EchoEntry(File file, Echo echo) {
-            this.file = file;
-            this.echo = echo;
-        }
+		public EchoEntry(File file, Echo echo) {
+			this.file = file;
+			this.echo = echo;
+		}
 
-        public String filename() {
-            return file.getName();
-        }
+		public String filename() {
+			return file.getName();
+		}
 
-        public long sortTime() {
-            if (echo.timestamp > 0)
-                return echo.timestamp;
-            return file.lastModified();
-        }
-    }
+		public long sortTime() {
+			if (echo.timestamp > 0)
+				return echo.timestamp;
+			return file.lastModified();
+		}
+	}
 
-    /** Newest echo per boss depth for the active play mode, sorted newest first. */
-    public List<EchoEntry> loadAll() {
-        Map<Integer, EchoEntry> newestPerDepth = new HashMap<>();
-        ensureEchoesDir();
-        String dirName = EchoPlayModePaths.echoesDir();
-        for (String name : FileUtils.filesInDir(dirName)) {
-            if (!name.endsWith(".dat") || name.startsWith("latest-")) {
-                continue;
-            }
-            int depth = parseDepth(name);
-            if (depth < 0) {
-                continue;
-            }
-            try {
-                String path = dirName + "/" + name;
-                Echo loaded = loadEchoFromPath(path);
-                if (loaded == null) {
-                    continue;
-                }
-                EchoEntry entry = new EchoEntry(FileUtils.getFileHandle(path).file(), loaded);
-                EchoEntry existing = newestPerDepth.get(depth);
-                if (existing == null || entry.sortTime() > existing.sortTime()) {
-                    newestPerDepth.put(depth, entry);
-                }
-            } catch (Exception ignored) {
-            }
-        }
+	/** Newest echo per boss depth for the active play mode, sorted newest first. */
+	public List<EchoEntry> loadAll() {
+		Map<Integer, EchoEntry> newestPerDepth = new HashMap<>();
+		ensureEchoesDir();
+		String dirName = EchoPlayModePaths.echoesDir();
+		for (String name : FileUtils.filesInDir(dirName)) {
+			if (!name.endsWith(".dat") || name.startsWith("latest-")) {
+				continue;
+			}
+			int depth = parseDepth(name);
+			if (depth < 0) {
+				continue;
+			}
+			try {
+				String path = dirName + "/" + name;
+				Echo loaded = loadEchoFromPath(path);
+				if (loaded == null) {
+					continue;
+				}
+				EchoEntry entry = new EchoEntry(FileUtils.getFileHandle(path).file(), loaded);
+				EchoEntry existing = newestPerDepth.get(depth);
+				if (existing == null || entry.sortTime() > existing.sortTime()) {
+					newestPerDepth.put(depth, entry);
+				}
+			} catch (Exception ignored) {
+			}
+		}
 
-        List<EchoEntry> entries = new ArrayList<>(newestPerDepth.values());
-        Collections.sort(entries, new Comparator<EchoEntry>() {
-            @Override
-            public int compare(EchoEntry a, EchoEntry b) {
-                return Long.compare(b.sortTime(), a.sortTime());
-            }
-        });
-        return entries;
-    }
+		List<EchoEntry> entries = new ArrayList<>(newestPerDepth.values());
+		Collections.sort(entries, new Comparator<EchoEntry>() {
+			@Override
+			public int compare(EchoEntry a, EchoEntry b) {
+				return Long.compare(b.sortTime(), a.sortTime());
+			}
+		});
+		return entries;
+	}
 
-    /** Deletes the echo file(s) for the entry's boss depth. */
-    public boolean deleteEntry(EchoEntry entry) {
-        if (entry == null || entry.echo == null) {
-            return false;
-        }
-        ensureEchoesDir();
-        String dirName = EchoPlayModePaths.echoesDir();
-        boolean deleted = false;
-        for (String name : FileUtils.filesInDir(dirName)) {
-            if (belongsToDepth(name, entry.echo.depth)) {
-                deleted |= FileUtils.deleteFile(dirName + "/" + name);
-            }
-        }
-        return deleted;
-    }
+	/** Deletes the echo file(s) for the entry's boss depth. */
+	public boolean deleteEntry(EchoEntry entry) {
+		if (entry == null || entry.echo == null) {
+			return false;
+		}
+		ensureEchoesDir();
+		String dirName = EchoPlayModePaths.echoesDir();
+		boolean deleted = false;
+		for (String name : FileUtils.filesInDir(dirName)) {
+			if (belongsToDepth(name, entry.echo.depth)) {
+				deleted |= FileUtils.deleteFile(dirName + "/" + name);
+			}
+		}
+		return deleted;
+	}
 
-    private static void ensureEchoesDir() {
-        String dirName = EchoPlayModePaths.echoesDir();
-        if (!FileUtils.dirExists(dirName)) {
-            FileHandle dir = FileUtils.getFileHandle(dirName);
-            if (dir != null) {
-                dir.mkdirs();
-            }
-        }
-    }
+	private static void ensureEchoesDir() {
+		String dirName = EchoPlayModePaths.echoesDir();
+		if (!FileUtils.dirExists(dirName)) {
+			FileHandle dir = FileUtils.getFileHandle(dirName);
+			if (dir != null) {
+				dir.mkdirs();
+			}
+		}
+	}
 
-    private static String canonicalPath(int depth) {
-        return String.format(Locale.ROOT, "%s/depth-%d.dat", EchoPlayModePaths.echoesDir(), depth);
-    }
+	private static String canonicalPath(int depth) {
+		return String.format(Locale.ROOT, "%s/depth-%d.dat", EchoPlayModePaths.echoesDir(), depth);
+	}
 
-    private static void clearDepth(int depth) {
-        String dirName = EchoPlayModePaths.echoesDir();
-        if (!FileUtils.dirExists(dirName)) {
-            return;
-        }
-        for (String name : FileUtils.filesInDir(dirName)) {
-            if (belongsToDepth(name, depth)) {
-                FileUtils.deleteFile(dirName + "/" + name);
-            }
-        }
-    }
+	private static void clearDepth(int depth) {
+		String dirName = EchoPlayModePaths.echoesDir();
+		if (!FileUtils.dirExists(dirName)) {
+			return;
+		}
+		for (String name : FileUtils.filesInDir(dirName)) {
+			if (belongsToDepth(name, depth)) {
+				FileUtils.deleteFile(dirName + "/" + name);
+			}
+		}
+	}
 
-    private static boolean belongsToDepth(String name, int depth) {
-        return name.equals("depth-" + depth + ".dat")
-                || name.startsWith("depth-" + depth + "-")
-                || name.equals("latest-depth-" + depth + ".dat");
-    }
+	private static boolean belongsToDepth(String name, int depth) {
+		return name.equals("depth-" + depth + ".dat")
+				|| name.startsWith("depth-" + depth + "-")
+				|| name.equals("latest-depth-" + depth + ".dat");
+	}
 
-    private EchoFetchResult loadResultForDepth(int depth) {
-        String canonical = canonicalPath(depth);
-        if (FileUtils.fileExists(canonical)) {
-            try {
-                return readResult(canonical, depth);
-            } catch (Exception ignored) {
-            }
-            return null;
-        }
+	private EchoFetchResult loadResultForDepth(int depth) {
+		String canonical = canonicalPath(depth);
+		if (FileUtils.fileExists(canonical)) {
+			try {
+				return readResult(canonical, depth);
+			} catch (Exception ignored) {
+			}
+			return null;
+		}
 
-        String dirName = EchoPlayModePaths.echoesDir();
-        if (!FileUtils.dirExists(dirName)) {
-            return null;
-        }
+		String dirName = EchoPlayModePaths.echoesDir();
+		if (!FileUtils.dirExists(dirName)) {
+			return null;
+		}
 
-        EchoFetchResult newest = null;
-        long newestTime = Long.MIN_VALUE;
-        for (String name : FileUtils.filesInDir(dirName)) {
-            if (!name.startsWith("depth-" + depth + "-") || !name.endsWith(".dat")) {
-                continue;
-            }
-            try {
-                String path = dirName + "/" + name;
-                EchoFetchResult loaded = readResult(path, depth);
-                if (loaded == null) {
-                    continue;
-                }
-                long sortTime = loaded.echo.timestamp > 0
-                        ? loaded.echo.timestamp
-                        : FileUtils.getFileHandle(path).lastModified();
-                if (sortTime >= newestTime) {
-                    newest = loaded;
-                    newestTime = sortTime;
-                }
-            } catch (Exception ignored) {
-            }
-        }
-        return newest;
-    }
+		EchoFetchResult newest = null;
+		long newestTime = Long.MIN_VALUE;
+		for (String name : FileUtils.filesInDir(dirName)) {
+			if (!name.startsWith("depth-" + depth + "-") || !name.endsWith(".dat")) {
+				continue;
+			}
+			try {
+				String path = dirName + "/" + name;
+				EchoFetchResult loaded = readResult(path, depth);
+				if (loaded == null) {
+					continue;
+				}
+				long sortTime = loaded.echo.timestamp > 0
+						? loaded.echo.timestamp
+						: FileUtils.getFileHandle(path).lastModified();
+				if (sortTime >= newestTime) {
+					newest = loaded;
+					newestTime = sortTime;
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		return newest;
+	}
 
-    private static EchoFetchResult readResult(String path, int depth)
-            throws IOException {
-        Bundle fileBundle = FileUtils.bundleFromFile(path);
-        if (!fileBundle.contains(Echo.BUNDLE_KEY) || !fileBundle.contains(POLICY_BUNDLE_KEY)) {
-            return null;
-        }
-        Echo loaded = Echo.fromFileBundle(fileBundle);
-        if (loaded.depth != depth || !loaded.hasCombatData()) {
-            return null;
-        }
-        EchoPolicy policy = EchoPolicy.fromBundle(fileBundle.getBundle(POLICY_BUNDLE_KEY));
-        if (!policy.isSupported()) {
-            return null;
-        }
-        return new EchoFetchResult(loaded, policy);
-    }
+	private static EchoFetchResult readResult(String path, int depth)
+			throws IOException {
+		Bundle fileBundle = FileUtils.bundleFromFile(path);
+		if (!fileBundle.contains(Echo.BUNDLE_KEY) || !fileBundle.contains(POLICY_BUNDLE_KEY)) {
+			return null;
+		}
+		Echo loaded = Echo.fromFileBundle(fileBundle);
+		if (loaded.depth != depth || !loaded.hasCombatData()) {
+			return null;
+		}
+		EchoPolicy policy = EchoPolicy.fromBundle(fileBundle.getBundle(POLICY_BUNDLE_KEY));
+		if (!policy.isSupported()) {
+			return null;
+		}
+		return new EchoFetchResult(loaded, policy);
+	}
 
-    private static int parseDepth(String filename) {
-        Matcher matcher = DEPTH_FILE.matcher(filename);
-        if (!matcher.matches())
-            return -1;
-        return Integer.parseInt(matcher.group(1));
-    }
+	private static int parseDepth(String filename) {
+		Matcher matcher = DEPTH_FILE.matcher(filename);
+		if (!matcher.matches())
+			return -1;
+		return Integer.parseInt(matcher.group(1));
+	}
 
-    private static Echo loadEchoFromPath(String path) throws IOException {
-        Bundle fileBundle = FileUtils.bundleFromFile(path);
-        if (!fileBundle.contains(Echo.BUNDLE_KEY)) {
-            return null;
-        }
-        return Echo.fromFileBundle(fileBundle);
-    }
+	private static Echo loadEchoFromPath(String path) throws IOException {
+		Bundle fileBundle = FileUtils.bundleFromFile(path);
+		if (!fileBundle.contains(Echo.BUNDLE_KEY)) {
+			return null;
+		}
+		return Echo.fromFileBundle(fileBundle);
+	}
 }

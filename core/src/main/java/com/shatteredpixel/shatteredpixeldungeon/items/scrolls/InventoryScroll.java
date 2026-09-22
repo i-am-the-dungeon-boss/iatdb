@@ -43,59 +43,62 @@ public abstract class InventoryScroll extends Scroll {
 
 		if (!isKnown()) {
 			identify();
-			curItem = detach( curUser.belongings.backpack );
+			curItem = detach(curUser.belongings.backpack);
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
 		}
 
-		GameScene.selectItem( itemSelector );
+		GameScene.selectItem(itemSelector);
 	}
 
 	private void confirmCancelation() {
-		GameScene.show( new WndConfirmCancel() );
+		GameScene.show(new WndConfirmCancel());
 	}
 
-	public class WndConfirmCancel extends WndOptions{
+	public class WndConfirmCancel extends WndOptions {
 
-		public WndConfirmCancel(){
+		public WndConfirmCancel() {
 			super(new ItemSprite(InventoryScroll.this),
 					Messages.titleCase(name()),
 					Messages.get(InventoryScroll.this, "warning"),
 					Messages.get(InventoryScroll.this, "yes"),
-					Messages.get(InventoryScroll.this, "no") );
+					Messages.get(InventoryScroll.this, "no"));
 		}
+
 		@Override
-		protected void onSelect( int index ) {
+		protected void onSelect(int index) {
 			switch (index) {
 				case 0:
-					curUser.spendAndNext( TIME_TO_READ );
+					curUser.spendAndNext(TIME_TO_READ);
 					identifiedByUse = false;
 					break;
 				case 1:
-					GameScene.selectItem( itemSelector );
+					GameScene.selectItem(itemSelector);
 					break;
 			}
 		}
-		public void onBackPressed() {}
 
-		public WndBag.ItemSelector getItemSelector(){
+		public void onBackPressed() {
+		}
+
+		public WndBag.ItemSelector getItemSelector() {
 			return itemSelector;
 		}
 
 	}
 
-	private String inventoryTitle(){
+	private String inventoryTitle() {
 		return Messages.get(this, "inv_title");
 	}
 
-	protected Class<?extends Bag> preferredBag = null;
+	protected Class<? extends Bag> preferredBag = null;
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
 
-	protected abstract void onItemSelected( Item item );
+	protected abstract void onItemSelected(Item item);
 
 	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {
 
@@ -115,11 +118,11 @@ public abstract class InventoryScroll extends Scroll {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
+		public void onSelect(Item item) {
 
 			//FIXME this safety check shouldn't be necessary
 			//it would be better to eliminate the curItem static variable.
-			if (!(curItem instanceof InventoryScroll)){
+			if (!(curItem instanceof InventoryScroll)) {
 				return;
 			}
 
@@ -130,20 +133,20 @@ public abstract class InventoryScroll extends Scroll {
 				if (!identifiedByUse && !(curItem instanceof ScrollOfUpgrade)) {
 					curItem = detach(curUser.belongings.backpack);
 				}
-				((InventoryScroll)curItem).onItemSelected( item );
+				((InventoryScroll) curItem).onItemSelected(item);
 
 				if (!(curItem instanceof ScrollOfUpgrade)) {
 					((InventoryScroll) curItem).readAnimation();
 					Sample.INSTANCE.play(Assets.Sounds.READ);
 				}
 
-			} else if (identifiedByUse && !((Scroll)curItem).anonymous) {
+			} else if (identifiedByUse && !((Scroll) curItem).anonymous) {
 
-				((InventoryScroll)curItem).confirmCancelation();
+				((InventoryScroll) curItem).confirmCancelation();
 
-			} else if (((Scroll)curItem).anonymous) {
+			} else if (((Scroll) curItem).anonymous) {
 
-				curUser.spendAndNext( TIME_TO_READ );
+				curUser.spendAndNext(TIME_TO_READ);
 
 			}
 		}

@@ -46,14 +46,14 @@ public class Greataxe extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  5*(tier+4) +    //45 base, up from 30
-				lvl*(tier+1);   //scaling unchanged
+		return 5 * (tier + 4) + //45 base, up from 30
+				lvl * (tier + 1); //scaling unchanged
 	}
 
 	@Override
 	public int STRReq(int lvl) {
-		int req = STRReq(tier+1, lvl); //20 base strength req, up from 18
-		if (masteryPotionBonus){
+		int req = STRReq(tier + 1, lvl); //20 base strength req, up from 18
+		if (masteryPotionBonus) {
 			req -= 2;
 		}
 		return req;
@@ -66,7 +66,7 @@ public class Greataxe extends MeleeWeapon {
 
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		if (hero.HP / (float)hero.HT >= 0.5f){
+		if (hero.HP / (float) hero.HT >= 0.5f) {
 			GLog.w(Messages.get(this, "ability_cant_use"));
 			return;
 		}
@@ -82,7 +82,7 @@ public class Greataxe extends MeleeWeapon {
 		}
 
 		hero.belongings.abilityWeapon = this;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(this, "ability_target_range"));
 			hero.belongings.abilityWeapon = null;
 			return;
@@ -96,14 +96,14 @@ public class Greataxe extends MeleeWeapon {
 				AttackIndicator.target(enemy);
 
 				//+(15+(2*lvl)) damage, roughly +60% base damage, +55% scaling
-				int dmgBoost = augment.damageFactor(15 + 2*buffedLvl());
+				int dmgBoost = augment.damageFactor(15 + 2 * buffedLvl());
 
-				if (hero.attack(enemy, 1, dmgBoost, Char.INFINITE_ACCURACY)){
+				if (hero.attack(enemy, 1, dmgBoost, Char.INFINITE_ACCURACY)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
 
 				Invisibility.dispel();
-				if (!enemy.isAlive()){
+				if (!enemy.isAlive()) {
 					hero.next();
 					onAbilityKill(hero, enemy);
 				} else {
@@ -116,16 +116,17 @@ public class Greataxe extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		int dmgBoost = levelKnown ? 15 + 2*buffedLvl() : 15;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		int dmgBoost = levelKnown ? 15 + 2 * buffedLvl() : 15;
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
-		int dmgBoost = 15 + 2*level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+	public String upgradeAbilityStat(int level) {
+		int dmgBoost = 15 + 2 * level;
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 }

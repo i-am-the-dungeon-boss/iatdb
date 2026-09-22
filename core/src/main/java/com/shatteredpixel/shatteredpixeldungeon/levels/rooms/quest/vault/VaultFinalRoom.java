@@ -49,7 +49,7 @@ public class VaultFinalRoom extends SpecialRoom {
 	}
 
 	@Override
-	public int maxHeight(){
+	public int maxHeight() {
 		return 21;
 	}
 
@@ -60,12 +60,12 @@ public class VaultFinalRoom extends SpecialRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.REGION_DECO_ALT );
-		Painter.fill( level, this, 2 , Terrain.EMPTY_SP );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.REGION_DECO_ALT);
+		Painter.fill(level, this, 2, Terrain.EMPTY_SP);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 			Painter.drawInside(level, this, door, 2, Terrain.EMPTY_SP);
 		}
 	}
@@ -74,6 +74,5 @@ public class VaultFinalRoom extends SpecialRoom {
 	public boolean canPlaceItem(Point p, Level l) {
 		return false;
 	}
-
 
 }

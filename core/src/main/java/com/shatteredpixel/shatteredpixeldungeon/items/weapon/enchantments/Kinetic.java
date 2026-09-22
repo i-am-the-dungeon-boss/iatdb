@@ -35,12 +35,12 @@ import com.watabou.noosa.Image;
 import com.watabou.utils.Bundle;
 
 public class Kinetic extends Weapon.Enchantment {
-	
-	private static ItemSprite.Glowing YELLOW = new ItemSprite.Glowing( 0xFFFF00 );
-	
+
+	private static ItemSprite.Glowing YELLOW = new ItemSprite.Glowing(0xFFFF00);
+
 	@Override
 	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
-		
+
 		int conservedDamage = 0;
 		if (attacker.buff(ConservedDamage.class) != null) {
 			conservedDamage = attacker.buff(ConservedDamage.class).damageBonus();
@@ -49,10 +49,10 @@ public class Kinetic extends Weapon.Enchantment {
 
 		//use a tracker so that we can know the true final damage
 		Buff.affect(attacker, KineticTracker.class).conservedDamage = conservedDamage;
-		
+
 		return damage + conservedDamage;
 	}
-	
+
 	@Override
 	public ItemSprite.Glowing glowing() {
 		return YELLOW;
@@ -72,26 +72,26 @@ public class Kinetic extends Weapon.Enchantment {
 			return true;
 		}
 	};
-	
+
 	public static class ConservedDamage extends Buff {
 
 		{
 			type = buffType.POSITIVE;
 		}
-		
+
 		@Override
 		public int icon() {
 			return BuffIndicator.WEAPON;
 		}
-		
+
 		@Override
 		public void tintIcon(Image icon) {
-			if (preservedDamage >= 10){
+			if (preservedDamage >= 10) {
 				icon.hardlight(1f, 0f, 0f);
 			} else if (preservedDamage >= 5) {
-				icon.hardlight(1f, 1f - (preservedDamage - 5f)*.2f, 0f);
+				icon.hardlight(1f, 1f - (preservedDamage - 5f) * .2f, 0f);
 			} else {
-				icon.hardlight(1f, 1f, 1f - preservedDamage*.2f);
+				icon.hardlight(1f, 1f, 1f - preservedDamage * .2f);
 			}
 		}
 
@@ -99,50 +99,51 @@ public class Kinetic extends Weapon.Enchantment {
 		public String iconTextDisplay() {
 			return Integer.toString(damageBonus());
 		}
-		
+
 		private float preservedDamage;
-		
-		public void setBonus(int bonus){
+
+		public void setBonus(int bonus) {
 			preservedDamage = bonus;
 		}
-		
-		public int damageBonus(){
-			return (int)Math.ceil(preservedDamage);
+
+		public int damageBonus() {
+			return (int) Math.ceil(preservedDamage);
 		}
-		
+
 		@Override
 		public boolean act() {
-			preservedDamage -= Math.max(preservedDamage*.025f, 0.1f);
-			if (preservedDamage <= 0) detach();
-			
+			preservedDamage -= Math.max(preservedDamage * .025f, 0.1f);
+			if (preservedDamage <= 0)
+				detach();
+
 			spend(TICK);
 			return true;
 		}
 
-		public void delay( float value ){
+		public void delay(float value) {
 			spend(value);
 		}
-		
+
 		@Override
 		public String desc() {
 			return Messages.get(this, "desc", damageBonus());
 		}
-		
+
 		private static final String PRESERVED_DAMAGE = "preserve_damage";
-		
+
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
 			bundle.put(PRESERVED_DAMAGE, preservedDamage);
 		}
-		
+
 		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
-			if (bundle.contains(PRESERVED_DAMAGE)){
+			if (bundle.contains(PRESERVED_DAMAGE)) {
 				preservedDamage = bundle.getFloat(PRESERVED_DAMAGE);
 			} else {
-				preservedDamage = cooldown()/10;
+				preservedDamage = cooldown() / 10;
 				spend(cooldown());
 			}
 		}

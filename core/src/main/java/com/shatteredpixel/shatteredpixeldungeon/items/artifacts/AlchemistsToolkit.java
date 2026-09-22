@@ -63,9 +63,9 @@ public class AlchemistsToolkit extends Artifact {
 	private float warmUpDelay;
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (isEquipped( hero ) && !cursed && hero.buff(MagicImmune.class) == null) {
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (isEquipped(hero) && !cursed && hero.buff(MagicImmune.class) == null) {
 			actions.add(AC_BREW);
 			if (level() < levelCap) {
 				actions.add(AC_ENERGIZE);
@@ -75,53 +75,61 @@ public class AlchemistsToolkit extends Artifact {
 	}
 
 	@Override
-	public void execute(Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 
 		super.execute(hero, action);
 
-		if (hero.buff(MagicImmune.class) != null) return;
+		if (hero.buff(MagicImmune.class) != null)
+			return;
 
-		if (action.equals(AC_BREW)){
-			if (!isEquipped(hero))              GLog.i( Messages.get(this, "need_to_equip") );
-			else if (cursed)                    GLog.w( Messages.get(this, "cursed") );
-			else if (warmUpDelay > 0)           GLog.w( Messages.get(this, "not_ready") );
+		if (action.equals(AC_BREW)) {
+			if (!isEquipped(hero))
+				GLog.i(Messages.get(this, "need_to_equip"));
+			else if (cursed)
+				GLog.w(Messages.get(this, "cursed"));
+			else if (warmUpDelay > 0)
+				GLog.w(Messages.get(this, "not_ready"));
 			else {
 				AlchemyScene.assignToolkit(this);
 				Game.switchScene(AlchemyScene.class);
 			}
 
-		} else if (action.equals(AC_ENERGIZE)){
-			if (!isEquipped(hero))              GLog.i( Messages.get(this, "need_to_equip") );
-			else if (cursed)                    GLog.w( Messages.get(this, "cursed") );
-			else if (Dungeon.energy < 6)        GLog.w( Messages.get(this, "need_energy") );
+		} else if (action.equals(AC_ENERGIZE)) {
+			if (!isEquipped(hero))
+				GLog.i(Messages.get(this, "need_to_equip"));
+			else if (cursed)
+				GLog.w(Messages.get(this, "cursed"));
+			else if (Dungeon.energy < 6)
+				GLog.w(Messages.get(this, "need_energy"));
 			else {
 
-				final int maxLevels = Math.min(levelCap - level(), Dungeon.energy/6);
+				final int maxLevels = Math.min(levelCap - level(), Dungeon.energy / 6);
 
 				String[] options;
-				if (maxLevels > 1){
-					options = new String[]{ Messages.get(this, "energize_1"), Messages.get(this, "energize_all", 6*maxLevels, maxLevels)};
+				if (maxLevels > 1) {
+					options = new String[] { Messages.get(this, "energize_1"),
+							Messages.get(this, "energize_all", 6 * maxLevels, maxLevels) };
 				} else {
-					options = new String[]{ Messages.get(this, "energize_1")};
+					options = new String[] { Messages.get(this, "energize_1") };
 				}
 
 				GameScene.show(new WndOptions(new ItemSprite(image),
 						Messages.titleCase(name()),
 						Messages.get(this, "energize_desc"),
-						options){
+						options) {
 					@Override
 					protected void onSelect(int index) {
 						super.onSelect(index);
 
-						if (index == 0){
+						if (index == 0) {
 							Dungeon.energy -= 6;
 							Sample.INSTANCE.play(Assets.Sounds.DRINK);
 							Sample.INSTANCE.playDelayed(Assets.Sounds.PUFF, 0.5f);
 							Dungeon.hero.sprite.operate(Dungeon.hero.pos);
 							upgrade();
 							Catalog.countUse(AlchemistsToolkit.class);
-						} else if (index == 1){
-							Dungeon.energy -= 6*maxLevels;
+						} else if (index == 1) {
+							Dungeon.energy -= 6 * maxLevels;
 							Sample.INSTANCE.play(Assets.Sounds.DRINK);
 							Sample.INSTANCE.playDelayed(Assets.Sounds.PUFF, 0.5f);
 							Dungeon.hero.sprite.operate(Dungeon.hero.pos);
@@ -149,8 +157,8 @@ public class AlchemistsToolkit extends Artifact {
 
 	@Override
 	public String status() {
-		if (isEquipped(Dungeon.hero) && warmUpDelay > 0 && !cursed){
-			return Messages.format( "%d%%", Math.max(0, 100 - (int)warmUpDelay) );
+		if (isEquipped(Dungeon.hero) && warmUpDelay > 0 && !cursed) {
+			return Messages.format("%d%%", Math.max(0, 100 - (int) warmUpDelay));
 		} else {
 			return super.status();
 		}
@@ -163,20 +171,21 @@ public class AlchemistsToolkit extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (target.buff(MagicImmune.class) != null) return;
-		partialCharge += 0.25f*amount;
-		while (partialCharge >= 1){
+		if (target.buff(MagicImmune.class) != null)
+			return;
+		partialCharge += 0.25f * amount;
+		while (partialCharge >= 1) {
 			partialCharge--;
 			charge++;
 			updateQuickslot();
 		}
 	}
 
-	public int availableEnergy(){
+	public int availableEnergy() {
 		return charge;
 	}
 
-	public int consumeEnergy(int amount){
+	public int consumeEnergy(int amount) {
 		int result = amount - charge;
 		charge = Math.max(0, charge - amount);
 		Talent.onArtifactUsed(Dungeon.hero);
@@ -188,9 +197,12 @@ public class AlchemistsToolkit extends Artifact {
 		String result = Messages.get(this, "desc");
 
 		if (isEquippedByOwner()) {
-			if (cursed)                 result += "\n\n" + Messages.get(this, "desc_cursed");
-			else if (warmUpDelay > 0)   result += "\n\n" + Messages.get(this, "desc_warming");
-			else                        result += "\n\n" + Messages.get(this, "desc_hint");
+			if (cursed)
+				result += "\n\n" + Messages.get(this, "desc_cursed");
+			else if (warmUpDelay > 0)
+				result += "\n\n" + Messages.get(this, "desc_warming");
+			else
+				result += "\n\n" + Messages.get(this, "desc_hint");
 		}
 
 		return result;
@@ -198,7 +210,7 @@ public class AlchemistsToolkit extends Artifact {
 
 	@Override
 	public boolean doEquip(Hero hero) {
-		if (super.doEquip(hero)){
+		if (super.doEquip(hero)) {
 			warmUpDelay = 101f;
 			return true;
 		} else {
@@ -225,10 +237,10 @@ public class AlchemistsToolkit extends Artifact {
 		@Override
 		public boolean act() {
 
-			if (warmUpDelay > 0){
-				if (level() == 10){
+			if (warmUpDelay > 0) {
+				if (level() == 10) {
 					warmUpDelay = 0;
-				} else if (warmUpDelay == 101){
+				} else if (warmUpDelay == 101) {
 					warmUpDelay = 100f;
 				} else if (!cursed && target.buff(MagicImmune.class) == null) {
 					float turnsToWarmUp = (int) Math.pow(10 - level(), 2);
@@ -242,7 +254,8 @@ public class AlchemistsToolkit extends Artifact {
 		}
 
 		public void gainCharge(float levelPortion) {
-			if (cursed || target.buff(MagicImmune.class) != null) return;
+			if (cursed || target.buff(MagicImmune.class) != null)
+				return;
 
 			//generates 2 energy every hero level, +1 energy per toolkit level
 			//to a max of 12 energy per hero level

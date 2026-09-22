@@ -46,56 +46,56 @@ import com.watabou.utils.Callback;
 import com.watabou.utils.Random;
 
 public class Warlock extends Mob implements Callback {
-	
-	private static final float TIME_TO_ZAP	= 1f;
-	
+
+	private static final float TIME_TO_ZAP = 1f;
+
 	{
 		spriteClass = WarlockSprite.class;
-		
+
 		HP = HT = 70;
 		defenseSkill = 18;
-		
+
 		EXP = 11;
 		maxLvl = 21;
-		
+
 		loot = Generator.Category.POTION;
 		lootChance = 0.5f;
 
 		properties.add(Property.UNDEAD);
 	}
-	
+
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 12, 18 );
+		return Random.NormalIntRange(12, 18);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 25;
 	}
-	
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 8);
 	}
-	
-	@Override
-	protected boolean canAttack( Char enemy ) {
-		return super.canAttack(enemy)
-				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
-	}
-	
-	protected boolean doAttack( Char enemy ) {
 
-		if (Dungeon.level.adjacent( pos, enemy.pos )
-				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {
-			
-			return super.doAttack( enemy );
-			
+	@Override
+	protected boolean canAttack(Char enemy) {
+		return super.canAttack(enemy)
+				|| new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
+	}
+
+	protected boolean doAttack(Char enemy) {
+
+		if (Dungeon.level.adjacent(pos, enemy.pos)
+				|| new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {
+
+			return super.doAttack(enemy);
+
 		} else {
-			
+
 			if (sprite != null && (sprite.visible || enemy.sprite.visible)) {
-				sprite.zap( enemy.pos );
+				sprite.zap(enemy.pos);
 				return false;
 			} else {
 				zap();
@@ -103,59 +103,60 @@ public class Warlock extends Mob implements Callback {
 			}
 		}
 	}
-	
+
 	//used so resistances can differentiate between melee and magical attacks
-	public static class DarkBolt{}
-	
+	public static class DarkBolt {
+	}
+
 	protected void zap() {
-		spend( TIME_TO_ZAP );
+		spend(TIME_TO_ZAP);
 
 		Invisibility.dispel(this);
 		Char enemy = this.enemy;
-		if (hit( this, enemy, true )) {
+		if (hit(this, enemy, true)) {
 			//TODO would be nice for this to work on ghost/statues too
-			if (enemy == Dungeon.hero && Random.Int( 2 ) == 0) {
-				Buff.prolong( enemy, Degrade.class, Degrade.DURATION );
-				Sample.INSTANCE.play( Assets.Sounds.DEGRADE );
+			if (enemy == Dungeon.hero && Random.Int(2) == 0) {
+				Buff.prolong(enemy, Degrade.class, Degrade.DURATION);
+				Sample.INSTANCE.play(Assets.Sounds.DEGRADE);
 			}
-			
-			int dmg = Random.NormalIntRange( 12, 18 );
+
+			int dmg = Random.NormalIntRange(12, 18);
 			dmg = Math.round(dmg * AscensionChallenge.statModifier(this));
 
 			//logic for DK taking 1/2 damage from aggression stoned minions
-			if ( enemy.buff(StoneOfAggression.Aggression.class) != null
+			if (enemy.buff(StoneOfAggression.Aggression.class) != null
 					&& enemy.alignment == alignment
-					&& (Char.hasProp(enemy, Property.BOSS) || Char.hasProp(enemy, Property.MINIBOSS))){
+					&& (Char.hasProp(enemy, Property.BOSS) || Char.hasProp(enemy, Property.MINIBOSS))) {
 				dmg *= 0.5f;
 			}
 
-			enemy.damage( dmg, new DarkBolt() );
-			
+			enemy.damage(dmg, new DarkBolt());
+
 			if (enemy == Dungeon.hero && !enemy.isAlive()) {
 				Badges.validateDeathFromEnemyMagic();
-				Dungeon.fail( this );
-				GLog.n( Messages.get(this, "bolt_kill") );
+				Dungeon.fail(this);
+				GLog.n(Messages.get(this, "bolt_kill"));
 			}
 		} else {
-			enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );
+			enemy.sprite.showStatus(CharSprite.NEUTRAL, enemy.defenseVerb());
 		}
 	}
-	
+
 	public void onZapComplete() {
 		zap();
 		next();
 	}
-	
+
 	@Override
 	public void call() {
 		next();
 	}
 
 	@Override
-	public Item createLoot(){
+	public Item createLoot() {
 
 		// 1/6 chance for healing, scaling to 0 over 8 drops
-		if (Random.Int(3) == 0 && Random.Int(8) > Dungeon.LimitedDrops.WARLOCK_HP.count ){
+		if (Random.Int(3) == 0 && Random.Int(8) > Dungeon.LimitedDrops.WARLOCK_HP.count) {
 			Dungeon.LimitedDrops.WARLOCK_HP.count++;
 			return new PotionOfHealing();
 		} else {

@@ -35,49 +35,49 @@ public class InputHandler extends InputAdapter {
 
 	private InputMultiplexer multiplexer;
 
-	public InputHandler( Input input ){
+	public InputHandler(Input input) {
 		multiplexer = new InputMultiplexer();
 		input.setInputProcessor(multiplexer);
 		addInputProcessor(this);
-		input.setCatchKey( Input.Keys.BACK, true);
-		input.setCatchKey( Input.Keys.MENU, true);
+		input.setCatchKey(Input.Keys.BACK, true);
+		input.setCatchKey(Input.Keys.MENU, true);
 	}
 
-	public void addInputProcessor(InputProcessor processor){
+	public void addInputProcessor(InputProcessor processor) {
 		multiplexer.addProcessor(0, processor);
 	}
 
-	public void removeInputProcessor(InputProcessor processor){
+	public void removeInputProcessor(InputProcessor processor) {
 		multiplexer.removeProcessor(processor);
 	}
 
-	public void emulateTouch(int id, int button, boolean down){
+	public void emulateTouch(int id, int button, boolean down) {
 		PointF hoverPos = PointerEvent.currentHoverPos();
-		if (down){
-			multiplexer.touchDown((int)hoverPos.x, (int)hoverPos.y, id, button);
+		if (down) {
+			multiplexer.touchDown((int) hoverPos.x, (int) hoverPos.y, id, button);
 		} else {
-			multiplexer.touchUp((int)hoverPos.x, (int)hoverPos.y, id, button);
+			multiplexer.touchUp((int) hoverPos.x, (int) hoverPos.y, id, button);
 		}
 	}
 
-	public void emulateDrag(int id){
+	public void emulateDrag(int id) {
 		PointF hoverPos = PointerEvent.currentHoverPos();
-		multiplexer.touchDragged((int)hoverPos.x, (int)hoverPos.y, id);
+		multiplexer.touchDragged((int) hoverPos.x, (int) hoverPos.y, id);
 	}
-	
-	public void processAllEvents(){
+
+	public void processAllEvents() {
 		PointerEvent.processPointerEvents();
 		KeyEvent.processKeyEvents();
 		ScrollEvent.processScrollEvents();
 	}
-	
+
 	// *********************
 	// *** Pointer Input ***
 	// *********************
-	
+
 	@Override
 	public synchronized boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if (screenX < 0 || screenX > Game.width || screenY < 0 || screenY > Game.height){
+		if (screenX < 0 || screenX > Game.width || screenY < 0 || screenY > Game.height) {
 			return true;
 		}
 
@@ -86,19 +86,19 @@ public class InputHandler extends InputAdapter {
 			ControllerHandler.controllerActive = false;
 		}
 
-		if (button >= 3 && KeyBindings.isKeyBound( button + 1000 )) {
-			KeyEvent.addKeyEvent( new KeyEvent( button + 1000, true ) );
+		if (button >= 3 && KeyBindings.isKeyBound(button + 1000)) {
+			KeyEvent.addKeyEvent(new KeyEvent(button + 1000, true));
 		} else if (button < 3) {
 			PointerEvent.addPointerEvent(new PointerEvent(screenX, screenY, pointer, PointerEvent.Type.DOWN, button));
 		}
 		return true;
 	}
-	
+
 	@Override
 	public synchronized boolean touchUp(int screenX, int screenY, int pointer, int button) {
 
-		if (button >= 3 && KeyBindings.isKeyBound( button + 1000 )) {
-			KeyEvent.addKeyEvent( new KeyEvent( button + 1000, false ) );
+		if (button >= 3 && KeyBindings.isKeyBound(button + 1000)) {
+			KeyEvent.addKeyEvent(new KeyEvent(button + 1000, false));
 		} else if (button < 3) {
 			PointerEvent.addPointerEvent(new PointerEvent(screenX, screenY, pointer, PointerEvent.Type.UP, button));
 		}
@@ -108,8 +108,8 @@ public class InputHandler extends InputAdapter {
 	@Override
 	public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
 
-		if (button >= 3 && KeyBindings.isKeyBound( button + 1000 )) {
-			KeyEvent.addKeyEvent( new KeyEvent( button + 1000, false ) );
+		if (button >= 3 && KeyBindings.isKeyBound(button + 1000)) {
+			KeyEvent.addKeyEvent(new KeyEvent(button + 1000, false));
 		} else if (button < 3) {
 			PointerEvent.addPointerEvent(new PointerEvent(screenX, screenY, pointer, PointerEvent.Type.CANCEL, button));
 		}
@@ -121,50 +121,50 @@ public class InputHandler extends InputAdapter {
 		PointerEvent.addIfExisting(new PointerEvent(screenX, screenY, pointer, PointerEvent.Type.DOWN));
 		return true;
 	}
-	
+
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
 		if (ControllerHandler.controllerPointerActive()) {
 			ControllerHandler.setControllerPointer(false);
 			PointF hover = ControllerHandler.getControllerPointerPos();
-			screenX = (int)hover.x;
-			screenY = (int)hover.y;
+			screenX = (int) hover.x;
+			screenY = (int) hover.y;
 		}
 		PointerEvent.addPointerEvent(new PointerEvent(screenX, screenY, -1, PointerEvent.Type.HOVER));
 		return true;
 	}
-	
+
 	// *****************
 	// *** Key Input ***
 	// *****************
-	
+
 	@Override
-	public synchronized boolean keyDown( int keyCode ) {
-		if (KeyBindings.isKeyBound( keyCode )) {
-			KeyEvent.addKeyEvent( new KeyEvent( keyCode, true ) );
+	public synchronized boolean keyDown(int keyCode) {
+		if (KeyBindings.isKeyBound(keyCode)) {
+			KeyEvent.addKeyEvent(new KeyEvent(keyCode, true));
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	@Override
-	public synchronized boolean keyUp( int keyCode ) {
-		if (KeyBindings.isKeyBound( keyCode )) {
-			KeyEvent.addKeyEvent( new KeyEvent( keyCode, false ) );
+	public synchronized boolean keyUp(int keyCode) {
+		if (KeyBindings.isKeyBound(keyCode)) {
+			KeyEvent.addKeyEvent(new KeyEvent(keyCode, false));
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	// ********************
 	// *** Scroll Input ***
 	// ********************
-	
+
 	@Override
 	public boolean scrolled(float amountX, float amountY) {
-		ScrollEvent.addScrollEvent( new ScrollEvent(PointerEvent.currentHoverPos(), amountY));
+		ScrollEvent.addScrollEvent(new ScrollEvent(PointerEvent.currentHoverPos(), amountY));
 		return true;
 	}
 }

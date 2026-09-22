@@ -30,19 +30,19 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 
 public class Light extends FlavourBuff {
-	
+
 	{
 		type = buffType.POSITIVE;
 	}
 
-	public static final float DURATION	= 250f;
-	public static final int DISTANCE	= 6;
-	
+	public static final float DURATION = 250f;
+	public static final int DISTANCE = 6;
+
 	@Override
-	public boolean attachTo( Char target ) {
-		if (super.attachTo( target )) {
+	public boolean attachTo(Char target) {
+		if (super.attachTo(target)) {
 			if (Dungeon.level != null) {
-				target.viewDistance = Math.max( Dungeon.level.viewDistance, DISTANCE );
+				target.viewDistance = Math.max(Dungeon.level.viewDistance, DISTANCE);
 				Dungeon.observe();
 			}
 			return true;
@@ -50,7 +50,7 @@ public class Light extends FlavourBuff {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public void detach() {
 		target.viewDistance = Dungeon.level.viewDistance;
@@ -58,15 +58,15 @@ public class Light extends FlavourBuff {
 		super.detach();
 	}
 
-	public void weaken( int amount ){
+	public void weaken(int amount) {
 		spend(-amount);
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.LIGHT;
 	}
-	
+
 	@Override
 	public float iconFadePercent() {
 		return Math.max(0, (DURATION - visualcooldown()) / DURATION);
@@ -74,7 +74,9 @@ public class Light extends FlavourBuff {
 
 	@Override
 	public void fx(boolean on) {
-		if (on) target.sprite.add(CharSprite.State.ILLUMINATED);
-		else target.sprite.remove(CharSprite.State.ILLUMINATED);
+		if (on)
+			target.sprite.add(CharSprite.State.ILLUMINATED);
+		else
+			target.sprite.remove(CharSprite.State.ILLUMINATED);
 	}
 }

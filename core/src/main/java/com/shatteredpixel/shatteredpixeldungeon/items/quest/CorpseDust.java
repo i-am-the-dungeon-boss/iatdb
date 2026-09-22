@@ -47,13 +47,13 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class CorpseDust extends Item {
-	
+
 	{
 		image = ItemSpriteSheet.DUST;
-		
+
 		cursed = true;
 		cursedKnown = true;
-		
+
 		unique = true;
 	}
 
@@ -66,7 +66,7 @@ public class CorpseDust extends Item {
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
@@ -74,8 +74,8 @@ public class CorpseDust extends Item {
 
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
-		if (super.doPickUp(hero, pos)){
-			GLog.n( Messages.get( this, "chill") );
+		if (super.doPickUp(hero, pos)) {
+			GLog.n(Messages.get(this, "chill"));
 			Buff.affect(hero, DustGhostSpawner.class);
 			return true;
 		}
@@ -85,7 +85,7 @@ public class CorpseDust extends Item {
 	@Override
 	protected void onDetach() {
 		DustGhostSpawner spawner = Dungeon.hero.buff(DustGhostSpawner.class);
-		if (spawner != null){
+		if (spawner != null) {
 			spawner.dispel();
 		}
 	}
@@ -101,7 +101,7 @@ public class CorpseDust extends Item {
 
 		@Override
 		public boolean act() {
-			if (target instanceof Hero && ((Hero) target).belongings.getItem(CorpseDust.class) == null){
+			if (target instanceof Hero && ((Hero) target).belongings.getItem(CorpseDust.class) == null) {
 				spawnPower = 0;
 				spend(TICK);
 				return true;
@@ -109,8 +109,8 @@ public class CorpseDust extends Item {
 
 			spawnPower++;
 			int wraiths = 1; //we include the wraith we're trying to spawn
-			for (Mob mob : Dungeon.level.mobs){
-				if (mob instanceof DustWraith){
+			for (Mob mob : Dungeon.level.mobs) {
+				if (mob instanceof DustWraith) {
 					wraiths++;
 				}
 			}
@@ -120,27 +120,27 @@ public class CorpseDust extends Item {
 			//v0.3.1-v0.6.5: wraith every 1/4/9/16/25/25... turns, basically guaranteed
 			//v0.7.0-v2.1.4: bugged, same rate as above but high (often >50%) chance that spawning fails. failed spawning resets delay!
 			//v2.2.0+: fixed bug, increased summon delay cap to counteract a bit, wraiths also now have to spawn at a slight distance
-			int powerNeeded = Math.min(49, wraiths*wraiths);
-			if (powerNeeded <= spawnPower){
+			int powerNeeded = Math.min(49, wraiths * wraiths);
+			if (powerNeeded <= spawnPower) {
 				ArrayList<Integer> candidates = new ArrayList<>();
 				//min distance scales based on hero's view distance
 				// wraiths must spawn at least 4/3/2/1 tiles away at view distance of 8(default)/7/4/1
-				int minDist = Math.round(Dungeon.hero.viewDistance/3f);
-				for (int i = 0; i < Dungeon.level.length(); i++){
+				int minDist = Math.round(Dungeon.hero.viewDistance / 3f);
+				for (int i = 0; i < Dungeon.level.length(); i++) {
 					if (Dungeon.level.heroFOV[i]
 							&& !Dungeon.level.solid[i]
-							&& Actor.findChar( i ) == null
-							&& Dungeon.level.distance(i, Dungeon.hero.pos) > minDist){
+							&& Actor.findChar(i) == null
+							&& Dungeon.level.distance(i, Dungeon.hero.pos) > minDist) {
 						candidates.add(i);
 					}
 				}
-				if (!candidates.isEmpty()){
+				if (!candidates.isEmpty()) {
 					Wraith.spawnAt(Random.element(candidates), DustWraith.class);
 					Sample.INSTANCE.play(Assets.Sounds.CURSED);
 					spawnPower -= powerNeeded;
 				} else {
 					//prevents excessive spawn power buildup
-					spawnPower = Math.min(spawnPower, 2*wraiths);
+					spawnPower = Math.min(spawnPower, 2 * wraiths);
 				}
 			}
 
@@ -148,10 +148,10 @@ public class CorpseDust extends Item {
 			return true;
 		}
 
-		public void dispel(){
+		public void dispel() {
 			detach();
-			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])){
-				if (mob instanceof DustWraith){
+			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+				if (mob instanceof DustWraith) {
 					mob.die(null);
 				}
 			}
@@ -175,26 +175,26 @@ public class CorpseDust extends Item {
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
-			bundle.put( SPAWNPOWER, spawnPower );
+			bundle.put(SPAWNPOWER, spawnPower);
 		}
 
 		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
-			spawnPower = bundle.getInt( SPAWNPOWER );
+			spawnPower = bundle.getInt(SPAWNPOWER);
 		}
 	}
 
-	public static class DustWraith extends Wraith{
+	public static class DustWraith extends Wraith {
 
 		private int atkCount = 0;
 
 		@Override
 		public boolean attack(Char enemy, float dmgMulti, float dmgBonus, float accMulti) {
-			if (enemy == Dungeon.hero){
+			if (enemy == Dungeon.hero) {
 				atkCount++;
 				//first attack from each wraith is free, max of -200 point penalty per wraith
-				if (atkCount == 2 || atkCount == 3){
+				if (atkCount == 2 || atkCount == 3) {
 					Statistics.questScores[1] -= 100;
 				}
 			}

@@ -60,34 +60,35 @@ public class SuperNovaTracker extends Buff {
 	@Override
 	public boolean act() {
 
-		if (branch != Dungeon.branch || depth != Dungeon.depth){
+		if (branch != Dungeon.branch || depth != Dungeon.depth) {
 			spend(TICK);
 			return true;
 		}
 
 		PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);
-		if (fieldOfView == null){
+		if (fieldOfView == null) {
 			fieldOfView = new boolean[Dungeon.level.length()];
 		}
-		if (halo == null){
+		if (halo == null) {
 			halo = new NovaVFX();
 			halo.point(p.x, p.y);
 			halo.hardlight(1, 1, 0f);
 			GameScene.effect(halo);
 		}
 
-		if (turnsLeft > 0){
+		if (turnsLeft > 0) {
 
 			FloatingText.show(p.x, p.y, pos, turnsLeft + "...", CharSprite.WARNING);
-			halo.radius(5 + 2*(10-turnsLeft));
-			halo.alpha(1.25f - 0.075f*turnsLeft);
+			halo.radius(5 + 2 * (10 - turnsLeft));
+			halo.alpha(1.25f - 0.075f * turnsLeft);
 			halo.point(p.x, p.y);
 		}
 
 		Point c = Dungeon.level.cellToPoint(pos);
-		ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), fieldOfView, Dungeon.level.solid, Math.min(DIST, 11-turnsLeft));
+		ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), fieldOfView, Dungeon.level.solid,
+				Math.min(DIST, 11 - turnsLeft));
 
-		if (turnsLeft <= 0){
+		if (turnsLeft <= 0) {
 			detach();
 			halo.killAndErase();
 
@@ -103,16 +104,16 @@ public class SuperNovaTracker extends Buff {
 			Sample.INSTANCE.play(Assets.Sounds.BLAST);
 			Sample.INSTANCE.playDelayed(Assets.Sounds.BLAST, 0.25f);
 			Sample.INSTANCE.playDelayed(Assets.Sounds.BLAST, 0.5f);
-			PixelScene.shake( 5, 2f );
-			for (int i = 0; i < Dungeon.level.length(); i++){
-				if (fieldOfView[i] && !Dungeon.level.solid[i]){
+			PixelScene.shake(5, 2f);
+			for (int i = 0; i < Dungeon.level.length(); i++) {
+				if (fieldOfView[i] && !Dungeon.level.solid[i]) {
 					new Bomb.ConjuredBomb().explode(i); //yes, a bomb at every cell
 					//this means that something in the blast effectively takes:
 					//9x bomb dmg when fully inside
 					//6x when along straight edge
 					//3x when outside straight edge
 					Dungeon.level.destroy(i);
-					if (Actor.findChar(i) == Dungeon.hero){
+					if (Actor.findChar(i) == Dungeon.hero) {
 						GameScene.flash(0x80FFFFFF);
 					}
 				}
@@ -120,8 +121,8 @@ public class SuperNovaTracker extends Buff {
 			GameScene.updateMap();
 
 		} else {
-			for (int i = 0; i < Dungeon.level.length(); i++){
-				if (fieldOfView[i]){
+			for (int i = 0; i < Dungeon.level.length(); i++) {
+				if (fieldOfView[i]) {
 					target.sprite.parent.add(new TargetedCell(i, 0xFF0000));
 				}
 			}
@@ -133,7 +134,7 @@ public class SuperNovaTracker extends Buff {
 
 	}
 
-	public static class NovaBombImmune extends FlavourBuff{
+	public static class NovaBombImmune extends FlavourBuff {
 		{
 			immunities.add(Bomb.ConjuredBomb.class);
 		}
@@ -142,12 +143,12 @@ public class SuperNovaTracker extends Buff {
 	@Override
 	public void fx(boolean on) {
 		if (on && depth == Dungeon.depth && branch == Dungeon.branch
-				&& (halo == null || halo.parent == null)){
+				&& (halo == null || halo.parent == null)) {
 			halo = new NovaVFX();
 			PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);
 			halo.hardlight(1, 1, 0f);
-			halo.radius(5 + 2*(10-turnsLeft));
-			halo.alpha(1.25f - 0.075f*turnsLeft);
+			halo.radius(5 + 2 * (10 - turnsLeft));
+			halo.alpha(1.25f - 0.075f * turnsLeft);
 			halo.point(p.x, p.y);
 			GameScene.effect(halo);
 		}
@@ -185,8 +186,8 @@ public class SuperNovaTracker extends Buff {
 
 		@Override
 		public void update() {
-			am = brightness + 0.1f*(float)Math.cos(20*Game.timeTotal);
-			scale.set((radius + (float)Math.cos(20*Game.timeTotal))/RADIUS);
+			am = brightness + 0.1f * (float) Math.cos(20 * Game.timeTotal);
+			scale.set((radius + (float) Math.cos(20 * Game.timeTotal)) / RADIUS);
 			PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);
 			point(p.x, p.y);
 			super.update();

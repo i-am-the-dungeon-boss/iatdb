@@ -49,10 +49,10 @@ public class VaultMob extends Mob {
 	public void move(int step, boolean travelling) {
 		previousPos = pos;
 		super.move(step, travelling);
-		if (travelling && !sprite.visible && Dungeon.level.distance(pos, Dungeon.hero.pos) <= 6){
-			if (state == HUNTING){
+		if (travelling && !sprite.visible && Dungeon.level.distance(pos, Dungeon.hero.pos) <= 6) {
+			if (state == HUNTING) {
 				WandOfBlastWave.BlastWave.blast(pos, 1f, 0xFF0000);
-			} else if (state == INVESTIGATING){
+			} else if (state == INVESTIGATING) {
 				WandOfBlastWave.BlastWave.blast(pos, 1f, 0xFF8800);
 			} else {
 				WandOfBlastWave.BlastWave.blast(pos, 1f);
@@ -94,7 +94,7 @@ public class VaultMob extends Mob {
 
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
-			if (enemyInFOV){
+			if (enemyInFOV) {
 				investigatingTurns++;
 			} else {
 				investigatingTurns = 0;
@@ -105,9 +105,9 @@ public class VaultMob extends Mob {
 		@Override
 		//TODO balance this
 		//chance is 1 in (distance/2 + stealth) as base, but reduced if enemy was only just seen
-		protected float detectionChance( Char enemy ){
-			float chance = 1 / (distance( enemy ) / 2f + enemy.stealth());
-			if (investigatingTurns == 1 && chance <= 1){
+		protected float detectionChance(Char enemy) {
+			float chance = 1 / (distance(enemy) / 2f + enemy.stealth());
+			if (investigatingTurns == 1 && chance <= 1) {
 				chance -= 0.33f;
 			}
 			return chance;
@@ -125,24 +125,27 @@ public class VaultMob extends Mob {
 		}
 
 		@Override
-		protected float detectionChance( Char enemy ){
+		protected float detectionChance(Char enemy) {
 			//defaults to 1 in (distance + stealth) (classic sleeping detection)
-			if (!Dungeon.level.adjacent(pos, previousPos)){
-				return 1 / (distance( enemy ) + enemy.stealth());
+			if (!Dungeon.level.adjacent(pos, previousPos)) {
+				return 1 / (distance(enemy) + enemy.stealth());
 			}
 
-			float movementDir = PointF.angle(Dungeon.level.cellToPoint(previousPos), Dungeon.level.cellToPoint(pos))/PointF.G2R;;
-			float enemyDir = PointF.angle(Dungeon.level.cellToPoint(pos), Dungeon.level.cellToPoint(enemy.pos))/PointF.G2R;
+			float movementDir = PointF.angle(Dungeon.level.cellToPoint(previousPos), Dungeon.level.cellToPoint(pos))
+					/ PointF.G2R;
+			;
+			float enemyDir = PointF.angle(Dungeon.level.cellToPoint(pos), Dungeon.level.cellToPoint(enemy.pos))
+					/ PointF.G2R;
 			//classic wandering detection if enemy is within (or touching) a 90 degree cone of vision
-			if (Math.abs(enemyDir - movementDir) <= 45f){
-				return 1 / (distance( enemy ) / 2f + enemy.stealth());
-			//classic sleeping (i.e. default) detection if enemy is within a 180 degree vision cone
-			} else if (Math.abs(enemyDir - movementDir) < 90f){
-				return 1 / (distance( enemy ) + enemy.stealth());
-			//otherwise uses very low chance detection (1/8 at 2 tiles, 0% at 3+)
+			if (Math.abs(enemyDir - movementDir) <= 45f) {
+				return 1 / (distance(enemy) / 2f + enemy.stealth());
+				//classic sleeping (i.e. default) detection if enemy is within a 180 degree vision cone
+			} else if (Math.abs(enemyDir - movementDir) < 90f) {
+				return 1 / (distance(enemy) + enemy.stealth());
+				//otherwise uses very low chance detection (1/8 at 2 tiles, 0% at 3+)
 			} else {
-				float chance = 1 / (float)Math.pow((distance( enemy ) + enemy.stealth()), 3);
-				if (chance < 0.1f){
+				float chance = 1 / (float) Math.pow((distance(enemy) + enemy.stealth()), 3);
+				if (chance < 0.1f) {
 					return 0;
 				} else {
 					return chance;
@@ -159,7 +162,7 @@ public class VaultMob extends Mob {
 			sprite.showInvestigate();
 			spend(TICK);
 			//hero must know if they are detected
-			if (!Dungeon.level.heroFOV[pos]){
+			if (!Dungeon.level.heroFOV[pos]) {
 				Buff.affect(Dungeon.hero, TalismanOfForesight.CharAwareness.class, 1f).charID = id();
 			}
 			return true;
@@ -168,7 +171,7 @@ public class VaultMob extends Mob {
 		@Override
 		protected int randomDestination() {
 			//stay still by default if given no other wandering behaviour
-			if (wanderPositions == null){
+			if (wanderPositions == null) {
 				wanderPositions = new int[1];
 				wanderPositions[0] = pos;
 			}
@@ -191,22 +194,22 @@ public class VaultMob extends Mob {
 		}
 	}
 
-	public class Sleeping extends Mob.Sleeping{
+	public class Sleeping extends Mob.Sleeping {
 
 		protected void awaken(boolean enemyInFOV) {
 			super.awaken(enemyInFOV);
 			//stay still by default if given no other wandering behaviour
-			if (wanderPositions == null){
+			if (wanderPositions == null) {
 				wanderPositions = new int[1];
 				wanderPositions[0] = pos;
 			}
-			if (state == HUNTING){
+			if (state == HUNTING) {
 				alerted = false;
 				state = INVESTIGATING;
 				investigatingTurns = 0;
 				sprite.showInvestigate();
 				//hero must know if they are detected
-				if (!Dungeon.level.heroFOV[pos]){
+				if (!Dungeon.level.heroFOV[pos]) {
 					Buff.affect(Dungeon.hero, TalismanOfForesight.CharAwareness.class, 1f).charID = id();
 				}
 			}
@@ -215,9 +218,9 @@ public class VaultMob extends Mob {
 		//chance is 1 in (distance + stealth)^2
 		//set to 0 if below 10% (usually happens at 4+ distance)
 		@Override
-		protected float detectionChance( Char enemy ){
-			float chance = 1 / (float)Math.pow((distance( enemy ) + enemy.stealth()), 2);
-			if (chance < 0.1f){
+		protected float detectionChance(Char enemy) {
+			float chance = 1 / (float) Math.pow((distance(enemy) + enemy.stealth()), 2);
+			if (chance < 0.1f) {
 				return 0;
 			} else {
 				return chance;

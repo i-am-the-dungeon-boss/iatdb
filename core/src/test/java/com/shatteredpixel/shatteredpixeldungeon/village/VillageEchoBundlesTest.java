@@ -234,6 +234,7 @@ class VillageEchoBundlesTest {
 
 		assertThat(engine.requested).containsExactly("5-1");
 	}
+
 	@Test
 	@DisplayName("asks as the player walks up, so the hero is there before the window opens")
 	void prefetchesOnApproach() {

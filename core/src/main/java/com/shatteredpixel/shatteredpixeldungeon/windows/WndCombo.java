@@ -41,9 +41,9 @@ public class WndCombo extends Window {
 	private static final int WIDTH_P = 120;
 	private static final int WIDTH_L = 180;
 
-	private static final int MARGIN  = 2;
+	private static final int MARGIN = 2;
 
-	public WndCombo( Combo combo ){
+	public WndCombo(Combo combo) {
 		super();
 
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
@@ -51,23 +51,28 @@ public class WndCombo extends Window {
 		float pos = MARGIN;
 		RenderedTextBlock title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(this, "title")), 9);
 		title.hardlight(TITLE_COLOR);
-		title.setPos((width-title.width())/2, pos);
+		title.setPos((width - title.width()) / 2, pos);
 		title.maxWidth(width - MARGIN * 2);
 		add(title);
 
-		pos = title.bottom() + 3*MARGIN;
+		pos = title.bottom() + 3 * MARGIN;
 
 		Image icon;
-		if (Dungeon.hero.belongings.weapon() != null){
+		if (Dungeon.hero.belongings.weapon() != null) {
 			icon = new ItemSprite(Dungeon.hero.belongings.weapon().image, null);
 		} else {
-			icon = new ItemSprite(new Item(){ {image = ItemSpriteSheet.WEAPON_HOLDER; }});
+			icon = new ItemSprite(new Item() {
+				{
+					image = ItemSpriteSheet.WEAPON_HOLDER;
+				}
+			});
 		}
 
 		for (Combo.ComboMove move : Combo.ComboMove.values()) {
 
-			String text = "_" + Messages.titleCase(move.title()) + " " + Messages.get(this, "combo_req", move.comboReq) + ":_ " + move.desc(combo.getComboCount());
-			RedButton moveBtn = new RedButton(text, 6){
+			String text = "_" + Messages.titleCase(move.title()) + " " + Messages.get(this, "combo_req", move.comboReq)
+					+ ":_ " + move.desc(combo.getComboCount());
+			RedButton moveBtn = new RedButton(text, 6) {
 				@Override
 				protected void onClick() {
 					super.onClick();
@@ -84,9 +89,8 @@ public class WndCombo extends Window {
 			pos = moveBtn.bottom() + MARGIN;
 		}
 
-		resize(width, (int)pos);
+		resize(width, (int) pos);
 
 	}
-
 
 }

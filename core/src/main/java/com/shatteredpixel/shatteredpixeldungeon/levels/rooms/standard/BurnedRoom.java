@@ -34,10 +34,10 @@ import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
 public class BurnedRoom extends PatchRoom {
-	
+
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{4, 1, 0};
+		return new float[] { 4, 1, 0 };
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class BurnedRoom extends PatchRoom {
 	protected float fill() {
 		//past 8x8 each point of width/height decreases fill by 3%
 		// e.g. a 14x14 burned room has a fill of 54%
-		return Math.min( 1f, 1.48f - (width()+height())*0.03f);
+		return Math.min(1f, 1.48f - (width() + height()) * 0.03f);
 	}
 
 	@Override
@@ -70,24 +70,25 @@ public class BurnedRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
-		
+
 		setupPatch(level);
 
 		float revealedChance = TrapMechanism.revealHiddenTrapChance();
 		float revealInc = 0;
-		for (int i=top + 1; i < bottom; i++) {
-			for (int j=left + 1; j < right; j++) {
+		for (int i = top + 1; i < bottom; i++) {
+			for (int j = left + 1; j < right; j++) {
 				if (!patch[xyToPatchCoords(j, i)])
 					continue;
 				int cell = i * level.width() + j;
 				int t;
-				switch (Random.Int( 5 )) {
-					case 0: default:
+				switch (Random.Int(5)) {
+					case 0:
+					default:
 						t = Terrain.EMPTY;
 						break;
 					case 1:
@@ -99,7 +100,7 @@ public class BurnedRoom extends PatchRoom {
 						break;
 					case 3:
 						revealInc += revealedChance;
-						if (revealInc >= 1){
+						if (revealInc >= 1) {
 							t = Terrain.TRAP;
 							level.setTrap(new BurningTrap().reveal(), cell);
 							revealInc--;
@@ -119,7 +120,7 @@ public class BurnedRoom extends PatchRoom {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean canPlaceWater(Point p) {
 		return !inside(p) || !patch[xyToPatchCoords(p.x, p.y)];
@@ -134,5 +135,5 @@ public class BurnedRoom extends PatchRoom {
 	public boolean canPlaceTrap(Point p) {
 		return !inside(p) || !patch[xyToPatchCoords(p.x, p.y)];
 	}
-	
+
 }

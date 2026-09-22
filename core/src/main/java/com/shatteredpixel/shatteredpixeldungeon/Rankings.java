@@ -62,13 +62,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum Rankings {
-	
+
 	INSTANCE;
-	
-	public static final int TABLE_SIZE	= 11;
-	
+
+	public static final int TABLE_SIZE = 11;
+
 	public static final String RANKINGS_FILE = "rankings.dat";
-	
+
 	public ArrayList<Record> records;
 	public int lastRecord;
 	public int totalNumber;
@@ -82,10 +82,10 @@ public enum Rankings {
 	public Record latestDailyReplay = null; //not stored, only meant to be temp
 	public LinkedHashMap<Long, Integer> dailyScoreHistory = new LinkedHashMap<>();
 
-	public void submit( boolean win, Object cause ) {
+	public void submit(boolean win, Object cause) {
 
 		load();
-		
+
 		Record rec = new Record();
 
 		//we trim version to just the numbers, ignoring alpha/beta, etc.
@@ -100,31 +100,31 @@ public enum Rankings {
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
 		rec.date = format.format(new Date(Game.realTime));
 
-		rec.cause = cause instanceof Class ? (Class)cause : cause.getClass();
-		rec.win		= win;
-		rec.heroClass	= Dungeon.hero.heroClass;
-		rec.armorTier	= Dungeon.hero.tier();
-		rec.herolevel	= Dungeon.hero.lvl;
-		if (Statistics.highestAscent == 0){
+		rec.cause = cause instanceof Class ? (Class) cause : cause.getClass();
+		rec.win = win;
+		rec.heroClass = Dungeon.hero.heroClass;
+		rec.armorTier = Dungeon.hero.tier();
+		rec.herolevel = Dungeon.hero.lvl;
+		if (Statistics.highestAscent == 0) {
 			rec.depth = Statistics.deepestFloor;
 			rec.ascending = false;
 		} else {
 			rec.depth = Statistics.highestAscent;
 			rec.ascending = true;
 		}
-		rec.score       = calculateScore();
-		rec.customSeed  = Dungeon.customSeedText;
-		rec.daily       = Dungeon.daily;
-		rec.easyMode    = Dungeon.easyMode;
+		rec.score = calculateScore();
+		rec.customSeed = Dungeon.customSeedText;
+		rec.daily = Dungeon.daily;
+		rec.easyMode = Dungeon.easyMode;
 
-		Badges.validateHighScore( rec.score );
-		
+		Badges.validateHighScore(rec.score);
+
 		INSTANCE.saveGameData(rec);
 
 		rec.gameID = UUID.randomUUID().toString();
 
-		if (rec.daily){
-			if (Dungeon.dailyReplay){
+		if (rec.daily) {
+			if (Dungeon.dailyReplay) {
 				latestDailyReplay = rec;
 				return;
 			}
@@ -139,19 +139,19 @@ public enum Rankings {
 			return;
 		}
 
-		records.add( rec );
-		
-		Collections.sort( records, scoreComparator );
-		
-		lastRecord = records.indexOf( rec );
+		records.add(rec);
+
+		Collections.sort(records, scoreComparator);
+
+		lastRecord = records.indexOf(rec);
 		int size = records.size();
 		while (size > TABLE_SIZE) {
 
 			if (lastRecord == size - 1) {
-				records.remove( size - 2 );
+				records.remove(size - 2);
 				lastRecord--;
 			} else {
-				records.remove( size - 1 );
+				records.remove(size - 1);
 			}
 
 			size = records.size();
@@ -165,25 +165,25 @@ public enum Rankings {
 		}
 
 		Badges.validateGamesPlayed();
-		
+
 		save();
 	}
 
-	private int score( boolean win ) {
-		return (Statistics.goldCollected + Dungeon.hero.lvl * (win ? 26 : Dungeon.depth ) * 100) * (win ? 2 : 1);
+	private int score(boolean win) {
+		return (Statistics.goldCollected + Dungeon.hero.lvl * (win ? 26 : Dungeon.depth) * 100) * (win ? 2 : 1);
 	}
 
 	//assumes a ranking is loaded, or game is ending
-	public int calculateScore(){
+	public int calculateScore() {
 
-		if (Dungeon.initialVersion > ShatteredPixelDungeon.v1_2_3){
+		if (Dungeon.initialVersion > ShatteredPixelDungeon.v1_2_3) {
 			Statistics.progressScore = Dungeon.hero.lvl * Statistics.deepestFloor * 65;
 			Statistics.progressScore = Math.min(Statistics.progressScore, 50_000);
 
 			if (Statistics.heldItemValue == 0) {
 				for (Item i : Dungeon.hero.belongings) {
 					Statistics.heldItemValue += i.value();
-					if (i instanceof CorpseDust && Statistics.deepestFloor >= 10){
+					if (i instanceof CorpseDust && Statistics.deepestFloor >= 10) {
 						// in case player kept the corpse dust, for a necromancer run
 						//we also override the score here, ignoring penalties
 						Statistics.questScores[1] = 2000;
@@ -195,27 +195,31 @@ public enum Rankings {
 
 			Statistics.exploreScore = 0;
 			int scorePerFloor = Statistics.floorsExplored.size * 50;
-			for (float percentExplored : Statistics.floorsExplored.valueList()){
-				Statistics.exploreScore += Math.round(percentExplored*scorePerFloor);
+			for (float percentExplored : Statistics.floorsExplored.valueList()) {
+				Statistics.exploreScore += Math.round(percentExplored * scorePerFloor);
 			}
 
 			Statistics.totalBossScore = 0;
-			for (int i : Statistics.bossScores){
-				if (i > 0) Statistics.totalBossScore += i;
+			for (int i : Statistics.bossScores) {
+				if (i > 0)
+					Statistics.totalBossScore += i;
 			}
 
 			Statistics.totalQuestScore = 0;
-			for (int i : Statistics.questScores){
-				if (i > 0) Statistics.totalQuestScore += i;
+			for (int i : Statistics.questScores) {
+				if (i > 0)
+					Statistics.totalQuestScore += i;
 			}
 
 			Statistics.winMultiplier = 1f;
-			if (Statistics.gameWon)         Statistics.winMultiplier += 1f;
-			if (Statistics.ascended)        Statistics.winMultiplier += 0.5f;
+			if (Statistics.gameWon)
+				Statistics.winMultiplier += 1f;
+			if (Statistics.ascended)
+				Statistics.winMultiplier += 0.5f;
 
-		//pre v1.3.0 runs have different score calculations
-		//only progress and treasure score, and they are each up to 50% bigger
-		//win multiplier is a simple 2x if run was a win, challenge multi is the same as 1.3.0
+			//pre v1.3.0 runs have different score calculations
+			//only progress and treasure score, and they are each up to 50% bigger
+			//win multiplier is a simple 2x if run was a win, challenge multi is the same as 1.3.0
 		} else {
 			Statistics.progressScore = Dungeon.hero.lvl * Statistics.deepestFloor * 100;
 			Statistics.treasureScore = Math.min(Statistics.goldCollected, 30_000);
@@ -226,31 +230,31 @@ public enum Rankings {
 
 		}
 
-		Statistics.chalMultiplier = (float)Math.pow(1.25, Challenges.activeChallenges());
-		Statistics.chalMultiplier = Math.round(Statistics.chalMultiplier*20f)/20f;
+		Statistics.chalMultiplier = (float) Math.pow(1.25, Challenges.activeChallenges());
+		Statistics.chalMultiplier = Math.round(Statistics.chalMultiplier * 20f) / 20f;
 
 		Statistics.totalScore = Statistics.progressScore + Statistics.treasureScore + Statistics.exploreScore
-					+ Statistics.totalBossScore + Statistics.totalQuestScore;
+				+ Statistics.totalBossScore + Statistics.totalQuestScore;
 
 		Statistics.totalScore *= Statistics.winMultiplier * Statistics.chalMultiplier;
 
 		return Statistics.totalScore;
 	}
 
-	public static final String HERO         = "hero";
-	public static final String STATS        = "stats";
-	public static final String BADGES       = "badges";
-	public static final String HANDLERS     = "handlers";
-	public static final String CHALLENGES   = "challenges";
+	public static final String HERO = "hero";
+	public static final String STATS = "stats";
+	public static final String BADGES = "badges";
+	public static final String HANDLERS = "handlers";
+	public static final String CHALLENGES = "challenges";
 	public static final String GAME_VERSION = "game_version";
-	public static final String SEED         = "seed";
-	public static final String CUSTOM_SEED	= "custom_seed";
-	public static final String DAILY	    = "daily";
-	public static final String DAILY_REPLAY	= "daily_replay";
-	public static final String EASY_MODE	= "easy_mode";
+	public static final String SEED = "seed";
+	public static final String CUSTOM_SEED = "custom_seed";
+	public static final String DAILY = "daily";
+	public static final String DAILY_REPLAY = "daily_replay";
+	public static final String EASY_MODE = "easy_mode";
 
-	public void saveGameData(Record rec){
-		if (Dungeon.hero == null){
+	public void saveGameData(Record rec) {
+		if (Dungeon.hero == null) {
 			rec.gameData = null;
 			return;
 		}
@@ -262,11 +266,11 @@ public enum Rankings {
 		//save the hero and belongings
 		ArrayList<Item> allItems = (ArrayList<Item>) belongings.backpack.items.clone();
 		//remove items that won't show up in the rankings screen
-		for (Item item : belongings.backpack.items.toArray( new Item[0])) {
-			if (item instanceof Bag){
-				for (Item bagItem : ((Bag) item).items.toArray( new Item[0])){
+		for (Item item : belongings.backpack.items.toArray(new Item[0])) {
+			if (item instanceof Bag) {
+				for (Item bagItem : ((Bag) item).items.toArray(new Item[0])) {
 					if (Dungeon.quickslot.contains(bagItem)
-							&& !Dungeon.quickslot.contains(item)){
+							&& !Dungeon.quickslot.contains(item)) {
 						belongings.backpack.items.add(bagItem);
 					}
 				}
@@ -277,51 +281,53 @@ public enum Rankings {
 		}
 
 		//remove all buffs (ones tied to equipment will be re-applied)
-		for(Buff b : Dungeon.hero.buffs()){
+		for (Buff b : Dungeon.hero.buffs()) {
 			//except Duelist's melee weapon charge buff
 			if (!(b instanceof MeleeWeapon.Charger)) {
 				Dungeon.hero.remove(b);
 			}
 		}
 
-		rec.gameData.put( HERO, Dungeon.hero );
+		rec.gameData.put(HERO, Dungeon.hero);
 
 		//save stats
 		Bundle stats = new Bundle();
 		Statistics.storeInBundle(stats);
-		rec.gameData.put( STATS, stats);
+		rec.gameData.put(STATS, stats);
 
 		//save badges
 		Bundle badges = new Bundle();
 		Badges.saveLocal(badges);
-		rec.gameData.put( BADGES, badges);
+		rec.gameData.put(BADGES, badges);
 
 		//save handler information
 		Bundle handler = new Bundle();
 		Scroll.saveSelectively(handler, belongings.backpack.items);
 		Potion.saveSelectively(handler, belongings.backpack.items);
 		//include potentially worn rings
-		if (belongings.misc != null)        belongings.backpack.items.add(belongings.misc);
-		if (belongings.ring != null)        belongings.backpack.items.add(belongings.ring);
+		if (belongings.misc != null)
+			belongings.backpack.items.add(belongings.misc);
+		if (belongings.ring != null)
+			belongings.backpack.items.add(belongings.ring);
 		Ring.saveSelectively(handler, belongings.backpack.items);
-		rec.gameData.put( HANDLERS, handler);
+		rec.gameData.put(HANDLERS, handler);
 
 		//restore items now that we're done saving
 		belongings.backpack.items = allItems;
-		
+
 		//save challenges
-		rec.gameData.put( CHALLENGES, Dungeon.challenges );
+		rec.gameData.put(CHALLENGES, Dungeon.challenges);
 
-		rec.gameData.put( GAME_VERSION, Dungeon.initialVersion );
+		rec.gameData.put(GAME_VERSION, Dungeon.initialVersion);
 
-		rec.gameData.put( SEED, Dungeon.seed );
-		rec.gameData.put( CUSTOM_SEED, Dungeon.customSeedText );
-		rec.gameData.put( DAILY, Dungeon.daily );
-		rec.gameData.put( DAILY_REPLAY, Dungeon.dailyReplay );
-		rec.gameData.put( EASY_MODE, Dungeon.easyMode );
+		rec.gameData.put(SEED, Dungeon.seed);
+		rec.gameData.put(CUSTOM_SEED, Dungeon.customSeedText);
+		rec.gameData.put(DAILY, Dungeon.daily);
+		rec.gameData.put(DAILY_REPLAY, Dungeon.dailyReplay);
+		rec.gameData.put(EASY_MODE, Dungeon.easyMode);
 	}
 
-	public void loadGameData(Record rec){
+	public void loadGameData(Record rec) {
 		Bundle data = rec.gameData;
 
 		Actor.clear();
@@ -333,7 +339,8 @@ public enum Rankings {
 		QuickSlotButton.reset();
 		Toolbar.swappedQuickslots = false;
 
-		if (data == null) return;
+		if (data == null)
+			return;
 
 		Bundle handler = data.getBundle(HANDLERS);
 		Scroll.restore(handler);
@@ -342,21 +349,21 @@ public enum Rankings {
 
 		Badges.loadLocal(data.getBundle(BADGES));
 
-		Dungeon.hero = (Hero)data.get(HERO);
+		Dungeon.hero = (Hero) data.get(HERO);
 		Dungeon.hero.belongings.identify();
 
 		Statistics.restoreFromBundle(data.getBundle(STATS));
-		
+
 		Dungeon.challenges = data.getInt(CHALLENGES);
 
 		Dungeon.initialVersion = data.getInt(GAME_VERSION);
 
-		if (Dungeon.initialVersion <= ShatteredPixelDungeon.v1_2_3){
+		if (Dungeon.initialVersion <= ShatteredPixelDungeon.v1_2_3) {
 			Statistics.gameWon = rec.win;
 		}
 		rec.score = calculateScore();
 
-		if (rec.gameData.contains(SEED)){
+		if (rec.gameData.contains(SEED)) {
 			Dungeon.seed = rec.gameData.getLong(SEED);
 			Dungeon.customSeedText = rec.gameData.getString(CUSTOM_SEED);
 			Dungeon.daily = rec.gameData.getBoolean(DAILY);
@@ -369,29 +376,29 @@ public enum Rankings {
 			Dungeon.easyMode = false;
 		}
 	}
-	
-	private static final String RECORDS	= "records";
-	private static final String LATEST	= "latest";
-	private static final String TOTAL	= "total";
-	private static final String WON     = "won";
 
-	public static final String LATEST_DAILY	        = "latest_daily";
-	public static final String DAILY_HISTORY_DATES  = "daily_history_dates";
+	private static final String RECORDS = "records";
+	private static final String LATEST = "latest";
+	private static final String TOTAL = "total";
+	private static final String WON = "won";
+
+	public static final String LATEST_DAILY = "latest_daily";
+	public static final String DAILY_HISTORY_DATES = "daily_history_dates";
 	public static final String DAILY_HISTORY_SCORES = "daily_history_scores";
 
 	public void save() {
 		Bundle bundle = new Bundle();
-		bundle.put( RECORDS, records );
-		bundle.put( LATEST, lastRecord );
-		bundle.put( TOTAL, totalNumber );
-		bundle.put( WON, wonNumber );
+		bundle.put(RECORDS, records);
+		bundle.put(LATEST, lastRecord);
+		bundle.put(TOTAL, totalNumber);
+		bundle.put(WON, wonNumber);
 
 		bundle.put(LATEST_DAILY, latestDaily);
 
 		long[] dates = new long[dailyScoreHistory.size()];
 		int[] scores = new int[dailyScoreHistory.size()];
 		int i = 0;
-		for (Long l : dailyScoreHistory.keySet()){
+		for (Long l : dailyScoreHistory.keySet()) {
 			dates[i] = l;
 			scores[i] = dailyScoreHistory.get(l);
 			i++;
@@ -400,35 +407,35 @@ public enum Rankings {
 		bundle.put(DAILY_HISTORY_SCORES, scores);
 
 		try {
-			FileUtils.bundleToFile( RANKINGS_FILE, bundle);
+			FileUtils.bundleToFile(RANKINGS_FILE, bundle);
 		} catch (IOException e) {
 			ShatteredPixelDungeon.reportException(e);
 		}
 
 	}
-	
+
 	public void load() {
-		
+
 		if (records != null) {
 			return;
 		}
-		
+
 		records = new ArrayList<>();
-		
+
 		try {
-			Bundle bundle = FileUtils.bundleFromFile( RANKINGS_FILE );
-			
-			for (Bundlable record : bundle.getCollection( RECORDS )) {
-				records.add( (Record)record );
+			Bundle bundle = FileUtils.bundleFromFile(RANKINGS_FILE);
+
+			for (Bundlable record : bundle.getCollection(RECORDS)) {
+				records.add((Record) record);
 			}
-			lastRecord = bundle.getInt( LATEST );
-			
-			totalNumber = bundle.getInt( TOTAL );
+			lastRecord = bundle.getInt(LATEST);
+
+			totalNumber = bundle.getInt(TOTAL);
 			if (totalNumber == 0) {
 				totalNumber = records.size();
 			}
 
-			wonNumber = bundle.getInt( WON );
+			wonNumber = bundle.getInt(WON);
 			if (wonNumber == 0) {
 				for (Record rec : records) {
 					if (rec.win) {
@@ -437,19 +444,20 @@ public enum Rankings {
 				}
 			}
 
-			if (bundle.contains(LATEST_DAILY)){
+			if (bundle.contains(LATEST_DAILY)) {
 				latestDaily = (Record) bundle.get(LATEST_DAILY);
 
 				dailyScoreHistory.clear();
 				int[] scores = bundle.getIntArray(DAILY_HISTORY_SCORES);
 				int i = 0;
 				long latestDate = 0;
-				for (long date : bundle.getLongArray(DAILY_HISTORY_DATES)){
+				for (long date : bundle.getLongArray(DAILY_HISTORY_DATES)) {
 					dailyScoreHistory.put(date, scores[i]);
-					if (date > latestDate) latestDate = date;
+					if (date > latestDate)
+						latestDate = date;
 					i++;
 				}
-				if (latestDate > SPDSettings.lastDaily()){
+				if (latestDate > SPDSettings.lastDaily()) {
 					SPDSettings.lastDaily(latestDate);
 				}
 			}
@@ -457,24 +465,24 @@ public enum Rankings {
 		} catch (IOException e) {
 		}
 	}
-	
+
 	public static class Record implements Bundlable {
 
-		private static final String CAUSE   = "cause";
-		private static final String WIN		= "win";
-		private static final String SCORE	= "score";
-		private static final String CLASS	= "class";
-		private static final String TIER	= "tier";
-		private static final String LEVEL	= "level";
-		private static final String DEPTH	= "depth";
-		private static final String ASCEND	= "ascending";
-		private static final String DATA	= "gameData";
-		private static final String ID      = "gameID";
-		private static final String SEED    = "custom_seed";
-		private static final String DAILY   = "daily";
+		private static final String CAUSE = "cause";
+		private static final String WIN = "win";
+		private static final String SCORE = "score";
+		private static final String CLASS = "class";
+		private static final String TIER = "tier";
+		private static final String LEVEL = "level";
+		private static final String DEPTH = "depth";
+		private static final String ASCEND = "ascending";
+		private static final String DATA = "gameData";
+		private static final String ID = "gameID";
+		private static final String SEED = "custom_seed";
+		private static final String DAILY = "daily";
 		private static final String EASY_MODE = "easy_mode";
 
-		private static final String DATE    = "date";
+		private static final String DATE = "date";
 		private static final String VERSION = "version";
 
 		public Class cause;
@@ -499,9 +507,9 @@ public enum Rankings {
 		public String date;
 		public String version;
 
-		public String desc(){
-			if (win){
-				if (ascending){
+		public String desc() {
+			if (win) {
+				if (ascending) {
 					return Messages.get(this, "ascended");
 				} else {
 					return Messages.get(this, "won");
@@ -510,89 +518,94 @@ public enum Rankings {
 				return Messages.get(this, "something");
 			} else {
 				String result = Messages.get(cause, "rankings_desc", (Messages.get(cause, "name")));
-				if (result.contains(Messages.NO_TEXT_FOUND)){
+				if (result.contains(Messages.NO_TEXT_FOUND)) {
 					return Messages.get(this, "something");
 				} else {
 					return result;
 				}
 			}
 		}
-		
+
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
-			
-			if (bundle.contains( CAUSE )) {
-				cause = bundle.getClass( CAUSE );
+		public void restoreFromBundle(Bundle bundle) {
+
+			if (bundle.contains(CAUSE)) {
+				cause = bundle.getClass(CAUSE);
 			} else {
 				cause = null;
 			}
-			
-			win		    = bundle.getBoolean( WIN );
-			score	    = bundle.getInt( SCORE );
-			customSeed  = bundle.getString( SEED );
-			daily       = bundle.getBoolean( DAILY );
-			easyMode    = bundle.getBoolean( EASY_MODE );
 
-			heroClass	= bundle.getEnum( CLASS, HeroClass.class );
-			armorTier	= bundle.getInt( TIER );
-			herolevel   = bundle.getInt( LEVEL );
-			depth       = bundle.getInt( DEPTH );
-			ascending   = bundle.getBoolean( ASCEND );
+			win = bundle.getBoolean(WIN);
+			score = bundle.getInt(SCORE);
+			customSeed = bundle.getString(SEED);
+			daily = bundle.getBoolean(DAILY);
+			easyMode = bundle.getBoolean(EASY_MODE);
 
-			if (bundle.contains( DATE )){
-				date = bundle.getString( DATE );
-				version = bundle.getString( VERSION );
+			heroClass = bundle.getEnum(CLASS, HeroClass.class);
+			armorTier = bundle.getInt(TIER);
+			herolevel = bundle.getInt(LEVEL);
+			depth = bundle.getInt(DEPTH);
+			ascending = bundle.getBoolean(ASCEND);
+
+			if (bundle.contains(DATE)) {
+				date = bundle.getString(DATE);
+				version = bundle.getString(VERSION);
 			} else {
 				date = version = null;
 			}
 
-			if (bundle.contains(DATA))  gameData = bundle.getBundle(DATA);
-			if (bundle.contains(ID))   gameID = bundle.getString(ID);
-			
-			if (gameID == null) gameID = UUID.randomUUID().toString();
+			if (bundle.contains(DATA))
+				gameData = bundle.getBundle(DATA);
+			if (bundle.contains(ID))
+				gameID = bundle.getString(ID);
+
+			if (gameID == null)
+				gameID = UUID.randomUUID().toString();
 
 		}
-		
+
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			
-			if (cause != null) bundle.put( CAUSE, cause );
+		public void storeInBundle(Bundle bundle) {
 
-			bundle.put( WIN, win );
-			bundle.put( SCORE, score );
-			bundle.put( SEED, customSeed );
-			bundle.put( DAILY, daily );
-			bundle.put( EASY_MODE, easyMode );
+			if (cause != null)
+				bundle.put(CAUSE, cause);
 
-			bundle.put( CLASS, heroClass );
-			bundle.put( TIER, armorTier );
-			bundle.put( LEVEL, herolevel );
-			bundle.put( DEPTH, depth );
-			bundle.put( ASCEND, ascending );
+			bundle.put(WIN, win);
+			bundle.put(SCORE, score);
+			bundle.put(SEED, customSeed);
+			bundle.put(DAILY, daily);
+			bundle.put(EASY_MODE, easyMode);
 
-			bundle.put( DATE, date );
-			bundle.put( VERSION, version );
+			bundle.put(CLASS, heroClass);
+			bundle.put(TIER, armorTier);
+			bundle.put(LEVEL, herolevel);
+			bundle.put(DEPTH, depth);
+			bundle.put(ASCEND, ascending);
 
-			if (gameData != null) bundle.put( DATA, gameData );
-			bundle.put( ID, gameID );
+			bundle.put(DATE, date);
+			bundle.put(VERSION, version);
+
+			if (gameData != null)
+				bundle.put(DATA, gameData);
+			bundle.put(ID, gameID);
 		}
 	}
 
 	public static final Comparator<Record> scoreComparator = new Comparator<Rankings.Record>() {
 		@Override
-		public int compare( Record lhs, Record rhs ) {
+		public int compare(Record lhs, Record rhs) {
 			//this covers custom seeded runs, easy mode, and dailies
 			boolean lhsSpecial = !lhs.customSeed.isEmpty() || lhs.easyMode;
 			boolean rhsSpecial = !rhs.customSeed.isEmpty() || rhs.easyMode;
-			if (!rhsSpecial && lhsSpecial){
+			if (!rhsSpecial && lhsSpecial) {
 				return +1;
-			} else if (!lhsSpecial && rhsSpecial){
+			} else if (!lhsSpecial && rhsSpecial) {
 				return -1;
 			}
 
-			int result = (int)Math.signum( rhs.score - lhs.score );
+			int result = (int) Math.signum(rhs.score - lhs.score);
 			if (result == 0) {
-				return (int)Math.signum( rhs.gameID.hashCode() - lhs.gameID.hashCode());
+				return (int) Math.signum(rhs.gameID.hashCode() - lhs.gameID.hashCode());
 			} else {
 				return result;
 			}

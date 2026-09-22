@@ -30,6 +30,7 @@ public abstract class NewsService {
 
 	public static abstract class NewsResultCallback {
 		public abstract void onArticlesFound(ArrayList<NewsArticle> articles);
+
 		public abstract void onConnectionFailed();
 	}
 

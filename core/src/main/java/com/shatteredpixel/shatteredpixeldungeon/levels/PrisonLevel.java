@@ -68,14 +68,14 @@ public class PrisonLevel extends RegularLevel {
 		color2 = 0x88924c;
 	}
 
-	public static final String[] PRISON_TRACK_LIST
-			= new String[]{Assets.Music.PRISON_1, Assets.Music.PRISON_2, Assets.Music.PRISON_2,
-			Assets.Music.PRISON_1, Assets.Music.PRISON_3, Assets.Music.PRISON_3};
-	public static final float[] PRISON_TRACK_CHANCES = new float[]{1f, 1f, 0.5f, 0.25f, 1f, 0.5f};
+	public static final String[] PRISON_TRACK_LIST = new String[] { Assets.Music.PRISON_1, Assets.Music.PRISON_2,
+			Assets.Music.PRISON_2,
+			Assets.Music.PRISON_1, Assets.Music.PRISON_3, Assets.Music.PRISON_3 };
+	public static final float[] PRISON_TRACK_CHANCES = new float[] { 1f, 1f, 0.5f, 0.25f, 1f, 0.5f };
 
 	@Override
 	public void playLevelMusic() {
-		if (Wandmaker.Quest.active() || Statistics.amuletObtained){
+		if (Wandmaker.Quest.active() || Statistics.amuletObtained) {
 			Music.INSTANCE.play(Assets.Music.PRISON_TENSE, true);
 		} else {
 			Music.INSTANCE.playTracks(PRISON_TRACK_LIST, PRISON_TRACK_CHANCES, false);
@@ -96,18 +96,20 @@ public class PrisonLevel extends RegularLevel {
 
 	@Override
 	protected int standardRooms(boolean forceMax) {
-		if (forceMax) return 6;
+		if (forceMax)
+			return 6;
 		//5 to 6, average 5.5
-		return 5+Random.chances(new float[]{1, 1});
+		return 5 + Random.chances(new float[] { 1, 1 });
 	}
-	
+
 	@Override
 	protected int specialRooms(boolean forceMax) {
-		if (forceMax) return 3;
+		if (forceMax)
+			return 3;
 		//1 to 3, average 2.0
-		return 1+Random.chances(new float[]{1, 3, 1});
+		return 1 + Random.chances(new float[] { 1, 3, 1 });
 	}
-	
+
 	@Override
 	protected Painter painter() {
 		return new PrisonPainter()
@@ -115,28 +117,29 @@ public class PrisonLevel extends RegularLevel {
 				.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 3)
 				.setTraps(nTraps(), trapClasses(), trapChances());
 	}
-	
+
 	@Override
 	public String tilesTex() {
 		return Assets.Environment.TILES_PRISON;
 	}
-	
+
 	@Override
 	public String waterTex() {
 		return Assets.Environment.WATER_PRISON;
 	}
-	
+
 	@Override
 	protected Class<?>[] trapClasses() {
-		return new Class[]{
+		return new Class[] {
 				ChillingTrap.class, ShockingTrap.class, ToxicTrap.class, BurningTrap.class, PoisonDartTrap.class,
 				AlarmTrap.class, OozeTrap.class, GrippingTrap.class,
-				ConfusionTrap.class, FlockTrap.class, SummoningTrap.class, TeleportationTrap.class, GatewayTrap.class, GeyserTrap.class };
+				ConfusionTrap.class, FlockTrap.class, SummoningTrap.class, TeleportationTrap.class, GatewayTrap.class,
+				GeyserTrap.class };
 	}
 
 	@Override
 	protected float[] trapChances() {
-		return new float[]{
+		return new float[] {
 				4, 4, 4, 4, 4,
 				2, 2, 2,
 				1, 1, 1, 1, 1, 1 };
@@ -152,7 +155,7 @@ public class PrisonLevel extends RegularLevel {
 
 	private Boolean wandmakerQuestWasActive = null;
 
-	public void updateWandmakerQuestMusic(){
+	public void updateWandmakerQuestMusic() {
 		if (wandmakerQuestWasActive == null) {
 			wandmakerQuestWasActive = Wandmaker.Quest.active();
 			return;
@@ -177,7 +180,7 @@ public class PrisonLevel extends RegularLevel {
 	}
 
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(PrisonLevel.class, "water_name");
@@ -186,7 +189,7 @@ public class PrisonLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(PrisonLevel.class, "region_deco_alt_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
 
@@ -202,10 +205,10 @@ public class PrisonLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(PrisonLevel.class, "region_deco_alt_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
-	
+
 	@Override
 	public Group addVisuals() {
 		super.addVisuals();
@@ -213,35 +216,35 @@ public class PrisonLevel extends RegularLevel {
 		return visuals;
 	}
 
-	public static void addPrisonVisuals(Level level, Group group){
-		for (int i=0; i < level.length(); i++) {
+	public static void addPrisonVisuals(Level level, Group group) {
+		for (int i = 0; i < level.length(); i++) {
 			if (level.map[i] == Terrain.WALL_DECO) {
-				group.add( new Torch( i ) );
+				group.add(new Torch(i));
 			}
 			//alt deco is a chasm visual in the prison
 			if (level.map[i] == Terrain.REGION_DECO_ALT) {
-				group.add( new WindParticle.Wind( i ) );
+				group.add(new WindParticle.Wind(i));
 			}
 		}
 	}
-	
+
 	public static class Torch extends Emitter {
-		
+
 		private int pos;
-		
-		public Torch( int pos ) {
+
+		public Torch(int pos) {
 			super();
-			
+
 			this.pos = pos;
-			
-			PointF p = DungeonTilemap.tileCenterToWorld( pos );
-			pos( p.x - 1, p.y + 2, 2, 0 );
-			
-			pour( FlameParticle.FACTORY, 0.15f );
-			
-			add( new Halo( 12, 0xFFFFCC, 0.4f ).point( p.x, p.y + 1 ) );
+
+			PointF p = DungeonTilemap.tileCenterToWorld(pos);
+			pos(p.x - 1, p.y + 2, 2, 0);
+
+			pour(FlameParticle.FACTORY, 0.15f);
+
+			add(new Halo(12, 0xFFFFCC, 0.4f).point(p.x, p.y + 1));
 		}
-		
+
 		@Override
 		public void update() {
 			if (visible = (pos < Dungeon.level.heroFOV.length && Dungeon.level.heroFOV[pos])) {

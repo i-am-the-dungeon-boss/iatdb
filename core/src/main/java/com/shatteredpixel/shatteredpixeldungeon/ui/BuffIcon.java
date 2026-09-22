@@ -39,29 +39,31 @@ public class BuffIcon extends Image {
 
 	private final boolean large;
 
-	public BuffIcon(Buff buff, boolean large){
-		super( large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL );
+	public BuffIcon(Buff buff, boolean large) {
+		super(large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL);
 		this.large = large;
 		refresh(buff);
 	}
 
-	public BuffIcon(int icon, boolean large){
-		super( large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL );
+	public BuffIcon(int icon, boolean large) {
+		super(large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL);
 		this.large = large;
 		refresh(icon);
 	}
 
-	public void refresh(Buff buff){
+	public void refresh(Buff buff) {
 		refresh(buff.icon());
 		buff.tintIcon(this);
 	}
 
-	public void refresh(int icon){
-		if (large){
-			if (largeFilm == null) largeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
+	public void refresh(int icon) {
+		if (large) {
+			if (largeFilm == null)
+				largeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
 			frame(largeFilm.get(icon));
 		} else {
-			if (smallFilm == null ) smallFilm = new TextureFilm(texture, SML_SIZE, SML_SIZE);
+			if (smallFilm == null)
+				smallFilm = new TextureFilm(texture, SML_SIZE, SML_SIZE);
 			frame(smallFilm.get(icon));
 		}
 	}

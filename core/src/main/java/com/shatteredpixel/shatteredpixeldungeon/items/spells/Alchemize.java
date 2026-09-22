@@ -55,29 +55,29 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class Alchemize extends Spell {
-	
+
 	{
 		image = ItemSpriteSheet.ALCHEMIZE;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	private static WndBag parentWnd;
-	
+
 	@Override
 	protected void onCast(Hero hero) {
-		parentWnd = GameScene.selectItem( itemSelector );
+		parentWnd = GameScene.selectItem(itemSelector);
 	}
-	
+
 	@Override
 	public int value() {
 		//lower value, as it's very cheap to make (and also sold at shops)
-		return (int)(20 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (20 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(4 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (4 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {
@@ -86,13 +86,14 @@ public class Alchemize extends Spell {
 
 		@Override
 		public boolean testIngredients(ArrayList<Item> ingredients) {
-			if (ingredients.size() != 2) return false;
+			if (ingredients.size() != 2)
+				return false;
 
-			if (ingredients.get(0) instanceof Plant.Seed && ingredients.get(1) instanceof Runestone){
+			if (ingredients.get(0) instanceof Plant.Seed && ingredients.get(1) instanceof Runestone) {
 				return true;
 			}
 
-			if (ingredients.get(0) instanceof Runestone && ingredients.get(1) instanceof Plant.Seed){
+			if (ingredients.get(0) instanceof Runestone && ingredients.get(1) instanceof Plant.Seed) {
 				return true;
 			}
 
@@ -106,8 +107,8 @@ public class Alchemize extends Spell {
 
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
-			ingredients.get(0).quantity(ingredients.get(0).quantity()-1);
-			ingredients.get(1).quantity(ingredients.get(1).quantity()-1);
+			ingredients.get(0).quantity(ingredients.get(0).quantity() - 1);
+			ingredients.get(1).quantity(ingredients.get(1).quantity() - 1);
 			return sampleOutput(null);
 		}
 
@@ -130,21 +131,20 @@ public class Alchemize extends Spell {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
+		public void onSelect(Item item) {
 			if (item != null) {
 				if (parentWnd != null) {
 					parentWnd = GameScene.selectItem(itemSelector);
 				}
-				GameScene.show( new WndAlchemizeItem( item, parentWnd ) );
+				GameScene.show(new WndAlchemizeItem(item, parentWnd));
 			}
 		}
 	};
 
-
 	public static class WndAlchemizeItem extends WndInfoItem {
 
-		private static final float GAP		= 2;
-		private static final int BTN_HEIGHT	= 18;
+		private static final float GAP = 2;
+		private static final int BTN_HEIGHT = 18;
 
 		private WndBag owner;
 
@@ -158,8 +158,9 @@ public class Alchemize extends Spell {
 			if (Shopkeeper.canSell(item)) {
 				if (item.quantity() == 1 || (item instanceof MissileWeapon && item.isUpgradable())) {
 
-					if (item instanceof MissileWeapon && ((MissileWeapon) item).extraThrownLeft){
-						RenderedTextBlock warn = PixelScene.renderTextBlock(Messages.get(WndUpgrade.class, "thrown_dust"), 6);
+					if (item instanceof MissileWeapon && ((MissileWeapon) item).extraThrownLeft) {
+						RenderedTextBlock warn = PixelScene
+								.renderTextBlock(Messages.get(WndUpgrade.class, "thrown_dust"), 6);
 						warn.hardlight(CharSprite.WARNING);
 						warn.maxWidth(this.width);
 						warn.setPos(0, pos + GAP);
@@ -218,11 +219,11 @@ public class Alchemize extends Spell {
 					RedButton btnEnergize = new RedButton(Messages.get(this, "energize", item.energyVal())) {
 						@Override
 						protected void onClick() {
-							if (item instanceof Trinket){
+							if (item instanceof Trinket) {
 								GameScene.show(new WndOptions(new ItemSprite(item), Messages.titleCase(item.name()),
 										Messages.get(WndEnergizeItem.class, "trinket_warn"),
 										Messages.get(WndEnergizeItem.class, "trinket_yes"),
-										Messages.get(WndEnergizeItem.class, "trinket_no")){
+										Messages.get(WndEnergizeItem.class, "trinket_no")) {
 
 									@Override
 									protected void onSelect(int index) {
@@ -253,7 +254,8 @@ public class Alchemize extends Spell {
 				} else {
 
 					int energyAll = item.energyVal();
-					RedButton btnEnergize1 = new RedButton(Messages.get(this, "energize_1", energyAll / item.quantity())) {
+					RedButton btnEnergize1 = new RedButton(
+							Messages.get(this, "energize_1", energyAll / item.quantity())) {
 						@Override
 						protected void onClick() {
 							WndEnergizeItem.energizeOne(item);
@@ -281,26 +283,26 @@ public class Alchemize extends Spell {
 				}
 			}
 
-			resize( width, (int)pos );
+			resize(width, (int) pos);
 
 		}
 
-		private void consumeAlchemize(){
+		private void consumeAlchemize() {
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-			if (curItem.quantity() <= 1){
+			if (curItem.quantity() <= 1) {
 				curItem.detachAll(Dungeon.hero.belongings.backpack);
 				if (owner != null) {
 					owner.hide();
 				}
 			} else {
 				curItem.detach(Dungeon.hero.belongings.backpack);
-				if (owner != null){
+				if (owner != null) {
 					owner.hide();
 				}
 				GameScene.selectItem(itemSelector);
 			}
 			Catalog.countUse(getClass());
-			if (curItem instanceof Alchemize && Random.Float() < ((Alchemize)curItem).talentChance){
+			if (curItem instanceof Alchemize && Random.Float() < ((Alchemize) curItem).talentChance) {
 				Talent.onScrollUsed(curUser, curUser.pos, ((Alchemize) curItem).talentFactor, curItem.getClass());
 			}
 		}

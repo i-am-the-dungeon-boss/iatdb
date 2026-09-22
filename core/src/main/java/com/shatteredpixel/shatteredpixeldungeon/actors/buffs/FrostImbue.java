@@ -30,19 +30,19 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.watabou.noosa.Image;
 
 public class FrostImbue extends FlavourBuff {
-	
+
 	{
 		type = buffType.POSITIVE;
 		announced = true;
 	}
-	
-	public static final float DURATION	= 50f;
-	
-	public void proc(Char enemy){
+
+	public static final float DURATION = 50f;
+
+	public void proc(Char enemy) {
 		Buff.affect(enemy, Chill.class, 3f);
-		enemy.sprite.emitter().burst( SnowParticle.FACTORY, 3 );
+		enemy.sprite.emitter().burst(SnowParticle.FACTORY, 3);
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.IMBUE;
@@ -57,15 +57,15 @@ public class FrostImbue extends FlavourBuff {
 	public float iconFadePercent() {
 		return Math.max(0, (DURATION - visualcooldown()) / DURATION);
 	}
-	
+
 	{
-		immunities.add( Frost.class );
-		immunities.add( Chill.class );
+		immunities.add(Frost.class);
+		immunities.add(Chill.class);
 	}
 
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
+		if (super.attachTo(target)) {
 			Buff.detach(target, Frost.class);
 			Buff.detach(target, Chill.class);
 			return true;

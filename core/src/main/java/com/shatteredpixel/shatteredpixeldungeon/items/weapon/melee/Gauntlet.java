@@ -39,8 +39,8 @@ public class Gauntlet extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(2.5f*(tier+1)) +     //15 base, down from 30
-				lvl*Math.round(0.5f*(tier+1));  //+3 per level, down from +6
+		return Math.round(2.5f * (tier + 1)) + //15 base, down from 30
+				lvl * Math.round(0.5f * (tier + 1)); //+3 per level, down from +6
 	}
 
 	@Override
@@ -58,14 +58,14 @@ public class Gauntlet extends MeleeWeapon {
 	@Override
 	public String abilityInfo() {
 		int dmgBoost = levelKnown ? 5 + buffedLvl() : 5;
-		if (levelKnown){
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(dmgBoost));
 		} else {
 			return Messages.get(this, "typical_ability_desc", augment.damageFactor(dmgBoost));
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		return "+" + augment.damageFactor(5 + level);
 	}
 

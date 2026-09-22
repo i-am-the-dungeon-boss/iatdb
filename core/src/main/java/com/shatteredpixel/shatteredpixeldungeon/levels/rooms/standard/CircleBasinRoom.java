@@ -33,22 +33,27 @@ import com.watabou.utils.Rect;
 public class CircleBasinRoom extends PatchRoom {
 
 	@Override
-	public int minWidth() { return sizeCat.minDim+1; }
+	public int minWidth() {
+		return sizeCat.minDim + 1;
+	}
+
 	public int minHeight() {
-		return sizeCat.minDim+1;
+		return sizeCat.minDim + 1;
 	}
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 3, 1};
+		return new float[] { 0, 3, 1 };
 	}
 
 	//cannot roll even numbers
 	@Override
 	public Rect resize(int w, int h) {
 		super.resize(w, h);
-		if (width() % 2 == 0) right--;
-		if (height() % 2 == 0) bottom--;
+		if (width() % 2 == 0)
+			right--;
+		if (height() % 2 == 0)
+			bottom--;
 		return this;
 	}
 
@@ -74,33 +79,33 @@ public class CircleBasinRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
-		Painter.fillEllipse( level, this, 1 , Terrain.EMPTY );
+		Painter.fillEllipse(level, this, 1, Terrain.EMPTY);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
-			if (door.x == left || door.x == right){
-				Painter.drawInside(level, this, door, width()/2, Terrain.EMPTY);
+			door.set(Door.Type.REGULAR);
+			if (door.x == left || door.x == right) {
+				Painter.drawInside(level, this, door, width() / 2, Terrain.EMPTY);
 			} else {
-				Painter.drawInside(level, this, door, height()/2, Terrain.EMPTY);
+				Painter.drawInside(level, this, door, height() / 2, Terrain.EMPTY);
 			}
 		}
 
-		Painter.fillEllipse( level, this, 3 , Terrain.CHASM );
+		Painter.fillEllipse(level, this, 3, Terrain.CHASM);
 
-		Point start = new Point(left + width()/2, top + 3);
-		Point end = new Point(left + width()/2, bottom - 3);
+		Point start = new Point(left + width() / 2, top + 3);
+		Point end = new Point(left + width() / 2, bottom - 3);
 		Painter.drawLine(level, start, end, Terrain.EMPTY_SP);
 
-		start.set(left+3, top + height()/2);
-		end.set(right-3, top + height()/2);
+		start.set(left + 3, top + height() / 2);
+		end.set(right - 3, top + height() / 2);
 		Painter.drawLine(level, start, end, Terrain.EMPTY_SP);
 
-		if (width() > 11 || height() > 11){
+		if (width() > 11 || height() > 11) {
 			Point center = center();
-			Painter.fill( level, center.x-1, center.y-1, 3, 3, Terrain.EMPTY_SP );
-			Painter.set( level, center, Terrain.WALL );
+			Painter.fill(level, center.x - 1, center.y - 1, 3, 3, Terrain.EMPTY_SP);
+			Painter.set(level, center, Terrain.WALL);
 		}
 
 		setupPatch(level);
@@ -109,8 +114,8 @@ public class CircleBasinRoom extends PatchRoom {
 				int cell = i * level.width() + j;
 				if (level.map[cell] == Terrain.EMPTY && patch[xyToPatchCoords(j, i)]) {
 					level.map[cell] = Terrain.WATER;
-					if (level.map[cell-level.width()] == Terrain.WALL){
-						level.map[cell-level.width()] = Terrain.WALL_DECO;
+					if (level.map[cell - level.width()] == Terrain.WALL) {
+						level.map[cell - level.width()] = Terrain.WALL_DECO;
 					}
 				}
 			}

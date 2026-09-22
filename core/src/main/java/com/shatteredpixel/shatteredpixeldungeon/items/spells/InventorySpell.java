@@ -38,24 +38,24 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Random;
 
 public abstract class InventorySpell extends Spell {
-	
+
 	@Override
 	protected void onCast(Hero hero) {
-		GameScene.selectItem( itemSelector );
+		GameScene.selectItem(itemSelector);
 	}
 
-	private String inventoryTitle(){
+	private String inventoryTitle() {
 		return Messages.get(this, "inv_title");
 	}
 
-	protected Class<?extends Bag> preferredBag = null;
+	protected Class<? extends Bag> preferredBag = null;
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
-	
-	protected abstract void onItemSelected( Item item );
-	
+
+	protected abstract void onItemSelected(Item item);
+
 	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {
 
 		@Override
@@ -74,14 +74,14 @@ public abstract class InventorySpell extends Spell {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
-			
+		public void onSelect(Item item) {
+
 			//FIXME this safety check shouldn't be necessary
 			//it would be better to eliminate the curItem static variable.
-			if (!(curItem instanceof InventorySpell)){
+			if (!(curItem instanceof InventorySpell)) {
 				return;
 			}
-			
+
 			if (item != null) {
 
 				//Infusion opens a separate window that can be cancelled
@@ -89,8 +89,8 @@ public abstract class InventorySpell extends Spell {
 				if (!(curItem instanceof MagicalInfusion)) {
 					curItem = detach(curUser.belongings.backpack);
 				}
-				
-				((InventorySpell)curItem).onItemSelected( item );
+
+				((InventorySpell) curItem).onItemSelected(item);
 				if (!(curItem instanceof MagicalInfusion)) {
 					curUser.spend(1f);
 					curUser.busy();
@@ -104,7 +104,7 @@ public abstract class InventorySpell extends Spell {
 						Talent.onScrollUsed(curUser, curUser.pos, ((Spell) curItem).talentFactor, curItem.getClass());
 					}
 				}
-				
+
 			}
 		}
 	};

@@ -10,5 +10,18 @@
       "vmArgs": ["-Dfile.encoding=UTF-8"]
     }
   ],
-  "java.test.defaultConfig": "core-assets"
+  "java.test.defaultConfig": "core-assets",
+  "java.format.enabled": false,
+  "[java]": {
+    "editor.insertSpaces": false,
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "files.trimTrailingWhitespace": false,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle",
+    "spotlessGradle.format.enable": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.spotlessGradle": "explicit"
+    }
+  }
 }

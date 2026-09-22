@@ -24,7 +24,6 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.rings;
 
-
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -41,8 +40,8 @@ public class RingOfMight extends Ring {
 
 	@Override
 	public boolean doEquip(Hero hero) {
-		if (super.doEquip(hero)){
-			hero.updateHT( false );
+		if (super.doEquip(hero)) {
+			hero.updateHT(false);
 			return true;
 		} else {
 			return false;
@@ -51,8 +50,8 @@ public class RingOfMight extends Ring {
 
 	@Override
 	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
-		if (super.doUnequip(hero, collect, single)){
-			hero.updateHT( false );
+		if (super.doUnequip(hero, collect, single)) {
+			hero.updateHT(false);
 			return true;
 		} else {
 			return false;
@@ -72,19 +71,20 @@ public class RingOfMight extends Ring {
 		updateTargetHT();
 	}
 
-	private void updateTargetHT(){
-		if (buff != null && buff.target instanceof Hero){
-			((Hero) buff.target).updateHT( false );
+	private void updateTargetHT() {
+		if (buff != null && buff.target instanceof Hero) {
+			((Hero) buff.target).updateHT(false);
 		}
 	}
 
 	public String statsInfo() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			String info = Messages.get(this, "stats",
 					soloBonus(), Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, soloBuffedBonus()) - 1f)));
-			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())) {
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						getBonus(owner(), Might.class), Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, combinedBuffedBonus(owner())) - 1f)));
+						getBonus(owner(), Might.class),
+						Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, combinedBuffedBonus(owner())) - 1f)));
 			}
 			return info;
 		} else {
@@ -94,27 +94,29 @@ public class RingOfMight extends Ring {
 
 	@Override
 	public String upgradeStat1(int level) {
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Integer.toString(level+1);
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Integer.toString(level + 1);
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, level+1)-1f)) + "%";
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.035, level + 1) - 1f)) + "%";
 	}
 
 	@Override
-	protected RingBuff buff( ) {
+	protected RingBuff buff() {
 		return new Might();
 	}
 
-	public static int strengthBonus( Char target ){
-		return getBonus( target, Might.class );
+	public static int strengthBonus(Char target) {
+		return getBonus(target, Might.class);
 	}
 
-	public static float HTMultiplier( Char target ){
-		return (float)Math.pow(1.035, getBuffedBonus(target, Might.class));
+	public static float HTMultiplier(Char target) {
+		return (float) Math.pow(1.035, getBuffedBonus(target, Might.class));
 	}
 
 	public class Might extends RingBuff {

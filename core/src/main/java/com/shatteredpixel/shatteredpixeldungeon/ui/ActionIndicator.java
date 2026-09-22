@@ -41,38 +41,42 @@ public class ActionIndicator extends Tag {
 	public static ActionIndicator instance;
 
 	public ActionIndicator() {
-		super( 0 );
+		super(0);
 
 		instance = this;
 
-		setSize( SIZE, SIZE );
+		setSize(SIZE, SIZE);
 		visible = false;
 	}
-	
+
 	@Override
 	public GameAction keyAction() {
 		return SPDAction.TAG_ACTION;
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
 		instance = null;
 	}
-	
+
 	@Override
 	protected synchronized void layout() {
 		super.layout();
-		
-		if (primaryVis != null){
-			if (!flipped)   primaryVis.x = x + (SIZE - primaryVis.width()) / 2f + 1;
-			else            primaryVis.x = x + width - (SIZE + primaryVis.width()) / 2f - 1;
+
+		if (primaryVis != null) {
+			if (!flipped)
+				primaryVis.x = x + (SIZE - primaryVis.width()) / 2f + 1;
+			else
+				primaryVis.x = x + width - (SIZE + primaryVis.width()) / 2f - 1;
 			primaryVis.y = y + (height - primaryVis.height()) / 2f;
 			PixelScene.align(primaryVis);
-			if (secondVis != null){
-				if (secondVis.width() > 16) secondVis.x = primaryVis.center().x - secondVis.width()/2f;
-				else                        secondVis.x = primaryVis.center().x + 8 - secondVis.width();
-				if (secondVis instanceof BitmapText){
+			if (secondVis != null) {
+				if (secondVis.width() > 16)
+					secondVis.x = primaryVis.center().x - secondVis.width() / 2f;
+				else
+					secondVis.x = primaryVis.center().x + 8 - secondVis.width();
+				if (secondVis instanceof BitmapText) {
 					//need a special case here for text unfortunately
 					secondVis.y = primaryVis.center().y + 8 - ((BitmapText) secondVis).baseLine();
 				} else {
@@ -82,9 +86,9 @@ public class ActionIndicator extends Tag {
 			}
 		}
 	}
-	
+
 	private boolean needsRefresh = false;
-	
+
 	@Override
 	public void update() {
 		super.update();
@@ -126,11 +130,15 @@ public class ActionIndicator extends Tag {
 			}
 
 			if (!Dungeon.hero.ready) {
-				if (primaryVis != null) primaryVis.alpha(0.5f);
-				if (secondVis != null) secondVis.alpha(0.5f);
+				if (primaryVis != null)
+					primaryVis.alpha(0.5f);
+				if (secondVis != null)
+					secondVis.alpha(0.5f);
 			} else {
-				if (primaryVis != null) primaryVis.alpha(1f);
-				if (secondVis != null) secondVis.alpha(1f);
+				if (primaryVis != null)
+					primaryVis.alpha(1f);
+				if (secondVis != null)
+					secondVis.alpha(1f);
 			}
 		}
 
@@ -147,25 +155,25 @@ public class ActionIndicator extends Tag {
 	@Override
 	protected String hoverText() {
 		String text = (action == null ? null : action.actionName());
-		if (text != null){
+		if (text != null) {
 			return Messages.titleCase(text);
 		} else {
 			return null;
 		}
 	}
 
-	public static void setAction(Action action){
+	public static void setAction(Action action) {
 		synchronized (ActionIndicator.class) {
 			ActionIndicator.action = action;
 			refresh();
 		}
 	}
 
-	public static void clearAction(){
+	public static void clearAction() {
 		clearAction(null);
 	}
 
-	public static void clearAction(Action action){
+	public static void clearAction(Action action) {
 		synchronized (ActionIndicator.class) {
 			if (action == null || ActionIndicator.action == action) {
 				ActionIndicator.action = null;
@@ -173,7 +181,7 @@ public class ActionIndicator extends Tag {
 		}
 	}
 
-	public static void refresh(){
+	public static void refresh() {
 		synchronized (ActionIndicator.class) {
 			if (instance != null) {
 				instance.needsRefresh = true;
@@ -185,17 +193,17 @@ public class ActionIndicator extends Tag {
 
 		String actionName();
 
-		default int actionIcon(){
+		default int actionIcon() {
 			return HeroIcon.NONE;
 		}
 
 		//usually just a static icon, unless overridden
-		default Visual primaryVisual(){
+		default Visual primaryVisual() {
 			return new HeroIcon(this);
 		}
 
 		//a smaller visual on the bottom-right, usually a tiny icon or bitmap text
-		default Visual secondaryVisual(){
+		default Visual secondaryVisual() {
 			return null; //no second visual by default
 		}
 

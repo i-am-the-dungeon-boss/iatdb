@@ -43,38 +43,38 @@ import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
 public class Piranha extends Mob {
-	
+
 	{
 		spriteClass = PiranhaSprite.class;
 
 		baseSpeed = 2f;
-		
+
 		EXP = 0;
-		
+
 		loot = MysteryMeat.class;
 		lootChance = 1f;
-		
+
 		SLEEPING = new Sleeping();
 		WANDERING = new Wandering();
 		HUNTING = new Hunting();
-		
+
 		state = SLEEPING;
 
 	}
-	
+
 	public Piranha() {
 		super();
-		
+
 		HP = HT = 10 + Dungeon.depth * 5;
 		defenseSkill = 10 + Dungeon.depth * 2;
 	}
-	
+
 	@Override
 	protected boolean act() {
-		
+
 		if (!Dungeon.level.water[pos] || flying) {
-			if (sprite != null && buff(Levitation.class) != null){
-				sprite.emitter().burst(Speck.factory( Speck.JET ), 10);
+			if (sprite != null && buff(Levitation.class) != null) {
+				sprite.emitter().burst(Speck.factory(Speck.JET), 10);
 			}
 			dieOnLand();
 			return true;
@@ -82,17 +82,17 @@ public class Piranha extends Mob {
 			return super.act();
 		}
 	}
-	
+
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( Dungeon.depth, 4 + Dungeon.depth * 2 );
+		return Random.NormalIntRange(Dungeon.depth, 4 + Dungeon.depth * 2);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 20 + Dungeon.depth * 2;
 	}
-	
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, Dungeon.depth);
@@ -100,24 +100,24 @@ public class Piranha extends Mob {
 
 	@Override
 	public boolean surprisedBy(Char enemy, boolean attacking) {
-		if (enemy == Dungeon.hero && (!attacking || ((Hero)enemy).canSurpriseAttack())){
-			if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){
+		if (enemy == Dungeon.hero && (!attacking || ((Hero) enemy).canSurpriseAttack())) {
+			if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()) {
 				fieldOfView = new boolean[Dungeon.level.length()];
-				Dungeon.level.updateFieldOfView( this, fieldOfView );
+				Dungeon.level.updateFieldOfView(this, fieldOfView);
 			}
 			return state == SLEEPING || !fieldOfView[enemy.pos] || enemy.invisible > 0;
 		}
 		return super.surprisedBy(enemy, attacking);
 	}
 
-	public void dieOnLand(){
-		die( null );
+	public void dieOnLand() {
+		die(null);
 	}
 
 	@Override
-	public void die( Object cause ) {
-		super.die( cause );
-		
+	public void die(Object cause) {
+		super.die(cause);
+
 		Statistics.piranhasKilled++;
 		Badges.validatePiranhasKilled();
 	}
@@ -131,84 +131,86 @@ public class Piranha extends Mob {
 	public boolean reset() {
 		return true;
 	}
-	
+
 	@Override
-	protected boolean getCloser( int target ) {
-		
+	protected boolean getCloser(int target) {
+
 		if (rooted) {
 			return false;
 		}
-		
-		int step = Dungeon.findStep( this, target, BArray.and(Dungeon.level.water, Dungeon.level.passable, null), fieldOfView, true );
+
+		int step = Dungeon.findStep(this, target, BArray.and(Dungeon.level.water, Dungeon.level.passable, null),
+				fieldOfView, true);
 		if (step != -1) {
-			move( step );
+			move(step);
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	@Override
-	protected boolean getFurther( int target ) {
-		int step = Dungeon.flee( this, target, BArray.and(Dungeon.level.water, Dungeon.level.passable, null), fieldOfView, true );
+	protected boolean getFurther(int target) {
+		int step = Dungeon.flee(this, target, BArray.and(Dungeon.level.water, Dungeon.level.passable, null),
+				fieldOfView, true);
 		if (step != -1) {
-			move( step );
+			move(step);
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	{
-		for (Class c : new BlobImmunity().immunities()){
-			if (c != Electricity.class && c != Freezing.class){
+		for (Class c : new BlobImmunity().immunities()) {
+			if (c != Electricity.class && c != Freezing.class) {
 				immunities.add(c);
 			}
 		}
-		immunities.add( Burning.class );
+		immunities.add(Burning.class);
 	}
-	
+
 	//if there is not a path to the enemy, piranhas act as if they can't see them
-	private class Sleeping extends Mob.Sleeping{
+	private class Sleeping extends Mob.Sleeping {
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 			if (enemyInFOV) {
 				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.water, viewDistance);
 				enemyInFOV = PathFinder.distance[pos] != Integer.MAX_VALUE;
 			}
-			
-			return super.act(enemyInFOV, justAlerted);
-		}
-	}
-	
-	private class Wandering extends Mob.Wandering{
-		@Override
-		public boolean act(boolean enemyInFOV, boolean justAlerted) {
-			if (enemyInFOV) {
-				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.water, viewDistance);
-				enemyInFOV = PathFinder.distance[pos] != Integer.MAX_VALUE;
-			}
-			
-			return super.act(enemyInFOV, justAlerted);
-		}
-	}
-	
-	private class Hunting extends Mob.Hunting{
-		
-		@Override
-		public boolean act(boolean enemyInFOV, boolean justAlerted) {
-			if (enemyInFOV) {
-				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.water, viewDistance);
-				enemyInFOV = PathFinder.distance[pos] != Integer.MAX_VALUE;
-			}
-			
+
 			return super.act(enemyInFOV, justAlerted);
 		}
 	}
 
-	public static Piranha random(){
-		float altChance = 1/50f * RatSkull.exoticChanceMultiplier();
-		if (Random.Float() < altChance){
+	private class Wandering extends Mob.Wandering {
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+			if (enemyInFOV) {
+				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.water, viewDistance);
+				enemyInFOV = PathFinder.distance[pos] != Integer.MAX_VALUE;
+			}
+
+			return super.act(enemyInFOV, justAlerted);
+		}
+	}
+
+	private class Hunting extends Mob.Hunting {
+
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+			if (enemyInFOV) {
+				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.water, viewDistance);
+				enemyInFOV = PathFinder.distance[pos] != Integer.MAX_VALUE;
+			}
+
+			return super.act(enemyInFOV, justAlerted);
+		}
+	}
+
+	public static Piranha random() {
+		float altChance = 1 / 50f * RatSkull.exoticChanceMultiplier();
+		if (Random.Float() < altChance) {
 			return new PhantomPiranha();
 		} else {
 			return new Piranha();

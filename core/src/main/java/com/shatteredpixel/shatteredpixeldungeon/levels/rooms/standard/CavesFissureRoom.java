@@ -49,7 +49,7 @@ public class CavesFissureRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{9, 3, 1};
+		return new float[] { 9, 3, 1 };
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class CavesFissureRoom extends StandardRoom {
 	public void paint(Level level) {
 
 		boolean pathable = true;
-		PathFinder.setMapSize(width()-2, height()-2);
+		PathFinder.setMapSize(width() - 2, height() - 2);
 
 		do {
 			Painter.fill(level, this, Terrain.WALL);
@@ -95,7 +95,8 @@ public class CavesFissureRoom extends StandardRoom {
 			for (Door d : connected.values()) {
 				PointF doorCenter = new PointF(d.x + 0.5f, d.y + 0.5f);
 				float doorAngle = angleBetweenPoints(center, doorCenter);
-				if (doorAngle < 0) doorAngle += 360f;
+				if (doorAngle < 0)
+					doorAngle += 360f;
 				doorAngles.add(doorAngle);
 			}
 
@@ -110,7 +111,8 @@ public class CavesFissureRoom extends StandardRoom {
 					float lineAngle = Random.Float(0, 360);
 					for (float doorAngle : doorAngles) {
 						float angleDiff = Math.abs(lineAngle - doorAngle);
-						if (angleDiff > 180f) angleDiff = 360f - angleDiff;
+						if (angleDiff > 180f)
+							angleDiff = 360f - angleDiff;
 						if (angleDiff <= (sizeCat == SizeCategory.NORMAL ? 30f : 15f)) {
 							valid = false;
 							break;
@@ -119,7 +121,8 @@ public class CavesFissureRoom extends StandardRoom {
 
 					for (float existingLineAngle : lineAngles) {
 						float angleDiff = Math.abs(lineAngle - existingLineAngle);
-						if (angleDiff > 180f) angleDiff = 360f - angleDiff;
+						if (angleDiff > 180f)
+							angleDiff = 360f - angleDiff;
 						if (angleDiff <= (numLines == 2 ? 120f : 60f)) {
 							valid = false;
 							break;
@@ -211,10 +214,14 @@ public class CavesFissureRoom extends StandardRoom {
 			int doorPoint = 0;
 			for (Door door : connected.values()) {
 				Painter.drawInside(level, this, door, 1, Terrain.EMPTY);
-				if (door.x == left)         doorPoint = xyToRoomCoords(door.x+1, door.y);
-				else if (door.x == right)   doorPoint = xyToRoomCoords(door.x-1, door.y);
-				else if (door.y == top)     doorPoint = xyToRoomCoords(door.x, door.y+1);
-				else if (door.y == bottom)  doorPoint = xyToRoomCoords(door.x, door.y-1);
+				if (door.x == left)
+					doorPoint = xyToRoomCoords(door.x + 1, door.y);
+				else if (door.x == right)
+					doorPoint = xyToRoomCoords(door.x - 1, door.y);
+				else if (door.y == top)
+					doorPoint = xyToRoomCoords(door.x, door.y + 1);
+				else if (door.y == bottom)
+					doorPoint = xyToRoomCoords(door.x, door.y - 1);
 			}
 
 			//ensures that there is always a path to any non-chasm tile
@@ -222,16 +229,16 @@ public class CavesFissureRoom extends StandardRoom {
 			pathable = true;
 			boolean[] passable = new boolean[PathFinder.distance.length];
 
-			for (Point p : shrink().getPoints()){
+			for (Point p : shrink().getPoints()) {
 				int i = xyToRoomCoords(p.x, p.y);
 				passable[i] = level.map[level.pointToCell(p)] != Terrain.CHASM;
 			}
 
 			PathFinder.buildDistanceMap(doorPoint, passable);
 
-			for (Point p : shrink().getPoints()){
+			for (Point p : shrink().getPoints()) {
 				int i = xyToRoomCoords(p.x, p.y);
-				if (passable[i] && PathFinder.distance[i] == Integer.MAX_VALUE){
+				if (passable[i] && PathFinder.distance[i] == Integer.MAX_VALUE) {
 					pathable = false;
 					break;
 				}
@@ -243,17 +250,19 @@ public class CavesFissureRoom extends StandardRoom {
 
 	}
 
-	private void buildBridge( Level level, float fisssureAngle, PointF center, int centerMargin){
-		float dX = (float)Math.cos(fisssureAngle/A - Math.PI/2.0);
-		float dY = (float)Math.sin(fisssureAngle/A - Math.PI/2.0);
+	private void buildBridge(Level level, float fisssureAngle, PointF center, int centerMargin) {
+		float dX = (float) Math.cos(fisssureAngle / A - Math.PI / 2.0);
+		float dY = (float) Math.sin(fisssureAngle / A - Math.PI / 2.0);
 
 		int edgemargin = 2;
 
 		//horizontal bridge
-		if (Math.abs(dY) >= Math.abs(dX)){
+		if (Math.abs(dY) >= Math.abs(dX)) {
 			int Y;
-			if (dY > 0) Y = Random.IntRange((int)center.y+centerMargin, bottom-edgemargin);
-			else        Y = Random.IntRange(top+edgemargin, (int)center.y-centerMargin);
+			if (dY > 0)
+				Y = Random.IntRange((int) center.y + centerMargin, bottom - edgemargin);
+			else
+				Y = Random.IntRange(top + edgemargin, (int) center.y - centerMargin);
 
 			boolean foundChasm = false;
 			if (dX <= 0) {
@@ -267,7 +276,7 @@ public class CavesFissureRoom extends StandardRoom {
 					}
 				}
 			} else {
-				for (int X = right-1; X >= left+1; X--) {
+				for (int X = right - 1; X >= left + 1; X--) {
 					int cell = X + Y * level.width();
 					if (level.map[cell] == Terrain.CHASM) {
 						foundChasm = true;
@@ -278,11 +287,13 @@ public class CavesFissureRoom extends StandardRoom {
 				}
 			}
 
-		//vertical bridge
+			//vertical bridge
 		} else {
 			int X;
-			if (dX > 0) X = Random.IntRange((int)center.x+centerMargin, right-edgemargin);
-			else        X = Random.IntRange(left+edgemargin, (int)center.x-centerMargin);
+			if (dX > 0)
+				X = Random.IntRange((int) center.x + centerMargin, right - edgemargin);
+			else
+				X = Random.IntRange(left + edgemargin, (int) center.x - centerMargin);
 
 			boolean foundChasm = false;
 			if (dY <= 0) {
@@ -291,17 +302,17 @@ public class CavesFissureRoom extends StandardRoom {
 					if (level.map[cell] == Terrain.CHASM) {
 						foundChasm = true;
 						Painter.set(level, cell, Terrain.EMPTY_SP);
-					} else if (foundChasm){
+					} else if (foundChasm) {
 						break;
 					}
 				}
 			} else {
-				for (int Y = bottom-1; Y >= top + 1; Y--) {
+				for (int Y = bottom - 1; Y >= top + 1; Y--) {
 					int cell = X + Y * level.width();
 					if (level.map[cell] == Terrain.CHASM) {
 						foundChasm = true;
 						Painter.set(level, cell, Terrain.EMPTY_SP);
-					} else if (foundChasm){
+					} else if (foundChasm) {
 						break;
 					}
 				}
@@ -312,16 +323,17 @@ public class CavesFissureRoom extends StandardRoom {
 
 	private static final double A = 180 / Math.PI;
 
-	protected static float angleBetweenPoints( PointF from, PointF to ){
-		double m = (to.y - from.y)/(to.x - from.x);
+	protected static float angleBetweenPoints(PointF from, PointF to) {
+		double m = (to.y - from.y) / (to.x - from.x);
 
-		float angle = (float)(A*(Math.atan(m) + Math.PI/2.0));
-		if (from.x > to.x) angle -= 180f;
+		float angle = (float) (A * (Math.atan(m) + Math.PI / 2.0));
+		if (from.x > to.x)
+			angle -= 180f;
 		return angle;
 	}
 
-	protected int xyToRoomCoords(int x, int y){
-		return (x-left-1) + ((y-top-1) * (width()-2));
+	protected int xyToRoomCoords(int x, int y) {
+		return (x - left - 1) + ((y - top - 1) * (width() - 2));
 	}
 
 }

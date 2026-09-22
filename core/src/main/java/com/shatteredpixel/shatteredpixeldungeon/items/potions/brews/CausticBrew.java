@@ -43,40 +43,40 @@ import com.watabou.utils.PathFinder;
 import java.util.ArrayList;
 
 public class CausticBrew extends Brew {
-	
+
 	{
 		image = ItemSpriteSheet.BREW_CAUSTIC;
 	}
-	
+
 	@Override
 	public void shatter(int cell) {
 
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		}
-		
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), 3 );
+
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), 3);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
-				Splash.at( i, 0x000000, 5);
+				Splash.at(i, 0x000000, 5);
 				Char ch = Actor.findChar(i);
-				
-				if (ch != null){
-					Buff.affect(ch, Ooze.class).set( Ooze.DURATION );
+
+				if (ch != null) {
+					Buff.affect(ch, Ooze.class).set(Ooze.DURATION);
 				}
 			}
 		}
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
-		
+
 		{
-			inputs =  new Class[]{PotionOfToxicGas.class, GooBlob.class};
-			inQuantity = new int[]{1, 1};
-			
+			inputs = new Class[] { PotionOfToxicGas.class, GooBlob.class };
+			inQuantity = new int[] { 1, 1 };
+
 			cost = 1;
-			
+
 			output = CausticBrew.class;
 			outQuantity = 1;
 		}

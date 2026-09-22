@@ -126,14 +126,7 @@ import java.util.HashSet;
 public abstract class Level implements Bundlable {
 
 	public static enum Feeling {
-		NONE,
-		CHASM,
-		WATER,
-		GRASS,
-		DARK,
-		LARGE,
-		TRAPS,
-		SECRETS;
+		NONE, CHASM, WATER, GRASS, DARK, LARGE, TRAPS, SECRETS;
 
 		public String title() {
 			return Messages.get(this, name() + "_title");

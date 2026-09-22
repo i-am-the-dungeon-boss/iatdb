@@ -34,43 +34,44 @@ import com.watabou.noosa.Game;
 public class DeviceCompat {
 
 	//return APi level on Android, major OS version on iOS, 0 on desktop
-	public static int getPlatformVersion(){
+	public static int getPlatformVersion() {
 		return Gdx.app.getVersion();
 	}
 
-	public static boolean isAndroid(){
+	public static boolean isAndroid() {
 		return SharedLibraryLoader.os == Os.Android;
 	}
 
-	public static boolean isiOS(){
+	public static boolean isiOS() {
 		return SharedLibraryLoader.os == Os.IOS;
 	}
 
-	public static boolean isDesktop(){
-		return SharedLibraryLoader.os == Os.Windows || SharedLibraryLoader.os == Os.MacOsX || SharedLibraryLoader.os == Os.Linux;
+	public static boolean isDesktop() {
+		return SharedLibraryLoader.os == Os.Windows || SharedLibraryLoader.os == Os.MacOsX
+				|| SharedLibraryLoader.os == Os.Linux;
 	}
 
-	public static boolean hasHardKeyboard(){
+	public static boolean hasHardKeyboard() {
 		return Gdx.input.isPeripheralAvailable(Input.Peripheral.HardwareKeyboard);
 	}
-	
-	public static boolean isDebug(){
+
+	public static boolean isDebug() {
 		return Game.version.contains("INDEV");
 	}
-	
-	public static void log( String tag, String message ){
-		Gdx.app.log( tag, message );
+
+	public static void log(String tag, String message) {
+		Gdx.app.log(tag, message);
 	}
 
 	//some devices (macOS mainly) report virtual pixels to Shattered, but sometimes we want real pixel precision
 	//this returns the number of real pixels per virtual pixel in the X dimension...
-	public static float getRealPixelScaleX(){
-		return (Gdx.graphics.getBackBufferWidth() / (float)Game.width );
+	public static float getRealPixelScaleX() {
+		return (Gdx.graphics.getBackBufferWidth() / (float) Game.width);
 	}
 
 	//...and in the Y dimension
-	public static float getRealPixelScaleY(){
-		return (Gdx.graphics.getBackBufferHeight() / (float)Game.height );
+	public static float getRealPixelScaleY() {
+		return (Gdx.graphics.getBackBufferHeight() / (float) Game.height);
 	}
 
 }

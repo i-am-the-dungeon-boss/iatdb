@@ -58,13 +58,13 @@ public class ShardOfOblivion extends Trinket {
 	@Override
 	protected int upgradeEnergyCost() {
 		//6 -> 8(14) -> 10(24) -> 12(36)
-		return 6+2*level();
+		return 6 + 2 * level();
 	}
 
 	@Override
 	public String statsDesc() {
-		if (isIdentified()){
-			return Messages.get(this, "stats_desc", buffedLvl()+1);
+		if (isIdentified()) {
+			return Messages.get(this, "stats_desc", buffedLvl() + 1);
 		} else {
 			return Messages.get(this, "stats_desc", 1);
 		}
@@ -79,7 +79,7 @@ public class ShardOfOblivion extends Trinket {
 
 	@Override
 	public void execute(Hero hero, String action) {
-		if (action.equals(AC_IDENTIFY)){
+		if (action.equals(AC_IDENTIFY)) {
 			curUser = hero;
 			curItem = this;
 			GameScene.selectItem(identifySelector);
@@ -101,36 +101,36 @@ public class ShardOfOblivion extends Trinket {
 
 		@Override
 		public void onSelect(Item item) {
-			if (item == null){
+			if (item == null) {
 				return;
 			}
 
 			boolean ready = false;
-			if (item instanceof Weapon){
+			if (item instanceof Weapon) {
 				ready = ((Weapon) item).readyToIdentify();
-				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.ADVENTURERS_INTUITION) == 2){
+				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.ADVENTURERS_INTUITION) == 2) {
 					ready = true;
 				}
-			} else if (item instanceof Armor){
+			} else if (item instanceof Armor) {
 				ready = ((Armor) item).readyToIdentify();
-				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.VETERANS_INTUITION) == 2){
+				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.VETERANS_INTUITION) == 2) {
 					ready = true;
 				}
-			} else if (item instanceof Ring){
+			} else if (item instanceof Ring) {
 				ready = ((Ring) item).readyToIdentify();
-				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.THIEFS_INTUITION) == 2){
+				if (item.isEquipped(curUser) && curUser.pointsInTalent(Talent.THIEFS_INTUITION) == 2) {
 					ready = true;
 				}
-			} else if (item instanceof Wand){
+			} else if (item instanceof Wand) {
 				ready = ((Wand) item).readyToIdentify();
 			}
 
-			if (ready){
+			if (ready) {
 				item.identify();
 				Badges.validateItemLevelAquired(item);
 				curUser.sprite.operate(curUser.pos);
 				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-				curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );
+				curUser.sprite.parent.add(new Identification(curUser.sprite.center().offset(0, -16)));
 				GLog.p(Messages.get(ShardOfOblivion.class, "identify"));
 			} else {
 				GLog.w(Messages.get(ShardOfOblivion.class, "identify_not_yet"));
@@ -138,11 +138,11 @@ public class ShardOfOblivion extends Trinket {
 		}
 	};
 
-	public static boolean passiveIDDisabled(){
+	public static boolean passiveIDDisabled() {
 		return trinketLevel(ShardOfOblivion.class) >= 0;
 	}
 
-	public static class WandUseTracker extends FlavourBuff{
+	public static class WandUseTracker extends FlavourBuff {
 
 		{
 			type = buffType.POSITIVE;
@@ -167,7 +167,7 @@ public class ShardOfOblivion extends Trinket {
 
 	}
 
-	public static class ThrownUseTracker extends FlavourBuff{
+	public static class ThrownUseTracker extends FlavourBuff {
 
 		{
 			type = buffType.POSITIVE;
@@ -192,35 +192,36 @@ public class ShardOfOblivion extends Trinket {
 
 	}
 
-	public static float lootChanceMultiplier(){
+	public static float lootChanceMultiplier() {
 		return lootChanceMultiplier(trinketLevel(ShardOfOblivion.class));
 	}
 
-	public static float lootChanceMultiplier(int level){
-		if (level < 0) return 1f;
+	public static float lootChanceMultiplier(int level) {
+		if (level < 0)
+			return 1f;
 
 		int wornUnIDed = 0;
-		if (Dungeon.hero.belongings.weapon() != null && !Dungeon.hero.belongings.weapon().isIdentified()){
+		if (Dungeon.hero.belongings.weapon() != null && !Dungeon.hero.belongings.weapon().isIdentified()) {
 			wornUnIDed++;
 		}
-		if (Dungeon.hero.belongings.armor() != null && !Dungeon.hero.belongings.armor().isIdentified()){
+		if (Dungeon.hero.belongings.armor() != null && !Dungeon.hero.belongings.armor().isIdentified()) {
 			wornUnIDed++;
 		}
-		if (Dungeon.hero.belongings.ring() != null && !Dungeon.hero.belongings.ring().isIdentified()){
+		if (Dungeon.hero.belongings.ring() != null && !Dungeon.hero.belongings.ring().isIdentified()) {
 			wornUnIDed++;
 		}
-		if (Dungeon.hero.belongings.misc() != null && !Dungeon.hero.belongings.misc().isIdentified()){
+		if (Dungeon.hero.belongings.misc() != null && !Dungeon.hero.belongings.misc().isIdentified()) {
 			wornUnIDed++;
 		}
-		if (Dungeon.hero.buff(WandUseTracker.class) != null){
+		if (Dungeon.hero.buff(WandUseTracker.class) != null) {
 			wornUnIDed++;
 		}
-		if (Dungeon.hero.buff(ThrownUseTracker.class) != null){
+		if (Dungeon.hero.buff(ThrownUseTracker.class) != null) {
 			wornUnIDed++;
 		}
 
-		wornUnIDed = Math.min(wornUnIDed, level+1);
-		return 1f + .2f*wornUnIDed;
+		wornUnIDed = Math.min(wornUnIDed, level + 1);
+		return 1f + .2f * wornUnIDed;
 
 	}
 }

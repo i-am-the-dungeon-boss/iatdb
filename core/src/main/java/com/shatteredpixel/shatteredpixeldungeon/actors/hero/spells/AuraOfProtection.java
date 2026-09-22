@@ -46,9 +46,10 @@ public class AuraOfProtection extends ClericSpell {
 
 	@Override
 	public String desc() {
-		int dmgReduction = 10 + 10*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
-		int glyphPow = 25 + 25*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
-		return Messages.get(this, "desc", dmgReduction, glyphPow) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		int dmgReduction = 10 + 10 * Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+		int glyphPow = 25 + 25 * Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+		return Messages.get(this, "desc", dmgReduction, glyphPow) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -64,11 +65,11 @@ public class AuraOfProtection extends ClericSpell {
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
 
-		Buff.affect(hero,AuraBuff.class, AuraBuff.DURATION);
+		Buff.affect(hero, AuraBuff.class, AuraBuff.DURATION);
 
 		Sample.INSTANCE.play(Assets.Sounds.READ);
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.busy();
 		hero.sprite.operate(hero.pos);
 
@@ -93,12 +94,12 @@ public class AuraOfProtection extends ClericSpell {
 
 		@Override
 		public void fx(boolean on) {
-			if (on && (particles == null || particles.parent == null)){
+			if (on && (particles == null || particles.parent == null)) {
 				particles = target.sprite.emitter(); //emitter is much bigger than char so it needs to manage itself
 				particles.pos(target.sprite, -32, -32, 80, 80);
 				particles.fillTarget = false;
 				particles.pour(Speck.factory(Speck.LIGHT), 0.02f);
-			} else if (!on && particles != null){
+			} else if (!on && particles != null) {
 				particles.on = false;
 			}
 		}

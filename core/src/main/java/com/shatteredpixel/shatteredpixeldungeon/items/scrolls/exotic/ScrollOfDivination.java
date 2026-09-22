@@ -47,31 +47,31 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class ScrollOfDivination extends ExoticScroll {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.SCROLL_DIVINATE;
 	}
-	
+
 	@Override
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );
-		
-		Sample.INSTANCE.play( Assets.Sounds.READ );
-		
+		curUser.sprite.parent.add(new Identification(curUser.sprite.center().offset(0, -16)));
+
+		Sample.INSTANCE.play(Assets.Sounds.READ);
+
 		HashSet<Class<? extends Potion>> potions = Potion.getUnknown();
 		HashSet<Class<? extends Scroll>> scrolls = Scroll.getUnknown();
 		HashSet<Class<? extends Ring>> rings = Ring.getUnknown();
-		
+
 		int total = potions.size() + scrolls.size() + rings.size();
-		
+
 		ArrayList<Item> IDed = new ArrayList<>();
 		int left = 4;
-		
-		float[] baseProbs = new float[]{3, 3, 3};
+
+		float[] baseProbs = new float[] { 3, 3, 3 };
 		float[] probs = baseProbs.clone();
-		
+
 		while (left > 0 && total > 0) {
 			switch (Random.chances(probs)) {
 				default:
@@ -111,12 +111,12 @@ public class ScrollOfDivination extends ExoticScroll {
 					rings.remove(r.getClass());
 					break;
 			}
-			left --;
-			total --;
+			left--;
+			total--;
 		}
 
-		if (left == 4){
-			GLog.n( Messages.get(this, "nothing_left") );
+		if (left == 4) {
+			GLog.n(Messages.get(this, "nothing_left"));
 		} else {
 			GameScene.show(new WndDivination(IDed));
 		}
@@ -124,35 +124,35 @@ public class ScrollOfDivination extends ExoticScroll {
 		readAnimation();
 		identify();
 	}
-	
+
 	private class WndDivination extends Window {
-		
+
 		private static final int WIDTH = 120;
-		
-		WndDivination(ArrayList<Item> IDed ){
+
+		WndDivination(ArrayList<Item> IDed) {
 			IconTitle cur = new IconTitle(new ItemSprite(ScrollOfDivination.this),
 					Messages.titleCase(Messages.get(ScrollOfDivination.class, "name")));
 			cur.setRect(0, 0, WIDTH, 0);
 			add(cur);
-			
+
 			RenderedTextBlock msg = PixelScene.renderTextBlock(Messages.get(this, "desc"), 6);
 			msg.maxWidth(120);
 			msg.setPos(0, cur.bottom() + 2);
 			add(msg);
-			
+
 			float pos = msg.bottom() + 10;
-			
-			for (Item i : IDed){
-				
+
+			for (Item i : IDed) {
+
 				cur = new IconTitle(i);
 				cur.setRect(0, pos, WIDTH, 0);
 				add(cur);
 				pos = cur.bottom() + 2;
-				
+
 			}
-			
-			resize(WIDTH, (int)pos);
+
+			resize(WIDTH, (int) pos);
 		}
-		
+
 	}
 }

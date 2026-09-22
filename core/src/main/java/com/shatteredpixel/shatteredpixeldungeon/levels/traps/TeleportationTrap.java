@@ -49,9 +49,9 @@ public class TeleportationTrap extends Trap {
 	@Override
 	public void activate() {
 
-		for (int i : PathFinder.NEIGHBOURS9){
+		for (int i : PathFinder.NEIGHBOURS9) {
 			Char ch = Actor.findChar(pos + i);
-			if (ch != null){
+			if (ch != null) {
 				if (ScrollOfTeleportation.teleportChar(ch)) {
 					if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).HUNTING) {
 						((Mob) ch).state = ((Mob) ch).WANDERING;
@@ -60,15 +60,15 @@ public class TeleportationTrap extends Trap {
 				}
 			}
 			Heap heap = Dungeon.level.heaps.get(pos + i);
-			if (heap != null && heap.type == Heap.Type.HEAP){
-				int cell = Dungeon.level.randomRespawnCell( null );
+			if (heap != null && heap.type == Heap.Type.HEAP) {
+				int cell = Dungeon.level.randomRespawnCell(null);
 
 				Item item = heap.pickUp();
 
 				if (cell != -1) {
-					Dungeon.level.drop( item, cell );
-					if (item instanceof Honeypot.ShatteredPot){
-						((Honeypot.ShatteredPot)item).movePot(pos, cell);
+					Dungeon.level.drop(item, cell);
+					if (item instanceof Honeypot.ShatteredPot) {
+						((Honeypot.ShatteredPot) item).movePot(pos, cell);
 					}
 					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 					CellEmitter.get(pos).burst(Speck.factory(Speck.LIGHT), 4);

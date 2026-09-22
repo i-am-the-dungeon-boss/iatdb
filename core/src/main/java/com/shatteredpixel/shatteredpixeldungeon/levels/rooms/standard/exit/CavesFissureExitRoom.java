@@ -36,7 +36,7 @@ public class CavesFissureExitRoom extends CavesFissureRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{3, 1, 0};
+		return new float[] { 3, 1, 0 };
 	}
 
 	@Override
@@ -56,14 +56,13 @@ public class CavesFissureExitRoom extends CavesFissureRoom {
 				|| level.map[exit] == Terrain.EMPTY_SP
 				|| level.findMob(exit) != null);
 
-
-		for (int i : PathFinder.NEIGHBOURS4){
-			if (level.map[exit+i] == Terrain.CHASM) {
+		for (int i : PathFinder.NEIGHBOURS4) {
+			if (level.map[exit + i] == Terrain.CHASM) {
 				Painter.set(level, exit + i, Terrain.EMPTY);
 			}
 		}
 
-		Painter.set( level, exit, Terrain.EXIT );
+		Painter.set(level, exit, Terrain.EXIT);
 		level.transitions.add(new LevelTransition(level, exit, LevelTransition.Type.REGULAR_EXIT));
 
 	}

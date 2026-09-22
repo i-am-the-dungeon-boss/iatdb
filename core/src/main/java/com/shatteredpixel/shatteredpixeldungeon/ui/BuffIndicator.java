@@ -47,105 +47,105 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 
 public class BuffIndicator extends Component {
-	
+
 	//transparent icon
-	public static final int NONE    = 127;
+	public static final int NONE = 127;
 
 	//FIXME this is becoming a mess, should do a big cleaning pass on all of these
 	//and think about tinting options
 	public static final int MIND_VISION = 0;
-	public static final int LEVITATION  = 1;
-	public static final int FIRE        = 2;
-	public static final int POISON      = 3;
-	public static final int PARALYSIS   = 4;
-	public static final int HUNGER      = 5;
-	public static final int STARVATION  = 6;
-	public static final int TIME        = 7;
-	public static final int OOZE        = 8;
-	public static final int AMOK        = 9;
-	public static final int TERROR      = 10;
-	public static final int ROOTS       = 11;
-	public static final int INVISIBLE   = 12;
-	public static final int SHADOWS     = 13;
-	public static final int WEAKNESS    = 14;
-	public static final int FROST       = 15;
-	public static final int BLINDNESS   = 16;
-	public static final int COMBO       = 17;
-	public static final int FURY        = 18;
-	public static final int HERB_HEALING= 19;
-	public static final int ARMOR       = 20;
-	public static final int HEART       = 21;
-	public static final int LIGHT       = 22;
-	public static final int CRIPPLE     = 23;
-	public static final int BARKSKIN    = 24;
-	public static final int IMMUNITY    = 25;
-	public static final int BLEEDING    = 26;
-	public static final int MARK        = 27;
-	public static final int DEFERRED    = 28;
-	public static final int DROWSY      = 29;
+	public static final int LEVITATION = 1;
+	public static final int FIRE = 2;
+	public static final int POISON = 3;
+	public static final int PARALYSIS = 4;
+	public static final int HUNGER = 5;
+	public static final int STARVATION = 6;
+	public static final int TIME = 7;
+	public static final int OOZE = 8;
+	public static final int AMOK = 9;
+	public static final int TERROR = 10;
+	public static final int ROOTS = 11;
+	public static final int INVISIBLE = 12;
+	public static final int SHADOWS = 13;
+	public static final int WEAKNESS = 14;
+	public static final int FROST = 15;
+	public static final int BLINDNESS = 16;
+	public static final int COMBO = 17;
+	public static final int FURY = 18;
+	public static final int HERB_HEALING = 19;
+	public static final int ARMOR = 20;
+	public static final int HEART = 21;
+	public static final int LIGHT = 22;
+	public static final int CRIPPLE = 23;
+	public static final int BARKSKIN = 24;
+	public static final int IMMUNITY = 25;
+	public static final int BLEEDING = 26;
+	public static final int MARK = 27;
+	public static final int DEFERRED = 28;
+	public static final int DROWSY = 29;
 	public static final int MAGIC_SLEEP = 30;
-	public static final int THORNS      = 31;
-	public static final int FORESIGHT   = 32;
-	public static final int VERTIGO     = 33;
-	public static final int RECHARGING  = 34;
-	public static final int LOCKED_FLOOR= 35;
-	public static final int CORRUPT     = 36;
-	public static final int BLESS       = 37;
-	public static final int RAGE        = 38;
-	public static final int SACRIFICE   = 39;
-	public static final int BERSERK     = 40;
-	public static final int HASTE       = 41;
+	public static final int THORNS = 31;
+	public static final int FORESIGHT = 32;
+	public static final int VERTIGO = 33;
+	public static final int RECHARGING = 34;
+	public static final int LOCKED_FLOOR = 35;
+	public static final int CORRUPT = 36;
+	public static final int BLESS = 37;
+	public static final int RAGE = 38;
+	public static final int SACRIFICE = 39;
+	public static final int BERSERK = 40;
+	public static final int HASTE = 41;
 	public static final int PREPARATION = 42;
-	public static final int WELL_FED    = 43;
-	public static final int HEALING     = 44;
-	public static final int WEAPON      = 45;
-	public static final int VULNERABLE  = 46;
-	public static final int HEX         = 47;
-	public static final int DEGRADE     = 48;
-	public static final int PINCUSHION  = 49;
-	public static final int UPGRADE     = 50;
-	public static final int MOMENTUM    = 51;
-	public static final int ANKH        = 52;
-	public static final int NOINV       = 53;
-	public static final int TARGETED    = 54;
-	public static final int IMBUE       = 55;
-	public static final int ENDURE      = 56;
+	public static final int WELL_FED = 43;
+	public static final int HEALING = 44;
+	public static final int WEAPON = 45;
+	public static final int VULNERABLE = 46;
+	public static final int HEX = 47;
+	public static final int DEGRADE = 48;
+	public static final int PINCUSHION = 49;
+	public static final int UPGRADE = 50;
+	public static final int MOMENTUM = 51;
+	public static final int ANKH = 52;
+	public static final int NOINV = 53;
+	public static final int TARGETED = 54;
+	public static final int IMBUE = 55;
+	public static final int ENDURE = 56;
 	public static final int INVERT_MARK = 57;
-	public static final int NATURE_POWER= 58;
-	public static final int AMULET      = 59;
+	public static final int NATURE_POWER = 58;
+	public static final int AMULET = 59;
 	public static final int DUEL_CLEAVE = 60;
-	public static final int DUEL_GUARD  = 61;
-	public static final int DUEL_SPIN   = 62;
-	public static final int DUEL_EVASIVE= 63;
-	public static final int DUEL_DANCE  = 64;
-	public static final int DUEL_BRAWL  = 65;
-	public static final int DUEL_XBOW   = 66;
-	public static final int CHALLENGE   = 67;
+	public static final int DUEL_GUARD = 61;
+	public static final int DUEL_SPIN = 62;
+	public static final int DUEL_EVASIVE = 63;
+	public static final int DUEL_DANCE = 64;
+	public static final int DUEL_BRAWL = 65;
+	public static final int DUEL_XBOW = 66;
+	public static final int CHALLENGE = 67;
 	public static final int MONK_ENERGY = 68;
-	public static final int DUEL_COMBO  = 69;
-	public static final int DAZE        = 70;
-	public static final int DISGUISE    = 71;
-	public static final int WAND        = 72;
+	public static final int DUEL_COMBO = 69;
+	public static final int DAZE = 70;
+	public static final int DISGUISE = 71;
+	public static final int WAND = 72;
 	public static final int HOLY_WEAPON = 73;
-	public static final int HOLY_ARMOR  = 74;
-	public static final int SPELL_FOOD  = 75;
-	public static final int LIGHT_SHIELD= 76;
-	public static final int HOLY_SIGHT  = 77;
-	public static final int GLYPH_RECALL= 78;
-	public static final int ASCEND      = 79;
-	public static final int PROT_AURA   = 80;
+	public static final int HOLY_ARMOR = 74;
+	public static final int SPELL_FOOD = 75;
+	public static final int LIGHT_SHIELD = 76;
+	public static final int HOLY_SIGHT = 77;
+	public static final int GLYPH_RECALL = 78;
+	public static final int ASCEND = 79;
+	public static final int PROT_AURA = 80;
 	public static final int ILLUMINATED = 81;
-	public static final int TRINITY_FORM= 82;
-	public static final int MANY_POWER  = 83;
+	public static final int TRINITY_FORM = 82;
+	public static final int MANY_POWER = 83;
 	public static final int SEAL_SHIELD = 84;
-	public static final int THROWN_WEP  = 85;
+	public static final int THROWN_WEP = 85;
 
-	public static final int SIZE_SMALL  = 7;
-	public static final int SIZE_LARGE  = 16;
-	
+	public static final int SIZE_SMALL = 7;
+	public static final int SIZE_LARGE = 16;
+
 	private static BuffIndicator heroInstance;
 	private static BuffIndicator bossInstance;
-	
+
 	private LinkedHashMap<Buff, BuffButton> buffButtons = new LinkedHashMap<>();
 	private boolean needsRefresh;
 	private Char ch;
@@ -156,21 +156,21 @@ public class BuffIndicator extends Component {
 	public float[] rowWidthLimits = new float[9]; //0 = no limit
 	//sometimes we also need to slightly lower a row, to avoid having to cut off width
 	public float[] rowHeightAdjusts = new float[9]; //0 = default adjust of 1
-	
-	public BuffIndicator( Char ch, boolean large ) {
+
+	public BuffIndicator(Char ch, boolean large) {
 		super();
-		
+
 		this.ch = ch;
 		this.large = large;
 		if (ch == Dungeon.hero) {
 			heroInstance = this;
 		}
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
-		
+
 		if (this == heroInstance) {
 			heroInstance = null;
 		}
@@ -179,7 +179,7 @@ public class BuffIndicator extends Component {
 	@Override
 	public synchronized void update() {
 		super.update();
-		if (needsRefresh){
+		if (needsRefresh) {
 			needsRefresh = false;
 			layout();
 		}
@@ -201,37 +201,37 @@ public class BuffIndicator extends Component {
 		int size = large ? SIZE_LARGE : SIZE_SMALL;
 
 		//remove any icons no longer present
-		for (Buff buff : buffButtons.keySet().toArray(new Buff[0])){
-			if (!newBuffs.contains(buff)){
-				Image icon = buffButtons.get( buff ).icon;
+		for (Buff buff : buffButtons.keySet().toArray(new Buff[0])) {
+			if (!newBuffs.contains(buff)) {
+				Image icon = buffButtons.get(buff).icon;
 				icon.originToCenter();
 				icon.alpha(0.6f);
-				add( icon );
-				add( new AlphaTweener( icon, 0, 0.6f ) {
+				add(icon);
+				add(new AlphaTweener(icon, 0, 0.6f) {
 					@Override
-					protected void updateValues( float progress ) {
-						super.updateValues( progress );
-						image.scale.set( 1 + 5 * progress );
+					protected void updateValues(float progress) {
+						super.updateValues(progress);
+						image.scale.set(1 + 5 * progress);
 					}
-					
+
 					@Override
 					protected void onComplete() {
 						image.killAndErase();
 					}
-				} );
-				
-				buffButtons.get( buff ).destroy();
-				remove(buffButtons.get( buff ));
-				buffButtons.remove( buff );
+				});
+
+				buffButtons.get(buff).destroy();
+				remove(buffButtons.get(buff));
+				buffButtons.remove(buff);
 			}
 		}
-		
+
 		//add new icons
 		for (Buff buff : newBuffs) {
 			if (!buffButtons.containsKey(buff)) {
 				BuffButton icon = new BuffButton(buff, large);
 				add(icon);
-				buffButtons.put( buff, icon );
+				buffButtons.put(buff, icon);
 			}
 		}
 
@@ -241,8 +241,8 @@ public class BuffIndicator extends Component {
 		int pos = 0;
 		float lastIconRight = 0;
 		int total = 0;
-		for (BuffButton icon : buffButtons.values()){
-			if (total >= maxBuffs){
+		for (BuffButton icon : buffButtons.values()) {
+			if (total >= maxBuffs) {
 				icon.visible = false;
 				continue;
 			}
@@ -252,17 +252,17 @@ public class BuffIndicator extends Component {
 			icon.topOffset = (row > 1 && !large) ? -1 : 0;
 			icon.updateIcon();
 			//button areas are slightly oversized, especially on small buttons
-			icon.setRect(x + pos * (size + 1), y + rowTop-icon.topOffset, size + 1, size + (large ? 0 : 5));
+			icon.setRect(x + pos * (size + 1), y + rowTop - icon.topOffset, size + 1, size + (large ? 0 : 5));
 			PixelScene.align(icon);
 			pos++;
 
-			lastIconRight = icon.right()-1;
+			lastIconRight = icon.right() - 1;
 
 			//if we're out of overall width but have more height, or this row has hits its limit
-			if ((rowTop+2*size+2 <= height && (pos * (size + 1) + size > width))
-					|| (rowWidthLimits[row] != 0 && pos * (size + 1) + size > rowWidthLimits[row])){
+			if ((rowTop + 2 * size + 2 <= height && (pos * (size + 1) + size > width))
+					|| (rowWidthLimits[row] != 0 && pos * (size + 1) + size > rowWidthLimits[row])) {
 				row++;
-				rowTop += size+1 + rowHeightAdjusts[row];
+				rowTop += size + 1 + rowHeightAdjusts[row];
 				pos = 0;
 			}
 			total++;
@@ -277,28 +277,30 @@ public class BuffIndicator extends Component {
 			ArrayList<BuffButton> buttons = new ArrayList<>();
 			float lastRowY = PixelScene.align(y + rowTop);
 			int i = 1;
-			for (BuffButton button : buffButtons.values()){
-				if (i > maxBuffs){
+			for (BuffButton button : buffButtons.values()) {
+				if (i > maxBuffs) {
 					button.visible = false;
 					buffsHidden = true;
 					continue;
 				}
-				if (button.top()+button.topOffset == lastRowY){
+				if (button.top() + button.topOffset == lastRowY) {
 					buttons.add(button);
 				}
 				i++;
 			}
 
-			float leftAdjust = excessWidth/(buttons.size()-1);
+			float leftAdjust = excessWidth / (buttons.size() - 1);
 			//can't squish by more than 50%
-			if (leftAdjust >= size*0.48f) leftAdjust = size*0.5f;
-			float cumulativeAdjust = leftAdjust * (buttons.size()-1);
+			if (leftAdjust >= size * 0.48f)
+				leftAdjust = size * 0.5f;
+			float cumulativeAdjust = leftAdjust * (buttons.size() - 1);
 
 			Collections.reverse(buttons);
 			for (BuffButton icon : buttons) {
 				icon.setPos(icon.left() - cumulativeAdjust, icon.top());
-				icon.visible = icon.right() <= right()+1;
-				if (!icon.visible) buffsHidden = true;
+				icon.visible = icon.right() <= right() + 1;
+				if (!icon.visible)
+					buffsHidden = true;
 				PixelScene.align(icon);
 				bringToFront(icon);
 				icon.givePointerPriority();
@@ -306,12 +308,12 @@ public class BuffIndicator extends Component {
 			}
 		}
 
-		if (this == heroInstance && buffButtons.size() >= 10){
+		if (this == heroInstance && buffButtons.size() >= 10) {
 			Badges.validateManyBuffs();
 		}
 	}
 
-	public boolean allBuffsVisible(){
+	public boolean allBuffsVisible() {
 		return !buffsHidden;
 	}
 
@@ -325,8 +327,8 @@ public class BuffIndicator extends Component {
 		public Image grey; //only for small
 		public BitmapText text; //only for large
 
-		public BuffButton( Buff buff, boolean large ){
-			super( new BuffIcon(buff, large));
+		public BuffButton(Buff buff, boolean large) {
+			super(new BuffIcon(buff, large));
 			this.buff = buff;
 			this.large = large;
 
@@ -337,15 +339,15 @@ public class BuffIndicator extends Component {
 		@Override
 		protected void createChildren() {
 			super.createChildren();
-			grey = new Image( TextureCache.createSolid(0xCC666666));
-			add( grey );
+			grey = new Image(TextureCache.createSolid(0xCC666666));
+			add(grey);
 
 			text = new BitmapText(PixelScene.pixelFont);
-			add( text );
+			add(text);
 		}
 
-		public void updateIcon(){
-			((BuffIcon)icon).refresh(buff);
+		public void updateIcon() {
+			((BuffIcon) icon).refresh(buff);
 			//round up to the nearest pixel if <50% faded, otherwise round down
 			if (!large || buff.iconTextDisplay().isEmpty()) {
 				text.visible = false;
@@ -360,8 +362,10 @@ public class BuffIndicator extends Component {
 			} else if (!buff.iconTextDisplay().isEmpty()) {
 				text.visible = true;
 				grey.visible = false;
-				if (buff.type == Buff.buffType.POSITIVE)        text.hardlight(CharSprite.POSITIVE);
-				else if (buff.type == Buff.buffType.NEGATIVE)   text.hardlight(CharSprite.NEGATIVE);
+				if (buff.type == Buff.buffType.POSITIVE)
+					text.hardlight(CharSprite.POSITIVE);
+				else if (buff.type == Buff.buffType.NEGATIVE)
+					text.hardlight(CharSprite.NEGATIVE);
 				text.alpha(0.7f);
 
 				text.text(buff.iconTextDisplay());
@@ -375,7 +379,7 @@ public class BuffIndicator extends Component {
 			grey.x = icon.x = this.x + (large ? 0 : 1);
 			grey.y = icon.y = this.y + (large ? 0 : 2) + topOffset;
 
-			if (text.width > width()){
+			if (text.width > width()) {
 				text.scale.set(PixelScene.align(0.5f));
 			} else {
 				text.scale.set(1f);
@@ -386,13 +390,14 @@ public class BuffIndicator extends Component {
 
 		@Override
 		protected void onClick() {
-			if (buff.icon() != NONE) GameScene.show(new WndInfoBuff(buff));
+			if (buff.icon() != NONE)
+				GameScene.show(new WndInfoBuff(buff));
 		}
 
 		@Override
 		protected void onPointerDown() {
 			//don't affect buff color
-			Sample.INSTANCE.play( Assets.Sounds.CLICK );
+			Sample.INSTANCE.play(Assets.Sounds.CLICK);
 		}
 
 		@Override
@@ -405,20 +410,20 @@ public class BuffIndicator extends Component {
 			return Messages.titleCase(buff.name());
 		}
 	}
-	
+
 	public static void refreshHero() {
 		if (heroInstance != null) {
 			heroInstance.needsRefresh = true;
 		}
 	}
 
-	public static void refreshBoss(){
+	public static void refreshBoss() {
 		if (bossInstance != null) {
 			bossInstance.needsRefresh = true;
 		}
 	}
 
-	public static void setBossInstance(BuffIndicator boss){
+	public static void setBossInstance(BuffIndicator boss) {
 		bossInstance = boss;
 	}
 }

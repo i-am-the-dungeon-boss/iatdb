@@ -42,7 +42,7 @@ public class Flash extends TargetedClericSpell {
 
 	@Override
 	public float chargeUse(Hero hero) {
-		if (hero.buff(AscendedForm.AscendBuff.class) != null){
+		if (hero.buff(AscendedForm.AscendBuff.class) != null) {
 			return 2 + hero.buff(AscendedForm.AscendBuff.class).flashCasts;
 		} else {
 			return 2;
@@ -64,18 +64,18 @@ public class Flash extends TargetedClericSpell {
 	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
 
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		if (Dungeon.level.solid[target] || (!Dungeon.level.mapped[target] && !Dungeon.level.visited[target])
-				|| Dungeon.level.distance(hero.pos, target) > 2+hero.pointsInTalent(Talent.FLASH)){
+				|| Dungeon.level.distance(hero.pos, target) > 2 + hero.pointsInTalent(Talent.FLASH)) {
 			GLog.w(Messages.get(this, "invalid_target"));
 			return;
 		}
 
-		if (ScrollOfTeleportation.teleportToLocation(hero, target)){
-			hero.spendAndNext( 1f );
+		if (ScrollOfTeleportation.teleportToLocation(hero, target)) {
+			hero.spendAndNext(1f);
 			onSpellCast(tome, hero);
 			hero.buff(AscendedForm.AscendBuff.class).flashCasts++;
 		}

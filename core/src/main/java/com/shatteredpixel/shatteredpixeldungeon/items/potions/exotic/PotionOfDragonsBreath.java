@@ -61,7 +61,7 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 
 		if (!isKnown()) {
 			identify();
-			curItem = detach( hero.belongings.backpack );
+			curItem = detach(hero.belongings.backpack);
 			identifiedByUse = true;
 		} else {
 			identifiedByUse = false;
@@ -124,26 +124,26 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 		@Override
 		public void onSelect(final Integer cell) {
 
-			if (showingWindow){
+			if (showingWindow) {
 				return;
 			}
-			if (potionAlreadyUsed){
+			if (potionAlreadyUsed) {
 				potionAlreadyUsed = false;
 				return;
 			}
 
-			if (cell == null && identifiedByUse){
+			if (cell == null && identifiedByUse) {
 				showingWindow = true;
 				ShatteredPixelDungeon.runOnRenderThread(new Callback() {
 					@Override
 					public void call() {
-						GameScene.show( new WndOptions(new ItemSprite(PotionOfDragonsBreath.this),
+						GameScene.show(new WndOptions(new ItemSprite(PotionOfDragonsBreath.this),
 								Messages.titleCase(name()),
 								Messages.get(ExoticPotion.class, "warning"),
 								Messages.get(ExoticPotion.class, "yes"),
-								Messages.get(ExoticPotion.class, "no") ) {
+								Messages.get(ExoticPotion.class, "no")) {
 							@Override
-							protected void onSelect( int index ) {
+							protected void onSelect(int index) {
 								showingWindow = false;
 								switch (index) {
 									case 0:
@@ -151,12 +151,14 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 										identifiedByUse = false;
 										break;
 									case 1:
-										GameScene.selectCell( targeter );
+										GameScene.selectCell(targeter);
 										break;
 								}
 							}
-							public void onBackPressed() {}
-						} );
+
+							public void onBackPressed() {
+							}
+						});
 					}
 				});
 			} else if (cell != null) {
@@ -168,30 +170,30 @@ public class PotionOfDragonsBreath extends ExoticPotion {
 				potionAlreadyUsed = true;
 				identifiedByUse = false;
 				curUser.busy();
-				Sample.INSTANCE.play( Assets.Sounds.DRINK );
+				Sample.INSTANCE.play(Assets.Sounds.DRINK);
 				curUser.sprite.operate(curUser.pos, new Callback() {
 					@Override
 					public void call() {
 
 						curUser.sprite.idle();
 						curUser.sprite.zap(cell);
-						Sample.INSTANCE.play( Assets.Sounds.BURNING );
+						Sample.INSTANCE.play(Assets.Sounds.BURNING);
 
 						final Ballistica bolt = new Ballistica(curUser.pos, cell, Ballistica.WONT_STOP);
 
 						int maxDist = 6;
 						int dist = Math.min(bolt.dist, maxDist);
 
-						final ConeAOE cone = new ConeAOE(bolt, 6, 60, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);
+						final ConeAOE cone = new ConeAOE(bolt, 6, 60,
+								Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);
 
 						//cast to cells at the tip, rather than all cells, better performance.
-						for (Ballistica ray : cone.outerRays){
-							((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(
+						for (Ballistica ray : cone.outerRays) {
+							((MagicMissile) curUser.sprite.parent.recycle(MagicMissile.class)).reset(
 									MagicMissile.FIRE_CONE,
 									curUser.sprite,
 									ray.path.get(ray.dist),
-									null
-							);
+									null);
 						}
 
 						MagicMissile.boltFromChar(curUser.sprite.parent,

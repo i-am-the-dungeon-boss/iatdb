@@ -206,8 +206,7 @@ class EchoArmorAbilityWildMagicTest {
 	void wildMagicFiresMagicMissileWhenParentLive() {
 		Fight f = fight();
 		grantKitWand(f, new WandOfMagicMissile());
-		EchoTestSupport.InstantProjectileGroup fx =
-				EchoTestSupport.attachInstantProjectileParent(f.boss);
+		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 		MageArmor armor = new MageArmor();
 		armor.charge = 100;
 

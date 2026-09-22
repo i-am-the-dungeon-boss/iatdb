@@ -36,7 +36,7 @@ public class CellBlockExitRoom extends CellBlockRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -48,20 +48,20 @@ public class CellBlockExitRoom extends CellBlockRoom {
 	public void paint(Level level) {
 		super.paint(level);
 
-		while (true){
+		while (true) {
 			Point p = random(3);
 
-			if (level.map[level.pointToCell(p)] == Terrain.EMPTY_SP){
+			if (level.map[level.pointToCell(p)] == Terrain.EMPTY_SP) {
 				boolean valid = true;
-				for (int i : PathFinder.NEIGHBOURS8){
-					if (level.map[level.pointToCell(p)+i] == Terrain.DOOR){
+				for (int i : PathFinder.NEIGHBOURS8) {
+					if (level.map[level.pointToCell(p) + i] == Terrain.DOOR) {
 						valid = false;
 					}
 				}
 
-				if (valid){
+				if (valid) {
 					int entrance = level.pointToCell(p);
-					Painter.set( level, entrance, Terrain.EXIT );
+					Painter.set(level, entrance, Terrain.EXIT);
 
 					level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_EXIT));
 					return;

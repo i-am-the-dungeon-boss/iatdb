@@ -37,29 +37,26 @@ import com.watabou.utils.Random;
 
 public class MagicWellRoom extends SpecialRoom {
 
-	private static final Class<?>[] WATERS =
-		{WaterOfAwareness.class, WaterOfHealth.class};
-	
-	public Class<?extends WellWater> overrideWater = null;
-	
-	public void paint( Level level ) {
+	private static final Class<?>[] WATERS = { WaterOfAwareness.class, WaterOfHealth.class };
 
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
-		
+	public Class<? extends WellWater> overrideWater = null;
+
+	public void paint(Level level) {
+
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
+
 		Point c = center();
-		Painter.set( level, c.x, c.y, Terrain.WELL );
-		
+		Painter.set(level, c.x, c.y, Terrain.WELL);
+
 		@SuppressWarnings("unchecked")
-		Class<? extends WellWater> waterClass =
-			overrideWater != null ?
-			overrideWater :
-			(Class<? extends WellWater>)Random.element( WATERS );
-			
-		
+		Class<? extends WellWater> waterClass = overrideWater != null
+				? overrideWater
+				: (Class<? extends WellWater>) Random.element(WATERS);
+
 		WellWater.seed(c.x + level.width() * c.y, 1, waterClass, level);
-		
-		entrance().set( Door.Type.LOCKED );
-		level.addItemToSpawn( new IronKey( Dungeon.depth ) );
+
+		entrance().set(Door.Type.LOCKED);
+		level.addItemToSpawn(new IronKey(Dungeon.depth));
 	}
 }

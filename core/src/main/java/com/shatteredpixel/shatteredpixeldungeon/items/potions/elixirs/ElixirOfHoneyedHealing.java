@@ -39,36 +39,36 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.watabou.noosa.audio.Sample;
 
 public class ElixirOfHoneyedHealing extends Elixir {
-	
+
 	{
 		image = ItemSpriteSheet.ELIXIR_HONEY;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		PotionOfHealing.cure(ch);
 		PotionOfHealing.heal(ch);
 		if (ch instanceof Hero) {
 			Hero hero = (Hero) ch;
-			Buff.affect(hero, Hunger.class).satisfy(Hunger.HUNGRY/2f);
-			Talent.onFoodEaten(hero, Hunger.HUNGRY/2f, this);
+			Buff.affect(hero, Hunger.class).satisfy(Hunger.HUNGRY / 2f);
+			Talent.onFoodEaten(hero, Hunger.HUNGRY / 2f, this);
 		}
 	}
-	
+
 	@Override
 	public void shatter(int cell) {
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		}
-		
+
 		Char ch = Actor.findChar(cell);
-		if (ch != null){
+		if (ch != null) {
 			PotionOfHealing.cure(ch);
 			PotionOfHealing.heal(ch);
-			if (ch instanceof Bee && ch.alignment != curUser.alignment){
+			if (ch instanceof Bee && ch.alignment != curUser.alignment) {
 				ch.alignment = Char.Alignment.ALLY;
-				((Bee)ch).setPotInfo(-1, null);
+				((Bee) ch).setPotInfo(-1, null);
 			}
 		}
 	}
@@ -85,16 +85,16 @@ public class ElixirOfHoneyedHealing extends Elixir {
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
-		
+
 		{
-			inputs =  new Class[]{PotionOfHealing.class, Honeypot.ShatteredPot.class};
-			inQuantity = new int[]{1, 1};
-			
+			inputs = new Class[] { PotionOfHealing.class, Honeypot.ShatteredPot.class };
+			inQuantity = new int[] { 1, 1 };
+
 			cost = 2;
-			
+
 			output = ElixirOfHoneyedHealing.class;
 			outQuantity = 1;
 		}
-		
+
 	}
 }

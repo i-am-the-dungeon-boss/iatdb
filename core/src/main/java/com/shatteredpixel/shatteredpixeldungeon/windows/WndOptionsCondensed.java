@@ -38,7 +38,7 @@ public class WndOptionsCondensed extends WndOptions {
 		super(icon, title, message, options);
 	}
 
-	public WndOptionsCondensed( String title, String message, String... options ) {
+	public WndOptionsCondensed(String title, String message, String... options) {
 		super(title, message, options);
 	}
 
@@ -46,35 +46,36 @@ public class WndOptionsCondensed extends WndOptions {
 	protected void layoutBody(float pos, String message, String... options) {
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
 
-		RenderedTextBlock tfMesage = PixelScene.renderTextBlock( 6 );
+		RenderedTextBlock tfMesage = PixelScene.renderTextBlock(6);
 		tfMesage.text(message, width);
-		tfMesage.setPos( 0, pos );
-		add( tfMesage );
+		tfMesage.setPos(0, pos);
+		add(tfMesage);
 
-		pos = tfMesage.bottom() + 2*MARGIN;
+		pos = tfMesage.bottom() + 2 * MARGIN;
 
 		ArrayList<RedButton> buttons = new ArrayList<>();
 
-		for (int i=0; i < options.length; i++) {
+		for (int i = 0; i < options.length; i++) {
 			final int index = i;
-			RedButton btn = new RedButton( options[i] ) {
+			RedButton btn = new RedButton(options[i]) {
 				@Override
 				protected void onClick() {
 					hide();
-					onSelect( index );
+					onSelect(index);
 				}
 			};
-			if (hasIcon(i)) btn.icon(getIcon(i));
+			if (hasIcon(i))
+				btn.icon(getIcon(i));
 			btn.enable(enabled(i));
 			btn.setSize(btn.reqWidth(), BUTTON_HEIGHT);
-			add( btn );
+			add(btn);
 			buttons.add(btn);
 		}
 
 		ArrayList<RedButton> curRow = new ArrayList<>();
 		float widthLeftThisRow = width;
 
-		while( !buttons.isEmpty() ){
+		while (!buttons.isEmpty()) {
 			RedButton btn = buttons.get(0);
 
 			widthLeftThisRow -= btn.width();
@@ -90,16 +91,16 @@ public class WndOptionsCondensed extends WndOptions {
 			}
 
 			//layout current row. Currently forces a max of 5 buttons but can work with more
-			if (buttons.isEmpty() || widthLeftThisRow <= 0 || curRow.size() >= 5){
+			if (buttons.isEmpty() || widthLeftThisRow <= 0 || curRow.size() >= 5) {
 
 				//re-use this variable for laying out the buttons
-				widthLeftThisRow = width - (curRow.size()-1);
-				for (RedButton b : curRow){
+				widthLeftThisRow = width - (curRow.size() - 1);
+				for (RedButton b : curRow) {
 					widthLeftThisRow -= b.width();
 				}
 
 				//while we still have space in this row, find the shortest button(s) and extend them
-				while (widthLeftThisRow > 0){
+				while (widthLeftThisRow > 0) {
 
 					ArrayList<RedButton> shortest = new ArrayList<>();
 					RedButton secondShortest = null;
@@ -114,7 +115,7 @@ public class WndOptionsCondensed extends WndOptions {
 								shortest.add(b);
 							} else if (b.width() == shortest.get(0).width()) {
 								shortest.add(b);
-							} else if (secondShortest == null || secondShortest.width() > b.width()){
+							} else if (secondShortest == null || secondShortest.width() > b.width()) {
 								secondShortest = b;
 							}
 						}
@@ -122,12 +123,12 @@ public class WndOptionsCondensed extends WndOptions {
 
 					float widthToGrow;
 
-					if (secondShortest == null){
+					if (secondShortest == null) {
 						widthToGrow = widthLeftThisRow / shortest.size();
 						widthLeftThisRow = 0;
 					} else {
 						widthToGrow = secondShortest.width() - shortest.get(0).width();
-						if ((widthToGrow * shortest.size()) >= widthLeftThisRow){
+						if ((widthToGrow * shortest.size()) >= widthLeftThisRow) {
 							widthToGrow = widthLeftThisRow / shortest.size();
 							widthLeftThisRow = 0;
 						} else {
@@ -135,20 +136,20 @@ public class WndOptionsCondensed extends WndOptions {
 						}
 					}
 
-					for (RedButton toGrow : shortest){
-						toGrow.setRect(0, 0, toGrow.width()+widthToGrow, toGrow.height());
+					for (RedButton toGrow : shortest) {
+						toGrow.setRect(0, 0, toGrow.width() + widthToGrow, toGrow.height());
 					}
 				}
 
 				//finally set positions
 				float x = 0;
-				for (RedButton b : curRow){
+				for (RedButton b : curRow) {
 					b.setRect(x, pos, b.width(), b.height());
 					x += b.width() + 1;
 				}
 
 				//move to next line and reset variables
-				pos += BUTTON_HEIGHT+MARGIN;
+				pos += BUTTON_HEIGHT + MARGIN;
 				widthLeftThisRow = width;
 				curRow.clear();
 
@@ -156,7 +157,7 @@ public class WndOptionsCondensed extends WndOptions {
 
 		}
 
-		resize( width, (int)(pos - MARGIN) );
+		resize(width, (int) (pos - MARGIN));
 	}
 
 	@Override

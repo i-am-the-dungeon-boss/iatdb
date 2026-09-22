@@ -60,35 +60,36 @@ public class EscapeCrystal extends Item {
 
 	@Override
 	public ArrayList<String> actions(Hero hero) {
-		ArrayList<String> actions = super.actions( hero );
+		ArrayList<String> actions = super.actions(hero);
 		actions.add(AC_USE);
 		return actions;
 	}
 
 	@Override
-	public void execute( final Hero hero, String action ) {
+	public void execute(final Hero hero, String action) {
 
 		super.execute(hero, action);
 
-		if (action.equals( AC_USE )) {
+		if (action.equals(AC_USE)) {
 
-			if (Dungeon.depth > 15 && Dungeon.depth < 20 && Dungeon.branch == 1 && Dungeon.level instanceof VaultLevel){
+			if (Dungeon.depth > 15 && Dungeon.depth < 20 && Dungeon.branch == 1
+					&& Dungeon.level instanceof VaultLevel) {
 
 				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
 				//for full release this will remove any non revive persists buff, but for now just do item buffs
-				for (Buff b : hero.buffs()){
+				for (Buff b : hero.buffs()) {
 					if (b instanceof Wand.Charger
 							|| b instanceof Artifact.ArtifactBuff
 							|| b instanceof Ring.RingBuff
 							//not melee charger, Duelist should retain her charge count
-							|| b instanceof ClassArmor.Charger){
+							|| b instanceof ClassArmor.Charger) {
 						b.detach();
 					}
 				}
 
 				restoreHeroBelongings(hero);
-				hero.updateHT( false );
+				hero.updateHT(false);
 
 				Level.beforeTransition();
 				InterlevelScene.curTransition = new LevelTransition(Dungeon.level,
@@ -98,7 +99,7 @@ public class EscapeCrystal extends Item {
 						0,
 						LevelTransition.Type.BRANCH_EXIT);
 				InterlevelScene.mode = InterlevelScene.Mode.ASCEND;
-				Game.switchScene( InterlevelScene.class );
+				Game.switchScene(InterlevelScene.class);
 				detachAll(hero.belongings.backpack);
 
 			}
@@ -109,10 +110,10 @@ public class EscapeCrystal extends Item {
 
 	public static String BELONGINGS = "belongings";
 	public static String QUICKSLOTS = "quickslots";
-	public static String GOLD       = "gold";
-	public static String ENERGY     = "energy";
+	public static String GOLD = "gold";
+	public static String ENERGY = "energy";
 
-	public void storeHeroBelongings( Hero hero ){
+	public void storeHeroBelongings(Hero hero) {
 		storedItems = new Bundle();
 
 		Bundle belongings = new Bundle();
@@ -132,7 +133,7 @@ public class EscapeCrystal extends Item {
 		hero.belongings.clear();
 	}
 
-	public void restoreHeroBelongings( Hero hero ){
+	public void restoreHeroBelongings(Hero hero) {
 		hero.belongings.clear();
 
 		Dungeon.quickslot.reset();

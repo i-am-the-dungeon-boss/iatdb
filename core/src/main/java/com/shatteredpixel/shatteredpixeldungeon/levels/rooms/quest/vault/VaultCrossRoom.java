@@ -36,17 +36,17 @@ public class VaultCrossRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
-		Painter.fill( level, this, 4, 1, 4, 1, Terrain.EMPTY );
-		Painter.fill( level, this, 1, 4, 1, 4, Terrain.EMPTY );
+		Painter.fill(level, this, 4, 1, 4, 1, Terrain.EMPTY);
+		Painter.fill(level, this, 1, 4, 1, 4, Terrain.EMPTY);
 
-		Painter.set( level, center(), Terrain.PEDESTAL);
+		Painter.set(level, center(), Terrain.PEDESTAL);
 
 		//TODO only shapes for sides with doors?
 
@@ -58,17 +58,17 @@ public class VaultCrossRoom extends StandardRoom {
 
 		sentry.afterScanCooldown = 2;
 
-		sentry.scanDirs = new int[][]{
-				new int[]{sentry.pos-1},
-				new int[]{sentry.pos-level.width()},
-				new int[]{sentry.pos+1},
-				new int[]{sentry.pos+level.width()},
+		sentry.scanDirs = new int[][] {
+				new int[] { sentry.pos - 1 },
+				new int[] { sentry.pos - level.width() },
+				new int[] { sentry.pos + 1 },
+				new int[] { sentry.pos + level.width() },
 		};
 
 		level.mobs.add(sentry);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 	}
 

@@ -21,101 +21,101 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GdxTestExtension.class)
 class UiUxAndPolishTest {
 
-    @AfterEach
-    void reset() {
-        BossHealthBar.assignBoss(null);
-    }
+	@AfterEach
+	void reset() {
+		BossHealthBar.assignBoss(null);
+	}
 
-    @Test
-    @DisplayName("Intro banner text includes hero class and level from snapshot")
-    void introBannerTextUsesSnapshotMetadata() {
-        String text = EchoBossSpawner.introBannerText(EchoTestSupport.warriorEcho(5));
+	@Test
+	@DisplayName("Intro banner text includes hero class and level from snapshot")
+	void introBannerTextUsesSnapshotMetadata() {
+		String text = EchoBossSpawner.introBannerText(EchoTestSupport.warriorEcho(5));
 
-        Assertions.assertThat(text).isNotBlank();
-        Assertions.assertThat(text.toLowerCase()).contains("warrior");
-    }
+		Assertions.assertThat(text).isNotBlank();
+		Assertions.assertThat(text.toLowerCase()).contains("warrior");
+	}
 
-    @Test
-    @DisplayName("EchoBoss name is the echo username")
-    void echoBossNameIsUsername() {
-        Echo echo = EchoTestSupport.warriorEchoWithData(5);
-        echo.userName = "Marwan";
-        EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
+	@Test
+	@DisplayName("EchoBoss name is the echo username")
+	void echoBossNameIsUsername() {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		echo.userName = "Marwan";
+		EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
 
-        Assertions.assertThat(boss.name()).isEqualTo("Marwan");
-    }
+		Assertions.assertThat(boss.name()).isEqualTo("Marwan");
+	}
 
-    @Test
-    @DisplayName("Boss health bar label renders EchoBoss username")
-    void bossHealthBarLabelRendersEchoUsername() {
-        Echo echo = EchoTestSupport.warriorEchoWithData(5);
-        echo.userName = "Marwan";
-        EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
+	@Test
+	@DisplayName("Boss health bar label renders EchoBoss username")
+	void bossHealthBarLabelRendersEchoUsername() {
+		Echo echo = EchoTestSupport.warriorEchoWithData(5);
+		echo.userName = "Marwan";
+		EchoBoss boss = EchoTestSupport.createBoss(echo, 5);
 
-        Assertions.assertThat(BossHealthBar.nameLabelFor(boss))
-                .isEqualTo(Messages.titleCase("Marwan"));
-    }
+		Assertions.assertThat(BossHealthBar.nameLabelFor(boss))
+				.isEqualTo(Messages.titleCase("Marwan"));
+	}
 
-    @Test
-    @DisplayName("Boss health bar label stays empty for non-echo bosses")
-    void bossHealthBarLabelEmptyForNonEchoBoss() {
-        Assertions.assertThat(BossHealthBar.nameLabelFor(new Goo())).isNull();
-    }
+	@Test
+	@DisplayName("Boss health bar label stays empty for non-echo bosses")
+	void bossHealthBarLabelEmptyForNonEchoBoss() {
+		Assertions.assertThat(BossHealthBar.nameLabelFor(new Goo())).isNull();
+	}
 
-    @Test
-    @DisplayName("Defeat banner text includes the echo username")
-    void defeatBannerTextIncludesUsername() {
-        Echo echo = EchoTestSupport.warriorEcho(5);
-        echo.userName = "Marwan";
+	@Test
+	@DisplayName("Defeat banner text includes the echo username")
+	void defeatBannerTextIncludesUsername() {
+		Echo echo = EchoTestSupport.warriorEcho(5);
+		echo.userName = "Marwan";
 
-        String text = EchoBossSpawner.defeatBannerText(echo);
+		String text = EchoBossSpawner.defeatBannerText(echo);
 
-        Assertions.assertThat(text).contains("Marwan");
-        Assertions.assertThat(text.toLowerCase()).contains("defeated");
-    }
+		Assertions.assertThat(text).contains("Marwan");
+		Assertions.assertThat(text.toLowerCase()).contains("defeated");
+	}
 
-    @Test
-    @DisplayName("Defeat banner text falls back when echo is missing")
-    void defeatBannerTextFallsBackWithoutEcho() {
-        String text = EchoBossSpawner.defeatBannerText(null);
+	@Test
+	@DisplayName("Defeat banner text falls back when echo is missing")
+	void defeatBannerTextFallsBackWithoutEcho() {
+		String text = EchoBossSpawner.defeatBannerText(null);
 
-        Assertions.assertThat(text).isNotBlank();
-        Assertions.assertThat(text.toLowerCase()).contains("defeated");
-    }
+		Assertions.assertThat(text).isNotBlank();
+		Assertions.assertThat(text.toLowerCase()).contains("defeated");
+	}
 
-    @Test
-    @DisplayName("EchoBossSprite resolves armor tier from echo hero equipment")
-    void resolvesArmorTierFromEchoHero() {
-        Hero hero = new Hero();
-        Dungeon.hero = hero;
-        HeroClass.WARRIOR.initHero(hero);
-        PlateArmor armor = new PlateArmor();
-        armor.identify();
-        hero.belongings.armor = armor;
+	@Test
+	@DisplayName("EchoBossSprite resolves armor tier from echo hero equipment")
+	void resolvesArmorTierFromEchoHero() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+		PlateArmor armor = new PlateArmor();
+		armor.identify();
+		hero.belongings.armor = armor;
 
-        Assertions.assertThat(EchoBossSprite.armorTierFor(hero, null)).isEqualTo(armor.tier);
-    }
+		Assertions.assertThat(EchoBossSprite.armorTierFor(hero, null)).isEqualTo(armor.tier);
+	}
 
-    @Test
-    @DisplayName("EchoBossSprite falls back to snapshot level for armor tier")
-    void fallsBackToSnapshotLevelForArmorTier() {
-        Echo echo = EchoTestSupport.warriorEcho(5);
-        echo.lvl = 12;
+	@Test
+	@DisplayName("EchoBossSprite falls back to snapshot level for armor tier")
+	void fallsBackToSnapshotLevelForArmorTier() {
+		Echo echo = EchoTestSupport.warriorEcho(5);
+		echo.lvl = 12;
 
-        Assertions.assertThat(EchoBossSprite.armorTierFor(null, echo)).isEqualTo(3);
-    }
+		Assertions.assertThat(EchoBossSprite.armorTierFor(null, echo)).isEqualTo(3);
+	}
 
-    @Test
-    @DisplayName("EchoBossSprite falls back to snapshot level when echo hero has no armor")
-    void fallsBackWhenEchoHeroHasNoArmor() {
-        Echo echo = EchoTestSupport.warriorEcho(5);
-        echo.lvl = 12;
+	@Test
+	@DisplayName("EchoBossSprite falls back to snapshot level when echo hero has no armor")
+	void fallsBackWhenEchoHeroHasNoArmor() {
+		Echo echo = EchoTestSupport.warriorEcho(5);
+		echo.lvl = 12;
 
-        Hero hero = new Hero();
-        hero.live();
-        hero.lvl = echo.lvl;
+		Hero hero = new Hero();
+		hero.live();
+		hero.lvl = echo.lvl;
 
-        Assertions.assertThat(hero.tier()).isZero();
-        Assertions.assertThat(EchoBossSprite.armorTierFor(hero, echo)).isEqualTo(3);
-    }
+		Assertions.assertThat(hero.tier()).isZero();
+		Assertions.assertThat(EchoBossSprite.armorTierFor(hero, echo)).isEqualTo(3);
+	}
 }

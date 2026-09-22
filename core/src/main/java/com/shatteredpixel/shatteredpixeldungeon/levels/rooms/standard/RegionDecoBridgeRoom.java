@@ -30,15 +30,15 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 public class RegionDecoBridgeRoom extends StandardBridgeRoom {
 
 	//can be large because the line breaks the space up
-	public float[] sizeCatProbs(){
-		return new float[]{2, 1, 0};
+	public float[] sizeCatProbs() {
+		return new float[] { 2, 1, 0 };
 	}
 
-	protected int maxBridgeWidth( int roomDimension ) {
+	protected int maxBridgeWidth(int roomDimension) {
 		return 1;
 	}
 
-	protected int spaceTile(){
+	protected int spaceTile() {
 		return Terrain.REGION_DECO_ALT;
 	}
 

@@ -42,52 +42,52 @@ import java.util.ArrayList;
 
 public class Wraith extends Mob {
 
-	private static final float SPAWN_DELAY	= 2f;
-	
+	private static final float SPAWN_DELAY = 2f;
+
 	protected int level;
-	
+
 	{
 		spriteClass = WraithSprite.class;
-		
+
 		HP = HT = 1;
 		EXP = 0;
 
 		maxLvl = -2;
-		
+
 		flying = true;
 
 		properties.add(Property.UNDEAD);
 		properties.add(Property.INORGANIC);
 	}
-	
+
 	private static final String LEVEL = "level";
-	
+
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( LEVEL, level );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(LEVEL, level);
 	}
-	
+
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		level = bundle.getInt( LEVEL );
-		adjustStats( level );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		level = bundle.getInt(LEVEL);
+		adjustStats(level);
 	}
-	
+
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 1 + level/2, 2 + level );
+		return Random.NormalIntRange(1 + level / 2, 2 + level);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 10 + level;
 	}
-	
-	public void adjustStats( int level ) {
+
+	public void adjustStats(int level) {
 		this.level = level;
-		defenseSkill = attackSkill( null ) * 5;
+		defenseSkill = attackSkill(null) * 5;
 		enemySeen = true;
 	}
 
@@ -102,37 +102,37 @@ public class Wraith extends Mob {
 		return true;
 	}
 
-	public static void spawnAround( int pos ) {
-		spawnAround( pos, null );
+	public static void spawnAround(int pos) {
+		spawnAround(pos, null);
 	}
-	
-	public static void spawnAround( int pos, Class<? extends Wraith> wraithClass ) {
+
+	public static void spawnAround(int pos, Class<? extends Wraith> wraithClass) {
 		for (int n : PathFinder.NEIGHBOURS4) {
-			spawnAt( pos + n, wraithClass, false );
+			spawnAt(pos + n, wraithClass, false);
 		}
 	}
 
-	public static Wraith spawnAt( int pos ) {
-		return spawnAt( pos, null );
+	public static Wraith spawnAt(int pos) {
+		return spawnAt(pos, null);
 	}
 
-	public static Wraith spawnAt( int pos, Class<? extends Wraith> wraithClass ) {
-		return spawnAt( pos, wraithClass, true );
+	public static Wraith spawnAt(int pos, Class<? extends Wraith> wraithClass) {
+		return spawnAt(pos, wraithClass, true);
 	}
 
-	private static Wraith spawnAt( int pos, Class<? extends Wraith> wraithClass, boolean allowAdjacent ) {
+	private static Wraith spawnAt(int pos, Class<? extends Wraith> wraithClass, boolean allowAdjacent) {
 
 		//if the position itself is blocked, try to place in an adjacent cell if allowed
-		if (Dungeon.level.solid[pos] || Actor.findChar( pos ) != null){
+		if (Dungeon.level.solid[pos] || Actor.findChar(pos) != null) {
 			ArrayList<Integer> candidates = new ArrayList<>();
 
-			for (int i : PathFinder.NEIGHBOURS8){
-				if (!Dungeon.level.solid[pos+i] && Actor.findChar( pos+i ) == null){
-					candidates.add(pos+i);
+			for (int i : PathFinder.NEIGHBOURS8) {
+				if (!Dungeon.level.solid[pos + i] && Actor.findChar(pos + i) == null) {
+					candidates.add(pos + i);
 				}
 			}
 
-			if (allowAdjacent && !candidates.isEmpty()){
+			if (allowAdjacent && !candidates.isEmpty()) {
 				pos = Random.element(candidates);
 			} else {
 				pos = -1;
@@ -144,9 +144,9 @@ public class Wraith extends Mob {
 
 			Wraith w;
 			//if no wraith type is specified, 1/100 chance for exotic, otherwise normal
-			if (wraithClass == null){
-				float altChance = 1/100f * RatSkull.exoticChanceMultiplier();
-				if (Random.Float() < altChance){
+			if (wraithClass == null) {
+				float altChance = 1 / 100f * RatSkull.exoticChanceMultiplier();
+				if (Random.Float() < altChance) {
 					w = new TormentedSpirit();
 				} else {
 					w = new Wraith();
@@ -154,16 +154,16 @@ public class Wraith extends Mob {
 			} else {
 				w = Reflection.newInstance(wraithClass);
 			}
-			w.adjustStats( Dungeon.scalingDepth() );
+			w.adjustStats(Dungeon.scalingDepth());
 			w.pos = pos;
 			w.state = w.HUNTING;
-			GameScene.add( w, SPAWN_DELAY );
+			GameScene.add(w, SPAWN_DELAY);
 			Dungeon.level.occupyCell(w);
 
-			w.sprite.alpha( 0 );
-			w.sprite.parent.add( new AlphaTweener( w.sprite, 1, 0.5f ) );
+			w.sprite.alpha(0);
+			w.sprite.parent.add(new AlphaTweener(w.sprite, 1, 0.5f));
 
-			if (w instanceof TormentedSpirit){
+			if (w instanceof TormentedSpirit) {
 				w.sprite.emitter().burst(ChallengeParticle.FACTORY, 10);
 			} else {
 				w.sprite.emitter().burst(ShadowParticle.CURSE, 5);

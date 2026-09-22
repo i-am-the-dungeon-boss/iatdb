@@ -100,6 +100,7 @@ public final class WorldWireCodec {
 		}
 		return occupants;
 	}
+
 	/**
 	 * Village bodies. Skipped-not-thrown for the same reason as the rows above,
 	 * and with one extra rule: a body has to be identifiable to be inspectable,

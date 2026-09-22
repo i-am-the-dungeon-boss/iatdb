@@ -40,7 +40,7 @@ public abstract class RemainsItem extends Item {
 		defaultAction = AC_USE;
 	}
 
-	public static final String AC_USE =  "USE";
+	public static final String AC_USE = "USE";
 
 	@Override
 	public ArrayList<String> actions(Hero hero) {
@@ -53,7 +53,7 @@ public abstract class RemainsItem extends Item {
 	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 
-		if (action.equals(AC_USE)){
+		if (action.equals(AC_USE)) {
 			hero.sprite.operate(hero.pos);
 
 			Catalog.countUse(getClass());
@@ -81,9 +81,10 @@ public abstract class RemainsItem extends Item {
 		return 50;
 	}
 
-	public static RemainsItem get(HeroClass cls){
-		switch (cls){
-			case WARRIOR: default:
+	public static RemainsItem get(HeroClass cls) {
+		switch (cls) {
+			case WARRIOR:
+			default:
 				return new SealShard();
 			case MAGE:
 				return new BrokenStaff();

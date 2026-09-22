@@ -47,7 +47,7 @@ public class CircleWallEntranceRoom extends CircleWallRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -62,9 +62,9 @@ public class CircleWallEntranceRoom extends CircleWallRoom {
 		Point p = center();
 
 		int cell = level.pointToCell(p);
-		for (int i : PathFinder.NEIGHBOURS8){
-			if (level.map[cell+2*i] == Terrain.WALL){
-				Painter.set(level, cell+i, Terrain.EMPTY);
+		for (int i : PathFinder.NEIGHBOURS8) {
+			if (level.map[cell + 2 * i] == Terrain.WALL) {
+				Painter.set(level, cell + i, Terrain.EMPTY);
 			}
 		}
 		Painter.set(level, p, Terrain.ENTRANCE);
@@ -77,10 +77,10 @@ public class CircleWallEntranceRoom extends CircleWallRoom {
 			yDir = Random.Int(2) == 0 ? 1 : -1;
 		}
 
-		p.x += 2*xDir;
-		p.y += 2*yDir;
+		p.x += 2 * xDir;
+		p.y += 2 * yDir;
 
-		while (level.map[level.pointToCell(p)] == Terrain.WALL){
+		while (level.map[level.pointToCell(p)] == Terrain.WALL) {
 			Painter.set(level, p, Terrain.EMPTY);
 			p.x += xDir;
 			p.y += yDir;

@@ -37,10 +37,10 @@ public class RingOfTenacity extends Ring {
 	}
 
 	public String statsInfo() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.85f, soloBuffedBonus()))));
-			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())) {
 				info += "\n\n" + Messages.get(this, "combined_stats",
 						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.85f, combinedBuffedBonus(owner())))));
 			}
@@ -50,19 +50,20 @@ public class RingOfTenacity extends Ring {
 		}
 	}
 
-	public String upgradeStat1(int level){
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.85f, level+1))) + "%";
+	public String upgradeStat1(int level) {
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.85f, level + 1))) + "%";
 	}
 
 	@Override
-	protected RingBuff buff( ) {
+	protected RingBuff buff() {
 		return new Tenacity();
 	}
 
-	public static float damageMultiplier( Char t ){
+	public static float damageMultiplier(Char t) {
 		//(HT - HP)/HT = heroes current % missing health.
-		return (float)Math.pow(0.85, getBuffedBonus( t, Tenacity.class)*((float)(t.HT - t.HP)/t.HT));
+		return (float) Math.pow(0.85, getBuffedBonus(t, Tenacity.class) * ((float) (t.HT - t.HP) / t.HT));
 	}
 
 	public class Tenacity extends RingBuff {

@@ -25,17 +25,13 @@ import java.util.Map;
 public enum EchoRole {
 
 	// --- Damage --------------------------------------------------------------
-	MELEE(Kind.DAMAGE, "*melee"),
-	RANGED(Kind.DAMAGE, null),
-	FINISHER(Kind.DAMAGE, null),
-	WEAPON_ABILITY(Kind.DAMAGE, null),
-	ARMOR_ABILITY(Kind.DAMAGE, null),
+	MELEE(Kind.DAMAGE, "*melee"), RANGED(Kind.DAMAGE, null), FINISHER(Kind.DAMAGE, null), WEAPON_ABILITY(Kind.DAMAGE,
+			null), ARMOR_ABILITY(Kind.DAMAGE, null),
 	/**
 	 * Aimed at the hero cell specifically to pierce a soft blocker and still
 	 * connect, so it is an attack rather than a bypass.
 	 */
-	PATH_THROUGH(Kind.DAMAGE, null),
-	SURPRISE_SHOT(Kind.DAMAGE, null),
+	PATH_THROUGH(Kind.DAMAGE, null), SURPRISE_SHOT(Kind.DAMAGE, null),
 	/** Damage <em>and</em> a blob: seeds an area the hero has to leave. */
 	PAYOFF_AOE(Kind.DAMAGE_BLOB, null),
 
@@ -43,48 +39,34 @@ public enum EchoRole {
 	/** Freezing an untouchable hero turns the wasted window into free hits. */
 	SETUP_CC(Kind.BLOB, null, 2),
 	/** Leads the prep order: cornered, it buys the distance RUN could not. */
-	KNOCKBACK(Kind.PLAIN, null, 1),
-	BLIND(Kind.PLAIN, null, 3),
-	FEAR(Kind.PLAIN, null, 4),
+	KNOCKBACK(Kind.PLAIN, null, 1), BLIND(Kind.PLAIN, null, 3), FEAR(Kind.PLAIN, null, 4),
 
 	// --- Recovery and self-buff ----------------------------------------------
-	HEAL(Kind.SELF_DRINK, null, 5),
-	CLEANSE(Kind.SELF_DRINK, null, 6),
-	CLEANSE_BURN(Kind.SELF_DRINK, null, 7),
+	HEAL(Kind.SELF_DRINK, null, 5), CLEANSE(Kind.SELF_DRINK, null, 6), CLEANSE_BURN(Kind.SELF_DRINK, null, 7),
 	/** The role; distinct from the lowercase {@code purity} enemy status. */
 	PURITY(Kind.SELF_DRINK, null, 8),
 	/** Grants armor, not shielding — see {@link #SHIELD_SELF}. */
-	ARCANE_ARMOR(Kind.PLAIN, null, 9),
-	HASTE(Kind.SELF_DRINK, null, 10),
-	FIRE_IMBUE(Kind.PLAIN, null, 11),
-	FROST_IMBUE(Kind.PLAIN, null, 12),
-	TOXIC_IMBUE(Kind.PLAIN, null, 13),
-	INVIS(Kind.SELF_DRINK, null, 14),
-	STEALTH(Kind.PLAIN, null, 15),
-	LEVITATE(Kind.SELF_DRINK, null, 16),
+	ARCANE_ARMOR(Kind.PLAIN, null, 9), HASTE(Kind.SELF_DRINK, null, 10), FIRE_IMBUE(Kind.PLAIN, null, 11), FROST_IMBUE(
+			Kind.PLAIN, null, 12), TOXIC_IMBUE(Kind.PLAIN, null,
+					13), INVIS(Kind.SELF_DRINK, null,
+							14), STEALTH(Kind.PLAIN, null, 15), LEVITATE(Kind.SELF_DRINK, null, 16),
 	/** Potion of Shielding is AC_CHOOSE; this role always means drink it. */
 	SHIELD_SELF(Kind.SELF_DRINK, null),
 	/** Generic "drink whatever this capability resolved to". */
 	DRINK(Kind.SELF_DRINK, null),
 
 	// --- Forced-throw roles ---------------------------------------------------
-	THROW(Kind.THROW, null),
-	THROW_POTION(Kind.THROW, null),
-	GAS(Kind.THROW, null),
+	THROW(Kind.THROW, null), THROW_POTION(Kind.THROW, null), GAS(Kind.THROW, null),
 
 	// --- Movement and positioning --------------------------------------------
-	CLOSE_IN(Kind.PLAIN, "*move_closer"),
-	KEEP_DISTANCE(Kind.DISENGAGE, "*move_further"),
-	BLINK(Kind.DISENGAGE, null),
-	LEAVE_AOE(Kind.PLAIN, "*leave_aoe"),
-	MOVE_TO_WATER(Kind.PLAIN, "*move_to_terrain:water"),
-	MOVE_TO_GRASS(Kind.PLAIN, "*move_to_terrain:grass"),
+	CLOSE_IN(Kind.PLAIN, "*move_closer"), KEEP_DISTANCE(Kind.DISENGAGE, "*move_further"), BLINK(Kind.DISENGAGE,
+			null), LEAVE_AOE(Kind.PLAIN, "*leave_aoe"), MOVE_TO_WATER(Kind.PLAIN,
+					"*move_to_terrain:water"), MOVE_TO_GRASS(Kind.PLAIN, "*move_to_terrain:grass"),
 	/** Strategy-only hold: legal solely via the matcher's {@code if_at_ideal}. */
 	HOLD(Kind.PLAIN, "*wait"),
 
 	// --- Obstacle clearing -----------------------------------------------------
-	CLEAR_LOS(Kind.PLAIN, null),
-	CLEAR_PLANT(Kind.PLAIN, null),
+	CLEAR_LOS(Kind.PLAIN, null), CLEAR_PLANT(Kind.PLAIN, null),
 	/**
 	 * Destroys a door the hero keeps dancing behind. Not reachable from a
 	 * playbook reaction: {@code EchoBoss.forceStalledDoor} decides when, and
@@ -93,12 +75,8 @@ public enum EchoRole {
 	DOOR_BREAK(Kind.PLAIN, null),
 
 	// --- Cleric spells ---------------------------------------------------------
-	GUIDING_LIGHT(Kind.DAMAGE, null),
-	HOLY_WEAPON(Kind.PLAIN, null),
-	HOLY_WARD(Kind.PLAIN, null),
-	SMITE(Kind.DAMAGE, null),
-	SUNRAY(Kind.PLAIN, null),
-	LAY_ON_HANDS(Kind.PLAIN, null);
+	GUIDING_LIGHT(Kind.DAMAGE, null), HOLY_WEAPON(Kind.PLAIN, null), HOLY_WARD(Kind.PLAIN, null), SMITE(Kind.DAMAGE,
+			null), SUNRAY(Kind.PLAIN, null), LAY_ON_HANDS(Kind.PLAIN, null);
 
 	/** How a role behaves; keeps the per-role flags from drifting apart. */
 	private enum Kind {

@@ -45,45 +45,56 @@ import com.watabou.utils.Random;
 public class AmbitiousImpRoom extends SpecialRoom {
 
 	@Override
-	public int maxWidth() { return 9; }
-	public int minWidth() { return 9; }
-	public int maxHeight() { return 9; }
-	public int minHeight() { return 9; }
+	public int maxWidth() {
+		return 9;
+	}
+
+	public int minWidth() {
+		return 9;
+	}
+
+	public int maxHeight() {
+		return 9;
+	}
+
+	public int minHeight() {
+		return 9;
+	}
 
 	@Override
 	public void paint(Level level) {
 
-		Painter.fill( level, this, Terrain.WALL_DECO );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL_DECO);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Point c = center();
 
-		Painter.set(level, c.x-2, c.y-2, Terrain.REGION_DECO);
-		Painter.set(level, c.x+2, c.y-2, Terrain.REGION_DECO);
-		Painter.set(level, c.x-2, c.y+2, Terrain.REGION_DECO);
-		Painter.set(level, c.x+2, c.y+2, Terrain.REGION_DECO);
+		Painter.set(level, c.x - 2, c.y - 2, Terrain.REGION_DECO);
+		Painter.set(level, c.x + 2, c.y - 2, Terrain.REGION_DECO);
+		Painter.set(level, c.x - 2, c.y + 2, Terrain.REGION_DECO);
+		Painter.set(level, c.x + 2, c.y + 2, Terrain.REGION_DECO);
 
-		Painter.set(level, c.x-3, c.y-3, Terrain.WALL_DECO);
-		Painter.set(level, c.x+3, c.y-3, Terrain.WALL_DECO);
-		Painter.set(level, c.x-3, c.y+3, Terrain.WALL_DECO);
-		Painter.set(level, c.x+3, c.y+3, Terrain.WALL_DECO);
+		Painter.set(level, c.x - 3, c.y - 3, Terrain.WALL_DECO);
+		Painter.set(level, c.x + 3, c.y - 3, Terrain.WALL_DECO);
+		Painter.set(level, c.x - 3, c.y + 3, Terrain.WALL_DECO);
+		Painter.set(level, c.x + 3, c.y + 3, Terrain.WALL_DECO);
 
 		Door entrance = entrance();
 		Imp npc = new Imp();
 		npc.pos = level.pointToCell(c);
 
 		//TODO we have imp in front for now, do we want to put him in the back?
-		if (entrance.x == left || entrance.x == right){
-			npc.pos += Random.IntRange(-1, 1)*level.width();
+		if (entrance.x == left || entrance.x == right) {
+			npc.pos += Random.IntRange(-1, 1) * level.width();
 			npc.pos += entrance.x == left ? -2 : 2;
-		} else if (entrance.y == top || entrance.y == bottom){
+		} else if (entrance.y == top || entrance.y == bottom) {
 			npc.pos += Random.IntRange(-1, 1);
 			npc.pos += level.width() * (entrance.y == top ? -2 : 2);
 		}
-		level.mobs.add( npc );
+		level.mobs.add(npc);
 
 		Painter.drawInside(level, this, entrance, 1, Terrain.EMPTY);
-		entrance.set( Door.Type.REGULAR ); //TODO maybe lock?
+		entrance.set(Door.Type.REGULAR); //TODO maybe lock?
 
 		//TODO finalize quest entrance visuals
 		QuestEntrance vis = new QuestEntrance();
@@ -161,7 +172,7 @@ public class AmbitiousImpRoom extends SpecialRoom {
 		@Override
 		public Image image(int tileX, int tileY) {
 			//only center 3x3 gives custom image/message
-			if (tileX >= 1 && tileX < 4 && tileY >= 1 && tileY < 4){
+			if (tileX >= 1 && tileX < 4 && tileY >= 1 && tileY < 4) {
 				return super.image(tileX, tileY);
 			} else {
 				return null;
@@ -181,8 +192,9 @@ public class AmbitiousImpRoom extends SpecialRoom {
 		@Override
 		public Tilemap create() {
 			//largely a copy of super method, so that we can change alpha on update
-			if (vis != null && vis.alive) vis.killAndErase();
-			vis = new Tilemap(texture, new TextureFilm( texture, SIZE, SIZE )){
+			if (vis != null && vis.alive)
+				vis.killAndErase();
+			vis = new Tilemap(texture, new TextureFilm(texture, SIZE, SIZE)) {
 				@Override
 				protected NoosaScript script() {
 					//allow lighting for custom tilemaps
@@ -191,12 +203,12 @@ public class AmbitiousImpRoom extends SpecialRoom {
 
 				@Override
 				public void update() {
-					alpha(0.3f + 0.3f*(float)Math.sin(Game.timeTotal));
+					alpha(0.3f + 0.3f * (float) Math.sin(Game.timeTotal));
 					super.update();
 				}
 			};
-			vis.x = tileX*SIZE;
-			vis.y = tileY*SIZE;
+			vis.x = tileX * SIZE;
+			vis.y = tileY * SIZE;
 			vis.map(mapSimpleImage(5, 1, TEX_WIDTH), 3);
 			return vis;
 		}

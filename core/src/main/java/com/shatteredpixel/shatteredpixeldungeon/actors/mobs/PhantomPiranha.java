@@ -52,11 +52,13 @@ public class PhantomPiranha extends Piranha {
 	@Override
 	public void damage(int dmg, Object src) {
 		Char dmgSource = null;
-		if (src instanceof Char) dmgSource = (Char)src;
-		if (src instanceof Wand || src instanceof ClericSpell) dmgSource = Dungeon.hero;
+		if (src instanceof Char)
+			dmgSource = (Char) src;
+		if (src instanceof Wand || src instanceof ClericSpell)
+			dmgSource = Dungeon.hero;
 
-		if (dmgSource == null || !Dungeon.level.adjacent(pos, dmgSource.pos)){
-			dmg = Math.round(dmg/2f); //halve damage taken if we are going to teleport
+		if (dmgSource == null || !Dungeon.level.adjacent(pos, dmgSource.pos)) {
+			dmg = Math.round(dmg / 2f); //halve damage taken if we are going to teleport
 		}
 		super.damage(dmg, src);
 
@@ -89,22 +91,22 @@ public class PhantomPiranha extends Piranha {
 
 	@Override
 	public void dieOnLand() {
-		if (!teleportAway()){
+		if (!teleportAway()) {
 			super.dieOnLand();
 		}
 	}
 
-	private boolean teleportAway(){
+	private boolean teleportAway() {
 
-		if (flying){
+		if (flying) {
 			return false;
 		}
 
 		ArrayList<Integer> inFOVCandidates = new ArrayList<>();
 		ArrayList<Integer> outFOVCandidates = new ArrayList<>();
-		for (int i = 0; i < Dungeon.level.length(); i++){
-			if (Dungeon.level.water[i] && Actor.findChar(i) == null){
-				if (Dungeon.level.heroFOV[i]){
+		for (int i = 0; i < Dungeon.level.length(); i++) {
+			if (Dungeon.level.water[i] && Actor.findChar(i) == null) {
+				if (Dungeon.level.heroFOV[i]) {
 					inFOVCandidates.add(i);
 				} else {
 					outFOVCandidates.add(i);
@@ -112,11 +114,12 @@ public class PhantomPiranha extends Piranha {
 			}
 		}
 
-		if (!outFOVCandidates.isEmpty()){
-			if (Dungeon.level.heroFOV[pos]) GLog.i(Messages.get(this, "teleport_away"));
+		if (!outFOVCandidates.isEmpty()) {
+			if (Dungeon.level.heroFOV[pos])
+				GLog.i(Messages.get(this, "teleport_away"));
 			ScrollOfTeleportation.appear(this, Random.element(outFOVCandidates));
 			return true;
-		} else if (!inFOVCandidates.isEmpty()){
+		} else if (!inFOVCandidates.isEmpty()) {
 			ScrollOfTeleportation.appear(this, Random.element(inFOVCandidates));
 			return true;
 		}

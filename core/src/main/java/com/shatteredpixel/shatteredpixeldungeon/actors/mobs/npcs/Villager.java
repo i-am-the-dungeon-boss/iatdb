@@ -48,10 +48,7 @@ public class Villager extends NPC {
 
 	/** Which villager this is — picks the sprite and the dialogue. */
 	public enum Kind {
-		SMITH,
-		SAGE,
-		ELDER,
-		KEEPER
+		SMITH, SAGE, ELDER, KEEPER
 	}
 
 	private static final String KIND = "kind";

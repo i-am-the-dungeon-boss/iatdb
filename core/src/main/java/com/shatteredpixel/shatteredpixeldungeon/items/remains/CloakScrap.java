@@ -41,6 +41,6 @@ public class CloakScrap extends RemainsItem {
 	protected void doEffect(Hero hero) {
 		ArtifactRecharge.chargeArtifacts(hero, 4f);
 		ScrollOfRecharging.charge(hero);
-		Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
 	}
 }

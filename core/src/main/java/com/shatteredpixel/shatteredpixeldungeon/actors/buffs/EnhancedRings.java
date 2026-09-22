@@ -39,8 +39,9 @@ public class EnhancedRings extends FlavourBuff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
-			if (target == Dungeon.hero) ((Hero) target).updateHT(false);
+		if (super.attachTo(target)) {
+			if (target == Dungeon.hero)
+				((Hero) target).updateHT(false);
 			return true;
 		}
 		return false;
@@ -49,7 +50,8 @@ public class EnhancedRings extends FlavourBuff {
 	@Override
 	public void detach() {
 		super.detach();
-		if (target == Dungeon.hero) ((Hero) target).updateHT(false);
+		if (target == Dungeon.hero)
+			((Hero) target).updateHT(false);
 	}
 
 	@Override
@@ -64,8 +66,8 @@ public class EnhancedRings extends FlavourBuff {
 
 	@Override
 	public float iconFadePercent() {
-		float max = 3*Dungeon.hero.pointsInTalent(Talent.ENHANCED_RINGS);
-		return Math.max(0, (max-visualcooldown()) / max);
+		float max = 3 * Dungeon.hero.pointsInTalent(Talent.ENHANCED_RINGS);
+		return Math.max(0, (max - visualcooldown()) / max);
 	}
 
 }

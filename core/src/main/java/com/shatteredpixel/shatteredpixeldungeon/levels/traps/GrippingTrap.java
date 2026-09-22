@@ -45,18 +45,18 @@ public class GrippingTrap extends Trap {
 	@Override
 	public void activate() {
 
-		Char c = Actor.findChar( pos );
+		Char c = Actor.findChar(pos);
 
 		if (c != null && !c.flying) {
 			if (c instanceof Mob) {
 				Buff.prolong(c, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 			}
-			int damage = Math.max( 0,  (2 + scalingDepth()/2) - c.drRoll()/2 );
-			Buff.affect( c, Bleeding.class ).set( damage );
-			Buff.prolong( c, Cripple.class, Cripple.DURATION);
-			Wound.hit( c );
+			int damage = Math.max(0, (2 + scalingDepth() / 2) - c.drRoll() / 2);
+			Buff.affect(c, Bleeding.class).set(damage);
+			Buff.prolong(c, Cripple.class, Cripple.DURATION);
+			Wound.hit(c);
 		} else {
-			Wound.hit( pos );
+			Wound.hit(pos);
 		}
 
 	}

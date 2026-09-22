@@ -40,7 +40,7 @@ public class PotionOfExperience extends Potion {
 
 		talentFactor = 2f;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		if (!(ch instanceof Hero)) {
@@ -49,10 +49,10 @@ public class PotionOfExperience extends Potion {
 		Hero hero = (Hero) ch;
 		identify();
 		hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(hero.maxExp()), FloatingText.EXPERIENCE);
-		hero.earnExp( hero.maxExp(), getClass() );
-		new Flare( 6, 32 ).color(0xFFFF00, true).show( curUser.sprite, 2f );
+		hero.earnExp(hero.maxExp(), getClass());
+		new Flare(6, 32).color(0xFFFF00, true).show(curUser.sprite, 2f);
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 50 * quantity : super.value();

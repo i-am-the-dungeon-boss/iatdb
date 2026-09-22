@@ -58,23 +58,23 @@ public class Tilemap extends Visual {
 	private int topLeftUpdating;
 	private int bottomRightUpdating;
 
-	public Tilemap( Object tx, TextureFilm tileset ) {
+	public Tilemap(Object tx, TextureFilm tileset) {
 
-		super( 0, 0, 0, 0 );
+		super(0, 0, 0, 0);
 
-		this.texture = TextureCache.get( tx );
+		this.texture = TextureCache.get(tx);
 		this.tileset = tileset;
 
-		RectF r = tileset.get( 0 );
-		cellW = tileset.width( r );
-		cellH = tileset.height( r );
+		RectF r = tileset.get(0);
+		cellW = tileset.width(r);
+		cellH = tileset.height(r);
 
 		vertices = new float[16];
 
 		updated = new Rect();
 	}
 
-	public void map( int[] data, int cols ) {
+	public void map(int[] data, int cols) {
 
 		this.data = data;
 
@@ -85,13 +85,13 @@ public class Tilemap extends Visual {
 		width = cellW * mapWidth;
 		height = cellH * mapHeight;
 
-		quads = Quad.createSet( size );
+		quads = Quad.createSet(size);
 
 		updateMap();
 	}
-	
-	public Image image(int x, int y){
-		if (!needsRender(x + mapWidth*y)){
+
+	public Image image(int x, int y) {
+		if (!needsRender(x + mapWidth * y)) {
 			return null;
 		} else {
 			Image img = new Image(texture);
@@ -101,16 +101,16 @@ public class Tilemap extends Visual {
 	}
 
 	//forces a full update, including new buffer
-	public synchronized void updateMap(){
-		updated.set( 0, 0, mapWidth, mapHeight );
+	public synchronized void updateMap() {
+		updated.set(0, 0, mapWidth, mapHeight);
 		fullUpdate = true;
 	}
 
-	public synchronized void updateMapCell(int cell){
-		updated.union( cell % mapWidth, cell / mapWidth );
+	public synchronized void updateMapCell(int cell) {
+		updated.union(cell % mapWidth, cell / mapWidth);
 	}
 
-	private synchronized void moveToUpdating(){
+	private synchronized void moveToUpdating() {
 		updating = new Rect(updated);
 		updated.setEmpty();
 	}
@@ -118,7 +118,7 @@ public class Tilemap extends Visual {
 	protected void updateVertices() {
 
 		moveToUpdating();
-		
+
 		float x1, y1, x2, y2;
 		int pos;
 		RectF uv;
@@ -126,24 +126,24 @@ public class Tilemap extends Visual {
 		y1 = cellH * updating.top;
 		y2 = y1 + cellH;
 
-		for (int i=updating.top; i < updating.bottom; i++) {
+		for (int i = updating.top; i < updating.bottom; i++) {
 
 			x1 = cellW * updating.left;
 			x2 = x1 + cellW;
 
 			pos = i * mapWidth + updating.left;
 
-			for (int j=updating.left; j < updating.right; j++) {
+			for (int j = updating.left; j < updating.right; j++) {
 
 				if (topLeftUpdating == -1)
 					topLeftUpdating = pos;
 
 				bottomRightUpdating = pos + 1;
 
-				((Buffer)quads).position(pos*16);
-				
+				((Buffer) quads).position(pos * 16);
+
 				uv = tileset.get(data[pos]);
-				
+
 				if (needsRender(pos) && uv != null) {
 
 					vertices[0] = x1;
@@ -223,18 +223,18 @@ public class Tilemap extends Visual {
 
 		texture.bind();
 
-		script.uModel.valueM4( matrix );
+		script.uModel.valueM4(matrix);
 		script.lighting(
 				rm, gm, bm, am,
-				ra, ga, ba, aa );
+				ra, ga, ba, aa);
 
-		script.camera( camera );
+		script.camera(camera);
 
-		script.drawQuadSet( buffer, size, 0 );
+		script.drawQuadSet(buffer, size, 0);
 
 	}
-	
-	protected NoosaScript script(){
+
+	protected NoosaScript script() {
 		return NoosaScriptNoLighting.get();
 	}
 
@@ -245,7 +245,7 @@ public class Tilemap extends Visual {
 			buffer.delete();
 	}
 
-	protected boolean needsRender(int pos){
+	protected boolean needsRender(int pos) {
 		return data[pos] >= 0;
 	}
 }

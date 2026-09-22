@@ -38,7 +38,7 @@ public class MinefieldRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{4, 1, 0};
+		return new float[] { 4, 1, 0 };
 	}
 
 	@Override
@@ -49,15 +49,15 @@ public class MinefieldRoom extends StandardRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 
-		int mines = (int)Math.round(Math.sqrt(square()));
+		int mines = (int) Math.round(Math.sqrt(square()));
 
-		switch (sizeCat){
+		switch (sizeCat) {
 			case NORMAL:
 				mines -= 3;
 				break;
@@ -71,17 +71,17 @@ public class MinefieldRoom extends StandardRoom {
 
 		float revealedChance = TrapMechanism.revealHiddenTrapChance();
 		float revealInc = 0;
-		for (int i = 0; i < mines; i++ ){
+		for (int i = 0; i < mines; i++) {
 			int pos;
 			do {
 				pos = level.pointToCell(random(1));
 			} while (level.traps.get(pos) != null);
 
 			//randomly places some embers around the mines
-			for (int j = 0; j < 8; j ++){
+			for (int j = 0; j < 8; j++) {
 				int c = PathFinder.NEIGHBOURS8[Random.Int(8)];
-				if (level.traps.get(pos+c) == null && level.map[pos+c] == Terrain.EMPTY){
-					Painter.set(level, pos+c, Terrain.EMBERS);
+				if (level.traps.get(pos + c) == null && level.map[pos + c] == Terrain.EMPTY) {
+					Painter.set(level, pos + c, Terrain.EMBERS);
 				}
 			}
 

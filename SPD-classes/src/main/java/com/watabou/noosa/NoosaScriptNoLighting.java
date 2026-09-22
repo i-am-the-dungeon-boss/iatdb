@@ -38,8 +38,8 @@ public class NoosaScriptNoLighting extends NoosaScript {
 		//Does nothing
 	}
 
-	public static NoosaScriptNoLighting get(){
-		return Script.use( NoosaScriptNoLighting.class );
+	public static NoosaScriptNoLighting get() {
+		return Script.use(NoosaScriptNoLighting.class);
 	}
 
 	@Override
@@ -48,29 +48,29 @@ public class NoosaScriptNoLighting extends NoosaScript {
 	}
 
 	private static final String SHADER =
-		
-		//vertex shader
-		"uniform mat4 uCamera;\n" +
-		"uniform mat4 uModel;\n" +
-		"attribute vec4 aXYZW;\n" +
-		"attribute vec2 aUV;\n" +
-		"varying vec2 vUV;\n" +
-		"void main() {\n" +
-		"  gl_Position = uCamera * uModel * aXYZW;\n" +
-		"  vUV = aUV;\n" +
-		"}\n" +
-		
-		//this symbol separates the vertex and fragment shaders (see Script.compile)
-		"//\n" +
-		
-		//fragment shader
-		//preprocessor directives let us define precision on GLES platforms, and ignore it elsewhere
-		"#ifdef GL_ES\n" +
-		"  precision mediump float;\n" +
-		"#endif\n" +
-		"varying vec2 vUV;\n" +
-		"uniform sampler2D uTex;\n" +
-		"void main() {\n" +
-		"  gl_FragColor = texture2D( uTex, vUV );\n" +
-		"}\n";
+
+			//vertex shader
+			"uniform mat4 uCamera;\n" +
+					"uniform mat4 uModel;\n" +
+					"attribute vec4 aXYZW;\n" +
+					"attribute vec2 aUV;\n" +
+					"varying vec2 vUV;\n" +
+					"void main() {\n" +
+					"  gl_Position = uCamera * uModel * aXYZW;\n" +
+					"  vUV = aUV;\n" +
+					"}\n" +
+
+					//this symbol separates the vertex and fragment shaders (see Script.compile)
+					"//\n" +
+
+					//fragment shader
+					//preprocessor directives let us define precision on GLES platforms, and ignore it elsewhere
+					"#ifdef GL_ES\n" +
+					"  precision mediump float;\n" +
+					"#endif\n" +
+					"varying vec2 vUV;\n" +
+					"uniform sampler2D uTex;\n" +
+					"void main() {\n" +
+					"  gl_FragColor = texture2D( uTex, vUV );\n" +
+					"}\n";
 }

@@ -33,16 +33,26 @@ public abstract class VaultTreasureRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
-	public int minHeight() { return 11; }
-	public int maxHeight() { return 11; }
+	public int minHeight() {
+		return 11;
+	}
+
+	public int maxHeight() {
+		return 11;
+	}
 
 	@Override
-	public int minWidth() { return 11; }
-	public int maxWidth() { return 11; }
+	public int minWidth() {
+		return 11;
+	}
+
+	public int maxWidth() {
+		return 11;
+	}
 
 	@Override
 	public int maxConnections(int direction) {
@@ -52,8 +62,8 @@ public abstract class VaultTreasureRoom extends StandardRoom {
 	private Door entrance;
 
 	public Door entrance() {
-		if (entrance == null){
-			if (connected.isEmpty()){
+		if (entrance == null) {
+			if (connected.isEmpty()) {
 				return null;
 			} else {
 				entrance = connected.values().iterator().next();

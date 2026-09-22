@@ -52,7 +52,7 @@ public class GoldenMimic extends Mimic {
 
 	@Override
 	public String name() {
-		if (alignment == Alignment.NEUTRAL){
+		if (alignment == Alignment.NEUTRAL) {
 			return Messages.get(Heap.class, "locked_chest");
 		} else {
 			return super.name();
@@ -61,8 +61,8 @@ public class GoldenMimic extends Mimic {
 
 	@Override
 	public String description() {
-		if (alignment == Alignment.NEUTRAL){
-			if (MimicTooth.stealthyMimics()){
+		if (alignment == Alignment.NEUTRAL) {
+			if (MimicTooth.stealthyMimics()) {
 				return Messages.get(Heap.class, "locked_chest_desc");
 			} else {
 				return Messages.get(Heap.class, "locked_chest_desc") + "\n\n" + Messages.get(this, "hidden_hint");
@@ -72,13 +72,14 @@ public class GoldenMimic extends Mimic {
 		}
 	}
 
-	public void stopHiding(){
+	public void stopHiding() {
 		state = HUNTING;
-		if (sprite != null) sprite.idle();
+		if (sprite != null)
+			sprite.idle();
 		if (Actor.chars().contains(this) && Dungeon.level.heroFOV[pos]) {
 			enemy = Dungeon.hero;
 			target = Dungeon.hero.pos;
-			GLog.w(Messages.get(this, "reveal") );
+			GLog.w(Messages.get(this, "reveal"));
 			CellEmitter.get(pos).burst(Speck.factory(Speck.STAR), 10);
 			Sample.INSTANCE.play(Assets.Sounds.MIMIC, 1, 0.85f);
 		}
@@ -86,24 +87,24 @@ public class GoldenMimic extends Mimic {
 
 	@Override
 	public void setLevel(int level) {
-		super.setLevel(Math.round(level*1.33f));
+		super.setLevel(Math.round(level * 1.33f));
 	}
 
 	@Override
-	protected void generatePrize( boolean useDecks ) {
-		super.generatePrize( useDecks );
+	protected void generatePrize(boolean useDecks) {
+		super.generatePrize(useDecks);
 		//all existing prize items are guaranteed uncursed, and have a 50% chance to be +1 if they were +0
-		for (Item i : items){
-			if (i instanceof EquipableItem || i instanceof Wand){
+		for (Item i : items) {
+			if (i instanceof EquipableItem || i instanceof Wand) {
 				i.cursed = false;
 				i.cursedKnown = true;
-				if (i instanceof Weapon && ((Weapon) i).hasCurseEnchant()){
+				if (i instanceof Weapon && ((Weapon) i).hasCurseEnchant()) {
 					((Weapon) i).enchant(null);
 				}
-				if (i instanceof Armor && ((Armor) i).hasCurseGlyph()){
+				if (i instanceof Armor && ((Armor) i).hasCurseGlyph()) {
 					((Armor) i).inscribe(null);
 				}
-				if (!(i instanceof Artifact) && i.level() == 0 && Random.Int(2) == 0){
+				if (!(i instanceof Artifact) && i.level() == 0 && Random.Int(2) == 0) {
 					i.upgrade();
 				}
 			}

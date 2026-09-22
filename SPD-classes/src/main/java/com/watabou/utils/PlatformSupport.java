@@ -36,10 +36,10 @@ import com.watabou.noosa.Game;
 import java.util.HashMap;
 
 public abstract class PlatformSupport {
-	
+
 	public abstract void updateDisplaySize();
 
-	public boolean supportsFullScreen(){
+	public boolean supportsFullScreen() {
 		return true; //default
 	}
 
@@ -47,43 +47,42 @@ public abstract class PlatformSupport {
 	public static final int INSET_LRG = 2; //Only big insets, full size notches and nav bars
 	public static final int INSET_BLK = 1; //only complete blocker assets like navbars
 
-	public RectF getSafeInsets( int level ){
+	public RectF getSafeInsets(int level) {
 		return new RectF(
 				Gdx.graphics.getSafeInsetLeft(),
 				Gdx.graphics.getSafeInsetTop(),
 				Gdx.graphics.getSafeInsetRight(),
-				Gdx.graphics.getSafeInsetBottom()
-		);
+				Gdx.graphics.getSafeInsetBottom());
 	}
 
 	//returns a display cutout (if one is present) in device pixels, or empty if none is present
-	public RectF getDisplayCutout(){
+	public RectF getDisplayCutout() {
 		return new RectF();
 	}
-	
+
 	public abstract void updateSystemUI();
 
 	public abstract boolean connectedToUnmeteredNetwork();
 
 	public abstract boolean supportsVibration();
 
-	public void vibrate( int millis ){
+	public void vibrate(int millis) {
 		if (ControllerHandler.isControllerConnected()) {
 			ControllerHandler.vibrate(millis);
 		} else {
-			Gdx.input.vibrate( millis );
+			Gdx.input.vibrate(millis);
 		}
 	}
 
-	public void setHonorSilentSwitch( boolean value ){
+	public void setHonorSilentSwitch(boolean value) {
 		//does nothing by default
 	}
 
-	public boolean openURI( String uri ){
-		return Gdx.net.openURI( uri );
+	public boolean openURI(String uri) {
+		return Gdx.net.openURI(uri);
 	}
 
-	public void setOnscreenKeyboardVisible(boolean value, boolean multiline){
+	public void setOnscreenKeyboardVisible(boolean value, boolean multiline) {
 		//by default ignore multiline
 		Gdx.input.setOnscreenKeyboardVisible(value, Input.OnscreenKeyboardType.Default);
 	}
@@ -94,18 +93,18 @@ public abstract class PlatformSupport {
 	protected int pageSize;
 	protected PixmapPacker packer;
 	protected boolean systemfont;
-	
-	public abstract void setupFontGenerators(int pageSize, boolean systemFont );
 
-	protected abstract FreeTypeFontGenerator getGeneratorForString( String input );
+	public abstract void setupFontGenerators(int pageSize, boolean systemFont);
 
-	public abstract String[] splitforTextBlock( String text, boolean multiline );
+	protected abstract FreeTypeFontGenerator getGeneratorForString(String input);
 
-	public void resetGenerators(){
-		resetGenerators( true );
+	public abstract String[] splitforTextBlock(String text, boolean multiline);
+
+	public void resetGenerators() {
+		resetGenerators(true);
 	}
 
-	public void resetGenerators( boolean setupAfter ){
+	public void resetGenerators(boolean setupAfter) {
 		if (fonts != null) {
 			for (FreeTypeFontGenerator generator : fonts.keySet()) {
 				for (BitmapFont f : fonts.get(generator).values()) {
@@ -123,10 +122,11 @@ public abstract class PlatformSupport {
 			}
 			fonts = null;
 		}
-		if (setupAfter) setupFontGenerators(pageSize, systemfont);
+		if (setupAfter)
+			setupFontGenerators(pageSize, systemfont);
 	}
 
-	public void reloadGenerators(){
+	public void reloadGenerators() {
 		if (packer != null) {
 			for (FreeTypeFontGenerator generator : fonts.keySet()) {
 				for (BitmapFont f : fonts.get(generator).values()) {
@@ -149,13 +149,15 @@ public abstract class PlatformSupport {
 	public BitmapFont getFont(int size, String text, boolean flipped, boolean border) {
 		FreeTypeFontGenerator generator = getGeneratorForString(text);
 
-		if (generator == null){
+		if (generator == null) {
 			return null;
 		}
 
 		int key = size;
-		if (border) key += Short.MAX_VALUE; //surely we'll never have a size above 32k
-		if (flipped) key = -key;
+		if (border)
+			key += Short.MAX_VALUE; //surely we'll never have a size above 32k
+		if (flipped)
+			key = -key;
 		if (!fonts.get(generator).containsKey(key)) {
 			FreeTypeFontGenerator.FreeTypeFontParameter parameters = new FreeTypeFontGenerator.FreeTypeFontParameter();
 			parameters.size = size;
@@ -163,7 +165,7 @@ public abstract class PlatformSupport {
 			if (border) {
 				parameters.borderWidth = parameters.size / 10f;
 			}
-			if (size >= 20){
+			if (size >= 20) {
 				parameters.renderCount = 2;
 			} else {
 				parameters.renderCount = 3;
@@ -178,7 +180,7 @@ public abstract class PlatformSupport {
 				BitmapFont font = generator.generateFont(parameters);
 				font.getData().missingGlyph = font.getData().getGlyph('�');
 				fonts.get(generator).put(key, font);
-			} catch ( Exception e ){
+			} catch (Exception e) {
 				Game.reportException(e);
 				return null;
 			}

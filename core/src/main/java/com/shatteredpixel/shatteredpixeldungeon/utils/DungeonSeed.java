@@ -41,20 +41,21 @@ public class DungeonSeed {
 
 	//generates a random seed, omitting seeds that contain vowels (to minimize real words appearing randomly)
 	//This means that there are 21^9 = 794,280,046,581 unique seeds that can be randomly generated
-	public static long randomSeed(){
+	public static long randomSeed() {
 		Long seed;
 		String seedText;
 		do {
 			seed = Random.Long(TOTAL_SEEDS);
 			seedText = convertToCode(seed);
-		} while (seedText.contains("A") || seedText.contains("E") || seedText.contains("I") || seedText.contains("O") || seedText.contains("U"));
+		} while (seedText.contains("A") || seedText.contains("E") || seedText.contains("I") || seedText.contains("O")
+				|| seedText.contains("U"));
 		return seed;
 	}
 
 	//Takes a seed code (@@@@@@@@@) and converts it to the equivalent long value
-	public static long convertFromCode( String code ){
+	public static long convertFromCode(String code) {
 		//if code is formatted properly, force uppercase
-		if (code.length() == 11 && code.charAt(3) == '-' && code.charAt(7) == '-'){
+		if (code.length() == 11 && code.charAt(3) == '-' && code.charAt(7) == '-') {
 			code = code.toUpperCase(Locale.ROOT);
 		}
 
@@ -77,7 +78,7 @@ public class DungeonSeed {
 	}
 
 	//Takes a long value and converts it to the equivalent seed code
-	public static String convertToCode( long seed ){
+	public static String convertToCode(long seed) {
 		if (seed < 0 || seed >= TOTAL_SEEDS) {
 			throw new IllegalArgumentException("seeds must be within the range [0, TOTAL_SEEDS)");
 		}
@@ -89,10 +90,12 @@ public class DungeonSeed {
 		//so we convert
 		for (int i = 0; i < 9; i++) {
 
-			if (i < interrim.length()){
+			if (i < interrim.length()) {
 				char c = interrim.charAt(i);
-				if (c <= '9') c += 17; //convert 0-9 to A-J
-				else          c -= 22; //convert a-p to K-Z
+				if (c <= '9')
+					c += 17; //convert 0-9 to A-J
+				else
+					c -= 22; //convert a-p to K-Z
 
 				result.append(c);
 
@@ -110,20 +113,21 @@ public class DungeonSeed {
 	}
 
 	//Creates a seed from arbitrary user text input
-	public static long convertFromText( String inputText ){
-		if (inputText.isEmpty()) return -1;
+	public static long convertFromText(String inputText) {
+		if (inputText.isEmpty())
+			return -1;
 
 		//First see if input is a seed code, use that format if it is
 		try {
 			return convertFromCode(inputText);
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 
 		}
 
 		//Then see if input is a number (ignoring spaces), if so parse as a long seed (with overflow)
 		try {
 			return Long.parseLong(inputText.replaceAll("\\s", "")) % TOTAL_SEEDS;
-		} catch (NumberFormatException e){
+		} catch (NumberFormatException e) {
 
 		}
 
@@ -131,20 +135,20 @@ public class DungeonSeed {
 		// This is basically the same as string.hashcode except with long, and overflow
 		// this lets the user input 'fun' seeds, like names or places
 		long total = 0;
-		for (char c : inputText.toCharArray()){
+		for (char c : inputText.toCharArray()) {
 			total = 31 * total + c;
 		}
-		if (total < 0) total += Long.MAX_VALUE;
+		if (total < 0)
+			total += Long.MAX_VALUE;
 		total %= TOTAL_SEEDS;
 		return total;
 	}
 
-
-	public static String formatText( String inputText ){
+	public static String formatText(String inputText) {
 		try {
 			//if the seed matches a code, then just convert it to using the code system
 			return convertToCode(convertFromCode(inputText));
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			//otherwise just return the input text
 			return inputText;
 		}

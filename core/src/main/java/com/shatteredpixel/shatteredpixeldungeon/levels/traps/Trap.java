@@ -37,24 +37,24 @@ import com.watabou.utils.Bundle;
 public abstract class Trap implements Bundlable {
 
 	//trap colors
-	public static final int RED     = 0;
-	public static final int ORANGE  = 1;
-	public static final int YELLOW  = 2;
-	public static final int GREEN   = 3;
-	public static final int TEAL    = 4;
-	public static final int VIOLET  = 5;
-	public static final int WHITE   = 6;
-	public static final int GREY    = 7;
-	public static final int BLACK   = 8;
+	public static final int RED = 0;
+	public static final int ORANGE = 1;
+	public static final int YELLOW = 2;
+	public static final int GREEN = 3;
+	public static final int TEAL = 4;
+	public static final int VIOLET = 5;
+	public static final int WHITE = 6;
+	public static final int GREY = 7;
+	public static final int BLACK = 8;
 
 	//trap shapes
-	public static final int DOTS        = 0;
-	public static final int WAVES       = 1;
-	public static final int GRILL       = 2;
-	public static final int STARS       = 3;
-	public static final int DIAMOND     = 4;
-	public static final int CROSSHAIR   = 5;
-	public static final int LARGE_DOT   = 6;
+	public static final int DOTS = 0;
+	public static final int WAVES = 1;
+	public static final int GRILL = 2;
+	public static final int STARS = 3;
+	public static final int DIAMOND = 4;
+	public static final int CROSSHAIR = 5;
+	public static final int LARGE_DOT = 6;
 
 	public int color;
 	public int shape;
@@ -65,13 +65,13 @@ public abstract class Trap implements Bundlable {
 	public boolean visible;
 	public boolean active = true;
 	public boolean disarmedByActivation = true;
-	
+
 	public boolean canBeHidden = true;
 	public boolean canBeSearched = true;
 
 	public boolean avoidsHallways = false; //whether this trap should avoid being placed in hallways
 
-	public Trap set(int pos){
+	public Trap set(int pos) {
 		this.pos = pos;
 		return this;
 	}
@@ -97,7 +97,8 @@ public abstract class Trap implements Bundlable {
 			if (Dungeon.level.heroFOV[pos]) {
 				Sample.INSTANCE.play(Assets.Sounds.TRAP);
 			}
-			if (disarmedByActivation) disarm();
+			if (disarmedByActivation)
+				disarm();
 			Dungeon.level.discover(pos);
 			Bestiary.setSeen(getClass());
 			Bestiary.countEncounter(getClass());
@@ -107,7 +108,7 @@ public abstract class Trap implements Bundlable {
 
 	public abstract void activate();
 
-	public void disarm(){
+	public void disarm() {
 		active = false;
 		Dungeon.level.disarmTrap(pos);
 	}
@@ -115,11 +116,11 @@ public abstract class Trap implements Bundlable {
 	//returns the depth value the trap should use for determining its power
 	//If the trap is part of the level, it should use the true depth
 	//If it's not part of the level (e.g. effect from reclaim trap), use scaling depth
-	protected int scalingDepth(){
+	protected int scalingDepth() {
 		return (reclaimed || Dungeon.level.traps.get(pos) != this) ? Dungeon.scalingDepth() : Dungeon.depth;
 	}
 
-	public String name(){
+	public String name() {
 		return Messages.get(this, "name");
 	}
 
@@ -127,28 +128,28 @@ public abstract class Trap implements Bundlable {
 		return Messages.get(this, "desc");
 	}
 
-	private static final String POS	= "pos";
-	private static final String VISIBLE	= "visible";
+	private static final String POS = "pos";
+	private static final String VISIBLE = "visible";
 	private static final String ACTIVE = "active";
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		pos = bundle.getInt( POS );
-		visible = bundle.getBoolean( VISIBLE );
-		if (bundle.contains(ACTIVE)){
+	public void restoreFromBundle(Bundle bundle) {
+		pos = bundle.getInt(POS);
+		visible = bundle.getBoolean(VISIBLE);
+		if (bundle.contains(ACTIVE)) {
 			active = bundle.getBoolean(ACTIVE);
 		}
 	}
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		bundle.put( POS, pos );
-		bundle.put( VISIBLE, visible );
-		bundle.put( ACTIVE, active );
+	public void storeInBundle(Bundle bundle) {
+		bundle.put(POS, pos);
+		bundle.put(VISIBLE, visible);
+		bundle.put(ACTIVE, active);
 	}
 
 	//this buff is used to keep track of hazards recently affecting a character
-	public static class HazardAssistTracker extends FlavourBuff{
+	public static class HazardAssistTracker extends FlavourBuff {
 		public static final float DURATION = 50f;
 	}
 }

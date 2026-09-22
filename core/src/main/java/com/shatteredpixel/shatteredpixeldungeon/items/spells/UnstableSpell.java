@@ -54,59 +54,59 @@ public class UnstableSpell extends Spell {
 	{
 		image = ItemSpriteSheet.UNSTABLE_SPELL;
 	}
-	
+
 	private static HashMap<Class<? extends Scroll>, Float> scrollChances = new HashMap<>();
-	static{
-		scrollChances.put( ScrollOfIdentify.class,      3f );
-		scrollChances.put( ScrollOfRemoveCurse.class,   2f );
-		scrollChances.put( ScrollOfMagicMapping.class,  2f );
-		scrollChances.put( ScrollOfMirrorImage.class,   2f );
-		scrollChances.put( ScrollOfRecharging.class,    2f );
-		scrollChances.put( ScrollOfLullaby.class,       2f );
-		scrollChances.put( ScrollOfRetribution.class,   2f );
-		scrollChances.put( ScrollOfRage.class,          2f );
-		scrollChances.put( ScrollOfTeleportation.class, 2f );
-		scrollChances.put( ScrollOfTerror.class,        2f );
-		scrollChances.put( ScrollOfTransmutation.class, 1f );
+	static {
+		scrollChances.put(ScrollOfIdentify.class, 3f);
+		scrollChances.put(ScrollOfRemoveCurse.class, 2f);
+		scrollChances.put(ScrollOfMagicMapping.class, 2f);
+		scrollChances.put(ScrollOfMirrorImage.class, 2f);
+		scrollChances.put(ScrollOfRecharging.class, 2f);
+		scrollChances.put(ScrollOfLullaby.class, 2f);
+		scrollChances.put(ScrollOfRetribution.class, 2f);
+		scrollChances.put(ScrollOfRage.class, 2f);
+		scrollChances.put(ScrollOfTeleportation.class, 2f);
+		scrollChances.put(ScrollOfTerror.class, 2f);
+		scrollChances.put(ScrollOfTransmutation.class, 1f);
 	}
 
 	private static HashSet<Class<? extends Scroll>> nonCombatScrolls = new HashSet<>();
 	static {
-		nonCombatScrolls.add( ScrollOfIdentify.class );
-		nonCombatScrolls.add( ScrollOfRemoveCurse.class );
-		nonCombatScrolls.add( ScrollOfMagicMapping.class );
-		nonCombatScrolls.add( ScrollOfRecharging.class );
-		nonCombatScrolls.add( ScrollOfLullaby.class );
-		nonCombatScrolls.add( ScrollOfTeleportation.class );
-		nonCombatScrolls.add( ScrollOfTransmutation.class );
+		nonCombatScrolls.add(ScrollOfIdentify.class);
+		nonCombatScrolls.add(ScrollOfRemoveCurse.class);
+		nonCombatScrolls.add(ScrollOfMagicMapping.class);
+		nonCombatScrolls.add(ScrollOfRecharging.class);
+		nonCombatScrolls.add(ScrollOfLullaby.class);
+		nonCombatScrolls.add(ScrollOfTeleportation.class);
+		nonCombatScrolls.add(ScrollOfTransmutation.class);
 	}
 
 	private static HashSet<Class<? extends Scroll>> combatScrolls = new HashSet<>();
 	static {
-		combatScrolls.add( ScrollOfMirrorImage.class );
-		combatScrolls.add( ScrollOfRecharging.class );
-		combatScrolls.add( ScrollOfLullaby.class );
-		combatScrolls.add( ScrollOfRetribution.class );
-		combatScrolls.add( ScrollOfRage.class );
-		combatScrolls.add( ScrollOfTeleportation.class );
-		combatScrolls.add( ScrollOfTerror.class );
+		combatScrolls.add(ScrollOfMirrorImage.class);
+		combatScrolls.add(ScrollOfRecharging.class);
+		combatScrolls.add(ScrollOfLullaby.class);
+		combatScrolls.add(ScrollOfRetribution.class);
+		combatScrolls.add(ScrollOfRage.class);
+		combatScrolls.add(ScrollOfTeleportation.class);
+		combatScrolls.add(ScrollOfTerror.class);
 	}
-	
+
 	@Override
 	protected void onCast(Hero hero) {
-		
-		detach( curUser.belongings.backpack );
+
+		detach(curUser.belongings.backpack);
 		updateQuickslot();
-		
+
 		Scroll s = Reflection.newInstance(Random.chances(scrollChances));
 
 		//reroll the scroll until it is relevant for the situation (whether there are visible enemies)
-		if (hero.visibleEnemies() == 0){
-			while (!nonCombatScrolls.contains(s.getClass())){
+		if (hero.visibleEnemies() == 0) {
+			while (!nonCombatScrolls.contains(s.getClass())) {
 				s = Reflection.newInstance(Random.chances(scrollChances));
 			}
 		} else {
-			while (!combatScrolls.contains(s.getClass())){
+			while (!combatScrolls.contains(s.getClass())) {
 				s = Reflection.newInstance(Random.chances(scrollChances));
 			}
 		}
@@ -138,8 +138,8 @@ public class UnstableSpell extends Spell {
 			boolean scroll = false;
 			boolean stone = false;
 
-			for (Item i : ingredients){
-				if (i instanceof Runestone){
+			for (Item i : ingredients) {
+				if (i instanceof Runestone) {
 					stone = true;
 					//if it is a regular or exotic potion
 				} else if (ExoticScroll.regToExo.containsKey(i.getClass())
@@ -150,7 +150,7 @@ public class UnstableSpell extends Spell {
 
 			return scroll && stone;
 		}
-		
+
 		@Override
 		public int cost(ArrayList<Item> ingredients) {
 			return 1;
@@ -159,8 +159,8 @@ public class UnstableSpell extends Spell {
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
 
-			for (Item i : ingredients){
-				i.quantity(i.quantity()-1);
+			for (Item i : ingredients) {
+				i.quantity(i.quantity() - 1);
 			}
 
 			return sampleOutput(null);

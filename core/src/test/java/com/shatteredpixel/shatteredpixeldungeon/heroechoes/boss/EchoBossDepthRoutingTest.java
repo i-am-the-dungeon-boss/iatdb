@@ -19,23 +19,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GdxTestExtension.class)
 class EchoBossDepthRoutingTest {
 
-    @Test
-    @DisplayName("All boss depths resolve pending echo via prefetch when snapshot exists")
-    void allBossDepthsResolvePendingEcho() {
-        EchoStorage storage = new EchoStorage();
+	@Test
+	@DisplayName("All boss depths resolve pending echo via prefetch when snapshot exists")
+	void allBossDepthsResolvePendingEcho() {
+		EchoStorage storage = new EchoStorage();
 
-        for (int depth : EchoReplacementDecider.BOSS_DEPTHS) {
-            EchoTestSupport.resetWorkflowState();
-            storage.save(EchoTestSupport.warriorEchoWithData(depth));
-            CompositeEchoLookup.setEchoLookupForTests(storage);
+		for (int depth : EchoReplacementDecider.BOSS_DEPTHS) {
+			EchoTestSupport.resetWorkflowState();
+			storage.save(EchoTestSupport.warriorEchoWithData(depth));
+			CompositeEchoLookup.setEchoLookupForTests(storage);
 
-            Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(depth))
-                    .as("depth %d", depth)
-                    .isTrue();
-            Assertions.assertThat(Dungeon.getPendingEcho())
-                    .as("depth %d", depth)
-                    .isNotNull();
-            Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();
-        }
-    }
+			Assertions.assertThat(Dungeon.prefetchEchoBossForDepth(depth))
+					.as("depth %d", depth)
+					.isTrue();
+			Assertions.assertThat(Dungeon.getPendingEcho())
+					.as("depth %d", depth)
+					.isNotNull();
+			Assertions.assertThat(Dungeon.isEchoBossActive()).isTrue();
+		}
+	}
 }

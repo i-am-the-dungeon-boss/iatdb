@@ -42,7 +42,7 @@ class UnlockEverythingSettingTest {
 	}
 
 	@ParameterizedTest(name = "{0} is locked without its badge or the setting")
-	@EnumSource(value = HeroClass.class, names = {"MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"})
+	@EnumSource(value = HeroClass.class, names = { "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC" })
 	@DisplayName("locked classes stay locked when the setting is off")
 	void lockedClassStaysLockedWithSettingOff(HeroClass heroClass) {
 		SPDSettings.unlockEverything(false);
@@ -51,7 +51,7 @@ class UnlockEverythingSettingTest {
 	}
 
 	@ParameterizedTest(name = "{0} is unlocked by the setting without earning its badge")
-	@EnumSource(value = HeroClass.class, names = {"MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"})
+	@EnumSource(value = HeroClass.class, names = { "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC" })
 	@DisplayName("unlock everything setting bypasses class-unlock badges")
 	void unlockEverythingBypassesClassBadges(HeroClass heroClass) {
 		SPDSettings.unlockEverything(true);

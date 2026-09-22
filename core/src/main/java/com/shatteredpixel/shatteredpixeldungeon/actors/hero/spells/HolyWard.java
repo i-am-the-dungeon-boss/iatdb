@@ -53,23 +53,24 @@ public class HolyWard extends ClericSpell {
 		Sample.INSTANCE.play(Assets.Sounds.READ);
 
 		hero.sprite.operate(hero.pos);
-		if (hero.belongings.armor() != null) Enchanting.show(hero, hero.belongings.armor());
+		if (hero.belongings.armor() != null)
+			Enchanting.show(hero, hero.belongings.armor());
 
 		onSpellCast(tome, hero);
 	}
 
 	@Override
-	public String desc(){
+	public String desc() {
 		String desc = Messages.get(this, "desc");
-		if (Dungeon.hero.subClass == HeroSubClass.PALADIN){
+		if (Dungeon.hero.subClass == HeroSubClass.PALADIN) {
 			desc += "\n\n" + Messages.get(this, "desc_paladin");
 		}
-		return desc + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return desc + "\n\n" + Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	public static class HolyArmBuff extends FlavourBuff {
 
-		public static final float DURATION	= 50f;
+		public static final float DURATION = 50f;
 
 		{
 			type = buffType.POSITIVE;
@@ -87,7 +88,7 @@ public class HolyWard extends ClericSpell {
 
 		@Override
 		public String desc() {
-			if (Dungeon.hero.subClass == HeroSubClass.PALADIN){
+			if (Dungeon.hero.subClass == HeroSubClass.PALADIN) {
 				return Messages.get(this, "desc_paladin", dispTurns());
 			} else {
 				return Messages.get(this, "desc", dispTurns());
@@ -100,11 +101,11 @@ public class HolyWard extends ClericSpell {
 			Item.updateQuickslot();
 		}
 
-		public void extend(float extension){
-			if (cooldown()+extension <= 2*DURATION){
+		public void extend(float extension) {
+			if (cooldown() + extension <= 2 * DURATION) {
 				spend(extension);
 			} else {
-				postpone(2*DURATION);
+				postpone(2 * DURATION);
 			}
 		}
 	}

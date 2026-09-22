@@ -43,10 +43,10 @@ public enum Sample {
 
 	public synchronized void reset() {
 
-		for (Sound sound : ids.values()){
+		for (Sound sound : ids.values()) {
 			sound.dispose();
 		}
-		
+
 		ids.clear();
 		delayedSFX.clear();
 
@@ -64,12 +64,12 @@ public enum Sample {
 		}
 	}
 
-	public synchronized void load( final String asset){
+	public synchronized void load(final String asset) {
 		if (asset != null) {
 			try {
 				Sound newSound = Gdx.audio.newSound(Gdx.files.internal(asset));
 				ids.put(asset, newSound);
-			} catch (Exception e){
+			} catch (Exception e) {
 				Game.reportException(e);
 			}
 		}
@@ -79,7 +79,7 @@ public enum Sample {
 
 	//queues multiple assets for loading, which happens in update()
 	// this prevents blocking while we load many assets
-	public void load( final String[] assets ) {
+	public void load(final String[] assets) {
 		synchronized (loadingQueue) {
 			for (String asset : assets) {
 				if (!ids.containsKey(asset) && !loadingQueue.contains(asset)) {
@@ -89,36 +89,36 @@ public enum Sample {
 		}
 	}
 
-	public synchronized void unload( Object src ) {
-		if (ids.containsKey( src )) {
-			ids.get( src ).dispose();
-			ids.remove( src );
+	public synchronized void unload(Object src) {
+		if (ids.containsKey(src)) {
+			ids.get(src).dispose();
+			ids.remove(src);
 		}
 	}
 
-	public long play( Object id ) {
-		return play( id, 1 );
+	public long play(Object id) {
+		return play(id, 1);
 	}
 
-	public long play( Object id, float volume ) {
-		return play( id, volume, volume, 1 );
+	public long play(Object id, float volume) {
+		return play(id, volume, volume, 1);
 	}
-	
-	public long play( Object id, float volume, float pitch ) {
-		return play( id, volume, volume, pitch );
+
+	public long play(Object id, float volume, float pitch) {
+		return play(id, volume, volume, pitch);
 	}
-	
-	public synchronized long play( Object id, float leftVolume, float rightVolume, float pitch ) {
+
+	public synchronized long play(Object id, float leftVolume, float rightVolume, float pitch) {
 		float volume = Math.max(leftVolume, rightVolume);
 		float pan = rightVolume - leftVolume;
-		if (enabled && ids.containsKey( id )) {
-			return ids.get(id).play( globalVolume*volume, pitch, pan );
+		if (enabled && ids.containsKey(id)) {
+			return ids.get(id).play(globalVolume * volume, pitch, pan);
 		} else {
 			return -1;
 		}
 	}
 
-	private class DelayedSoundEffect{
+	private class DelayedSoundEffect {
 		Object id;
 		float delay;
 
@@ -129,19 +129,19 @@ public enum Sample {
 
 	private static final HashSet<DelayedSoundEffect> delayedSFX = new HashSet<>();
 
-	public void playDelayed( Object id, float delay ){
-		playDelayed( id, delay, 1 );
+	public void playDelayed(Object id, float delay) {
+		playDelayed(id, delay, 1);
 	}
 
-	public void playDelayed( Object id, float delay, float volume ) {
-		playDelayed( id, delay, volume, volume, 1 );
+	public void playDelayed(Object id, float delay, float volume) {
+		playDelayed(id, delay, volume, volume, 1);
 	}
 
-	public void playDelayed( Object id, float delay, float volume, float pitch ) {
-		playDelayed( id, delay, volume, volume, pitch );
+	public void playDelayed(Object id, float delay, float volume, float pitch) {
+		playDelayed(id, delay, volume, volume, pitch);
 	}
 
-	public void playDelayed( Object id, float delay, float leftVolume, float rightVolume, float pitch ) {
+	public void playDelayed(Object id, float delay, float leftVolume, float rightVolume, float pitch) {
 		if (delay <= 0) {
 			play(id, leftVolume, rightVolume, pitch);
 			return;
@@ -157,7 +157,7 @@ public enum Sample {
 		}
 	}
 
-	public void update(){
+	public void update() {
 		synchronized (loadingQueue) {
 			if (!loadingQueue.isEmpty()) {
 				load(loadingQueue.poll());
@@ -165,7 +165,8 @@ public enum Sample {
 		}
 
 		synchronized (delayedSFX) {
-			if (delayedSFX.isEmpty()) return;
+			if (delayedSFX.isEmpty())
+				return;
 			for (DelayedSoundEffect sfx : delayedSFX.toArray(new DelayedSoundEffect[0])) {
 				sfx.delay -= Game.elapsed;
 				if (sfx.delay <= 0) {
@@ -176,16 +177,16 @@ public enum Sample {
 		}
 	}
 
-	public void enable( boolean value ) {
+	public void enable(boolean value) {
 		enabled = value;
 	}
 
-	public void volume( float value ) {
+	public void volume(float value) {
 		globalVolume = value;
 	}
 
 	public boolean isEnabled() {
 		return enabled;
 	}
-	
+
 }

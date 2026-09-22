@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public abstract class ShieldBuff extends Buff {
-	
+
 	private int shielding;
 
 	//higher priority shielding buffs are consumed first if multiple exist
@@ -44,7 +44,7 @@ public abstract class ShieldBuff extends Buff {
 	// 0: everything else, mostly the various sources of generic barrier
 	protected int shieldUsePriority = 0;
 	protected boolean detachesAtZero = true;
-	
+
 	@Override
 	public boolean attachTo(Char target) {
 		if (super.attachTo(target)) {
@@ -54,75 +54,80 @@ public abstract class ShieldBuff extends Buff {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public void detach() {
 		target.needsShieldUpdate = true;
 		super.detach();
 	}
-	
-	public int shielding(){
+
+	public int shielding() {
 		return shielding;
 	}
 
 	//false for shields that persist and recharge (e.g. the warrior's seal)
 	//rather than going away once spent
-	public boolean detachesAtZero(){
+	public boolean detachesAtZero() {
 		return detachesAtZero;
 	}
-	
-	public void setShield( int shield ) {
-		if (this.shielding <= shield) this.shielding = shield;
-		if (target != null) target.needsShieldUpdate = true;
+
+	public void setShield(int shield) {
+		if (this.shielding <= shield)
+			this.shielding = shield;
+		if (target != null)
+			target.needsShieldUpdate = true;
 	}
-	
-	public void incShield(){
+
+	public void incShield() {
 		incShield(1);
 	}
 
-	public void incShield( int amt ){
+	public void incShield(int amt) {
 		shielding += amt;
-		if (target != null) target.needsShieldUpdate = true;
+		if (target != null)
+			target.needsShieldUpdate = true;
 	}
 
 	//doesn't add shield, but postpones it detereorating
-	public void delay( float value ){
+	public void delay(float value) {
 		spend(value);
 	}
-	
-	public void decShield(){
+
+	public void decShield() {
 		decShield(1);
 	}
 
-	public void decShield( int amt ){
+	public void decShield(int amt) {
 		shielding -= amt;
-		if (target != null) target.needsShieldUpdate = true;
+		if (target != null)
+			target.needsShieldUpdate = true;
 	}
-	
+
 	//returns the amount of damage leftover
-	public int absorbDamage( int dmg ){
-		if (shielding >= dmg){
+	public int absorbDamage(int dmg) {
+		if (shielding >= dmg) {
 			shielding -= dmg;
 			dmg = 0;
 		} else {
 			dmg -= shielding;
 			shielding = 0;
 		}
-		if (shielding <= 0 && detachesAtZero){
+		if (shielding <= 0 && detachesAtZero) {
 			detach();
 		}
-		if (target != null) target.needsShieldUpdate = true;
+		if (target != null)
+			target.needsShieldUpdate = true;
 		return dmg;
 	}
 
-	public static int processDamage( Char target, int damage, Object src ){
+	public static int processDamage(Char target, int damage, Object src) {
 		//hunger damage is not affected by shielding
-		if (src instanceof Hunger){
+		if (src instanceof Hunger) {
 			return damage;
 		}
 
 		ArrayList<ShieldBuff> buffs = new ArrayList<>(target.buffs(ShieldBuff.class));
-		if (!buffs.isEmpty()){
+		if (!buffs.isEmpty()) {
 			//sort in descending order based on shield use priority
 			Collections.sort(buffs, new Comparator<ShieldBuff>() {
 				@Override
@@ -130,33 +135,35 @@ public abstract class ShieldBuff extends Buff {
 					return b.shieldUsePriority - a.shieldUsePriority;
 				}
 			});
-			for (ShieldBuff buff : buffs){
-				if (buff.shielding() <= 0) continue;
+			for (ShieldBuff buff : buffs) {
+				if (buff.shielding() <= 0)
+					continue;
 				damage = buff.absorbDamage(damage);
-				if (buff.shielding() <= 0){
-					if (target instanceof Hero && ((Hero) target).hasTalent(Talent.PROVOKED_ANGER)){
+				if (buff.shielding() <= 0) {
+					if (target instanceof Hero && ((Hero) target).hasTalent(Talent.PROVOKED_ANGER)) {
 						Buff.affect(target, Talent.ProvokedAngerTracker.class, 5f);
 					}
 				}
-				if (damage == 0) break;
+				if (damage == 0)
+					break;
 			}
 		}
 
 		return damage;
 	}
-	
+
 	private static final String SHIELDING = "shielding";
-	
+
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( SHIELDING, shielding);
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(SHIELDING, shielding);
 	}
-	
+
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		shielding = bundle.getInt( SHIELDING );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		shielding = bundle.getInt(SHIELDING);
 	}
-	
+
 }

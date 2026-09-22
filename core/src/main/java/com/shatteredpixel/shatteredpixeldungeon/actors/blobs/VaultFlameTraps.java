@@ -80,12 +80,12 @@ public class VaultFlameTraps extends Blob {
 		boolean playSfx = false;
 		for (int i = area.left; i < area.right; i++) {
 			for (int j = area.top; j < area.bottom; j++) {
-				cell = i + j* Dungeon.level.width();
+				cell = i + j * Dungeon.level.width();
 				if (cur[cell] > 0) {
 
 					//similar to fire.burn(), but Tengu is immune, and hero loses score
-					Char ch = Actor.findChar( cell );
-					if (ch == Dungeon.hero){
+					Char ch = Actor.findChar(cell);
+					if (ch == Dungeon.hero) {
 						Sample.INSTANCE.play(Assets.Sounds.BURNING);
 						SFXLastPlayed = ShatteredPixelDungeon.realTime;
 						ch.sprite.showStatus(CharSprite.NEGATIVE, "!!!");
@@ -110,7 +110,7 @@ public class VaultFlameTraps extends Blob {
 						GameScene.updateMap( cell );
 					}*/
 
-					if (Dungeon.level.heroFOV[cell]){
+					if (Dungeon.level.heroFOV[cell]) {
 						CellEmitter.get(cell).start(ElmoParticle.FACTORY, 0.02f, 10);
 						playSfx = true;
 					}
@@ -122,29 +122,29 @@ public class VaultFlameTraps extends Blob {
 			}
 		}
 
-		if (playSfx && SFXLastPlayed +80 < ShatteredPixelDungeon.realTime) {
+		if (playSfx && SFXLastPlayed + 80 < ShatteredPixelDungeon.realTime) {
 			Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.5f);
 			SFXLastPlayed = ShatteredPixelDungeon.realTime;
 		}
 	}
 
-	public void seed(Level level, int cell, int amount ) {
+	public void seed(Level level, int cell, int amount) {
 		super.seed(level, cell, amount);
 		if (afterTriggerCooldowns == null) {
 			afterTriggerCooldowns = new int[level.length()];
 			Arrays.fill(afterTriggerCooldowns, -1);
 		}
-		if (curCooldowns == null){
+		if (curCooldowns == null) {
 			curCooldowns = new int[level.length()];
 		}
-		if (triggersAfterCooldown == null){
+		if (triggersAfterCooldown == null) {
 			triggersAfterCooldown = new int[level.length()];
 		}
 	}
 
-	private static final String AFTER_TRIGGER_CDS	= "after_trigger_cds";
-	private static final String CUR_COOLDOWNS	    = "cur_cooldowns";
-	private static final String TRIGGERS	        = "triggers";
+	private static final String AFTER_TRIGGER_CDS = "after_trigger_cds";
+	private static final String CUR_COOLDOWNS = "cur_cooldowns";
+	private static final String TRIGGERS = "triggers";
 
 	@Override
 	public void storeInBundle(Bundle bundle) {
@@ -159,7 +159,7 @@ public class VaultFlameTraps extends Blob {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (bundle.contains(AFTER_TRIGGER_CDS)){
+		if (bundle.contains(AFTER_TRIGGER_CDS)) {
 			afterTriggerCooldowns = bundle.getIntArray(AFTER_TRIGGER_CDS);
 			curCooldowns = bundle.getIntArray(CUR_COOLDOWNS);
 			triggersAfterCooldown = bundle.getIntArray(TRIGGERS);
@@ -167,10 +167,10 @@ public class VaultFlameTraps extends Blob {
 	}
 
 	@Override
-	public void use( BlobEmitter emitter ) {
-		super.use( emitter );
+	public void use(BlobEmitter emitter) {
+		super.use(emitter);
 		emitter.bound.set(0.4f, 0.4f, 0.6f, 0.6f);
-		emitter.pour( ElmoParticle.FACTORY, 0.3f );
+		emitter.pour(ElmoParticle.FACTORY, 0.3f);
 	}
 
 	@Override

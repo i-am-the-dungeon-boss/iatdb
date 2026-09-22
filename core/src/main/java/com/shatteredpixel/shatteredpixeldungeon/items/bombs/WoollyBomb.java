@@ -39,7 +39,7 @@ import com.watabou.utils.PathFinder;
 import java.util.ArrayList;
 
 public class WoollyBomb extends Bomb {
-	
+
 	{
 		image = ItemSpriteSheet.WOOLY_BOMB;
 	}
@@ -52,8 +52,8 @@ public class WoollyBomb extends Bomb {
 	@Override
 	public void explode(int cell) {
 		super.explode(cell);
-		
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange()+2 );
+
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), explosionRange() + 2);
 		ArrayList<Integer> spawnPoints = new ArrayList<>();
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
@@ -61,7 +61,7 @@ public class WoollyBomb extends Bomb {
 			}
 		}
 
-		for (int i : spawnPoints){
+		for (int i : spawnPoints) {
 			if (Dungeon.level.insideMap(i)
 					&& Actor.findChar(i) == null
 					&& !(Dungeon.level.pit[i])) {
@@ -73,12 +73,12 @@ public class WoollyBomb extends Bomb {
 				CellEmitter.get(i).burst(Speck.factory(Speck.WOOL), 4);
 			}
 		}
-		
+
 		Sample.INSTANCE.play(Assets.Sounds.PUFF);
 		Sample.INSTANCE.play(Assets.Sounds.SHEEP);
-		
+
 	}
-	
+
 	@Override
 	public int value() {
 		//prices of ingredients

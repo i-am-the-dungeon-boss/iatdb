@@ -37,16 +37,16 @@ public class VaultEntranceRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL);
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		for (Room.Door door : connected.values()) {
-			door.set( Room.Door.Type.REGULAR );
+			door.set(Room.Door.Type.REGULAR);
 		}
 
 		int entrance;
@@ -70,7 +70,8 @@ public class VaultEntranceRoom extends StandardRoom {
 	@Override
 	public int maxConnections(int direction) {
 		//max of two connections
-		if (direction == ALL) return 2;
+		if (direction == ALL)
+			return 2;
 		return super.maxConnections(direction);
 	}
 

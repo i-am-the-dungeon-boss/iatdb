@@ -43,90 +43,91 @@ public class BadgeBanner extends Image {
 	private enum State {
 		FADE_IN, STATIC, FADE_OUT
 	}
+
 	private State state;
 
-	public static final float DEFAULT_SCALE	= 3;
+	public static final float DEFAULT_SCALE = 3;
 	public static final int SIZE = 16;
-	
-	private static final float FADE_IN_TIME		= 0.25f;
-	private static final float STATIC_TIME		= 1f;
-	private static final float FADE_OUT_TIME	= 1.75f;
-	
+
+	private static final float FADE_IN_TIME = 0.25f;
+	private static final float STATIC_TIME = 1f;
+	private static final float FADE_OUT_TIME = 1.75f;
+
 	private int index;
 	private float time;
-	
+
 	private static TextureFilm atlas;
-	
+
 	public static ArrayList<BadgeBanner> showing = new ArrayList<>();
-	
-	private BadgeBanner( int index ) {
-		
-		super( Assets.Interfaces.BADGES );
-		
+
+	private BadgeBanner(int index) {
+
+		super(Assets.Interfaces.BADGES);
+
 		if (atlas == null) {
-			atlas = new TextureFilm( texture, SIZE, SIZE );
+			atlas = new TextureFilm(texture, SIZE, SIZE);
 		}
-		
+
 		setup(index);
 	}
-	
-	public void setup( int index ){
+
+	public void setup(int index) {
 		this.index = index;
-		
-		frame( atlas.get( index ) );
-		origin.set( width / 2, height / 2 );
-		
-		alpha( 0 );
-		scale.set( 2 * DEFAULT_SCALE );
-		
+
+		frame(atlas.get(index));
+		origin.set(width / 2, height / 2);
+
+		alpha(0);
+		scale.set(2 * DEFAULT_SCALE);
+
 		state = State.FADE_IN;
 		time = FADE_IN_TIME;
-		
-		Sample.INSTANCE.play( Assets.Sounds.BADGE );
+
+		Sample.INSTANCE.play(Assets.Sounds.BADGE);
 	}
-	
+
 	@Override
 	public void update() {
 		super.update();
-		
+
 		time -= Game.elapsed;
 		if (time >= 0) {
-			
+
 			switch (state) {
-			case FADE_IN:
-				float p = time / FADE_IN_TIME;
-				scale.set( (1 + p) * DEFAULT_SCALE );
-				alpha( 1 - p );
-				break;
-			case STATIC:
-				break;
-			case FADE_OUT:
-				alpha( time /  FADE_OUT_TIME );
-				break;
+				case FADE_IN:
+					float p = time / FADE_IN_TIME;
+					scale.set((1 + p) * DEFAULT_SCALE);
+					alpha(1 - p);
+					break;
+				case STATIC:
+					break;
+				case FADE_OUT:
+					alpha(time / FADE_OUT_TIME);
+					break;
 			}
-			
+
 		} else {
-			
+
 			switch (state) {
-			case FADE_IN:
-				time = STATIC_TIME;
-				state = State.STATIC;
-				scale.set( DEFAULT_SCALE );
-				alpha( 1 );
-				highlight( this, index );
-				break;
-			case STATIC:
-				time = FADE_OUT_TIME;
-				state = State.FADE_OUT;
-				break;
-			case FADE_OUT:
-				killAndErase();
-				break;
+				case FADE_IN:
+					time = STATIC_TIME;
+					state = State.STATIC;
+					scale.set(DEFAULT_SCALE);
+					alpha(1);
+					highlight(this, index);
+					break;
+				case STATIC:
+					time = FADE_OUT_TIME;
+					state = State.FADE_OUT;
+					break;
+				case FADE_OUT:
+					killAndErase();
+					break;
 			}
-			
+
 		}
 	}
-	
+
 	@Override
 	public void kill() {
 		showing.remove(this);
@@ -148,11 +149,11 @@ public class BadgeBanner extends Image {
 	}
 
 	//adds a shine to an appropriate pixel on a badge
-	public static void highlight( Image image, int index ) {
-		
+	public static void highlight(Image image, int index) {
+
 		PointF p = new PointF();
 
-		if (highlightPositions.containsKey(index)){
+		if (highlightPositions.containsKey(index)) {
 			p.x = highlightPositions.get(index).x * image.scale.x;
 			p.y = highlightPositions.get(index).y * image.scale.y;
 		} else {
@@ -172,14 +173,16 @@ public class BadgeBanner extends Image {
 
 			for (x = 3; x <= 12; x++) {
 				curColor = tx.getPixel(col * size + x, row * size + y);
-				if (curColor != bgColor) break;
+				if (curColor != bgColor)
+					break;
 			}
 
 			if (curColor == bgColor) {
 				y++;
 				for (x = 3; x <= 12; x++) {
 					curColor = tx.getPixel(col * size + x, row * size + y);
-					if (curColor != bgColor) break;
+					if (curColor != bgColor)
+						break;
 				}
 			}
 
@@ -190,32 +193,32 @@ public class BadgeBanner extends Image {
 		}
 
 		p.offset(
-			-image.origin.x * (image.scale.x - 1),
-			-image.origin.y * (image.scale.y - 1) );
-		p.offset( image.point() );
-		
+				-image.origin.x * (image.scale.x - 1),
+				-image.origin.y * (image.scale.y - 1));
+		p.offset(image.point());
+
 		Speck star = new Speck();
-		star.reset( 0, p.x, p.y, Speck.DISCOVER );
+		star.reset(0, p.x, p.y, Speck.DISCOVER);
 		star.camera = image.camera();
-		image.parent.add( star );
+		image.parent.add(star);
 	}
-	
-	public static BadgeBanner show( int image ) {
+
+	public static BadgeBanner show(int image) {
 		BadgeBanner banner = new BadgeBanner(image);
 		showing.add(banner);
 		return banner;
 	}
 
-	public static boolean isShowingBadges(){
+	public static boolean isShowingBadges() {
 		return !showing.isEmpty();
 	}
-	
-	public static Image image( int index ) {
-		Image image = new Image( Assets.Interfaces.BADGES );
+
+	public static Image image(int index) {
+		Image image = new Image(Assets.Interfaces.BADGES);
 		if (atlas == null) {
-			atlas = new TextureFilm( image.texture, 16, 16 );
+			atlas = new TextureFilm(image.texture, 16, 16);
 		}
-		image.frame( atlas.get( index ) );
+		image.frame(atlas.get(index));
 		return image;
 	}
 }

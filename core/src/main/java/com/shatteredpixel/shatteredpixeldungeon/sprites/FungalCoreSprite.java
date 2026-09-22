@@ -32,28 +32,28 @@ import com.watabou.noosa.TextureFilm;
 
 public class FungalCoreSprite extends MobSprite {
 
-	public FungalCoreSprite(){
+	public FungalCoreSprite() {
 		super();
 
-		texture( Assets.Sprites.FUNGAL_CORE );
+		texture(Assets.Sprites.FUNGAL_CORE);
 
-		TextureFilm frames = new TextureFilm( texture, 27, 27 );
+		TextureFilm frames = new TextureFilm(texture, 27, 27);
 
-		idle = new Animation( 0, true );
-		idle.frames( frames, 0);
+		idle = new Animation(0, true);
+		idle.frames(frames, 0);
 
-		run = new Animation( 0, true );
-		run.frames( frames, 0);
+		run = new Animation(0, true);
+		run.frames(frames, 0);
 
-		attack = new Animation( 24, false );
-		attack.frames( frames, 0 );
+		attack = new Animation(24, false);
+		attack.frames(frames, 0);
 
 		zap = attack.clone();
 
-		die = new Animation( 12, false );
-		die.frames( frames, 0 );
+		die = new Animation(12, false);
+		die.frames(frames, 0);
 
-		play( idle );
+		play(idle);
 
 	}
 
@@ -62,16 +62,16 @@ public class FungalCoreSprite extends MobSprite {
 	@Override
 	public void update() {
 		super.update();
-		if (curAnim != die && ch != null && visible != wasVisible){
-			if (visible){
-				DungeonWallsTilemap.skipCells.add(ch.pos - 2* Dungeon.level.width());
+		if (curAnim != die && ch != null && visible != wasVisible) {
+			if (visible) {
+				DungeonWallsTilemap.skipCells.add(ch.pos - 2 * Dungeon.level.width());
 				DungeonWallsTilemap.skipCells.add(ch.pos - Dungeon.level.width());
 			} else {
-				DungeonWallsTilemap.skipCells.remove(ch.pos - 2*Dungeon.level.width());
+				DungeonWallsTilemap.skipCells.remove(ch.pos - 2 * Dungeon.level.width());
 				DungeonWallsTilemap.skipCells.remove(ch.pos - Dungeon.level.width());
 			}
-			GameScene.updateMap(ch.pos-2*Dungeon.level.width());
-			GameScene.updateMap(ch.pos-Dungeon.level.width());
+			GameScene.updateMap(ch.pos - 2 * Dungeon.level.width());
+			GameScene.updateMap(ch.pos - Dungeon.level.width());
 			wasVisible = visible;
 		}
 	}
@@ -79,11 +79,11 @@ public class FungalCoreSprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (ch != null && visible){
-			DungeonWallsTilemap.skipCells.remove(ch.pos - 2*Dungeon.level.width());
+		if (ch != null && visible) {
+			DungeonWallsTilemap.skipCells.remove(ch.pos - 2 * Dungeon.level.width());
 			DungeonWallsTilemap.skipCells.remove(ch.pos - Dungeon.level.width());
-			GameScene.updateMap(ch.pos-2*Dungeon.level.width());
-			GameScene.updateMap(ch.pos-Dungeon.level.width());
+			GameScene.updateMap(ch.pos - 2 * Dungeon.level.width());
+			GameScene.updateMap(ch.pos - Dungeon.level.width());
 		}
 	}
 

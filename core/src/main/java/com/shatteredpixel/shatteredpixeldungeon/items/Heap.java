@@ -61,51 +61,45 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 public class Heap implements Bundlable {
-	
+
 	public enum Type {
-		HEAP,
-		FOR_SALE,
-		CHEST,
-		LOCKED_CHEST,
-		CRYSTAL_CHEST,
-		TOMB,
-		SKELETON,
-		REMAINS
+		HEAP, FOR_SALE, CHEST, LOCKED_CHEST, CRYSTAL_CHEST, TOMB, SKELETON, REMAINS
 	}
+
 	public Type type = Type.HEAP;
-	
+
 	public int pos = 0;
-	
+
 	public ItemSprite sprite;
 	public boolean seen = false;
 	public boolean haunted = false;
 	public boolean autoExplored = false; //used to determine if this heap should count for exploration bonus
 	public boolean hidden = false; //sets alpha to 15%
-	
+
 	public LinkedList<Item> items = new LinkedList<>();
-	
-	public void open( Hero hero ) {
+
+	public void open(Hero hero) {
 		switch (type) {
-		case TOMB:
-			Wraith.spawnAround( hero.pos );
-			break;
-		case REMAINS:
-		case SKELETON:
-			CellEmitter.center( pos ).start(Speck.factory(Speck.RATTLE), 0.1f, 3);
-			break;
-		default:
+			case TOMB:
+				Wraith.spawnAround(hero.pos);
+				break;
+			case REMAINS:
+			case SKELETON:
+				CellEmitter.center(pos).start(Speck.factory(Speck.RATTLE), 0.1f, 3);
+				break;
+			default:
 		}
-		
-		if (haunted){
-			if (Wraith.spawnAt( pos ) == null) {
-				hero.sprite.emitter().burst( ShadowParticle.CURSE, 6 );
-				hero.damage( hero.HP / 2, this );
-				if (!hero.isAlive()){
+
+		if (haunted) {
+			if (Wraith.spawnAt(pos) == null) {
+				hero.sprite.emitter().burst(ShadowParticle.CURSE, 6);
+				hero.damage(hero.HP / 2, this);
+				if (!hero.isAlive()) {
 					Dungeon.fail(Wraith.class);
-					GLog.n( Messages.capitalize(Messages.get(Char.class, "kill", Messages.get(Wraith.class, "name"))));
+					GLog.n(Messages.capitalize(Messages.get(Char.class, "kill", Messages.get(Wraith.class, "name"))));
 				}
 			}
-			Sample.INSTANCE.play( Assets.Sounds.CURSED );
+			Sample.INSTANCE.play(Assets.Sounds.CURSED);
 		}
 
 		type = Type.HEAP;
@@ -117,8 +111,8 @@ public class Heap implements Bundlable {
 		sprite.link();
 		sprite.drop();
 	}
-	
-	public Heap setHauntedIfCursed(){
+
+	public Heap setHauntedIfCursed() {
 		for (Item item : items) {
 			if (item.cursed) {
 				haunted = true;
@@ -128,14 +122,14 @@ public class Heap implements Bundlable {
 		}
 		return this;
 	}
-	
+
 	public int size() {
 		return items.size();
 	}
-	
+
 	public Item pickUp() {
-		
-		if (items.isEmpty()){
+
+		if (items.isEmpty()) {
 			destroy();
 			return null;
 		}
@@ -143,98 +137,98 @@ public class Heap implements Bundlable {
 		if (items.isEmpty()) {
 			destroy();
 		} else if (sprite != null) {
-			sprite.view(this).place( pos );
+			sprite.view(this).place(pos);
 		}
-		
+
 		return item;
 	}
-	
+
 	public Item peek() {
 		return items.peek();
 	}
-	
-	public void drop( Item item ) {
+
+	public void drop(Item item) {
 		hidden = false;
-		
+
 		if (item.stackable && type != Type.FOR_SALE) {
-			
+
 			for (Item i : items) {
-				if (i.isSimilar( item )) {
-					item = i.merge( item );
+				if (i.isSimilar(item)) {
+					item = i.merge(item);
 					break;
 				}
 			}
-			items.remove( item );
-			
+			items.remove(item);
+
 		}
 
 		//lost backpack must always be on top of a heap
 		if ((item.dropsDownHeap && type != Type.FOR_SALE) || peek() instanceof LostBackpack) {
-			items.add( item );
+			items.add(item);
 		} else {
-			items.addFirst( item );
-		}
-		
-		if (sprite != null) {
-			sprite.view(this).place( pos );
+			items.addFirst(item);
 		}
 
-		if (TippedDart.lostDarts > 0){
+		if (sprite != null) {
+			sprite.view(this).place(pos);
+		}
+
+		if (TippedDart.lostDarts > 0) {
 			Dart d = new Dart();
 			d.quantity(TippedDart.lostDarts);
 			TippedDart.lostDarts = 0;
 			drop(d);
 		}
 	}
-	
-	public void replace( Item a, Item b ) {
+
+	public void replace(Item a, Item b) {
 		hidden = false;
-		int index = items.indexOf( a );
+		int index = items.indexOf(a);
 		if (index != -1) {
-			items.remove( index );
+			items.remove(index);
 			for (Item i : items) {
-				if (i.isSimilar( b )) {
-					i.merge( b );
+				if (i.isSimilar(b)) {
+					i.merge(b);
 					return;
 				}
 			}
-			items.add( index, b );
+			items.add(index, b);
 		}
 	}
-	
-	public void remove( Item a ){
+
+	public void remove(Item a) {
 		hidden = false;
 		items.remove(a);
-		if (items.isEmpty()){
+		if (items.isEmpty()) {
 			destroy();
 		} else if (sprite != null) {
-			sprite.view(this).place( pos );
+			sprite.view(this).place(pos);
 		}
 	}
-	
+
 	public void burn() {
 		hidden = false;
 
 		if (type != Type.HEAP) {
 			return;
 		}
-		
+
 		boolean burnt = false;
 		boolean evaporated = false;
-		
-		for (Item item : items.toArray( new Item[0] )) {
+
+		for (Item item : items.toArray(new Item[0])) {
 			if (item instanceof Scroll && !item.unique) {
-				items.remove( item );
+				items.remove(item);
 				burnt = true;
 			} else if (item instanceof Dewdrop) {
-				items.remove( item );
+				items.remove(item);
 				evaporated = true;
 			} else if (item instanceof MysteryMeat || item instanceof FrozenCarpaccio) {
-				replace( item, ChargrilledMeat.cook( item.quantity ) );
+				replace(item, ChargrilledMeat.cook(item.quantity));
 				burnt = true;
 			} else if (item instanceof Bomb) {
-				items.remove( item );
-				((Bomb) item).explode( pos );
+				items.remove(item);
+				((Bomb) item).explode(pos);
 				if (((Bomb) item).explodesDestructively()) {
 					//stop processing the burning, it will be replaced by the explosion.
 					return;
@@ -243,23 +237,23 @@ public class Heap implements Bundlable {
 				}
 			}
 		}
-		
+
 		if (burnt || evaporated) {
-			
+
 			if (Dungeon.level.heroFOV[pos]) {
 				if (burnt) {
-					burnFX( pos );
+					burnFX(pos);
 				} else {
-					evaporateFX( pos );
+					evaporateFX(pos);
 				}
 			}
-			
+
 			if (isEmpty()) {
 				destroy();
 			} else if (sprite != null) {
-				sprite.view(this).place( pos );
+				sprite.view(this).place(pos);
 			}
-			
+
 		}
 	}
 
@@ -281,10 +275,10 @@ public class Heap implements Bundlable {
 
 		} else {
 
-			for (Item item : items.toArray( new Item[0] )) {
+			for (Item item : items.toArray(new Item[0])) {
 
 				//unique items and equipment aren't affect by explosions
-				if (item.unique || item.isUpgradable() || item instanceof EquipableItem){
+				if (item.unique || item.isUpgradable() || item instanceof EquipableItem) {
 					continue;
 				}
 
@@ -297,7 +291,7 @@ public class Heap implements Bundlable {
 					((Honeypot.ShatteredPot) item).destroyPot(pos);
 
 				} else if (item instanceof Bomb) {
-					items.remove( item );
+					items.remove(item);
 					((Bomb) item).explode(pos);
 					if (((Bomb) item).explodesDestructively()) {
 						//stop processing current explosion, it will be replaced by the new one.
@@ -305,71 +299,71 @@ public class Heap implements Bundlable {
 					}
 
 				} else {
-					items.remove( item );
+					items.remove(item);
 				}
 
 			}
 
-			if (isEmpty()){
+			if (isEmpty()) {
 				destroy();
 			} else if (sprite != null) {
-				sprite.view(this).place( pos );
+				sprite.view(this).place(pos);
 			}
 		}
 	}
-	
+
 	public void freeze() {
 
 		if (type != Type.HEAP) {
 			return;
 		}
-		
+
 		boolean frozen = false;
-		for (Item item : items.toArray( new Item[0] )) {
+		for (Item item : items.toArray(new Item[0])) {
 			if (item instanceof MysteryMeat) {
-				replace( item, FrozenCarpaccio.cook( (MysteryMeat)item ) );
+				replace(item, FrozenCarpaccio.cook((MysteryMeat) item));
 				frozen = true;
 			} else if (item instanceof Potion && !item.unique) {
 				items.remove(item);
 				((Potion) item).shatter(pos);
 				frozen = true;
-			} else if (item instanceof Bomb && ((Bomb) item).fuse != null){
+			} else if (item instanceof Bomb && ((Bomb) item).fuse != null) {
 				frozen = frozen || ((Bomb) item).fuse.freeze();
 			}
 		}
-		
+
 		if (frozen) {
 			if (isEmpty()) {
 				destroy();
 			} else if (sprite != null) {
-				sprite.view(this).place( pos );
+				sprite.view(this).place(pos);
 			}
 		}
 	}
-	
-	public static void burnFX( int pos ) {
-		CellEmitter.get( pos ).burst( ElmoParticle.FACTORY, 6 );
-		Sample.INSTANCE.play( Assets.Sounds.BURNING );
+
+	public static void burnFX(int pos) {
+		CellEmitter.get(pos).burst(ElmoParticle.FACTORY, 6);
+		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 	}
-	
-	public static void evaporateFX( int pos ) {
-		CellEmitter.get( pos ).burst( Speck.factory( Speck.STEAM ), 5 );
+
+	public static void evaporateFX(int pos) {
+		CellEmitter.get(pos).burst(Speck.factory(Speck.STEAM), 5);
 	}
-	
+
 	public boolean isEmpty() {
 		return items == null || items.size() == 0;
 	}
-	
+
 	public void destroy() {
-		Dungeon.level.heaps.remove( this.pos );
+		Dungeon.level.heaps.remove(this.pos);
 		if (sprite != null) {
 			sprite.kill();
 		}
 		items.clear();
 	}
 
-	public String title(){
-		switch(type){
+	public String title() {
+		switch (type) {
 			case FOR_SALE:
 				Item i = peek();
 				if (size() == 1) {
@@ -394,19 +388,19 @@ public class Heap implements Bundlable {
 		}
 	}
 
-	public String info(){
-		switch(type){
+	public String info() {
+		switch (type) {
 			case CHEST:
 				return Messages.get(this, "chest_desc");
 			case LOCKED_CHEST:
 				return Messages.get(this, "locked_chest_desc");
 			case CRYSTAL_CHEST:
 				if (peek() instanceof Artifact)
-					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "artifact") );
+					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "artifact"));
 				else if (peek() instanceof Wand)
-					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "wand") );
+					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "wand"));
 				else
-					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "ring") );
+					return Messages.get(this, "crystal_chest_desc", Messages.get(this, "ring"));
 			case TOMB:
 				return Messages.get(this, "tomb_desc");
 			case SKELETON:
@@ -418,50 +412,50 @@ public class Heap implements Bundlable {
 		}
 	}
 
-	private static final String POS		= "pos";
-	private static final String SEEN	= "seen";
-	private static final String TYPE	= "type";
-	private static final String ITEMS	= "items";
-	private static final String HAUNTED	= "haunted";
-	private static final String AUTO_EXPLORED	= "auto_explored";
-	private static final String HIDDEN	= "hidden";
-	
+	private static final String POS = "pos";
+	private static final String SEEN = "seen";
+	private static final String TYPE = "type";
+	private static final String ITEMS = "items";
+	private static final String HAUNTED = "haunted";
+	private static final String AUTO_EXPLORED = "auto_explored";
+	private static final String HIDDEN = "hidden";
+
 	@SuppressWarnings("unchecked")
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		pos = bundle.getInt( POS );
-		seen = bundle.getBoolean( SEEN );
-		type = Type.valueOf( bundle.getString( TYPE ) );
-		
+	public void restoreFromBundle(Bundle bundle) {
+		pos = bundle.getInt(POS);
+		seen = bundle.getBoolean(SEEN);
+		type = Type.valueOf(bundle.getString(TYPE));
+
 		items = new LinkedList<>((Collection<Item>) ((Collection<?>) bundle.getCollection(ITEMS)));
 		items.removeAll(Collections.singleton(null));
-		
+
 		//remove any document pages that either don't exist anymore or that the player already has
-		for (Item item : items.toArray(new Item[0])){
+		for (Item item : items.toArray(new Item[0])) {
 			if (item instanceof DocumentPage
-					&& ( !((DocumentPage) item).document().pageNames().contains(((DocumentPage) item).page())
-					||    ((DocumentPage) item).document().isPageFound(((DocumentPage) item).page()))){
+					&& (!((DocumentPage) item).document().pageNames().contains(((DocumentPage) item).page())
+							|| ((DocumentPage) item).document().isPageFound(((DocumentPage) item).page()))) {
 				items.remove(item);
 			}
-			if (item instanceof Guidebook && Document.ADVENTURERS_GUIDE.isPageRead(0)){
+			if (item instanceof Guidebook && Document.ADVENTURERS_GUIDE.isPageRead(0)) {
 				items.remove(item);
 			}
 		}
-		
-		haunted = bundle.getBoolean( HAUNTED );
-		autoExplored = bundle.getBoolean( AUTO_EXPLORED );
-		hidden = bundle.getBoolean( HIDDEN );
+
+		haunted = bundle.getBoolean(HAUNTED);
+		autoExplored = bundle.getBoolean(AUTO_EXPLORED);
+		hidden = bundle.getBoolean(HIDDEN);
 	}
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		bundle.put( POS, pos );
-		bundle.put( SEEN, seen );
-		bundle.put( TYPE, type );
-		bundle.put( ITEMS, items );
-		bundle.put( HAUNTED, haunted );
-		bundle.put( AUTO_EXPLORED, autoExplored );
-		bundle.put( HIDDEN, hidden );
+	public void storeInBundle(Bundle bundle) {
+		bundle.put(POS, pos);
+		bundle.put(SEEN, seen);
+		bundle.put(TYPE, type);
+		bundle.put(ITEMS, items);
+		bundle.put(HAUNTED, haunted);
+		bundle.put(AUTO_EXPLORED, autoExplored);
+		bundle.put(HIDDEN, hidden);
 	}
-	
+
 }

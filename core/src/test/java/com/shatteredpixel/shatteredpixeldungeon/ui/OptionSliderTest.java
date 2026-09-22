@@ -22,7 +22,7 @@ class OptionSliderTest {
 		if (Game.platform == null) {
 			PlatformSupport platform = mock(PlatformSupport.class);
 			when(platform.splitforTextBlock(anyString(), anyBoolean()))
-					.thenAnswer(invocation -> new String[]{ invocation.getArgument(0) });
+					.thenAnswer(invocation -> new String[] { invocation.getArgument(0) });
 			Game.platform = platform;
 		}
 	}

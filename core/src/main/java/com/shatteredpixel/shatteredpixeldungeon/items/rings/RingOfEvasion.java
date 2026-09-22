@@ -37,10 +37,10 @@ public class RingOfEvasion extends Ring {
 	}
 
 	public String statsInfo() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, soloBuffedBonus()) - 1f)));
-			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())) {
 				info += "\n\n" + Messages.get(this, "combined_stats",
 						Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, combinedBuffedBonus(owner())) - 1f)));
 			}
@@ -50,18 +50,19 @@ public class RingOfEvasion extends Ring {
 		}
 	}
 
-	public String upgradeStat1(int level){
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, level+1)-1f)) + "%";
+	public String upgradeStat1(int level) {
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, level + 1) - 1f)) + "%";
 	}
 
 	@Override
-	protected RingBuff buff( ) {
+	protected RingBuff buff() {
 		return new Evasion();
 	}
 
-	public static float evasionMultiplier( Char target ){
-		return (float) Math.pow( 1.125, getBuffedBonus(target, Evasion.class));
+	public static float evasionMultiplier(Char target) {
+		return (float) Math.pow(1.125, getBuffedBonus(target, Evasion.class));
 	}
 
 	public class Evasion extends RingBuff {

@@ -40,12 +40,11 @@ public class Cursor {
 	public enum Type {
 
 		//TODO if we ever add more cursors, should cache their pixmaps rather than always remaking
-		DEFAULT("gdx/cursor_mouse.png"),
-		CONTROLLER("gdx/cursor_controller.png");
+		DEFAULT("gdx/cursor_mouse.png"), CONTROLLER("gdx/cursor_controller.png");
 
 		public final String file;
 
-		Type(String file){
+		Type(String file) {
 			this.file = file;
 		}
 
@@ -54,15 +53,15 @@ public class Cursor {
 	private static Type lastType;
 	private static int lastZoom;
 
-	public static void setCustomCursor(Type type, int zoom){
+	public static void setCustomCursor(Type type, int zoom) {
 
 		//custom cursors (i.e. images which replace the mouse icon) are only supported on desktop
-		if (!DeviceCompat.isDesktop()){
+		if (!DeviceCompat.isDesktop()) {
 			return;
 		}
 
-		if (currentCursor != null){
-			if (lastType == type && lastZoom == zoom){
+		if (currentCursor != null) {
+			if (lastType == type && lastZoom == zoom) {
 				return;
 			}
 
@@ -72,13 +71,13 @@ public class Cursor {
 
 		Pixmap cursorImg = new Pixmap(FileUtils.getFileHandle(Files.FileType.Internal, type.file));
 
-		int scaledWidth = cursorImg.getWidth()*zoom;
+		int scaledWidth = cursorImg.getWidth() * zoom;
 		int width2 = 2;
 		while (width2 < scaledWidth) {
 			width2 <<= 1;
 		}
 
-		int scaledHeight = cursorImg.getHeight()*zoom;
+		int scaledHeight = cursorImg.getHeight() * zoom;
 		int height2 = 2;
 		while (height2 < scaledHeight) {
 			height2 <<= 1;
@@ -86,7 +85,8 @@ public class Cursor {
 
 		Pixmap scaledImg = new Pixmap(width2, height2, cursorImg.getFormat());
 		scaledImg.setFilter(Pixmap.Filter.NearestNeighbour);
-		scaledImg.drawPixmap(cursorImg, 0, 0, cursorImg.getWidth(), cursorImg.getHeight(), 0, 0, scaledWidth, scaledHeight);
+		scaledImg.drawPixmap(cursorImg, 0, 0, cursorImg.getWidth(), cursorImg.getHeight(), 0, 0, scaledWidth,
+				scaledHeight);
 
 		currentCursor = Gdx.graphics.newCursor(scaledImg, 0, 0);
 		Gdx.graphics.setCursor(currentCursor);
@@ -100,7 +100,7 @@ public class Cursor {
 
 	private static boolean cursorCaptured = false;
 
-	public static void captureCursor(boolean captured){
+	public static void captureCursor(boolean captured) {
 		cursorCaptured = captured;
 
 		if (captured) {
@@ -108,18 +108,18 @@ public class Cursor {
 		} else {
 			if (ControllerHandler.controllerPointerActive()) {
 				ControllerHandler.setControllerPointer(true);
-				ControllerHandler.updateControllerPointer(new PointF(Game.width/2f, Game.height/2f), false);
+				ControllerHandler.updateControllerPointer(new PointF(Game.width / 2f, Game.height / 2f), false);
 			} else {
 				Gdx.input.setCursorCatched(false);
 			}
 		}
 	}
 
-	public static PointF getCursorDelta(){
+	public static PointF getCursorDelta() {
 		return new PointF(Gdx.input.getDeltaX(), Gdx.input.getDeltaY());
 	}
 
-	public static boolean isCursorCaptured(){
+	public static boolean isCursorCaptured() {
 		return cursorCaptured;
 	}
 

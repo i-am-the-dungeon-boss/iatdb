@@ -47,10 +47,9 @@ public class FlockTrap extends Trap {
 		shape = WAVES;
 	}
 
-
 	@Override
 	public void activate() {
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		ArrayList<Integer> spawnPoints = new ArrayList<>();
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
@@ -58,7 +57,7 @@ public class FlockTrap extends Trap {
 			}
 		}
 
-		for (int i : spawnPoints){
+		for (int i : spawnPoints) {
 			Trap t;
 			if (Dungeon.level.insideMap(i)
 					&& Actor.findChar(i) == null
@@ -69,15 +68,16 @@ public class FlockTrap extends Trap {
 				GameScene.add(sheep);
 				CellEmitter.get(i).burst(Speck.factory(Speck.WOOL), 4);
 				//before the tile is pressed, directly trigger traps to avoid sfx spam
-				if ((t = Dungeon.level.traps.get(i)) != null && t.active){
-					if (t.disarmedByActivation) t.disarm();
+				if ((t = Dungeon.level.traps.get(i)) != null && t.active) {
+					if (t.disarmedByActivation)
+						t.disarm();
 					t.reveal();
 					Bestiary.setSeen(t.getClass());
 					Bestiary.countEncounter(t.getClass());
 					t.activate();
 				}
 				Dungeon.level.occupyCell(sheep);
-			} else if (Actor.findChar(i) instanceof Mob){
+			} else if (Actor.findChar(i) instanceof Mob) {
 				Buff.prolong(Actor.findChar(i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 			}
 		}

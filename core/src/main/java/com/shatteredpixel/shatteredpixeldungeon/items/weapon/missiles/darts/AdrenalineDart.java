@@ -32,7 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class AdrenalineDart extends TippedDart {
-	
+
 	{
 		image = ItemSpriteSheet.ADRENALINE_DART;
 	}
@@ -40,7 +40,7 @@ public class AdrenalineDart extends TippedDart {
 	@Override
 	public int damageRoll(Char owner) {
 		if (owner instanceof Hero) {
-			if (((Hero) owner).attackTarget().alignment == owner.alignment){
+			if (((Hero) owner).attackTarget().alignment == owner.alignment) {
 				return 0; //does not deal damage to allies
 			}
 		}
@@ -52,12 +52,12 @@ public class AdrenalineDart extends TippedDart {
 
 		if (processingChargedShot && defender == attacker) {
 			//do nothing to the hero when processing charged shot
-		} else if (attacker.alignment == defender.alignment){
-			Buff.prolong( defender, Adrenaline.class, Adrenaline.DURATION);
+		} else if (attacker.alignment == defender.alignment) {
+			Buff.prolong(defender, Adrenaline.class, Adrenaline.DURATION);
 		} else {
-			Buff.prolong( defender, Cripple.class, Cripple.DURATION/2);
+			Buff.prolong(defender, Cripple.class, Cripple.DURATION / 2);
 		}
-		
+
 		return super.proc(attacker, defender, damage);
 	}
 }

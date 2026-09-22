@@ -29,11 +29,11 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class GuidePage extends DocumentPage {
-	
+
 	{
 		image = ItemSpriteSheet.GUIDE_PAGE;
 	}
-	
+
 	@Override
 	public Document document() {
 		return Document.ADVENTURERS_GUIDE;

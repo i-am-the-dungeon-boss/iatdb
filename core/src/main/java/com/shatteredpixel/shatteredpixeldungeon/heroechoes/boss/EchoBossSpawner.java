@@ -20,9 +20,7 @@ import com.watabou.utils.DeviceCompat;
 public final class EchoBossSpawner {
 
 	public enum BossSpawnChoice {
-		ECHO,
-		DEFAULT,
-		ABORT
+		ECHO, DEFAULT, ABORT
 	}
 
 	/**

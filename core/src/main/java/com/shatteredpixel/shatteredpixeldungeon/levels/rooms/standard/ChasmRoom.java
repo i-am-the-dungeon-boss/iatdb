@@ -34,7 +34,7 @@ public class ChasmRoom extends PatchRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{4, 2, 1};
+		return new float[] { 4, 2, 1 };
 	}
 
 	@Override
@@ -53,8 +53,8 @@ public class ChasmRoom extends PatchRoom {
 		// normal   ~30% to ~40%
 		// large    ~40% to ~50%
 		// giant    ~50% to ~60%
-		int scale = Math.min(width()*height(), 18*18);
-		return 0.30f + scale/1024f;
+		int scale = Math.min(width() * height(), 18 * 18);
+		return 0.30f + scale / 1024f;
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class ChasmRoom extends PatchRoom {
 	@Override
 	public void merge(Level l, Room other, Rect merge, int mergeTerrain) {
 		if (mergeTerrain == Terrain.EMPTY
-				&& (other instanceof ChasmRoom || other instanceof PlatformRoom)){
+				&& (other instanceof ChasmRoom || other instanceof PlatformRoom)) {
 			super.merge(l, other, merge, Terrain.CHASM);
 			Painter.set(l, connected.get(other), Terrain.EMPTY);
 		} else {
@@ -85,10 +85,10 @@ public class ChasmRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 		for (Room.Door door : connected.values()) {
-			door.set( Room.Door.Type.REGULAR );
+			door.set(Room.Door.Type.REGULAR);
 		}
 
 		setupPatch(level);

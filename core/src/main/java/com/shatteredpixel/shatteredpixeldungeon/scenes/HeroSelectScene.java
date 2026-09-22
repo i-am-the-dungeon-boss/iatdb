@@ -813,7 +813,8 @@ public class HeroSelectScene extends PixelScene {
 					Messages.get(HeroSelectScene.class, "custom_seed"), 6) {
 				@Override
 				protected void onClick() {
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug() && !SPDSettings.unlockEverything()) {
+					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()
+							&& !SPDSettings.unlockEverything()) {
 						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 								Icons.get(Icons.SEED),
 								Messages.get(HeroSelectScene.class, "custom_seed"),
@@ -878,7 +879,8 @@ public class HeroSelectScene extends PixelScene {
 				protected void onClick() {
 					super.onClick();
 
-					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug() && !SPDSettings.unlockEverything()) {
+					if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()
+							&& !SPDSettings.unlockEverything()) {
 						ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 								Icons.get(Icons.CALENDAR),
 								Messages.get(HeroSelectScene.class, "daily"),
@@ -909,7 +911,8 @@ public class HeroSelectScene extends PixelScene {
 					ShatteredPixelDungeon.scene().addToFront(new WndOptions(
 							icon,
 							Messages.get(HeroSelectScene.class, "daily"),
-							diff > 0 ? Messages.get(HeroSelectScene.class, "daily_repeat")
+							diff > 0
+									? Messages.get(HeroSelectScene.class, "daily_repeat")
 									: Messages.get(HeroSelectScene.class, "daily_desc"),
 							Messages.get(HeroSelectScene.class, "daily_yes"),
 							Messages.get(HeroSelectScene.class, "daily_no")) {
@@ -979,7 +982,8 @@ public class HeroSelectScene extends PixelScene {
 				challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, "title"), 6) {
 					@Override
 					protected void onClick() {
-						if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug() && !SPDSettings.unlockEverything()) {
+						if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()
+								&& !SPDSettings.unlockEverything()) {
 							ShatteredPixelDungeon.scene().addToFront(new WndTitledMessage(
 									Icons.get(Icons.CHALLENGE_GREY),
 									Messages.get(WndChallenges.class, "title"),
@@ -991,7 +995,8 @@ public class HeroSelectScene extends PixelScene {
 							public void onBackPressed() {
 								super.onBackPressed();
 								icon(Icons
-										.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR
+										.get(SPDSettings.challenges() > 0
+												? Icons.CHALLENGE_COLOR
 												: Icons.CHALLENGE_GREY));
 								updateOptionsColor();
 							}
@@ -1041,7 +1046,8 @@ public class HeroSelectScene extends PixelScene {
 					@Override
 					protected void onClick() {
 
-						if (Badges.isUnlocked(Badges.Badge.VICTORY) || DeviceCompat.isDebug() || SPDSettings.unlockEverything()) {
+						if (Badges.isUnlocked(Badges.Badge.VICTORY) || DeviceCompat.isDebug()
+								|| SPDSettings.unlockEverything()) {
 							ShatteredPixelDungeon.scene().addToFront(new WndRandomize());
 						} else {
 
@@ -1151,7 +1157,8 @@ public class HeroSelectScene extends PixelScene {
 							SPDSettings.challenges(mask);
 							if (challengeButton != null) {
 								challengeButton.icon(Icons
-										.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR
+										.get(SPDSettings.challenges() > 0
+												? Icons.CHALLENGE_COLOR
 												: Icons.CHALLENGE_GREY));
 							}
 							ShatteredPixelDungeon.scene().addToFront(new WndChallenges(mask, false));

@@ -47,7 +47,7 @@ public class ExitButton extends IconButton {
 		if (Game.scene() instanceof TitleScene) {
 			Game.instance.finish();
 		} else {
-			ShatteredPixelDungeon.switchNoFade( TitleScene.class );
+			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 		}
 	}
 

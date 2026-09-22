@@ -66,24 +66,24 @@ public class ChaoticCenser extends Trinket {
 	@Override
 	protected int upgradeEnergyCost() {
 		//6 -> 8(14) -> 10(24) -> 12(36)
-		return 6+2*level();
+		return 6 + 2 * level();
 	}
 
 	@Override
 	public String statsDesc() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			return Messages.get(this, "stats_desc", averageTurnsUntilGas(buffedLvl()));
 		} else {
 			return Messages.get(this, "stats_desc", averageTurnsUntilGas(0));
 		}
 	}
 
-	public static int averageTurnsUntilGas(){
+	public static int averageTurnsUntilGas() {
 		return averageTurnsUntilGas(trinketLevel(ChaoticCenser.class));
 	}
 
-	public static int averageTurnsUntilGas(int level){
-		if (level <= -1){
+	public static int averageTurnsUntilGas(int level) {
+		if (level <= -1) {
 			return -1;
 		} else {
 			return 300 / (level + 1);
@@ -100,24 +100,24 @@ public class ChaoticCenser extends Trinket {
 
 			int avgTurns = averageTurnsUntilGas();
 
-			if (avgTurns == -1){
+			if (avgTurns == -1) {
 				spend(Random.NormalIntRange(1, 5));
 				return true;
-			} else if (left > avgTurns*1.2f){
-				left = Random.IntRange((int) (avgTurns*0.833f), (int) (avgTurns*1.2f));
+			} else if (left > avgTurns * 1.2f) {
+				left = Random.IntRange((int) (avgTurns * 0.833f), (int) (avgTurns * 1.2f));
 			}
 
 			if (left <= 0) {
 
-				if (TargetHealthIndicator.instance != null && TargetHealthIndicator.instance.isVisible()){
+				if (TargetHealthIndicator.instance != null && TargetHealthIndicator.instance.isVisible()) {
 					Char target = TargetHealthIndicator.instance.target();
 
 					if (target != null
 							&& target.isActive()
 							&& target.alignment == Char.Alignment.ENEMY
-							&& (!(target instanceof Mob) || ((Mob) target).state != ((Mob) target).PASSIVE)){
+							&& (!(target instanceof Mob) || ((Mob) target).state != ((Mob) target).PASSIVE)) {
 
-						if (produceGas(target)){
+						if (produceGas(target)) {
 							Sample.INSTANCE.play(Assets.Sounds.GAS, 0.5f);
 							Dungeon.hero.interrupt();
 							left += Random.IntRange((int) (avgTurns * 0.9f), (int) (avgTurns * 1.1f));
@@ -130,7 +130,7 @@ public class ChaoticCenser extends Trinket {
 			//buff ticks an average of every 3 turns
 			int delay = Random.NormalIntRange(1, 3);
 			spend(delay);
-			left = (int)Math.max(left-delay, -avgTurns/3f);
+			left = (int) Math.max(left - delay, -avgTurns / 3f);
 
 			return true;
 		}
@@ -146,23 +146,24 @@ public class ChaoticCenser extends Trinket {
 		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
-			if (bundle.contains(LEFT)){
+			if (bundle.contains(LEFT)) {
 				left = bundle.getInt(LEFT);
 			}
 		}
 	}
 
-	private static boolean produceGas( Char target ){
+	private static boolean produceGas(Char target) {
 		int level = trinketLevel(ChaoticCenser.class);
 
-		if (level < 0 || level > 3){
+		if (level < 0 || level > 3) {
 			return false;
 		}
 
-		Class<?extends Blob> gasToSpawn;
+		Class<? extends Blob> gasToSpawn;
 		float gasQuantity;
-		switch (Random.chances(GAS_CAT_CHANCES[level])){
-			case 0: default:
+		switch (Random.chances(GAS_CAT_CHANCES[level])) {
+			case 0:
+			default:
 				do {
 					gasToSpawn = Random.element(COMMON_GASSES.keySet());
 				} while (!Regeneration.regenOn() && gasToSpawn == Regrowth.class);
@@ -182,7 +183,7 @@ public class ChaoticCenser extends Trinket {
 		PathFinder.buildDistanceMap(Dungeon.hero.pos, BArray.not(Dungeon.level.solid, null), 6);
 
 		//spawn gas in a random visible cell 2-6 tiles away
-		for (int i = 0; i < Dungeon.level.length(); i++){
+		for (int i = 0; i < Dungeon.level.length(); i++) {
 			if (Dungeon.level.heroFOV[i] && PathFinder.distance[i] < Integer.MAX_VALUE) {
 				if (PathFinder.distance[i] >= 2 && PathFinder.distance[i] <= 6) {
 					candidateCells.put(i, 0f);
@@ -192,23 +193,24 @@ public class ChaoticCenser extends Trinket {
 
 		//strongly prefer cells closer to target
 		int targetpos = target.pos;
-		if (Dungeon.level.trueDistance(target.pos, Dungeon.hero.pos) >= 4){
+		if (Dungeon.level.trueDistance(target.pos, Dungeon.hero.pos) >= 4) {
 			//if target is a distance from the hero, aim in front of them instead
-			for (int i : PathFinder.NEIGHBOURS8){
-				while (!Dungeon.level.solid[targetpos+i]
-						&& Dungeon.level.trueDistance(target.pos+i, Dungeon.hero.pos) < Dungeon.level.trueDistance(targetpos, Dungeon.hero.pos)){
-					targetpos = target.pos+i;
+			for (int i : PathFinder.NEIGHBOURS8) {
+				while (!Dungeon.level.solid[targetpos + i]
+						&& Dungeon.level.trueDistance(target.pos + i, Dungeon.hero.pos) < Dungeon.level
+								.trueDistance(targetpos, Dungeon.hero.pos)) {
+					targetpos = target.pos + i;
 				}
 			}
 		}
 		float closest = 100;
-		for (int cell : candidateCells.keySet()){
+		for (int cell : candidateCells.keySet()) {
 			float dist = Dungeon.level.distance(cell, targetpos);
-			if (dist < closest){
+			if (dist < closest) {
 				closest = dist;
 			}
 		}
-		for (int cell : candidateCells.keySet()){
+		for (int cell : candidateCells.keySet()) {
 			float dist = Dungeon.level.distance(cell, targetpos);
 			if (dist - closest == 0) {
 				candidateCells.put(cell, 8f);
@@ -222,8 +224,9 @@ public class ChaoticCenser extends Trinket {
 		if (!candidateCells.isEmpty()) {
 			Integer targetCell = Random.chances(candidateCells);
 			if (targetCell != null) {
-				Buff.affect(Dungeon.hero, GasSpewer.class, Dungeon.hero.cooldown()).set(targetCell, gasToSpawn, (int)gasQuantity);
-				GLog.w(Messages.get(ChaoticCenser.class, "spew", Messages.titleCase(Messages.get(gasToSpawn, "name")) ));
+				Buff.affect(Dungeon.hero, GasSpewer.class, Dungeon.hero.cooldown()).set(targetCell, gasToSpawn,
+						(int) gasQuantity);
+				GLog.w(Messages.get(ChaoticCenser.class, "spew", Messages.titleCase(Messages.get(gasToSpawn, "name"))));
 				if (target.sprite != null && target.sprite.parent != null) {
 					target.sprite.parent.addToBack(new TargetedCell(targetCell, 0xFF0000));
 				}
@@ -242,10 +245,10 @@ public class ChaoticCenser extends Trinket {
 		private int depth;
 		private int branch;
 
-		private Class<?extends Blob> gasType;
+		private Class<? extends Blob> gasType;
 		private int gasQuantity;
 
-		public void set( int targetCell, Class<?extends Blob> gasType, int gasQuantity){
+		public void set(int targetCell, Class<? extends Blob> gasType, int gasQuantity) {
 			this.targetCell = targetCell;
 
 			depth = Dungeon.depth;
@@ -258,15 +261,17 @@ public class ChaoticCenser extends Trinket {
 		@Override
 		public boolean act() {
 
-			if (depth == Dungeon.depth && branch == Dungeon.branch){
+			if (depth == Dungeon.depth && branch == Dungeon.branch) {
 				GameScene.add(Blob.seed(targetCell, gasQuantity, gasType));
 
 				//corrosion starts at the same level as potion of corrosive gas
-				if (gasType == CorrosiveGas.class){
-					((CorrosiveGas)Dungeon.level.blobs.get(CorrosiveGas.class)).setStrength( 2 + Dungeon.scalingDepth()/5, ChaoticCenser.class);
+				if (gasType == CorrosiveGas.class) {
+					((CorrosiveGas) Dungeon.level.blobs.get(CorrosiveGas.class))
+							.setStrength(2 + Dungeon.scalingDepth() / 5, ChaoticCenser.class);
 				}
 
-				MagicMissile.boltFromChar(Dungeon.hero.sprite.parent, MISSILE_VFX.get(gasType), Dungeon.hero.sprite, targetCell, null);
+				MagicMissile.boltFromChar(Dungeon.hero.sprite.parent, MISSILE_VFX.get(gasType), Dungeon.hero.sprite,
+						targetCell, null);
 				Sample.INSTANCE.play(Assets.Sounds.GAS);
 			}
 
@@ -303,10 +308,10 @@ public class ChaoticCenser extends Trinket {
 
 	private static final float[][] GAS_CAT_CHANCES = new float[4][3];
 	static {
-		GAS_CAT_CHANCES[0] = new float[]{70, 25, 5};
-		GAS_CAT_CHANCES[1] = new float[]{60, 30, 10};
-		GAS_CAT_CHANCES[2] = new float[]{50, 35, 15};
-		GAS_CAT_CHANCES[3] = new float[]{40, 40, 20};
+		GAS_CAT_CHANCES[0] = new float[] { 70, 25, 5 };
+		GAS_CAT_CHANCES[1] = new float[] { 60, 30, 10 };
+		GAS_CAT_CHANCES[2] = new float[] { 50, 35, 15 };
+		GAS_CAT_CHANCES[3] = new float[] { 40, 40, 20 };
 	}
 
 	private static final HashMap<Class<? extends Blob>, Float> COMMON_GASSES = new HashMap<>();

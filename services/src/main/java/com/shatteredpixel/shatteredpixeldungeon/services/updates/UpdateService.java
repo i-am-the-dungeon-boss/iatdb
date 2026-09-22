@@ -29,8 +29,10 @@ package com.shatteredpixel.shatteredpixeldungeon.services.updates;
 public abstract class UpdateService {
 
 	public static abstract class UpdateResultCallback {
-		public abstract void onUpdateAvailable( AvailableUpdateData update );
+		public abstract void onUpdateAvailable(AvailableUpdateData update);
+
 		public abstract void onNoUpdateFound();
+
 		public abstract void onConnectionFailed();
 	}
 
@@ -40,9 +42,9 @@ public abstract class UpdateService {
 	//whether the service supports an opt-in channel for betas
 	public abstract boolean supportsBetaChannel();
 
-	public abstract void checkForUpdate( boolean useMetered, boolean includeBetas, UpdateResultCallback callback );
+	public abstract void checkForUpdate(boolean useMetered, boolean includeBetas, UpdateResultCallback callback);
 
-	public abstract void initializeUpdate( AvailableUpdateData update );
+	public abstract void initializeUpdate(AvailableUpdateData update);
 
 	public static abstract class ReviewResultCallback {
 		public abstract void onComplete();
@@ -51,7 +53,7 @@ public abstract class UpdateService {
 	//whether the service supports prompts to review the game via and ingame prompt
 	public abstract boolean supportsReviews();
 
-	public abstract void initializeReview( ReviewResultCallback callback );
+	public abstract void initializeReview(ReviewResultCallback callback);
 
 	public abstract void openReviewURI();
 

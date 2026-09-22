@@ -55,7 +55,8 @@ public class MindForm extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", itemLevel()) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", itemLevel()) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -68,7 +69,7 @@ public class MindForm extends ClericSpell {
 		return super.canCast(hero) && hero.hasTalent(Talent.MIND_FORM);
 	}
 
-	public static int effectLevel(){
+	public static int effectLevel() {
 		return 2 + Dungeon.hero.pointsInTalent(Talent.MIND_FORM);
 	}
 
@@ -79,7 +80,7 @@ public class MindForm extends ClericSpell {
 
 	}
 
-	public static int itemLevel(){
+	public static int itemLevel() {
 		return 2 + Dungeon.hero.pointsInTalent(Talent.MIND_FORM);
 	}
 
@@ -88,22 +89,22 @@ public class MindForm extends ClericSpell {
 
 		private Bundlable effect;
 
-		public void setEffect(Bundlable effect){
+		public void setEffect(Bundlable effect) {
 			this.effect = effect;
 		}
 
-		private Wand wand(){
-			if (effect instanceof Wand){
+		private Wand wand() {
+			if (effect instanceof Wand) {
 				((Wand) effect).level(effectLevel());
 				((Wand) effect).curCharges = ((Wand) effect).maxCharges;
 				((Wand) effect).identify(false);
-				return (Wand)effect;
+				return (Wand) effect;
 			}
 			return null;
 		}
 
-		private MissileWeapon thrown(){
-			if (effect instanceof MissileWeapon){
+		private MissileWeapon thrown() {
+			if (effect instanceof MissileWeapon) {
 				((MissileWeapon) effect).level(effectLevel());
 				((MissileWeapon) effect).repair(100);
 				((MissileWeapon) effect).identify(false);
@@ -115,18 +116,18 @@ public class MindForm extends ClericSpell {
 
 		@Override
 		public void onSelect(Integer target) {
-			if (target == null){
+			if (target == null) {
 				return;
 			}
-			if (wand() != null){
+			if (wand() != null) {
 				Wand wand = wand();
 				if (wand.tryToZap(Dungeon.hero, target)) {
 
-					final Ballistica shot = new Ballistica( Dungeon.hero.pos, target, wand.collisionProperties(target));
+					final Ballistica shot = new Ballistica(Dungeon.hero.pos, target, wand.collisionProperties(target));
 					int cell = shot.collisionPos;
 
 					if (target == Dungeon.hero.pos || cell == Dungeon.hero.pos) {
-						GLog.i( Messages.get(Wand.class, "self_target") );
+						GLog.i(Messages.get(Wand.class, "self_target"));
 						return;
 					}
 
@@ -141,7 +142,7 @@ public class MindForm extends ClericSpell {
 					wand.fx(shot, new Callback() {
 						public void call() {
 							wand.onZap(shot);
-							if (Random.Float() < WondrousResin.extraCurseEffectChance()){
+							if (Random.Float() < WondrousResin.extraCurseEffectChance()) {
 								WondrousResin.forcePositive = true;
 								CursedWand.cursedZap(wand,
 										Dungeon.hero,
@@ -152,21 +153,23 @@ public class MindForm extends ClericSpell {
 											}
 										});
 							}
-							((ClassArmor)Dungeon.hero.belongings.armor()).charge -= Trinity.trinityChargeUsePerEffect(wand.getClass());
+							((ClassArmor) Dungeon.hero.belongings.armor()).charge -= Trinity
+									.trinityChargeUsePerEffect(wand.getClass());
 							wand.wandUsed();
 						}
 					});
 				}
-			} else if (thrown() != null){
+			} else if (thrown() != null) {
 				MissileWeapon thrown = thrown();
 				thrown.cast(Dungeon.hero, target);
-				((ClassArmor)Dungeon.hero.belongings.armor()).charge -= Trinity.trinityChargeUsePerEffect(thrown.getClass());
+				((ClassArmor) Dungeon.hero.belongings.armor()).charge -= Trinity
+						.trinityChargeUsePerEffect(thrown.getClass());
 			}
 		}
 
 		@Override
 		public String prompt() {
-			if (wand() != null){
+			if (wand() != null) {
 				return Messages.get(Wand.class, "prompt");
 			} else {
 				return Messages.get(Item.class, "prompt");

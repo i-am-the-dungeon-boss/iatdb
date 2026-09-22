@@ -46,16 +46,16 @@ public class ScrollOfTerror extends Scroll {
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		new Flare( 5, 32 ).color( 0xFF0000, true ).show( curUser.sprite, 2f );
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		new Flare(5, 32).color(0xFF0000, true).show(curUser.sprite, 2f);
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 
 		int count = 0;
 		Mob affected = null;
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
-				Buff.affect( mob, Terror.class, Terror.DURATION ).object = curUser.id();
+				Buff.affect(mob, Terror.class, Terror.DURATION).object = curUser.id();
 
-				if (mob.buff(Terror.class) != null){
+				if (mob.buff(Terror.class) != null) {
 					count++;
 					affected = mob;
 				}
@@ -63,14 +63,14 @@ public class ScrollOfTerror extends Scroll {
 		}
 
 		switch (count) {
-		case 0:
-			GLog.i( Messages.get(this, "none") );
-			break;
-		case 1:
-			GLog.i( Messages.get(this, "one", affected.name()) );
-			break;
-		default:
-			GLog.i( Messages.get(this, "many") );
+			case 0:
+				GLog.i(Messages.get(this, "none"));
+				break;
+			case 1:
+				GLog.i(Messages.get(this, "one", affected.name()));
+				break;
+			default:
+				GLog.i(Messages.get(this, "many"));
 		}
 		identify();
 

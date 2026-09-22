@@ -39,58 +39,58 @@ public class VaultMultipleEnemyTreasureRoom extends VaultTreasureRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
 		Door entrance = entrance();
-		entrance.set( Door.Type.REGULAR );
+		entrance.set(Door.Type.REGULAR);
 
 		Point c = center();
 
 		int treasurePos;
 
-		if (entrance.x == left || entrance.x == right){
-			int areaTop = (int) GameMath.gate(top+1, entrance.y-2, bottom-5);
-			Painter.fill(level, left+1, areaTop+1, 9, 3, Terrain.EMPTY_SP);
-			Painter.fill(level, left+4, areaTop, 3, 5, Terrain.EMPTY_SP);
+		if (entrance.x == left || entrance.x == right) {
+			int areaTop = (int) GameMath.gate(top + 1, entrance.y - 2, bottom - 5);
+			Painter.fill(level, left + 1, areaTop + 1, 9, 3, Terrain.EMPTY_SP);
+			Painter.fill(level, left + 4, areaTop, 3, 5, Terrain.EMPTY_SP);
 
 			VaultRat rat = new VaultRat();
-			rat.pos = c.x + areaTop*level.width();
+			rat.pos = c.x + areaTop * level.width();
 			level.mobs.add(rat);
 
 			rat = new VaultRat();
-			rat.pos = c.x + (areaTop+4)*level.width();
+			rat.pos = c.x + (areaTop + 4) * level.width();
 			level.mobs.add(rat);
 
 			rat = new VaultRat();
-			if (entrance.x == left){
-				rat.pos = c.x + 1 + (areaTop+2)*level.width();
+			if (entrance.x == left) {
+				rat.pos = c.x + 1 + (areaTop + 2) * level.width();
 				treasurePos = rat.pos + 2;
 			} else {
-				rat.pos = c.x - 1 + (areaTop+2)*level.width();
+				rat.pos = c.x - 1 + (areaTop + 2) * level.width();
 				treasurePos = rat.pos - 2;
 			}
 			level.mobs.add(rat);
 
 		} else {
-			int areaLeft = (int)GameMath.gate(left+1, entrance.x-2, right-5);
-			Painter.fill(level, areaLeft+1, top+1, 3, 9, Terrain.EMPTY_SP);
-			Painter.fill(level, areaLeft, top+4, 5, 3, Terrain.EMPTY_SP);
+			int areaLeft = (int) GameMath.gate(left + 1, entrance.x - 2, right - 5);
+			Painter.fill(level, areaLeft + 1, top + 1, 3, 9, Terrain.EMPTY_SP);
+			Painter.fill(level, areaLeft, top + 4, 5, 3, Terrain.EMPTY_SP);
 
 			VaultRat rat = new VaultRat();
-			rat.pos = areaLeft + c.y*level.width();
+			rat.pos = areaLeft + c.y * level.width();
 			level.mobs.add(rat);
 
 			rat = new VaultRat();
-			rat.pos = areaLeft+4 + c.y*level.width();
+			rat.pos = areaLeft + 4 + c.y * level.width();
 			level.mobs.add(rat);
 
 			rat = new VaultRat();
-			if (entrance.y == top){
-				rat.pos = areaLeft+2 + (c.y+1)*level.width();
-				treasurePos = rat.pos + 2*level.width();
+			if (entrance.y == top) {
+				rat.pos = areaLeft + 2 + (c.y + 1) * level.width();
+				treasurePos = rat.pos + 2 * level.width();
 			} else {
-				rat.pos = areaLeft+2 + (c.y-1)*level.width();
-				treasurePos = rat.pos - 2*level.width();
+				rat.pos = areaLeft + 2 + (c.y - 1) * level.width();
+				treasurePos = rat.pos - 2 * level.width();
 			}
 			level.mobs.add(rat);
 		}
@@ -98,9 +98,9 @@ public class VaultMultipleEnemyTreasureRoom extends VaultTreasureRoom {
 		Painter.set(level, treasurePos, Terrain.PEDESTAL);
 
 		Item treasureItem = Generator.randomUsingDefaults(Generator.Category.WEP_T5);
-		if (treasureItem.cursed){
+		if (treasureItem.cursed) {
 			treasureItem.cursed = false;
-			if (((MeleeWeapon) treasureItem).hasCurseEnchant()){
+			if (((MeleeWeapon) treasureItem).hasCurseEnchant()) {
 				((MeleeWeapon) treasureItem).enchant(null);
 			}
 		}

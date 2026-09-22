@@ -45,10 +45,9 @@ public class BlazingTrap extends Trap {
 		shape = STARS;
 	}
 
-
 	@Override
 	public void activate() {
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				if (Dungeon.level.pit[i] || Dungeon.level.water[i]) {
@@ -57,7 +56,7 @@ public class BlazingTrap extends Trap {
 					GameScene.add(Blob.seed(i, 5, Fire.class));
 				}
 				CellEmitter.get(i).burst(FlameParticle.FACTORY, 5);
-				if (Actor.findChar(i) instanceof Mob){
+				if (Actor.findChar(i) instanceof Mob) {
 					Buff.prolong(Actor.findChar(i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 				}
 			}

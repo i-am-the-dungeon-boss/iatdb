@@ -51,8 +51,8 @@ public class RunicBlade extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  5*(tier) +                	//20 base, down from 25
-				Math.round(lvl*(tier+2));	//+6 per level, up from +5
+		return 5 * (tier) + //20 base, down from 25
+				Math.round(lvl * (tier + 2)); //+6 per level, up from +5
 	}
 
 	@Override
@@ -74,9 +74,9 @@ public class RunicBlade extends MeleeWeapon {
 
 		//we apply here because of projecting
 		RunicSlashTracker tracker = Buff.affect(hero, RunicSlashTracker.class);
-		tracker.boost = 3f + 0.50f*buffedLvl();
+		tracker.boost = 3f + 0.50f * buffedLvl();
 		hero.belongings.abilityWeapon = this;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(this, "ability_target_range"));
 			tracker.detach();
 			hero.belongings.abilityWeapon = null;
@@ -89,9 +89,9 @@ public class RunicBlade extends MeleeWeapon {
 			public void call() {
 				beforeAbilityUsed(hero, enemy);
 				AttackIndicator.target(enemy);
-				if (hero.attack(enemy, 1f, 0, Char.INFINITE_ACCURACY)){
+				if (hero.attack(enemy, 1f, 0, Char.INFINITE_ACCURACY)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-					if (!enemy.isAlive()){
+					if (!enemy.isAlive()) {
 						onAbilityKill(hero, enemy);
 					}
 				}
@@ -105,8 +105,8 @@ public class RunicBlade extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", 300+50*buffedLvl());
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", 300 + 50 * buffedLvl());
 		} else {
 			return Messages.get(this, "typical_ability_desc", 300);
 		}
@@ -114,11 +114,10 @@ public class RunicBlade extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return "+" + (300+50*level) + "%";
+		return "+" + (300 + 50 * level) + "%";
 	}
 
-
-	public static class RunicSlashTracker extends FlavourBuff{
+	public static class RunicSlashTracker extends FlavourBuff {
 
 		public float boost = 2f;
 

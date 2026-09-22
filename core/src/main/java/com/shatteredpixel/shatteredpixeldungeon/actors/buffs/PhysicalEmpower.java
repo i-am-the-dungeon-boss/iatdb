@@ -50,7 +50,7 @@ public class PhysicalEmpower extends Buff {
 	@Override
 	public float iconFadePercent() {
 		float max = 1 + Dungeon.hero.pointsInTalent(Talent.STRENGTHENING_MEAL);
-		return Math.max(0, (max-left) / max);
+		return Math.max(0, (max - left) / max);
 	}
 
 	@Override
@@ -66,8 +66,8 @@ public class PhysicalEmpower extends Buff {
 	public int dmgBoost;
 	public int left;
 
-	public void set(int dmg, int hits){
-		if (dmg*hits > dmgBoost*left) {
+	public void set(int dmg, int hits) {
+		if (dmg * hits > dmgBoost * left) {
 			dmgBoost = dmg;
 			left = hits;
 		}
@@ -79,15 +79,15 @@ public class PhysicalEmpower extends Buff {
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		bundle.put( BOOST, dmgBoost );
-		bundle.put( LEFT, left );
+		bundle.put(BOOST, dmgBoost);
+		bundle.put(LEFT, left);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		dmgBoost = bundle.getInt( BOOST );
-		left = bundle.getInt( LEFT );
+		dmgBoost = bundle.getInt(BOOST);
+		left = bundle.getInt(LEFT);
 	}
 
 }

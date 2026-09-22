@@ -35,39 +35,39 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 
 public abstract class DocumentPage extends Item {
-	
+
 	{
 		image = ItemSpriteSheet.MASTERY;
 	}
 
 	public abstract Document document();
-	
+
 	private String page;
-	
-	public void page( String page ){
+
+	public void page(String page) {
 		this.page = page;
 	}
-	
-	public String page(){
+
+	public String page() {
 		return page;
 	}
-	
+
 	@Override
 	public final boolean doPickUp(Hero hero, int pos) {
 		GameScene.pickUpJournal(this, pos);
 		GameScene.flashForDocument(document(), page());
-		if (document() == Document.ADVENTURERS_GUIDE){
+		if (document() == Document.ADVENTURERS_GUIDE) {
 			WndJournal.last_index = 1;
 		} else if (document() == Document.ALCHEMY_GUIDE) {
 			WndJournal.last_index = 2;
 			WndJournal.AlchemyTab.currentPageIdx = document().pageIdx(page());
-		} else if (document().isLoreDoc()){
+		} else if (document().isLoreDoc()) {
 			WndJournal.last_index = 3;
 			WndJournal.CatalogTab.currentItemIdx = 3;
 		}
 		document().findPage(page);
-		Sample.INSTANCE.play( Assets.Sounds.ITEM );
-		hero.spendAndNext( pickupDelay() );
+		Sample.INSTANCE.play(Assets.Sounds.ITEM);
+		hero.spendAndNext(pickupDelay());
 		return true;
 	}
 
@@ -80,18 +80,18 @@ public abstract class DocumentPage extends Item {
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	private static final String PAGE = "page";
-	
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		bundle.put( PAGE, page() );
+		bundle.put(PAGE, page());
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		page = bundle.getString( PAGE );
+		page = bundle.getString(PAGE);
 	}
 }

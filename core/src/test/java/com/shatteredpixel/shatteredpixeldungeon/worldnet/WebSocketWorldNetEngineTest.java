@@ -174,8 +174,7 @@ class WebSocketWorldNetEngineTest {
 	@DisplayName("never delivers the same message twice across a reconnect replay")
 	void deduplicatesReplayedChat() {
 		connectAndOpen();
-		String frame =
-				"{\"t\":\"chat\",\"messages\":[{\"id\":\"m1\",\"name\":\"Ann\",\"text\":\"hi\",\"at\":1}]}";
+		String frame = "{\"t\":\"chat\",\"messages\":[{\"id\":\"m1\",\"name\":\"Ann\",\"text\":\"hi\",\"at\":1}]}";
 
 		current().listener.onText(frame);
 		engine.tick(0.01f);
@@ -840,6 +839,7 @@ class WebSocketWorldNetEngineTest {
 
 		assertThat(current().sentAny("\"t\":\"report\"")).isTrue();
 	}
+
 	@Test
 	@DisplayName("hands a figures frame to the listener as a whole set")
 	void deliversFigures() {

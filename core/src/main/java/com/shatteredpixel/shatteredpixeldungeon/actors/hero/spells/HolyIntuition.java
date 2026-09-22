@@ -61,24 +61,24 @@ public class HolyIntuition extends InventoryClericSpell {
 
 	@Override
 	protected void onItemSelected(HolyTome tome, Hero hero, Item item) {
-		if (item == null){
+		if (item == null) {
 			return;
 		}
 
 		item.cursedKnown = true;
 
-		if (item.cursed){
+		if (item.cursed) {
 			GLog.w(Messages.get(this, "cursed"));
 		} else {
 			GLog.i(Messages.get(this, "uncursed"));
 		}
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.busy();
 		hero.sprite.operate(hero.pos);
-		hero.sprite.parent.add( new Identification( hero.sprite.center().offset( 0, -16 ) ) );
+		hero.sprite.parent.add(new Identification(hero.sprite.center().offset(0, -16)));
 
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 		onSpellCast(tome, hero);
 
 	}

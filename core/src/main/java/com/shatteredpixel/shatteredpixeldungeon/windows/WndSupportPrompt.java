@@ -37,15 +37,15 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 
 public class WndSupportPrompt extends Window {
 
-	protected static final int WIDTH_P    = 120;
-	protected static final int WIDTH_L    = 200;
+	protected static final int WIDTH_P = 120;
+	protected static final int WIDTH_L = 200;
 
-	public WndSupportPrompt(){
+	public WndSupportPrompt() {
 
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
 
 		IconTitle title = new IconTitle(Icons.get(Icons.SHPX), Messages.get(WndSupportPrompt.class, "title"));
-		title.setRect( 0, 0, width, 0 );
+		title.setRect(0, 0, width, 0);
 		add(title);
 
 		String message = Messages.get(WndSupportPrompt.class, "intro");
@@ -55,12 +55,12 @@ public class WndSupportPrompt extends Window {
 		}
 		message += "\n- Dungeon Boss";
 
-		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
-		text.text( message, width );
-		text.setPos( title.left(), title.bottom() + 4 );
-		add( text );
+		RenderedTextBlock text = PixelScene.renderTextBlock(6);
+		text.text(message, width);
+		text.setPos(title.left(), title.bottom() + 4);
+		add(text);
 
-		RedButton link = new RedButton(Messages.get(SupporterScene.class, "supporter_link")){
+		RedButton link = new RedButton(Messages.get(SupporterScene.class, "supporter_link")) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -77,7 +77,7 @@ public class WndSupportPrompt extends Window {
 		link.setRect(0, text.bottom() + 4, width, 18);
 		add(link);
 
-		RedButton close = new RedButton(Messages.get(this, "close")){
+		RedButton close = new RedButton(Messages.get(this, "close")) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -88,7 +88,7 @@ public class WndSupportPrompt extends Window {
 		close.setRect(0, link.bottom() + 2, width, 18);
 		add(close);
 
-		resize(width, (int)close.bottom());
+		resize(width, (int) close.bottom());
 
 	}
 

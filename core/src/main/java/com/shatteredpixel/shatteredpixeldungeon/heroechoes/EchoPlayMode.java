@@ -6,8 +6,7 @@ import com.shatteredpixel.shatteredpixeldungeon.DebugSettings;
  * How hero echoes are sourced for a run.
  */
 public enum EchoPlayMode {
-	RANKED,
-	SOLO,
+	RANKED, SOLO,
 	/** Sandbox arena — debug builds only; never for release. */
 	DEBUG;
 

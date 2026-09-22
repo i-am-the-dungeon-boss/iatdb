@@ -29,13 +29,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
-
 public class BlindingDart extends TippedDart {
-	
+
 	{
 		image = ItemSpriteSheet.BLINDING_DART;
 	}
-	
+
 	@Override
 	public int proc(Char attacker, Char defender, int damage) {
 
@@ -43,7 +42,7 @@ public class BlindingDart extends TippedDart {
 		if (!processingChargedShot || attacker.alignment != defender.alignment) {
 			Buff.affect(defender, Blindness.class, Blindness.DURATION);
 		}
-		
+
 		return super.proc(attacker, defender, damage);
 	}
 }

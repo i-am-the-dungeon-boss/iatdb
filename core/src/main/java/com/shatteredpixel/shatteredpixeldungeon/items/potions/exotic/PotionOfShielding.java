@@ -36,11 +36,11 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class PotionOfShielding extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_SHIELDING;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		if (ch instanceof Hero) {

@@ -58,7 +58,8 @@ public class Sunray extends TargetedClericSpell {
 		int min = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;
 		int max = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 12 : 8;
 		int dur = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;
-		return Messages.get(this, "desc", min, max, dur) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", min, max, dur) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -68,14 +69,14 @@ public class Sunray extends TargetedClericSpell {
 
 	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
-		Ballistica aim = new Ballistica(hero.pos, target,  targetingFlags());
+		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());
 
-		if (Actor.findChar( aim.collisionPos ) == hero){
-			GLog.i( Messages.get(Wand.class, "self_target") );
+		if (Actor.findChar(aim.collisionPos) == hero) {
+			GLog.i(Messages.get(Wand.class, "self_target"));
 			return;
 		}
 
@@ -86,18 +87,18 @@ public class Sunray extends TargetedClericSpell {
 		}
 
 		hero.busy();
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
+		Sample.INSTANCE.play(Assets.Sounds.RAY);
 		hero.sprite.zap(target);
 
 		hero.sprite.parent.add(
 				new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(aim.collisionPos)));
-		Sample.INSTANCE.play( Assets.Sounds.RAY );
+		Sample.INSTANCE.play(Assets.Sounds.RAY);
 
-		Char ch = Actor.findChar( aim.collisionPos );
+		Char ch = Actor.findChar(aim.collisionPos);
 		if (ch != null) {
 			ch.sprite.burst(0xFFFFFF44, 5);
 
-			if (Char.hasProp(ch, Char.Property.UNDEAD) || Char.hasProp(ch, Char.Property.DEMONIC)){
+			if (Char.hasProp(ch, Char.Property.UNDEAD) || Char.hasProp(ch, Char.Property.DEMONIC)) {
 				if (hero.pointsInTalent(Talent.SUNRAY) == 2) {
 					ch.damage(12, Sunray.this);
 				} else {
@@ -113,27 +114,30 @@ public class Sunray extends TargetedClericSpell {
 
 			if (ch.isAlive()) {
 				if (ch.buff(Blindness.class) != null && ch.buff(SunRayRecentlyBlindedTracker.class) != null) {
-					Buff.prolong(ch, Paralysis.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
+					Buff.prolong(ch, Paralysis.class, 2f + 2f * hero.pointsInTalent(Talent.SUNRAY));
 					ch.buff(SunRayRecentlyBlindedTracker.class).detach();
 				} else if (ch.buff(SunRayUsedTracker.class) == null) {
-					Buff.prolong(ch, Blindness.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
-					Buff.prolong(ch, SunRayRecentlyBlindedTracker.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));
+					Buff.prolong(ch, Blindness.class, 2f + 2f * hero.pointsInTalent(Talent.SUNRAY));
+					Buff.prolong(ch, SunRayRecentlyBlindedTracker.class, 2f + 2f * hero.pointsInTalent(Talent.SUNRAY));
 					Buff.affect(ch, SunRayUsedTracker.class);
 				}
-				if (hero.subClass == HeroSubClass.PRIEST){
+				if (hero.subClass == HeroSubClass.PRIEST) {
 					Buff.affect(ch, GuidingLight.Illuminated.class);
 				}
 			}
 		}
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.next();
 
 		onSpellCast(tome, hero);
 
 	}
 
-	public static class SunRayUsedTracker extends Buff {}
-	public static class SunRayRecentlyBlindedTracker extends FlavourBuff {}
+	public static class SunRayUsedTracker extends Buff {
+	}
+
+	public static class SunRayRecentlyBlindedTracker extends FlavourBuff {
+	}
 
 }

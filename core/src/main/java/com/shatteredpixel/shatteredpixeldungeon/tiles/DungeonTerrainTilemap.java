@@ -33,10 +33,10 @@ public class DungeonTerrainTilemap extends DungeonTilemap {
 
 	static DungeonTerrainTilemap instance;
 
-	public DungeonTerrainTilemap(){
+	public DungeonTerrainTilemap() {
 		super(Dungeon.level.tilesTex());
 
-		map( Dungeon.level.map, Dungeon.level.width() );
+		map(Dungeon.level.map, Dungeon.level.width());
 
 		instance = this;
 	}
@@ -44,31 +44,30 @@ public class DungeonTerrainTilemap extends DungeonTilemap {
 	@Override
 	protected int getTileVisual(int pos, int tile, boolean flat) {
 		int visual = DungeonTileSheet.directVisuals.get(tile, -1);
-		if (visual != -1) return DungeonTileSheet.getVisualWithAlts(visual, pos);
+		if (visual != -1)
+			return DungeonTileSheet.getVisualWithAlts(visual, pos);
 
 		if (tile == Terrain.WATER) {
 			return DungeonTileSheet.stitchWaterTile(
 					map[pos + PathFinder.CIRCLE4[0]],
 					map[pos + PathFinder.CIRCLE4[1]],
 					map[pos + PathFinder.CIRCLE4[2]],
-					map[pos + PathFinder.CIRCLE4[3]]
-			);
+					map[pos + PathFinder.CIRCLE4[3]]);
 
 		} else if (tile == Terrain.CHASM) {
-			return DungeonTileSheet.stitchChasmTile( pos > mapWidth ? map[pos - mapWidth] : -1);
+			return DungeonTileSheet.stitchChasmTile(pos > mapWidth ? map[pos - mapWidth] : -1);
 		}
 
 		if (!flat) {
 			if ((DungeonTileSheet.doorTile(tile))) {
 				return DungeonTileSheet.getRaisedDoorTile(tile, map[pos - mapWidth]);
-			} else if (DungeonTileSheet.wallStitcheable(tile)){
+			} else if (DungeonTileSheet.wallStitcheable(tile)) {
 				return DungeonTileSheet.getRaisedWallTile(
 						tile,
 						pos,
-						(pos+1) % mapWidth != 0 ?   map[pos + 1] : -1,
-						pos + mapWidth < size ?     map[pos + mapWidth] : -1,
-						pos % mapWidth != 0 ?       map[pos - 1] : -1
-						);
+						(pos + 1) % mapWidth != 0 ? map[pos + 1] : -1,
+						pos + mapWidth < size ? map[pos + mapWidth] : -1,
+						pos % mapWidth != 0 ? map[pos - 1] : -1);
 			} else if (tile == Terrain.STATUE) {
 				return DungeonTileSheet.RAISED_STATUE;
 			} else if (tile == Terrain.STATUE_SP) {
@@ -108,9 +107,9 @@ public class DungeonTerrainTilemap extends DungeonTilemap {
 
 	}
 
-	public static Image tile(int pos, int tile ) {
-		Image img = new Image( instance.texture );
-		img.frame( instance.tileset.get( instance.getTileVisual( pos, tile, true ) ) );
+	public static Image tile(int pos, int tile) {
+		Image img = new Image(instance.texture);
+		img.frame(instance.tileset.get(instance.getTileVisual(pos, tile, true)));
 		return img;
 	}
 

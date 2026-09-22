@@ -50,10 +50,10 @@ public class WndQuickBag extends Window {
 
 	private static Item bag;
 
-	public WndQuickBag(Bag bag){
+	public WndQuickBag(Bag bag) {
 		super(0, 0, Chrome.get(Chrome.Type.TOAST_TR));
 
-		if( WndBag.INSTANCE != null ){
+		if (WndBag.INSTANCE != null) {
 			WndBag.INSTANCE.hide();
 		}
 		WndBag.INSTANCE = this;
@@ -67,8 +67,8 @@ public class WndQuickBag extends Window {
 
 		ArrayList<Item> items = new ArrayList<>();
 
-		for (Item i : bag == null ? Dungeon.hero.belongings : bag){
-			if (i.defaultAction() == null){
+		for (Item i : bag == null ? Dungeon.hero.belongings : bag) {
+			if (i.defaultAction() == null) {
 				continue;
 			}
 			if (i instanceof Bag) {
@@ -77,7 +77,7 @@ public class WndQuickBag extends Window {
 			if (i instanceof Artifact
 					&& !i.isEquipped(Dungeon.hero)
 					&& (!(i instanceof CloakOfShadows) || !Dungeon.hero.hasTalent(Talent.LIGHT_CLOAK))
-					&& (!(i instanceof HolyTome) || !Dungeon.hero.hasTalent(Talent.LIGHT_READING))){
+					&& (!(i instanceof HolyTome) || !Dungeon.hero.hasTalent(Talent.LIGHT_READING))) {
 				continue;
 			}
 			items.add(i);
@@ -90,27 +90,27 @@ public class WndQuickBag extends Window {
 
 		//height of the toolbar and status pane, plus a little extra
 		int targetHeight = PixelScene.uiCamera.height - 100;
-		int rows = (int)Math.ceil(items.size() / (float)((maxWidth+1) / (btnWidth+1)));
-		int expectedHeight = rows * btnHeight + (rows-1);
-		while (expectedHeight > targetHeight && btnHeight > 16){
+		int rows = (int) Math.ceil(items.size() / (float) ((maxWidth + 1) / (btnWidth + 1)));
+		int expectedHeight = rows * btnHeight + (rows - 1);
+		while (expectedHeight > targetHeight && btnHeight > 16) {
 			btnHeight--;
 			expectedHeight -= rows;
 		}
 
-		for (Item i : items){
-			InventorySlot slot = new InventorySlot(i){
+		for (Item i : items) {
+			InventorySlot slot = new InventorySlot(i) {
 				@Override
 				protected void onClick() {
-					if (Dungeon.hero == null || !Dungeon.hero.isAlive() || !Dungeon.hero.belongings.contains(item)){
+					if (Dungeon.hero == null || !Dungeon.hero.isAlive() || !Dungeon.hero.belongings.contains(item)) {
 						Game.scene().addToFront(new WndUseItem(WndQuickBag.this, item));
 						return;
 					}
 
 					hide();
 					item.execute(Dungeon.hero);
-					if (item.usesTargeting && bag != null){
+					if (item.usesTargeting && bag != null) {
 						int idx = Dungeon.quickslot.getSlot(WndQuickBag.bag);
-						if (idx != -1){
+						if (idx != -1) {
 							QuickSlotButton.useTargeting(idx);
 							bag.quickUseItem = item;
 						}
@@ -126,49 +126,52 @@ public class WndQuickBag extends Window {
 				@Override
 				protected String hoverText() {
 					return null; //no tooltips here
- 				}
+				}
 			};
 			slot.showExtraInfo(false);
 			slot.setRect(left, top, btnWidth, btnHeight);
 			add(slot);
 
-			if (width < slot.right()) width = slot.right();
-			if (height < slot.bottom()) height = slot.bottom();
+			if (width < slot.right())
+				width = slot.right();
+			if (height < slot.bottom())
+				height = slot.bottom();
 
-			left += btnWidth+1;
+			left += btnWidth + 1;
 
-			if (left + btnWidth > maxWidth){
+			if (left + btnWidth > maxWidth) {
 				left = 0;
-				top += btnHeight+1;
+				top += btnHeight + 1;
 			}
 		}
 
 		RenderedTextBlock txtTitle;
-		txtTitle = PixelScene.renderTextBlock( Messages.titleCase(Messages.get(this, "title")), 8 );
-		txtTitle.hardlight( TITLE_COLOR );
-		if (txtTitle.width() > width) width = txtTitle.width();
+		txtTitle = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(this, "title")), 8);
+		txtTitle.hardlight(TITLE_COLOR);
+		if (txtTitle.width() > width)
+			width = txtTitle.width();
 
 		txtTitle.setPos(
-				(width - txtTitle.width())/2f,
+				(width - txtTitle.width()) / 2f,
 				(10 - txtTitle.height()) / 2f - 1);
 		PixelScene.align(txtTitle);
-		add( txtTitle );
+		add(txtTitle);
 
-		resize((int)width, (int)height);
+		resize((int) width, (int) height);
 
 		int bottom = GameScene.uiCamera.height;
 
 		//offset to be above the toolbar
-		offset(0, (int) (bottom/2 - 30 - height/2));
+		offset(0, (int) (bottom / 2 - 30 - height / 2));
 
 	}
 
 	public static final Comparator<Item> quickBagComparator = new Comparator<Item>() {
 		@Override
-		public int compare( Item lhs, Item rhs ) {
-			if (lhs.isEquipped(Dungeon.hero) && !rhs.isEquipped(Dungeon.hero)){
+		public int compare(Item lhs, Item rhs) {
+			if (lhs.isEquipped(Dungeon.hero) && !rhs.isEquipped(Dungeon.hero)) {
 				return -1;
-			} else if (!lhs.isEquipped(Dungeon.hero) && rhs.isEquipped(Dungeon.hero)){
+			} else if (!lhs.isEquipped(Dungeon.hero) && rhs.isEquipped(Dungeon.hero)) {
 				return 1;
 			} else {
 				return Generator.Category.order(lhs) - Generator.Category.order(rhs);
@@ -179,7 +182,7 @@ public class WndQuickBag extends Window {
 	@Override
 	public void hide() {
 		super.hide();
-		if (WndBag.INSTANCE == this){
+		if (WndBag.INSTANCE == this) {
 			WndBag.INSTANCE = null;
 		}
 	}

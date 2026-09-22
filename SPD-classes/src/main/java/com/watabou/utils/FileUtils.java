@@ -36,61 +36,61 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FileUtils {
-	
+
 	// Helper methods for setting/using a default base path and file address mode
-	
+
 	private static Files.FileType defaultFileType = null;
 	private static String defaultPath = "";
-	
-	public static void setDefaultFileProperties( Files.FileType type, String path ){
+
+	public static void setDefaultFileProperties(Files.FileType type, String path) {
 		defaultFileType = type;
 		defaultPath = path;
 	}
-	
-	public static FileHandle getFileHandle( String name ){
-		return getFileHandle( defaultFileType, defaultPath, name );
+
+	public static FileHandle getFileHandle(String name) {
+		return getFileHandle(defaultFileType, defaultPath, name);
 	}
-	
-	public static FileHandle getFileHandle( Files.FileType type, String name ){
-		return getFileHandle( type, "", name );
+
+	public static FileHandle getFileHandle(Files.FileType type, String name) {
+		return getFileHandle(type, "", name);
 	}
-	
-	public static FileHandle getFileHandle( Files.FileType type, String basePath, String name ){
-		switch (type){
+
+	public static FileHandle getFileHandle(Files.FileType type, String basePath, String name) {
+		switch (type) {
 			case Classpath:
-				return Gdx.files.classpath( basePath + name );
+				return Gdx.files.classpath(basePath + name);
 			case Internal:
-				return Gdx.files.internal( basePath + name );
+				return Gdx.files.internal(basePath + name);
 			case External:
-				return Gdx.files.external( basePath + name );
+				return Gdx.files.external(basePath + name);
 			case Absolute:
-				return Gdx.files.absolute( basePath + name );
+				return Gdx.files.absolute(basePath + name);
 			case Local:
-				return Gdx.files.local( basePath + name );
+				return Gdx.files.local(basePath + name);
 			default:
 				return null;
 		}
 	}
-	
+
 	// Files
 
 	//looks to see if there is any evidence of interrupted saving
-	public static boolean cleanTempFiles(){
+	public static boolean cleanTempFiles() {
 		return cleanTempFiles("");
 	}
 
-	public static boolean cleanTempFiles( String dirName ){
+	public static boolean cleanTempFiles(String dirName) {
 		FileHandle dir = getFileHandle(dirName);
 		boolean foundTemp = false;
-		for (FileHandle file : dir.list()){
-			if (file.isDirectory()){
+		for (FileHandle file : dir.list()) {
+			if (file.isDirectory()) {
 				foundTemp = cleanTempFiles(dirName + file.name()) || foundTemp;
 			} else if (file.length() == 0) {
 				file.delete();
 			} else {
-				if (file.name().endsWith(".spdtmp")){
+				if (file.name().endsWith(".spdtmp")) {
 					FileHandle temp = file;
-					FileHandle original = getFileHandle( defaultFileType, "", temp.path().replace(".spdtmp", "") );
+					FileHandle original = getFileHandle(defaultFileType, "", temp.path().replace(".spdtmp", ""));
 
 					//replace the base file with the temp one if base is invalid or temp is valid and newer
 					try {
@@ -119,94 +119,94 @@ public class FileUtils {
 		}
 		return foundTemp;
 	}
-	
-	public static boolean fileExists( String name ){
-		FileHandle file = getFileHandle( name );
+
+	public static boolean fileExists(String name) {
+		FileHandle file = getFileHandle(name);
 		return file.exists() && !file.isDirectory() && file.length() > 0;
 	}
 
 	//returns length of a file in bytes, or 0 if file does not exist
-	public static long fileLength( String name ){
-		FileHandle file = getFileHandle( name );
-		if (!file.exists() || file.isDirectory()){
+	public static long fileLength(String name) {
+		FileHandle file = getFileHandle(name);
+		if (!file.exists() || file.isDirectory()) {
 			return 0;
 		} else {
 			return file.length();
 		}
 	}
-	
-	public static boolean deleteFile( String name ){
-		return getFileHandle( name ).delete();
+
+	public static boolean deleteFile(String name) {
+		return getFileHandle(name).delete();
 	}
 
 	//replaces a file with junk data, for as many bytes as given
 	//This is helpful as some cloud sync systems do not persist deleted, empty, or zeroed files
-	public static void overwriteFile( String name, int bytes ){
+	public static void overwriteFile(String name, int bytes) {
 		byte[] data = new byte[bytes];
-		Arrays.fill(data, (byte)1);
-		getFileHandle( name ).writeBytes(data, false);
+		Arrays.fill(data, (byte) 1);
+		getFileHandle(name).writeBytes(data, false);
 	}
-	
+
 	// Directories
-	
-	public static boolean dirExists( String name ){
-		FileHandle dir = getFileHandle( name );
+
+	public static boolean dirExists(String name) {
+		FileHandle dir = getFileHandle(name);
 		return dir.exists() && dir.isDirectory();
 	}
-	
-	public static boolean deleteDir( String name ){
-		FileHandle dir = getFileHandle( name );
-		
-		if (dir == null || !dir.isDirectory()){
+
+	public static boolean deleteDir(String name) {
+		FileHandle dir = getFileHandle(name);
+
+		if (dir == null || !dir.isDirectory()) {
 			return false;
 		} else {
 			return dir.deleteDirectory();
 		}
 	}
 
-	public static ArrayList<String> filesInDir( String name ){
-		FileHandle dir = getFileHandle( name );
+	public static ArrayList<String> filesInDir(String name) {
+		FileHandle dir = getFileHandle(name);
 		ArrayList result = new ArrayList();
-		if (dir != null && dir.isDirectory()){
-			for (FileHandle file : dir.list()){
+		if (dir != null && dir.isDirectory()) {
+			for (FileHandle file : dir.list()) {
 				result.add(file.name());
 			}
 		}
 		return result;
 	}
-	
+
 	// bundle reading
-	
+
 	//only works for base path
-	public static Bundle bundleFromFile( String fileName ) throws IOException{
+	public static Bundle bundleFromFile(String fileName) throws IOException {
 		try {
-			FileHandle file = getFileHandle( fileName );
+			FileHandle file = getFileHandle(fileName);
 			if (!file.exists() || file.isDirectory() || file.length() == 0) {
 				throw new IOException("file does not exist!");
 			}
 			return bundleFromStream(file.read());
-		} catch (GdxRuntimeException e){
+		} catch (GdxRuntimeException e) {
 			//game classes expect an IO exception, so wrap the GDX exception in that
 			throw new IOException(e);
 		}
 	}
-	
-	private static Bundle bundleFromStream( InputStream input ) throws IOException{
-		Bundle bundle = Bundle.read( input );
+
+	private static Bundle bundleFromStream(InputStream input) throws IOException {
+		Bundle bundle = Bundle.read(input);
 		input.close();
 		return bundle;
 	}
-	
+
 	// bundle writing
-	
+
 	//only works for base path
-	public static void bundleToFile( String fileName, Bundle bundle ) throws IOException{
+	public static void bundleToFile(String fileName, Bundle bundle) throws IOException {
 		try {
 			FileHandle file = getFileHandle(fileName);
 
 			//write to a temp file, then move the files.
 			// This helps prevent save corruption if writing is interrupted
-			if (file.exists()){
+			if (file.exists()) {
 				FileHandle temp = getFileHandle(fileName + ".spdtmp");
 				bundleToStream(temp.write(false), bundle);
 				file.delete();
@@ -215,14 +215,14 @@ public class FileUtils {
 				bundleToStream(file.write(false), bundle);
 			}
 
-		} catch (GdxRuntimeException e){
+		} catch (GdxRuntimeException e) {
 			//game classes expect an IO exception, so wrap the GDX exception in that
 			throw new IOException(e);
 		}
 	}
-	
-	private static void bundleToStream( OutputStream output, Bundle bundle ) throws IOException{
-		Bundle.write( bundle, output );
+
+	private static void bundleToStream(OutputStream output, Bundle bundle) throws IOException {
+		Bundle.write(bundle, output);
 		output.close();
 	}
 

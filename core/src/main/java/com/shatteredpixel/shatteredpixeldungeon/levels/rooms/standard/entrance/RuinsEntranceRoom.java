@@ -50,7 +50,7 @@ public class RuinsEntranceRoom extends RuinsRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{2, 1, 0};
+		return new float[] { 2, 1, 0 };
 	}
 
 	@Override
@@ -64,22 +64,22 @@ public class RuinsEntranceRoom extends RuinsRoom {
 			entrance = level.pointToCell(random(2));
 
 			//need extra logic here as these rooms can spawn small and cramped in very rare cases
-			if (tries-- > 0){
+			if (tries-- > 0) {
 				valid = level.map[entrance] != Terrain.WALL && level.findMob(entrance) == null;
 			} else {
 				valid = false;
-				for (int i : PathFinder.NEIGHBOURS4){
-					if (level.map[entrance+i] != Terrain.WALL && level.map[entrance+i] != Terrain.REGION_DECO){
+				for (int i : PathFinder.NEIGHBOURS4) {
+					if (level.map[entrance + i] != Terrain.WALL && level.map[entrance + i] != Terrain.REGION_DECO) {
 						valid = true;
 					}
 				}
 				valid = valid && level.findMob(entrance) == null;
 			}
 		} while (!valid);
-		Painter.set( level, entrance, Terrain.ENTRANCE );
+		Painter.set(level, entrance, Terrain.ENTRANCE);
 
-		for (int i : PathFinder.NEIGHBOURS8){
-			Painter.set( level, entrance+i, Terrain.EMPTY );
+		for (int i : PathFinder.NEIGHBOURS8) {
+			Painter.set(level, entrance + i, Terrain.EMPTY);
 		}
 
 		level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_ENTRANCE));

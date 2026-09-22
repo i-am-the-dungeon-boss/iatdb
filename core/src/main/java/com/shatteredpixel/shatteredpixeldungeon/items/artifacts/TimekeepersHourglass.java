@@ -67,9 +67,9 @@ public class TimekeepersHourglass extends Artifact {
 
 		levelCap = 5;
 
-		charge = 5+level();
+		charge = 5 + level();
 		partialCharge = 0;
-		chargeCap = 5+level();
+		chargeCap = 5 + level();
 
 		defaultAction = AC_ACTIVATE;
 	}
@@ -77,7 +77,7 @@ public class TimekeepersHourglass extends Artifact {
 	@Override
 	public void resetForTrinity(int visibleLevel) {
 		super.resetForTrinity(visibleLevel);
-		charge = visibleLevel/2 - 1; //grants 4-10 turns of time freeze
+		charge = visibleLevel / 2 - 1; //grants 4-10 turns of time freeze
 	}
 
 	public static final String AC_ACTIVATE = "ACTIVATE";
@@ -86,9 +86,9 @@ public class TimekeepersHourglass extends Artifact {
 	public int sandBags = 0;
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (isEquipped( hero )
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (isEquipped(hero)
 				&& !cursed
 				&& hero.buff(MagicImmune.class) == null
 				&& (charge > 0 || activeBuff != null)) {
@@ -98,24 +98,29 @@ public class TimekeepersHourglass extends Artifact {
 	}
 
 	@Override
-	public void execute( Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 
 		super.execute(hero, action);
 
-		if (hero.buff(MagicImmune.class) != null) return;
+		if (hero.buff(MagicImmune.class) != null)
+			return;
 
-		if (action.equals(AC_ACTIVATE)){
+		if (action.equals(AC_ACTIVATE)) {
 
-			if (!isEquipped( hero ))        GLog.i( Messages.get(Artifact.class, "need_to_equip") );
+			if (!isEquipped(hero))
+				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
 			else if (activeBuff != null) {
 				if (activeBuff instanceof timeStasis) { //do nothing
 				} else {
 					activeBuff.detach();
-					GLog.i( Messages.get(this, "deactivate") );
+					GLog.i(Messages.get(this, "deactivate"));
 				}
-			} else if (charge <= 0)         GLog.i( Messages.get(this, "no_charge") );
-			else if (cursed)                GLog.i( Messages.get(this, "cursed") );
-			else GameScene.show(
+			} else if (charge <= 0)
+				GLog.i(Messages.get(this, "no_charge"));
+			else if (cursed)
+				GLog.i(Messages.get(this, "cursed"));
+			else
+				GameScene.show(
 						new WndOptions(new ItemSprite(this),
 								Messages.titleCase(name()),
 								Messages.get(this, "prompt"),
@@ -124,7 +129,7 @@ public class TimekeepersHourglass extends Artifact {
 							@Override
 							protected void onSelect(int index) {
 								if (index == 0) {
-									GLog.i( Messages.get(TimekeepersHourglass.class, "onstasis") );
+									GLog.i(Messages.get(TimekeepersHourglass.class, "onstasis"));
 									GameScene.flash(0x80FFFFFF);
 									Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
@@ -134,13 +139,13 @@ public class TimekeepersHourglass extends Artifact {
 								} else if (index == 1) {
 
 									//This might be really good...
-									for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+									for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
 										if (Dungeon.level.heroFOV[mob.pos]) {
 											artifactProc(mob, visiblyUpgraded(), 1);
 										}
 									}
 
-									GLog.i( Messages.get(TimekeepersHourglass.class, "onfreeze") );
+									GLog.i(Messages.get(TimekeepersHourglass.class, "onfreeze"));
 									GameScene.flash(0x80FFFFFF);
 									Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
@@ -149,11 +154,10 @@ public class TimekeepersHourglass extends Artifact {
 									Talent.onArtifactUsed(Dungeon.hero);
 									activeBuff.attachTo(Dungeon.hero);
 									charge--;
-									((timeFreeze)activeBuff).processTime(0f);
+									((timeFreeze) activeBuff).processTime(0f);
 								}
 							}
-						}
-				);
+						});
 		}
 	}
 
@@ -166,8 +170,8 @@ public class TimekeepersHourglass extends Artifact {
 
 	@Override
 	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
-		if (super.doUnequip(hero, collect, single)){
-			if (activeBuff != null){
+		if (super.doUnequip(hero, collect, single)) {
+			if (activeBuff != null) {
 				activeBuff.detach();
 				activeBuff = null;
 			}
@@ -183,13 +187,13 @@ public class TimekeepersHourglass extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null){
-			partialCharge += 0.25f*amount;
-			while (partialCharge >= 1){
+		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null) {
+			partialCharge += 0.25f * amount;
+			while (partialCharge >= 1) {
 				partialCharge--;
 				charge++;
 			}
-			if (charge >= chargeCap){
+			if (charge >= chargeCap) {
 				partialCharge = 0;
 			}
 			updateQuickslot();
@@ -198,11 +202,11 @@ public class TimekeepersHourglass extends Artifact {
 
 	@Override
 	public Item upgrade() {
-		chargeCap+= 1;
+		chargeCap += 1;
 
 		//for artifact transmutation.
-		while (level()+1 > sandBags)
-			sandBags ++;
+		while (level() + 1 > sandBags)
+			sandBags++;
 
 		return super.upgrade();
 	}
@@ -211,9 +215,9 @@ public class TimekeepersHourglass extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquippedByOwner()){
+		if (isEquippedByOwner()) {
 			if (!cursed) {
-				if (level() < levelCap )
+				if (level() < levelCap)
 					desc += "\n\n" + Messages.get(this, "desc_hint");
 
 			} else
@@ -222,29 +226,28 @@ public class TimekeepersHourglass extends Artifact {
 		return desc;
 	}
 
-
-	private static final String SANDBAGS =  "sandbags";
-	private static final String BUFF =      "buff";
+	private static final String SANDBAGS = "sandbags";
+	private static final String BUFF = "buff";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
+	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		bundle.put( SANDBAGS, sandBags );
+		bundle.put(SANDBAGS, sandBags);
 
 		if (activeBuff != null)
-			bundle.put( BUFF , activeBuff );
+			bundle.put(BUFF, activeBuff);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
+	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		sandBags = bundle.getInt( SANDBAGS );
+		sandBags = bundle.getInt(SANDBAGS);
 
 		//these buffs belong to hourglass, need to handle unbundling within the hourglass class.
-		if (bundle.contains( BUFF )){
-			Bundle buffBundle = bundle.getBundle( BUFF );
+		if (bundle.contains(BUFF)) {
+			Bundle buffBundle = bundle.getBundle(BUFF);
 
-			if (buffBundle.contains( timeFreeze.PRESSES ))
+			if (buffBundle.contains(timeFreeze.PRESSES))
 				activeBuff = new timeFreeze();
 			else
 				activeBuff = new timeStasis();
@@ -262,24 +265,24 @@ public class TimekeepersHourglass extends Artifact {
 					&& target.buff(MagicImmune.class) == null
 					&& Regeneration.regenOn()) {
 				//90 turns to charge at full, 60 turns to charge at 0/10
-				float chargeGain = 1 / (90f - (chargeCap - charge)*3f);
+				float chargeGain = 1 / (90f - (chargeCap - charge) * 3f);
 				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);
 				partialCharge += chargeGain;
 
 				while (partialCharge >= 1) {
-					partialCharge --;
-					charge ++;
+					partialCharge--;
+					charge++;
 
-					if (charge == chargeCap){
+					if (charge == chargeCap) {
 						partialCharge = 0;
 					}
 				}
 			} else if (cursed && Random.Int(10) == 0)
-				((Hero) target).spend( TICK );
+				((Hero) target).spend(TICK);
 
 			updateQuickslot();
 
-			spend( TICK );
+			spend(TICK);
 
 			return true;
 		}
@@ -289,7 +292,7 @@ public class TimekeepersHourglass extends Artifact {
 
 		{
 			type = buffType.POSITIVE;
-			actPriority = BUFF_PRIO-3; //acts after all other buffs, so they are prevented
+			actPriority = BUFF_PRIO - 3; //acts after all other buffs, so they are prevented
 		}
 
 		private float echoLandedTurns;
@@ -303,7 +306,7 @@ public class TimekeepersHourglass extends Artifact {
 
 				int usedCharge = Math.min(charge, 2);
 				//buffs always act last, so the stasis buff should end a turn early.
-				float duration = 5*usedCharge;
+				float duration = 5 * usedCharge;
 				if (EchoHardStun.appliesTo(target)) {
 					duration = Math.min(duration, EchoHardStun.MAX_DURATION);
 				}
@@ -342,8 +345,10 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public void detach() {
-			if (target.invisible > 0) target.invisible--;
-			if (target.paralysed > 0) target.paralysed--;
+			if (target.invisible > 0)
+				target.invisible--;
+			if (target.paralysed > 0)
+				target.paralysed--;
 			super.detach();
 			EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 			activeBuff = null;
@@ -352,10 +357,13 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public void fx(boolean on) {
-			if (on) target.sprite.add( CharSprite.State.PARALYSED );
+			if (on)
+				target.sprite.add(CharSprite.State.PARALYSED);
 			else {
-				if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );
-				if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
+				if (target.paralysed == 0)
+					target.sprite.remove(CharSprite.State.PARALYSED);
+				if (target.invisible == 0)
+					target.sprite.remove(CharSprite.State.INVISIBLE);
 			}
 		}
 
@@ -382,30 +390,30 @@ public class TimekeepersHourglass extends Artifact {
 
 		ArrayList<Integer> presses = new ArrayList<>();
 
-		public void processTime(float time){
+		public void processTime(float time) {
 			turnsToCost -= time;
 
 			//use 1/1,000 to account for rounding errors
-			while (turnsToCost < -0.001f){
+			while (turnsToCost < -0.001f) {
 				turnsToCost += 2f;
-				charge --;
+				charge--;
 			}
 
 			updateQuickslot();
 
-			if (charge < 0 || charge == 0 && turnsToCost <= 0){
+			if (charge < 0 || charge == 0 && turnsToCost <= 0) {
 				charge = 0;
 				detach();
 			}
 
 		}
 
-		public void setDelayedPress(int cell){
+		public void setDelayedPress(int cell) {
 			if (!presses.contains(cell))
 				presses.add(cell);
 		}
 
-		public void triggerPresses(){
+		public void triggerPresses() {
 			ArrayList<Integer> toTrigger = presses;
 			presses = new ArrayList<>();
 			Actor.add(new Actor() {
@@ -415,13 +423,13 @@ public class TimekeepersHourglass extends Artifact {
 
 				@Override
 				protected boolean act() {
-					for (int cell : toTrigger){
+					for (int cell : toTrigger) {
 						Plant p = Dungeon.level.plants.get(cell);
-						if (p != null){
+						if (p != null) {
 							p.trigger();
 						}
 						Trap t = Dungeon.level.traps.get(cell);
-						if (t != null){
+						if (t != null) {
 							t.trigger();
 						}
 					}
@@ -431,8 +439,8 @@ public class TimekeepersHourglass extends Artifact {
 			});
 		}
 
-		public void disarmPresses(){
-			for (int cell : presses){
+		public void disarmPresses() {
+			for (int cell : presses) {
 				Plant p = Dungeon.level.plants.get(cell);
 				if (p != null && !(p instanceof Rotberry)) {
 					Dungeon.level.uproot(cell);
@@ -447,7 +455,7 @@ public class TimekeepersHourglass extends Artifact {
 		}
 
 		@Override
-		public void detach(){
+		public void detach() {
 			updateQuickslot();
 			super.detach();
 			activeBuff = null;
@@ -457,15 +465,18 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public void fx(boolean on) {
-			if (!(target instanceof Hero)) return;
+			if (!(target instanceof Hero))
+				return;
 			Emitter.freezeEmitters = on;
-			if (on){
+			if (on) {
 				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-					if (mob.sprite != null) mob.sprite.add(CharSprite.State.PARALYSED);
+					if (mob.sprite != null)
+						mob.sprite.add(CharSprite.State.PARALYSED);
 				}
 			} else {
 				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
-					if (mob.paralysed <= 0) mob.sprite.remove(CharSprite.State.PARALYSED);
+					if (mob.paralysed <= 0)
+						mob.sprite.remove(CharSprite.State.PARALYSED);
 				}
 			}
 		}
@@ -487,7 +498,7 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)(turnsToCost + 0.001f));
+			return Integer.toString((int) (turnsToCost + 0.001f));
 		}
 
 		@Override
@@ -503,22 +514,22 @@ public class TimekeepersHourglass extends Artifact {
 			super.storeInBundle(bundle);
 
 			int[] values = new int[presses.size()];
-			for (int i = 0; i < values.length; i ++)
+			for (int i = 0; i < values.length; i++)
 				values[i] = presses.get(i);
-			bundle.put( PRESSES , values );
+			bundle.put(PRESSES, values);
 
-			bundle.put( TURNSTOCOST , turnsToCost);
+			bundle.put(TURNSTOCOST, turnsToCost);
 		}
 
 		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
 
-			int[] values = bundle.getIntArray( PRESSES );
+			int[] values = bundle.getIntArray(PRESSES);
 			for (int value : values)
 				presses.add(value);
 
-			turnsToCost = bundle.getFloat( TURNSTOCOST );
+			turnsToCost = bundle.getFloat(TURNSTOCOST);
 		}
 	}
 
@@ -532,20 +543,20 @@ public class TimekeepersHourglass extends Artifact {
 		public boolean doPickUp(Hero hero, int pos) {
 			Catalog.setSeen(getClass());
 			Statistics.itemTypesDiscovered.add(getClass());
-			TimekeepersHourglass hourglass = hero.belongings.getItem( TimekeepersHourglass.class );
+			TimekeepersHourglass hourglass = hero.belongings.getItem(TimekeepersHourglass.class);
 			if (hourglass != null && !hourglass.cursed) {
 				hourglass.upgrade();
 				Catalog.countUses(hourglass.getClass(), 2);
-				Sample.INSTANCE.play( Assets.Sounds.DEWDROP );
+				Sample.INSTANCE.play(Assets.Sounds.DEWDROP);
 				if (hourglass.level() == hourglass.levelCap)
-					GLog.p( Messages.get(this, "maxlevel") );
+					GLog.p(Messages.get(this, "maxlevel"));
 				else
-					GLog.i( Messages.get(this, "levelup") );
+					GLog.i(Messages.get(this, "levelup"));
 				GameScene.pickUp(this, pos);
 				hero.spendAndNext(pickupDelay());
 				return true;
 			} else {
-				GLog.w( Messages.get(this, "no_hourglass") );
+				GLog.w(Messages.get(this, "no_hourglass"));
 				return false;
 			}
 		}
@@ -565,6 +576,5 @@ public class TimekeepersHourglass extends Artifact {
 			return true;
 		}
 	}
-
 
 }

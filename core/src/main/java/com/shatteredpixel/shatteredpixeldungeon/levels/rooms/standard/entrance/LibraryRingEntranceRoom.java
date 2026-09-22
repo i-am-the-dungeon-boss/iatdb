@@ -46,7 +46,7 @@ public class LibraryRingEntranceRoom extends LibraryRingRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class LibraryRingEntranceRoom extends LibraryRingRoom {
 		level.transitions.add(new LevelTransition(level, level.pointToCell(p), LevelTransition.Type.REGULAR_ENTRANCE));
 
 		int dirX = 0, dirY = 0;
-		if (Random.Int(2) == 0){
+		if (Random.Int(2) == 0) {
 			dirX = Random.Int(2) == 0 ? +1 : -1;
 		} else {
 			dirY = Random.Int(2) == 0 ? +1 : -1;
@@ -73,7 +73,7 @@ public class LibraryRingEntranceRoom extends LibraryRingRoom {
 
 		p.x += dirX;
 		p.y += dirY;
-		while (level.map[level.pointToCell(p)] != Terrain.EMPTY){
+		while (level.map[level.pointToCell(p)] != Terrain.EMPTY) {
 			Painter.set(level, p, Terrain.EMPTY_SP);
 			p.x += dirX;
 			p.y += dirY;

@@ -41,55 +41,69 @@ import com.watabou.utils.Random;
 public class SacrificeRoom extends SpecialRoom {
 
 	@Override
-	public int minWidth() { return 7; }
-	public int minHeight() { return 7; }
+	public int minWidth() {
+		return 7;
+	}
+
+	public int minHeight() {
+		return 7;
+	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.CHASM );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.CHASM);
 
 		Point c = center();
 		Door door = entrance();
 		if (door.x == left || door.x == right) {
-			if (door.y == c.y) c.y += Random.Int(2) == 0 ? -1 : +1;
-			Point p = Painter.drawInside( level, this, door, Math.abs( door.x - c.x ) - 2, Terrain.EMPTY_SP );
+			if (door.y == c.y)
+				c.y += Random.Int(2) == 0 ? -1 : +1;
+			Point p = Painter.drawInside(level, this, door, Math.abs(door.x - c.x) - 2, Terrain.EMPTY_SP);
 			for (; p.y != c.y; p.y += p.y < c.y ? +1 : -1) {
-				Painter.set( level, p, Terrain.EMPTY_SP );
+				Painter.set(level, p, Terrain.EMPTY_SP);
 			}
 		} else {
-			if (door.x == c.x) c.x += Random.Int(2) == 0 ? -1 : +1;
-			Point p = Painter.drawInside( level, this, door, Math.abs( door.y - c.y ) - 2, Terrain.EMPTY_SP );
+			if (door.x == c.x)
+				c.x += Random.Int(2) == 0 ? -1 : +1;
+			Point p = Painter.drawInside(level, this, door, Math.abs(door.y - c.y) - 2, Terrain.EMPTY_SP);
 			for (; p.x != c.x; p.x += p.x < c.x ? +1 : -1) {
-				Painter.set( level, p, Terrain.EMPTY_SP );
+				Painter.set(level, p, Terrain.EMPTY_SP);
 			}
 		}
 
 		//we add four statues to give some cover from ranged enemies
 		Point statue = new Point(c);
 		statue.x -= 2;
-		if (statue.x > left) Painter.set( level, statue, Terrain.STATUE );
-		statue.x += 2; statue.y -= 2;
-		if (statue.y > top) Painter.set( level, statue, Terrain.STATUE );
-		statue.y += 2; statue.x += 2;
-		if (statue.x < right) Painter.set( level, statue, Terrain.STATUE );
-		statue.x -= 2; statue.y += 2;
-		if (statue.y < bottom) Painter.set( level, statue, Terrain.STATUE );
+		if (statue.x > left)
+			Painter.set(level, statue, Terrain.STATUE);
+		statue.x += 2;
+		statue.y -= 2;
+		if (statue.y > top)
+			Painter.set(level, statue, Terrain.STATUE);
+		statue.y += 2;
+		statue.x += 2;
+		if (statue.x < right)
+			Painter.set(level, statue, Terrain.STATUE);
+		statue.x -= 2;
+		statue.y += 2;
+		if (statue.y < bottom)
+			Painter.set(level, statue, Terrain.STATUE);
 
-		Painter.fill( level, c.x - 1, c.y - 1, 3, 3, Terrain.EMBERS );
-		Painter.set( level, c, Terrain.PEDESTAL );
+		Painter.fill(level, c.x - 1, c.y - 1, 3, 3, Terrain.EMBERS);
+		Painter.set(level, c, Terrain.PEDESTAL);
 
-		Blob.seed( level.pointToCell(c), 6 + Dungeon.depth * 4, SacrificialFire.class, level ).setPrize(prize(level));
+		Blob.seed(level.pointToCell(c), 6 + Dungeon.depth * 4, SacrificialFire.class, level).setPrize(prize(level));
 
-		door.set( Door.Type.EMPTY );
+		door.set(Door.Type.EMPTY);
 	}
 
-	public static Item prize( Level level ) {
+	public static Item prize(Level level) {
 
 		//1 floor set higher than normal
-		Weapon prize = Generator.randomWeapon( (Dungeon.depth / 5) + 1);
+		Weapon prize = Generator.randomWeapon((Dungeon.depth / 5) + 1);
 
-		if (Challenges.isItemBlocked(prize)){
+		if (Challenges.isItemBlocked(prize)) {
 			return new Gold().random();
 		}
 
@@ -97,10 +111,10 @@ public class SacrificeRoom extends SpecialRoom {
 		Weapon.Enchantment curse = Weapon.Enchantment.randomCurse();
 
 		//if it isn't already cursed, give it a free upgrade
-		if (!prize.cursed){
+		if (!prize.cursed) {
 			prize.upgrade();
 			//curse the weapon, unless it has a glyph
-			if (!prize.hasGoodEnchant()){
+			if (!prize.hasGoodEnchant()) {
 				prize.enchant(curse);
 			}
 		}

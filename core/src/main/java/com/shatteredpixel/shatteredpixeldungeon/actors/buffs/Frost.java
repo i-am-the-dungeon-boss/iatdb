@@ -45,7 +45,7 @@ import java.util.ArrayList;
 
 public class Frost extends FlavourBuff {
 
-	public static final float DURATION	= 10f;
+	public static final float DURATION = 10f;
 
 	private float echoLandedTurns;
 
@@ -59,17 +59,17 @@ public class Frost extends FlavourBuff {
 	}
 
 	@Override
-	public boolean attachTo( Char target ) {
-		Buff.detach( target, Burning.class );
+	public boolean attachTo(Char target) {
+		Buff.detach(target, Burning.class);
 
-		if (super.attachTo( target )) {
+		if (super.attachTo(target)) {
 
 			target.paralysed++;
-			Buff.detach( target, Chill.class );
+			Buff.detach(target, Chill.class);
 
 			if (target instanceof Hero) {
 
-				Hero hero = (Hero)target;
+				Hero hero = (Hero) target;
 				ArrayList<Item> freezable = new ArrayList<>();
 				//does not reach inside of containers
 				if (!hero.belongings.lostInventory()) {
@@ -80,15 +80,15 @@ public class Frost extends FlavourBuff {
 					}
 				}
 
-				if (!freezable.isEmpty()){
-					Item toFreeze = Random.element(freezable).detach( hero.belongings.backpack );
-					GLog.w( Messages.capitalize(Messages.get(this, "freezes", toFreeze.title())) );
-					if (toFreeze instanceof Potion){
+				if (!freezable.isEmpty()) {
+					Item toFreeze = Random.element(freezable).detach(hero.belongings.backpack);
+					GLog.w(Messages.capitalize(Messages.get(this, "freezes", toFreeze.title())));
+					if (toFreeze instanceof Potion) {
 						((Potion) toFreeze).shatter(hero.pos);
-					} else if (toFreeze instanceof MysteryMeat){
+					} else if (toFreeze instanceof MysteryMeat) {
 						FrozenCarpaccio carpaccio = new FrozenCarpaccio();
-						if (!carpaccio.collect( hero.belongings.backpack )) {
-							Dungeon.level.drop( carpaccio, target.pos ).sprite.drop();
+						if (!carpaccio.collect(hero.belongings.backpack)) {
+							Dungeon.level.drop(carpaccio, target.pos).sprite.drop();
 						}
 					}
 				}
@@ -100,7 +100,7 @@ public class Frost extends FlavourBuff {
 				if (item instanceof Potion && !item.unique) {
 					((Potion) ((Thief) target).item).shatter(target.pos);
 					((Thief) target).item = null;
-				} else if (item instanceof MysteryMeat){
+				} else if (item instanceof MysteryMeat) {
 					((Thief) target).item = new FrozenCarpaccio();
 				}
 
@@ -120,7 +120,7 @@ public class Frost extends FlavourBuff {
 		EchoHardStun.grantImmunityOnDetach(target, echoLandedTurns);
 		EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 		if (Dungeon.level.water[target.pos])
-			Buff.prolong(target, Chill.class, Chill.DURATION/2f);
+			Buff.prolong(target, Chill.class, Chill.DURATION / 2f);
 	}
 
 	@Override
@@ -145,7 +145,8 @@ public class Frost extends FlavourBuff {
 			target.sprite.add(CharSprite.State.PARALYSED);
 		} else {
 			target.sprite.remove(CharSprite.State.FROZEN);
-			if (target.paralysed <= 1) target.sprite.remove(CharSprite.State.PARALYSED);
+			if (target.paralysed <= 1)
+				target.sprite.remove(CharSprite.State.PARALYSED);
 		}
 	}
 
@@ -163,7 +164,7 @@ public class Frost extends FlavourBuff {
 
 	{
 		//can't chill what's frozen!
-		immunities.add( Chill.class );
+		immunities.add(Chill.class);
 	}
 
 }

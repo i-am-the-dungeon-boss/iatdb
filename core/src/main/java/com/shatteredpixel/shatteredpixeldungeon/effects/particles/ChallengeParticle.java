@@ -32,9 +32,10 @@ public class ChallengeParticle extends PixelParticle.Shrinking {
 
 	public static final Emitter.Factory FACTORY = new Emitter.Factory() {
 		@Override
-		public void emit( Emitter emitter, int index, float x, float y ) {
-			((ChallengeParticle)emitter.recycle( ChallengeParticle.class )).reset( x, y );
+		public void emit(Emitter emitter, int index, float x, float y) {
+			((ChallengeParticle) emitter.recycle(ChallengeParticle.class)).reset(x, y);
 		}
+
 		@Override
 		public boolean lightMode() {
 			return false;
@@ -46,10 +47,10 @@ public class ChallengeParticle extends PixelParticle.Shrinking {
 
 		lifespan = 0.6f;
 
-		color( 0xFF0000 );
+		color(0xFF0000);
 	}
 
-	public void reset( float x, float y){
+	public void reset(float x, float y) {
 		revive();
 
 		this.x = x;
@@ -58,7 +59,7 @@ public class ChallengeParticle extends PixelParticle.Shrinking {
 		left = lifespan;
 		size = 8;
 
-		speed.set( Random.Float( -8, +8 ), Random.Float( -16, -32 ) );
+		speed.set(Random.Float(-8, +8), Random.Float(-16, -32));
 	}
 
 	@Override

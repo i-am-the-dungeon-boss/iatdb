@@ -39,15 +39,15 @@ import com.watabou.utils.PathFinder;
 import java.util.ArrayList;
 
 public class StoneOfFlock extends Runestone {
-	
+
 	{
 		image = ItemSpriteSheet.STONE_FLOCK;
 	}
-	
+
 	@Override
 	protected void activate(int cell) {
 
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), 2 );
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), 2);
 		ArrayList<Integer> spawnPoints = new ArrayList<>();
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
@@ -55,7 +55,7 @@ public class StoneOfFlock extends Runestone {
 			}
 		}
 
-		for (int i : spawnPoints){
+		for (int i : spawnPoints) {
 			if (Dungeon.level.insideMap(i)
 					&& Actor.findChar(i) == null
 					&& !(Dungeon.level.pit[i])) {
@@ -71,7 +71,7 @@ public class StoneOfFlock extends Runestone {
 		CellEmitter.get(cell).burst(Speck.factory(Speck.WOOL), 4);
 		Sample.INSTANCE.play(Assets.Sounds.PUFF);
 		Sample.INSTANCE.play(Assets.Sounds.SHEEP);
-		
+
 	}
-	
+
 }

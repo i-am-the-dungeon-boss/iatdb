@@ -33,8 +33,8 @@ public class Javelin extends MissileWeapon {
 		image = ItemSpriteSheet.JAVELIN;
 		hitSound = Assets.Sounds.HIT_STAB;
 		hitSoundPitch = 1f;
-		
+
 		tier = 4;
 	}
-	
+
 }

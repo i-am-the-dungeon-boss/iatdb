@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GdxTestExtension.class)
 class LevelRoutingTest {
 
-    @Test
-    @DisplayName("Depths 1-4 are SewerLevel; depth 5 is SewerBossLevel without a saved echo")
-    void routingForFirstFiveDepths() {
-        Assertions.assertThat(Dungeon.levelClassForDepth(1, 0)).isEqualTo(SewerLevel.class);
-        Assertions.assertThat(Dungeon.levelClassForDepth(2, 0)).isEqualTo(SewerLevel.class);
-        Assertions.assertThat(Dungeon.levelClassForDepth(3, 0)).isEqualTo(SewerLevel.class);
-        Assertions.assertThat(Dungeon.levelClassForDepth(4, 0)).isEqualTo(SewerLevel.class);
-        Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
-    }
+	@Test
+	@DisplayName("Depths 1-4 are SewerLevel; depth 5 is SewerBossLevel without a saved echo")
+	void routingForFirstFiveDepths() {
+		Assertions.assertThat(Dungeon.levelClassForDepth(1, 0)).isEqualTo(SewerLevel.class);
+		Assertions.assertThat(Dungeon.levelClassForDepth(2, 0)).isEqualTo(SewerLevel.class);
+		Assertions.assertThat(Dungeon.levelClassForDepth(3, 0)).isEqualTo(SewerLevel.class);
+		Assertions.assertThat(Dungeon.levelClassForDepth(4, 0)).isEqualTo(SewerLevel.class);
+		Assertions.assertThat(Dungeon.levelClassForDepth(5, 0)).isEqualTo(SewerBossLevel.class);
+	}
 }

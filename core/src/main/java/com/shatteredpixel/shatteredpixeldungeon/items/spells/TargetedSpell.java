@@ -41,83 +41,83 @@ import com.watabou.utils.Callback;
 import com.watabou.utils.Random;
 
 public abstract class TargetedSpell extends Spell {
-	
+
 	protected int collisionProperties = Ballistica.PROJECTILE;
-	
+
 	@Override
 	protected void onCast(Hero hero) {
 		GameScene.selectCell(targeter);
 	}
-	
-	protected abstract void affectTarget( Ballistica bolt, Hero hero );
-	
-	protected void fx( Ballistica bolt, Callback callback ) {
-		MagicMissile.boltFromChar( curUser.sprite.parent,
+
+	protected abstract void affectTarget(Ballistica bolt, Hero hero);
+
+	protected void fx(Ballistica bolt, Callback callback) {
+		MagicMissile.boltFromChar(curUser.sprite.parent,
 				MagicMissile.MAGIC_MISSILE,
 				curUser.sprite,
 				bolt.collisionPos,
 				callback);
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 	}
 
-	protected void onSpellused(){
-		detach( curUser.belongings.backpack );
+	protected void onSpellused() {
+		detach(curUser.belongings.backpack);
 		Invisibility.dispel();
 		updateQuickslot();
-		curUser.spendAndNext( timeToCast() );
+		curUser.spendAndNext(timeToCast());
 		Catalog.countUse(getClass());
-		if (Random.Float() < talentChance){
+		if (Random.Float() < talentChance) {
 			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());
 		}
 	}
 
-	protected float timeToCast(){
+	protected float timeToCast() {
 		return Actor.TICK;
 	}
-	
-	private static CellSelector.Listener targeter = new  CellSelector.Listener(){
-		
+
+	private static CellSelector.Listener targeter = new CellSelector.Listener() {
+
 		@Override
-		public void onSelect( Integer target ) {
-			
+		public void onSelect(Integer target) {
+
 			if (target != null) {
-				
+
 				//FIXME this safety check shouldn't be necessary
 				//it would be better to eliminate the curItem static variable.
 				final TargetedSpell curSpell;
 				if (curItem instanceof TargetedSpell) {
-					curSpell = (TargetedSpell)curItem;
+					curSpell = (TargetedSpell) curItem;
 				} else {
 					return;
 				}
-				
-				final Ballistica shot = new Ballistica( curUser.pos, target, curSpell.collisionProperties);
+
+				final Ballistica shot = new Ballistica(curUser.pos, target, curSpell.collisionProperties);
 				int cell = shot.collisionPos;
-				
+
 				curUser.sprite.zap(cell);
-				
+
 				//attempts to target the cell aimed at if something is there, otherwise targets the collision pos.
 				if (Actor.findChar(target) != null)
 					QuickSlotButton.target(Actor.findChar(target));
 				else
 					QuickSlotButton.target(Actor.findChar(cell));
-				
+
 				curUser.busy();
-				
+
 				curSpell.fx(shot, new Callback() {
 					public void call() {
 						curSpell.affectTarget(shot, curUser);
 					}
 				});
-				
+
 			}
-				
+
 		}
-		
+
 		@Override
 		public String prompt() {
 			return Messages.get(TargetedSpell.class, "prompt");
 		}
 	};
-	
+
 }

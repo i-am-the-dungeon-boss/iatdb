@@ -62,9 +62,9 @@ public class ChaliceOfBlood extends Artifact {
 	public static final String AC_PRICK = "PRICK";
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (isEquipped( hero )
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (isEquipped(hero)
 				&& level() < levelCap
 				&& !cursed
 				&& !hero.isInvulnerable(getClass())
@@ -74,10 +74,10 @@ public class ChaliceOfBlood extends Artifact {
 	}
 
 	@Override
-	public void execute(Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 
-		if (action.equals(AC_PRICK)){
+		if (action.equals(AC_PRICK)) {
 
 			int minDmg = minPrickDmg();
 			int maxDmg = maxPrickDmg();
@@ -100,32 +100,32 @@ public class ChaliceOfBlood extends Artifact {
 			}
 
 			GameScene.show(
-				new WndOptions(new ItemSprite(this),
-						Messages.titleCase(name()),
-						Messages.get(this, "prick_warn", minDmg, maxDmg, Messages.decimalFormat("#.##", 100*deathChance)),
-						Messages.get(this, "yes"),
-						Messages.get(this, "no")) {
-					@Override
-					protected void onSelect(int index) {
-						if (index == 0) {
-							prick(Dungeon.hero);
+					new WndOptions(new ItemSprite(this),
+							Messages.titleCase(name()),
+							Messages.get(this, "prick_warn", minDmg, maxDmg,
+									Messages.decimalFormat("#.##", 100 * deathChance)),
+							Messages.get(this, "yes"),
+							Messages.get(this, "no")) {
+						@Override
+						protected void onSelect(int index) {
+							if (index == 0) {
+								prick(Dungeon.hero);
+							}
 						}
-					}
-				}
-			);
+					});
 
 		}
 	}
 
-	private int minPrickDmg(){
-		return (int)Math.ceil(3 + 2.5f*(level()*level()));
+	private int minPrickDmg() {
+		return (int) Math.ceil(3 + 2.5f * (level() * level()));
 	}
 
-	private int maxPrickDmg(){
-		return (int)Math.floor(7 + 3.5f*(level()*level()));
+	private int maxPrickDmg() {
+		return (int) Math.floor(7 + 3.5f * (level() * level()));
 	}
 
-	private void prick(Hero hero){
+	private void prick(Hero hero) {
 		int damage = Random.NormalIntRange(minPrickDmg(), maxPrickDmg());
 
 		//need to process on-hit effects manually
@@ -134,7 +134,7 @@ public class ChaliceOfBlood extends Artifact {
 			damage = armor.absorb(damage);
 		}
 
-		if (hero.buff(MagicImmune.class) != null && hero.buff(HolyWard.HolyArmBuff.class) != null){
+		if (hero.buff(MagicImmune.class) != null && hero.buff(HolyWard.HolyArmBuff.class) != null) {
 			damage -= hero.subClass == HeroSubClass.PALADIN ? 3 : 1;
 		}
 
@@ -145,23 +145,23 @@ public class ChaliceOfBlood extends Artifact {
 
 		damage -= hero.drRoll();
 
-		hero.sprite.operate( hero.pos );
+		hero.sprite.operate(hero.pos);
 		hero.busy();
 		hero.spend(Actor.TICK);
-		GLog.w( Messages.get(this, "onprick") );
-		if (damage <= 0){
+		GLog.w(Messages.get(this, "onprick"));
+		if (damage <= 0) {
 			damage = 1;
 		} else {
 			Sample.INSTANCE.play(Assets.Sounds.CURSED);
-			hero.sprite.emitter().burst( ShadowParticle.CURSE, 4+(damage/10) );
+			hero.sprite.emitter().burst(ShadowParticle.CURSE, 4 + (damage / 10));
 		}
 
 		hero.damage(damage, this);
 
 		if (!hero.isAlive()) {
 			Badges.validateDeathFromFriendlyMagic();
-			Dungeon.fail( this );
-			GLog.n( Messages.get(this, "ondeath") );
+			Dungeon.fail(this);
+			GLog.n(Messages.get(this, "ondeath"));
 		} else {
 			upgrade();
 			Catalog.countUse(getClass());
@@ -180,8 +180,10 @@ public class ChaliceOfBlood extends Artifact {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (level() >= 7) image = ItemSpriteSheet.ARTIFACT_CHALICE3;
-		else if (level() >= 3) image = ItemSpriteSheet.ARTIFACT_CHALICE2;
+		if (level() >= 7)
+			image = ItemSpriteSheet.ARTIFACT_CHALICE3;
+		else if (level() >= 3)
+			image = ItemSpriteSheet.ARTIFACT_CHALICE2;
 	}
 
 	@Override
@@ -191,21 +193,23 @@ public class ChaliceOfBlood extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (cursed || target.buff(MagicImmune.class) != null) return;
+		if (cursed || target.buff(MagicImmune.class) != null)
+			return;
 
 		//grants 5 turns of healing up-front, if hero isn't starving
-		if (target.isStarving()) return;
+		if (target.isStarving())
+			return;
 
-		float healDelay = 10f - (1.33f + level()*0.667f);
+		float healDelay = 10f - (1.33f + level() * 0.667f);
 		healDelay /= amount;
-		float heal = 5f/healDelay;
+		float heal = 5f / healDelay;
 		//effectively 0.5/1/1.5/2/2.5 HP per turn at +0/+6/+8/+9/+10
-		if (Random.Float() < heal%1){
+		if (Random.Float() < heal % 1) {
 			heal++;
 		}
 		if (heal >= 1f && target.HP < target.HT) {
-			target.HP = Math.min(target.HT, target.HP + (int)heal);
-			target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString((int)heal), FloatingText.HEALING);
+			target.HP = Math.min(target.HT, target.HP + (int) heal);
+			target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString((int) heal), FloatingText.HEALING);
 
 			if (target.HP == target.HT && target instanceof Hero) {
 				((Hero) target).resting = false;
@@ -217,7 +221,7 @@ public class ChaliceOfBlood extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 
-		if (isEquipped (owner())){
+		if (isEquipped(owner())) {
 			desc += "\n\n";
 			if (cursed)
 				desc += Messages.get(this, "desc_cursed");

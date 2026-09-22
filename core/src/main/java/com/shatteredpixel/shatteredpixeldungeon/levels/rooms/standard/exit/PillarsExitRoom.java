@@ -36,7 +36,7 @@ public class PillarsExitRoom extends PillarsRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{3, 1, 0};
+		return new float[] { 3, 1, 0 };
 	}
 
 	@Override
@@ -54,15 +54,16 @@ public class PillarsExitRoom extends PillarsRoom {
 			exit = level.pointToCell(random(2));
 			valid = true;
 
-			for (int i : PathFinder.NEIGHBOURS4){
-				if (i == -level.width()) continue;
-				if (level.map[exit+i] == Terrain.WALL){
+			for (int i : PathFinder.NEIGHBOURS4) {
+				if (i == -level.width())
+					continue;
+				if (level.map[exit + i] == Terrain.WALL) {
 					valid = false;
 				}
 			}
 
 		} while (level.findMob(exit) != null || level.map[exit] == Terrain.WALL || !valid);
-		Painter.set( level, exit, Terrain.EXIT );
+		Painter.set(level, exit, Terrain.EXIT);
 
 		level.transitions.add(new LevelTransition(level, exit, LevelTransition.Type.REGULAR_EXIT));
 	}

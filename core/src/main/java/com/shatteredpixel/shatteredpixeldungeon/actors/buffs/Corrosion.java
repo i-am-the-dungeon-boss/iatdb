@@ -42,9 +42,9 @@ public class Corrosion extends Buff implements Hero.Doom {
 	//used in specific cases where the source of the corrosion is important for death logic
 	private Class source;
 
-	private static final String DAMAGE	= "damage";
-	private static final String LEFT	= "left";
-	private static final String SOURCE	= "source";
+	private static final String DAMAGE = "damage";
+	private static final String LEFT = "left";
+	private static final String SOURCE = "source";
 
 	{
 		type = buffType.NEGATIVE;
@@ -52,40 +52,41 @@ public class Corrosion extends Buff implements Hero.Doom {
 	}
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( DAMAGE, damage );
-		bundle.put( LEFT, left );
-		bundle.put( SOURCE, source);
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(DAMAGE, damage);
+		bundle.put(LEFT, left);
+		bundle.put(SOURCE, source);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		damage = bundle.getFloat( DAMAGE );
-		left = bundle.getFloat( LEFT );
-		source = bundle.getClass( SOURCE );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		damage = bundle.getFloat(DAMAGE);
+		left = bundle.getFloat(LEFT);
+		source = bundle.getClass(SOURCE);
 	}
 
-	public void set(float duration, int damage){
+	public void set(float duration, int damage) {
 		set(duration, damage, null);
 	}
 
 	public void set(float duration, int damage, Class source) {
 		this.left = Math.max(duration, left);
-		if (this.damage < damage) this.damage = damage;
+		if (this.damage < damage)
+			this.damage = damage;
 		this.source = source;
 	}
 
-	public void extend( float duration ) {
+	public void extend(float duration) {
 		left += duration;
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.POISON;
 	}
-	
+
 	@Override
 	public void tintIcon(Image icon) {
 		icon.hardlight(1f, 0.5f, 0f);
@@ -93,25 +94,25 @@ public class Corrosion extends Buff implements Hero.Doom {
 
 	@Override
 	public String iconTextDisplay() {
-		return Integer.toString((int)damage);
+		return Integer.toString((int) damage);
 	}
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", dispTurns(left), (int)damage);
+		return Messages.get(this, "desc", dispTurns(left), (int) damage);
 	}
 
 	@Override
 	public boolean act() {
 		if (target.isAlive()) {
-			target.damage((int)damage, this);
-			if (damage < (Dungeon.scalingDepth()/2)+2) {
+			target.damage((int) damage, this);
+			if (damage < (Dungeon.scalingDepth() / 2) + 2) {
 				damage++;
 			} else {
 				damage += 0.5f;
 			}
-			
-			spend( TICK );
+
+			spend(TICK);
 			if ((left -= TICK) <= 0) {
 				detach();
 			}
@@ -121,14 +122,14 @@ public class Corrosion extends Buff implements Hero.Doom {
 
 		return true;
 	}
-	
+
 	@Override
 	public void onDeath() {
-		if (source == WandOfCorrosion.class){
+		if (source == WandOfCorrosion.class) {
 			Badges.validateDeathFromFriendlyMagic();
 		}
 
-		Dungeon.fail( this );
+		Dungeon.fail(this);
 		GLog.n(Messages.get(this, "ondeath"));
 	}
 

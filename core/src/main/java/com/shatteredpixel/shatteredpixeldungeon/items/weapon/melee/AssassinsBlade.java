@@ -40,20 +40,20 @@ public class AssassinsBlade extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  4*(tier+1) +    //20 base, down from 25
-				lvl*(tier+1);   //scaling unchanged
+		return 4 * (tier + 1) + //20 base, down from 25
+				lvl * (tier + 1); //scaling unchanged
 	}
 
 	@Override
 	public int damageRoll(Char owner) {
 		if (owner instanceof Hero) {
-			Hero hero = (Hero)owner;
+			Hero hero = (Hero) owner;
 			Char enemy = hero.attackTarget();
 			if (enemy instanceof Mob && ((Mob) enemy).surprisedBy(hero)) {
 				//deals 50% toward max to max on surprise, instead of min to max.
 				int diff = max() - min();
 				int damage = augment.damageFactor(Hero.heroDamageIntRange(
-						min() + Math.round(diff*0.50f),
+						min() + Math.round(diff * 0.50f),
 						max()));
 				int exStr = hero.STR() - STRReq();
 				if (exStr > 0) {
@@ -70,19 +70,19 @@ public class AssassinsBlade extends MeleeWeapon {
 		return Messages.get(this, "prompt");
 	}
 
-	public boolean useTargeting(){
+	public boolean useTargeting() {
 		return false;
 	}
 
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		Dagger.sneakAbility(hero, target, 3, 2+buffedLvl(), this);
+		Dagger.sneakAbility(hero, target, 3, 2 + buffedLvl(), this);
 	}
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", 2+buffedLvl());
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", 2 + buffedLvl());
 		} else {
 			return Messages.get(this, "typical_ability_desc", 2);
 		}
@@ -90,7 +90,7 @@ public class AssassinsBlade extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return Integer.toString(2+level);
+		return Integer.toString(2 + level);
 	}
 
 }

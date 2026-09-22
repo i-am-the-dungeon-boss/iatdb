@@ -41,7 +41,7 @@ public class VaultLongRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 0, 1};
+		return new float[] { 0, 0, 1 };
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class VaultLongRoom extends StandardRoom {
 
 	@Override
 	public int minHeight() {
-		return wide ? 11: 21;
+		return wide ? 11 : 21;
 	}
 
 	@Override
@@ -66,12 +66,12 @@ public class VaultLongRoom extends StandardRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Painter.fill(level, this, 4, Terrain.WALL);
 
-		if (wide){
+		if (wide) {
 			Painter.fill(level, this, 8, 4, 8, 4, Terrain.EMPTY);
 		} else {
 			Painter.fill(level, this, 4, 8, 4, 8, Terrain.EMPTY);
@@ -79,13 +79,13 @@ public class VaultLongRoom extends StandardRoom {
 
 		Point c = center();
 		Item i = level.findPrizeItem();
-		if (i != null){
+		if (i != null) {
 			level.drop(i, level.pointToCell(c));
 		}
 
 		VaultRat rat = new VaultRat();
 		rat.pos = randomWander(level);
-		rat.wanderPositions = new int[]{
+		rat.wanderPositions = new int[] {
 				randomWander(level), randomWander(level), randomWander(level),
 				randomWander(level), randomWander(level), randomWander(level),
 				randomWander(level), randomWander(level), randomWander(level),
@@ -97,11 +97,11 @@ public class VaultLongRoom extends StandardRoom {
 		level.mobs.add(rat);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 	}
 
-	private int randomWander(Level level){
+	private int randomWander(Level level) {
 		int pos;
 		do {
 			pos = level.pointToCell(random(1));

@@ -50,15 +50,15 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 
 public class WndTradeItem extends WndInfoItem {
 
-	private static final float GAP		= 2;
-	private static final int BTN_HEIGHT	= 18;
+	private static final float GAP = 2;
+	private static final int BTN_HEIGHT = 18;
 
 	private WndBag owner;
 
 	private boolean selling = false;
 
 	//selling
-	public WndTradeItem( final Item item, WndBag owner ) {
+	public WndTradeItem(final Item item, WndBag owner) {
 
 		super(item);
 
@@ -70,8 +70,8 @@ public class WndTradeItem extends WndInfoItem {
 
 		//find the shopkeeper in the current level
 		Shopkeeper shop = null;
-		for (Char ch : Actor.chars()){
-			if (ch instanceof Shopkeeper){
+		for (Char ch : Actor.chars()) {
+			if (ch instanceof Shopkeeper) {
 				shop = (Shopkeeper) ch;
 				break;
 			}
@@ -80,7 +80,7 @@ public class WndTradeItem extends WndInfoItem {
 
 		if (item.quantity() == 1 || (item instanceof MissileWeapon && item.isUpgradable())) {
 
-			if (item instanceof MissileWeapon && ((MissileWeapon) item).extraThrownLeft){
+			if (item instanceof MissileWeapon && ((MissileWeapon) item).extraThrownLeft) {
 				RenderedTextBlock warn = PixelScene.renderTextBlock(Messages.get(WndUpgrade.class, "thrown_dust"), 6);
 				warn.hardlight(CharSprite.WARNING);
 				warn.maxWidth(this.width);
@@ -89,52 +89,52 @@ public class WndTradeItem extends WndInfoItem {
 				pos = warn.bottom();
 			}
 
-			RedButton btnSell = new RedButton( Messages.get(this, "sell", item.value()) ) {
+			RedButton btnSell = new RedButton(Messages.get(this, "sell", item.value())) {
 				@Override
 				protected void onClick() {
-					sell( item, finalShop);
+					sell(item, finalShop);
 					hide();
 				}
 			};
-			btnSell.setRect( 0, pos + GAP, width, BTN_HEIGHT );
+			btnSell.setRect(0, pos + GAP, width, BTN_HEIGHT);
 			btnSell.icon(new ItemSprite(ItemSpriteSheet.GOLD));
-			add( btnSell );
+			add(btnSell);
 
 			pos = btnSell.bottom();
 
 		} else {
 
-			int priceAll= item.value();
-			RedButton btnSell1 = new RedButton( Messages.get(this, "sell_1", priceAll / item.quantity()) ) {
+			int priceAll = item.value();
+			RedButton btnSell1 = new RedButton(Messages.get(this, "sell_1", priceAll / item.quantity())) {
 				@Override
 				protected void onClick() {
-					sellOne( item, finalShop );
+					sellOne(item, finalShop);
 					hide();
 				}
 			};
-			btnSell1.setRect( 0, pos + GAP, width, BTN_HEIGHT );
+			btnSell1.setRect(0, pos + GAP, width, BTN_HEIGHT);
 			btnSell1.icon(new ItemSprite(ItemSpriteSheet.GOLD));
-			add( btnSell1 );
-			RedButton btnSellAll = new RedButton( Messages.get(this, "sell_all", priceAll ) ) {
+			add(btnSell1);
+			RedButton btnSellAll = new RedButton(Messages.get(this, "sell_all", priceAll)) {
 				@Override
 				protected void onClick() {
-					sell( item, finalShop );
+					sell(item, finalShop);
 					hide();
 				}
 			};
-			btnSellAll.setRect( 0, btnSell1.bottom() + 1, width, BTN_HEIGHT );
+			btnSellAll.setRect(0, btnSell1.bottom() + 1, width, BTN_HEIGHT);
 			btnSellAll.icon(new ItemSprite(ItemSpriteSheet.GOLD));
-			add( btnSellAll );
+			add(btnSellAll);
 
 			pos = btnSellAll.bottom();
 
 		}
 
-		resize( width, (int)pos );
+		resize(width, (int) pos);
 	}
 
 	//buying
-	public WndTradeItem( final Heap heap ) {
+	public WndTradeItem(final Heap heap) {
 
 		super(heap);
 
@@ -145,19 +145,19 @@ public class WndTradeItem extends WndInfoItem {
 
 		float pos = height;
 
-		final int price = Shopkeeper.sellPrice( item );
+		final int price = Shopkeeper.sellPrice(item);
 
-		RedButton btnBuy = new RedButton( Messages.get(this, "buy", price) ) {
+		RedButton btnBuy = new RedButton(Messages.get(this, "buy", price)) {
 			@Override
 			protected void onClick() {
 				hide();
-				buy( heap );
+				buy(heap);
 			}
 		};
-		btnBuy.setRect( 0, pos + GAP, width, BTN_HEIGHT );
+		btnBuy.setRect(0, pos + GAP, width, BTN_HEIGHT);
 		btnBuy.icon(new ItemSprite(ItemSpriteSheet.GOLD));
-		btnBuy.enable( price <= Dungeon.gold );
-		add( btnBuy );
+		btnBuy.enable(price <= Dungeon.gold);
+		add(btnBuy);
 
 		pos = btnBuy.bottom();
 
@@ -165,10 +165,11 @@ public class WndTradeItem extends WndInfoItem {
 		if (thievery != null && !thievery.isCursed() && thievery.chargesToUse(item) > 0) {
 			final float chance = thievery.stealChance(item);
 			final int chargesToUse = thievery.chargesToUse(item);
-			RedButton btnSteal = new RedButton(Messages.get(this, "steal", Math.min(100, (int) (chance * 100)), chargesToUse), 6) {
+			RedButton btnSteal = new RedButton(
+					Messages.get(this, "steal", Math.min(100, (int) (chance * 100)), chargesToUse), 6) {
 				@Override
 				protected void onClick() {
-					if (chance >= 1){
+					if (chance >= 1) {
 						thievery.steal(item);
 						Hero hero = Dungeon.hero;
 						Item item = heap.pickUp();
@@ -182,11 +183,11 @@ public class WndTradeItem extends WndInfoItem {
 								Messages.titleCase(Messages.get(MasterThievesArmband.class, "name")),
 								Messages.get(WndTradeItem.class, "steal_warn"),
 								Messages.get(WndTradeItem.class, "steal_warn_yes"),
-								Messages.get(WndTradeItem.class, "steal_warn_no")){
+								Messages.get(WndTradeItem.class, "steal_warn_no")) {
 							@Override
 							protected void onSelect(int index) {
 								super.onSelect(index);
-								if (index == 0){
+								if (index == 0) {
 									if (thievery.steal(item)) {
 										Hero hero = Dungeon.hero;
 										Item item = heap.pickUp();
@@ -221,88 +222,91 @@ public class WndTradeItem extends WndInfoItem {
 
 		resize(width, (int) pos);
 	}
-	
+
 	@Override
 	public void hide() {
-		
+
 		super.hide();
 		CurrencyIndicator.showGold = false;
-		
+
 		if (owner != null) {
 			owner.hide();
 		}
-		if (selling) Shopkeeper.sell();
+		if (selling)
+			Shopkeeper.sell();
 	}
 
-	public static void sell( Item item ) {
+	public static void sell(Item item) {
 		sell(item, null);
 	}
 
-	public static void sell( Item item, Shopkeeper shop ) {
-		
+	public static void sell(Item item, Shopkeeper shop) {
+
 		Hero hero = Dungeon.hero;
-		
-		if (item.isEquipped( hero ) && !((EquipableItem)item).doUnequip( hero, false )) {
+
+		if (item.isEquipped(hero) && !((EquipableItem) item).doUnequip(hero, false)) {
 			return;
 		}
-		item.detachAll( hero.belongings.backpack );
+		item.detachAll(hero.belongings.backpack);
 
-		if (item instanceof MissileWeapon && item.isUpgradable()){
-			Buff.affect(hero, MissileWeapon.UpgradedSetTracker.class).levelThresholds.put(((MissileWeapon) item).setID, Integer.MAX_VALUE);
+		if (item instanceof MissileWeapon && item.isUpgradable()) {
+			Buff.affect(hero, MissileWeapon.UpgradedSetTracker.class).levelThresholds.put(((MissileWeapon) item).setID,
+					Integer.MAX_VALUE);
 		}
 
 		//selling items in the sell interface doesn't spend time
 		hero.spend(-hero.cooldown());
 
-		new Gold( item.value() ).doPickUp( hero );
+		new Gold(item.value()).doPickUp(hero);
 
-		if (shop != null){
+		if (shop != null) {
 			shop.buybackItems.add(item);
-			while (shop.buybackItems.size() > Shopkeeper.MAX_BUYBACK_HISTORY){
+			while (shop.buybackItems.size() > Shopkeeper.MAX_BUYBACK_HISTORY) {
 				shop.buybackItems.remove(0);
 			}
 		}
 	}
 
-	public static void sellOne( Item item ) {
-		sellOne( item, null );
+	public static void sellOne(Item item) {
+		sellOne(item, null);
 	}
 
-	public static void sellOne( Item item, Shopkeeper shop ) {
-		
+	public static void sellOne(Item item, Shopkeeper shop) {
+
 		if (item.quantity() <= 1) {
-			sell( item, shop );
+			sell(item, shop);
 		} else {
-			
+
 			Hero hero = Dungeon.hero;
-			
-			item = item.detach( hero.belongings.backpack );
+
+			item = item.detach(hero.belongings.backpack);
 
 			//selling items in the sell interface doesn't spend time
 			hero.spend(-hero.cooldown());
 
-			new Gold( item.value() ).doPickUp( hero );
+			new Gold(item.value()).doPickUp(hero);
 
-			if (shop != null){
+			if (shop != null) {
 				shop.buybackItems.add(item);
-				while (shop.buybackItems.size() > Shopkeeper.MAX_BUYBACK_HISTORY){
+				while (shop.buybackItems.size() > Shopkeeper.MAX_BUYBACK_HISTORY) {
 					shop.buybackItems.remove(0);
 				}
 			}
 		}
 	}
-	
-	private void buy( Heap heap ) {
-		
+
+	private void buy(Heap heap) {
+
 		Item item = heap.pickUp();
-		if (item == null) return;
-		
-		int price = Shopkeeper.sellPrice( item );
+		if (item == null)
+			return;
+
+		int price = Shopkeeper.sellPrice(item);
 		Dungeon.gold -= price;
 		Catalog.countUses(Gold.class, price);
-		
-		if (!item.doPickUp( Dungeon.hero )) {
-			Dungeon.level.drop( item, heap.pos ).sprite.drop();
+
+		if (!item.doPickUp(Dungeon.hero)) {
+			Dungeon.level.drop(item, heap.pos).sprite.drop();
 		}
 	}
 }

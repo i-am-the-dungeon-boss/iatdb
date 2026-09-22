@@ -45,21 +45,21 @@ import com.watabou.utils.Random;
 
 public class WndChooseAbility extends Window {
 
-	private static final int WIDTH		= 130;
-	private static final float GAP		= 2;
+	private static final int WIDTH = 130;
+	private static final float GAP = 2;
 
-	public WndChooseAbility(final KingsCrown crown, final Armor armor, final Hero hero){
+	public WndChooseAbility(final KingsCrown crown, final Armor armor, final Hero hero) {
 
 		super();
 
 		//crown can be null if hero is choosing from armor
 		IconTitle titlebar = new IconTitle();
-		titlebar.icon( new ItemSprite( crown == null ? armor.image() : crown.image(), null ) );
-		titlebar.label( Messages.titleCase(crown == null ? armor.name() : crown.name()) );
-		titlebar.setRect( 0, 0, WIDTH, 0 );
-		add( titlebar );
+		titlebar.icon(new ItemSprite(crown == null ? armor.image() : crown.image(), null));
+		titlebar.label(Messages.titleCase(crown == null ? armor.name() : crown.name()));
+		titlebar.setRect(0, 0, WIDTH, 0);
+		add(titlebar);
 
-		IconButton random = new IconButton(Icons.SHUFFLE.get()){
+		IconButton random = new IconButton(Icons.SHUFFLE.get()) {
 			@Override
 			protected void onClick() {
 				super.onClick();
@@ -67,11 +67,11 @@ public class WndChooseAbility extends Window {
 						Messages.get(WndChooseAbility.class, "random_title"),
 						Messages.get(WndChooseAbility.class, "random_sure"),
 						Messages.get(WndChooseAbility.class, "yes"),
-						Messages.get(WndChooseAbility.class, "no")){
+						Messages.get(WndChooseAbility.class, "no")) {
 					@Override
 					protected void onSelect(int index) {
 						super.onSelect(index);
-						if (index == 0){
+						if (index == 0) {
 							WndChooseAbility.this.hide();
 							ArmorAbility abil = Random.oneOf(hero.heroClass.armorAbilities());
 							crown.upgradeArmor(hero, armor, abil);
@@ -83,8 +83,8 @@ public class WndChooseAbility extends Window {
 
 			@Override
 			public void update() {
-				if (Statistics.qualifiedForRandomVictoryBadge){
-					icon.tint(1, 1, 1, (float)Math.abs(Math.cos(1.5f*Math.PI* Game.timeTotal)/2f));
+				if (Statistics.qualifiedForRandomVictoryBadge) {
+					icon.tint(1, 1, 1, (float) Math.abs(Math.cos(1.5f * Math.PI * Game.timeTotal) / 2f));
 				}
 				super.update();
 			}
@@ -94,34 +94,35 @@ public class WndChooseAbility extends Window {
 				return Messages.get(WndChooseAbility.class, "random_title");
 			}
 		};
-		random.setRect(WIDTH-16, 0, 16, 16);
-		if (crown != null) add(random);
+		random.setRect(WIDTH - 16, 0, 16, 16);
+		if (crown != null)
+			add(random);
 
-		RenderedTextBlock body = PixelScene.renderTextBlock( 6 );
+		RenderedTextBlock body = PixelScene.renderTextBlock(6);
 		if (crown != null) {
 			body.text(Messages.get(this, "message"), WIDTH);
 		} else {
 			body.text(Messages.get(this, "message_no_crown"), WIDTH);
 		}
-		body.setPos( titlebar.left(), titlebar.bottom() + GAP );
-		add( body );
+		body.setPos(titlebar.left(), titlebar.bottom() + GAP);
+		add(body);
 
-		float pos = body.bottom() + 3*GAP;
+		float pos = body.bottom() + 3 * GAP;
 		for (ArmorAbility ability : hero.heroClass.armorAbilities()) {
 
-			RedButton abilityButton = new RedButton(ability.shortDesc(), 6){
+			RedButton abilityButton = new RedButton(ability.shortDesc(), 6) {
 				@Override
 				protected void onClick() {
-					GameScene.show(new WndOptions( new HeroIcon( ability ),
+					GameScene.show(new WndOptions(new HeroIcon(ability),
 							Messages.titleCase(ability.name()),
 							Messages.get(WndChooseAbility.this, "are_you_sure"),
 							Messages.get(WndChooseAbility.this, "yes"),
-							Messages.get(WndChooseAbility.this, "no")){
+							Messages.get(WndChooseAbility.this, "no")) {
 
 						@Override
 						protected void onSelect(int index) {
 							hide();
-							if (index == 0 && WndChooseAbility.this.parent != null){
+							if (index == 0 && WndChooseAbility.this.parent != null) {
 								WndChooseAbility.this.hide();
 								if (crown != null) {
 									crown.upgradeArmor(hero, armor, ability);
@@ -136,23 +137,23 @@ public class WndChooseAbility extends Window {
 			};
 			abilityButton.leftJustify = true;
 			abilityButton.multiline = true;
-			abilityButton.setSize(WIDTH-20, abilityButton.reqHeight()+2);
-			abilityButton.setRect(0, pos, WIDTH-20, abilityButton.reqHeight()+2);
+			abilityButton.setSize(WIDTH - 20, abilityButton.reqHeight() + 2);
+			abilityButton.setRect(0, pos, WIDTH - 20, abilityButton.reqHeight() + 2);
 			add(abilityButton);
 
-			IconButton abilityInfo = new IconButton(Icons.get(Icons.INFO)){
+			IconButton abilityInfo = new IconButton(Icons.get(Icons.INFO)) {
 				@Override
 				protected void onClick() {
 					GameScene.show(new WndInfoArmorAbility(Dungeon.hero.heroClass, ability));
 				}
 			};
-			abilityInfo.setRect(WIDTH-20, abilityButton.top() + (abilityButton.height()-20)/2, 20, 20);
+			abilityInfo.setRect(WIDTH - 20, abilityButton.top() + (abilityButton.height() - 20) / 2, 20, 20);
 			add(abilityInfo);
 
 			pos = abilityButton.bottom() + GAP;
 		}
 
-		RedButton cancelButton = new RedButton(Messages.get(this, "cancel")){
+		RedButton cancelButton = new RedButton(Messages.get(this, "cancel")) {
 			@Override
 			protected void onClick() {
 				hide();
@@ -162,9 +163,8 @@ public class WndChooseAbility extends Window {
 		add(cancelButton);
 		pos = cancelButton.bottom() + GAP;
 
-		resize(WIDTH, (int)pos);
+		resize(WIDTH, (int) pos);
 
 	}
-
 
 }

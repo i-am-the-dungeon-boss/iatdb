@@ -48,16 +48,16 @@ public class SuspiciousChestRoom extends StandardRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 
 		Item i = level.findPrizeItem();
 
-		if ( i == null ){
+		if (i == null) {
 			i = new Gold().random();
 		}
 
@@ -65,7 +65,7 @@ public class SuspiciousChestRoom extends StandardRoom {
 
 		Painter.set(level, center, Terrain.PEDESTAL);
 
-		float mimicChance = 1/3f * MimicTooth.mimicChanceMultiplier();
+		float mimicChance = 1 / 3f * MimicTooth.mimicChanceMultiplier();
 		if (Random.Float() < mimicChance) {
 			level.mobs.add(Mimic.spawnAt(center, i));
 		} else {

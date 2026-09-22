@@ -35,7 +35,7 @@ import com.watabou.noosa.audio.Sample;
 
 public class Camouflage extends Armor.Glyph {
 
-	private static ItemSprite.Glowing GREEN = new ItemSprite.Glowing( 0x448822 );
+	private static ItemSprite.Glowing GREEN = new ItemSprite.Glowing(0x448822);
 
 	@Override
 	public int proc(Armor armor, Char attacker, Char defender, int damage) {
@@ -43,11 +43,12 @@ public class Camouflage extends Armor.Glyph {
 		return damage;
 	}
 
-	public static void activate(Char ch, int level){
-		if (level == -1) return;
-		Buff.prolong(ch, Invisibility.class, Math.round((3 + level/2f)* genericProcChanceMultiplier(ch)));
-		if ( Dungeon.level.heroFOV[ch.pos] ) {
-			Sample.INSTANCE.play( Assets.Sounds.MELD );
+	public static void activate(Char ch, int level) {
+		if (level == -1)
+			return;
+		Buff.prolong(ch, Invisibility.class, Math.round((3 + level / 2f) * genericProcChanceMultiplier(ch)));
+		if (Dungeon.level.heroFOV[ch.pos]) {
+			Sample.INSTANCE.play(Assets.Sounds.MELD);
 		}
 	}
 
@@ -57,4 +58,3 @@ public class Camouflage extends Armor.Glyph {
 	}
 
 }
-

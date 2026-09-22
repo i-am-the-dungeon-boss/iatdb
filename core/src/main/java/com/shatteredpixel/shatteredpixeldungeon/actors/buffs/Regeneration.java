@@ -35,7 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
 import com.watabou.utils.Bundle;
 
 public class Regeneration extends Buff {
-	
+
 	{
 		//unlike other buffs, this one acts after the hero and takes priority against other effects
 		//healing is much more useful if you get some of it off before taking damage
@@ -45,18 +45,18 @@ public class Regeneration extends Buff {
 	private float partialRegen = 0f;
 
 	private static final float REGENERATION_DELAY = 10; //1HP every 10 turns
-	
+
 	@Override
 	public boolean act() {
 		if (target.isAlive()) {
 
 			//if other trinkets ever get buffs like this should probably make the buff attaching
 			// behaviour more like wands/rings/artifacts
-			if (ChaoticCenser.averageTurnsUntilGas() != -1){
+			if (ChaoticCenser.averageTurnsUntilGas() != -1) {
 				Buff.affect(Dungeon.hero, ChaoticCenser.CenserGasTracker.class);
 			}
 
-			if (regenOn() && target.HP < regencap() && !((Hero)target).isStarving()) {
+			if (regenOn() && target.HP < regencap() && !((Hero) target).isStarving()) {
 				boolean chaliceCursed = false;
 				int chaliceLevel = -1;
 				if (target.buff(MagicImmune.class) == null) {
@@ -64,7 +64,8 @@ public class Regeneration extends Buff {
 						chaliceCursed = Dungeon.hero.buff(ChaliceOfBlood.chaliceRegen.class).isCursed();
 						chaliceLevel = Dungeon.hero.buff(ChaliceOfBlood.chaliceRegen.class).itemLevel();
 					} else if (Dungeon.hero.buff(SpiritForm.SpiritFormBuff.class) != null
-							&& Dungeon.hero.buff(SpiritForm.SpiritFormBuff.class).artifact() instanceof ChaliceOfBlood) {
+							&& Dungeon.hero.buff(SpiritForm.SpiritFormBuff.class)
+									.artifact() instanceof ChaliceOfBlood) {
 						chaliceLevel = SpiritForm.artifactLevel();
 					}
 				}
@@ -75,7 +76,7 @@ public class Regeneration extends Buff {
 						delay *= 1.5f;
 					} else {
 						//15% boost at +0, scaling to a 500% boost at +10
-						delay -= 1.33f + chaliceLevel*0.667f;
+						delay -= 1.33f + chaliceLevel * 0.667f;
 						delay /= RingOfEnergy.artifactChargeMultiplier(target);
 					}
 				}
@@ -88,8 +89,8 @@ public class Regeneration extends Buff {
 				partialRegen += 1f / delay;
 
 				if (partialRegen >= 1) {
-					target.HP += (int)partialRegen;
-					partialRegen -= (int)partialRegen;
+					target.HP += (int) partialRegen;
+					partialRegen -= (int) partialRegen;
 					if (target.HP >= regencap()) {
 						target.HP = regencap();
 						((Hero) target).resting = false;
@@ -98,27 +99,27 @@ public class Regeneration extends Buff {
 
 			}
 
-			spend( TICK );
-			
+			spend(TICK);
+
 		} else {
-			
+
 			diactivate();
-			
+
 		}
-		
+
 		return true;
 	}
-	
-	public int regencap(){
+
+	public int regencap() {
 		return target.HT;
 	}
 
-	public static boolean regenOn(){
+	public static boolean regenOn() {
 		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
-		if (lock != null && !lock.regenOn()){
+		if (lock != null && !lock.regenOn()) {
 			return false;
 		}
-		if (Dungeon.level instanceof VaultLevel){
+		if (Dungeon.level instanceof VaultLevel) {
 			return false;
 		}
 		return true;

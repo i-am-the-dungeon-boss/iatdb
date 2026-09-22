@@ -45,24 +45,24 @@ public class Rotberry extends Plant {
 	}
 
 	@Override
-	public void activate( Char ch ) {
-		if (ch instanceof Hero && ((Hero) ch).subClass == HeroSubClass.WARDEN){
+	public void activate(Char ch) {
+		if (ch instanceof Hero && ((Hero) ch).subClass == HeroSubClass.WARDEN) {
 			Buff.affect(ch, AdrenalineSurge.class).reset(1, AdrenalineSurge.DURATION);
 		} else {
-			GameScene.add( Blob.seed( pos, 100, ToxicGas.class ) );
+			GameScene.add(Blob.seed(pos, 100, ToxicGas.class));
 		}
 	}
-	
+
 	@Override
 	public void wither() {
-		Dungeon.level.uproot( pos );
-		
+		Dungeon.level.uproot(pos);
+
 		if (Dungeon.level.heroFOV[pos]) {
-			CellEmitter.get( pos ).burst( LeafParticle.GENERAL, 6 );
+			CellEmitter.get(pos).burst(LeafParticle.GENERAL, 6);
 		}
 
 		//seed always drops, no lotus benefit
-		Dungeon.level.drop( new Seed(), pos ).sprite.drop();
+		Dungeon.level.drop(new Seed(), pos).sprite.drop();
 	}
 
 	public static class Seed extends Plant.Seed {
@@ -73,7 +73,7 @@ public class Rotberry extends Plant {
 
 			unique = true;
 		}
-		
+
 		@Override
 		public int value() {
 			return 30 * quantity;

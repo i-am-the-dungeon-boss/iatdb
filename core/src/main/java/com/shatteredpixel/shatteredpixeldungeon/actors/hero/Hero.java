@@ -2075,7 +2075,8 @@ public class Hero extends Char {
 					curAction = new HeroAction.PickUp(cell);
 					break;
 				case FOR_SALE:
-					curAction = heap.size() == 1 && heap.peek().value() > 0 ? new HeroAction.Buy(cell)
+					curAction = heap.size() == 1 && heap.peek().value() > 0
+							? new HeroAction.Buy(cell)
 							: new HeroAction.PickUp(cell);
 					break;
 				default:

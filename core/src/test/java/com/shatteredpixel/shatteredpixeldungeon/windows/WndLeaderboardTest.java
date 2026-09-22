@@ -25,11 +25,9 @@ class WndLeaderboardTest {
 		lifecycle.cancel();
 
 		EchoLeaderboardEntry entry = new EchoLeaderboardEntry(
-				1, "echo-1", true, 5, "WARRIOR", 100, 20, 50, 1f
-		);
+				1, "echo-1", true, 5, "WARRIOR", 100, 20, 50, 1f);
 
-		Assertions.assertThatCode(() ->
-				WndLeaderboard.applyOnlineLeaderboard(lifecycle, null, 5, List.of(entry), null)
-		).doesNotThrowAnyException();
+		Assertions.assertThatCode(() -> WndLeaderboard.applyOnlineLeaderboard(lifecycle, null, 5, List.of(entry), null))
+				.doesNotThrowAnyException();
 	}
 }

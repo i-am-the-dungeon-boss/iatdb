@@ -49,12 +49,12 @@ import com.watabou.utils.Callback;
 import java.util.ArrayList;
 
 public class Pickaxe extends MeleeWeapon {
-	
+
 	{
 		image = ItemSpriteSheet.PICKAXE;
 
 		levelKnown = true;
-		
+
 		unique = true;
 		bones = false;
 
@@ -67,9 +67,9 @@ public class Pickaxe extends MeleeWeapon {
 	}
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (Dungeon.level instanceof MiningLevel){
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (Dungeon.level instanceof MiningLevel) {
 			actions.remove(AC_DROP);
 			actions.remove(AC_THROW);
 		}
@@ -81,6 +81,7 @@ public class Pickaxe extends MeleeWeapon {
 		//pickaxe is always kept when it's needed for the mining level
 		return super.keptThroughLostInventory() || Dungeon.level instanceof MiningLevel;
 	}
+
 	@Override
 	public String targetingPrompt() {
 		return Messages.get(this, "prompt");
@@ -99,7 +100,7 @@ public class Pickaxe extends MeleeWeapon {
 		}
 
 		hero.belongings.abilityWeapon = this;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(this, "ability_target_range"));
 			hero.belongings.abilityWeapon = null;
 			return;
@@ -117,7 +118,7 @@ public class Pickaxe extends MeleeWeapon {
 						|| enemy instanceof Spinner
 						|| enemy instanceof Scorpio) {
 					//+(8+2*lvl) damage, equivalent to +100% damage
-					damageBoost = augment.damageFactor(8 + 2*buffedLvl());
+					damageBoost = augment.damageFactor(8 + 2 * buffedLvl());
 				}
 				beforeAbilityUsed(hero, enemy);
 				AttackIndicator.target(enemy);
@@ -138,13 +139,14 @@ public class Pickaxe extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		int dmgBoost = 8 + 2*buffedLvl();
-		return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		int dmgBoost = 8 + 2 * buffedLvl();
+		return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+				augment.damageFactor(max() + dmgBoost));
 	}
 
-	public String upgradeAbilityStat(int level){
-		int dmgBoost = 8 + 2*level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+	public String upgradeAbilityStat(int level) {
+		int dmgBoost = 8 + 2 * level;
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 
 }

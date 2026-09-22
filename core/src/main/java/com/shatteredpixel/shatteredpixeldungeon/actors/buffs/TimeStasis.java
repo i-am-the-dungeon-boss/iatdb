@@ -35,7 +35,7 @@ public class TimeStasis extends FlavourBuff {
 
 	{
 		type = Buff.buffType.POSITIVE;
-		actPriority = BUFF_PRIO-3; //acts after all other buffs, so they are prevented
+		actPriority = BUFF_PRIO - 3; //acts after all other buffs, so they are prevented
 	}
 
 	private float echoLandedTurns;
@@ -76,8 +76,10 @@ public class TimeStasis extends FlavourBuff {
 
 	@Override
 	public void detach() {
-		if (target.invisible > 0) target.invisible--;
-		if (target.paralysed > 0) target.paralysed--;
+		if (target.invisible > 0)
+			target.invisible--;
+		if (target.paralysed > 0)
+			target.paralysed--;
 		super.detach();
 		EchoHardStun.clearGuaranteedHitIfUnstunned(target);
 		Dungeon.observe();
@@ -85,10 +87,13 @@ public class TimeStasis extends FlavourBuff {
 
 	@Override
 	public void fx(boolean on) {
-		if (on) target.sprite.add( CharSprite.State.PARALYSED );
+		if (on)
+			target.sprite.add(CharSprite.State.PARALYSED);
 		else {
-			if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );
-			if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
+			if (target.paralysed == 0)
+				target.sprite.remove(CharSprite.State.PARALYSED);
+			if (target.invisible == 0)
+				target.sprite.remove(CharSprite.State.INVISIBLE);
 		}
 	}
 

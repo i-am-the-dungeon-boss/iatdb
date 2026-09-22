@@ -31,7 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 public abstract class TargetedClericSpell extends ClericSpell {
 
 	@Override
-	public void onCast(HolyTome tome, Hero hero ){
+	public void onCast(HolyTome tome, Hero hero) {
 		GameScene.selectCell(new CellSelector.Listener() {
 			@Override
 			public void onSelect(Integer cell) {
@@ -46,11 +46,11 @@ public abstract class TargetedClericSpell extends ClericSpell {
 	}
 
 	@Override
-	public int targetingFlags(){
+	public int targetingFlags() {
 		return Ballistica.MAGIC_BOLT;
 	}
 
-	protected String targetingPrompt(){
+	protected String targetingPrompt() {
 		return Messages.get(this, "prompt");
 	}
 

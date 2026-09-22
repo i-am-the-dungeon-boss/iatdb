@@ -32,7 +32,7 @@ import com.watabou.noosa.Image;
 import com.watabou.utils.Bundle;
 
 public class Barrier extends ShieldBuff {
-	
+
 	{
 		type = buffType.POSITIVE;
 	}
@@ -48,28 +48,29 @@ public class Barrier extends ShieldBuff {
 	@Override
 	public void setShield(int shield) {
 		super.setShield(shield);
-		if (shielding() == shield) partialLostShield = 0;
+		if (shielding() == shield)
+			partialLostShield = 0;
 	}
 
 	@Override
 	public boolean act() {
 
-		partialLostShield += Math.min(1f, shielding()/20f) * HoldFast.buffDecayFactor(target);
+		partialLostShield += Math.min(1f, shielding() / 20f) * HoldFast.buffDecayFactor(target);
 
 		if (partialLostShield >= 1f) {
 			absorbDamage(1);
 			partialLostShield = 0;
 		}
-		
-		if (shielding() <= 0){
+
+		if (shielding() <= 0) {
 			detach();
 		}
-		
-		spend( TICK );
-		
+
+		spend(TICK);
+
 		return true;
 	}
-	
+
 	@Override
 	public void fx(boolean on) {
 		if (on) {
@@ -78,12 +79,12 @@ public class Barrier extends ShieldBuff {
 			target.sprite.remove(CharSprite.State.SHIELDED);
 		}
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.ARMOR;
 	}
-	
+
 	@Override
 	public void tintIcon(Image icon) {
 		icon.hardlight(0.5f, 1f, 2f);
@@ -93,7 +94,7 @@ public class Barrier extends ShieldBuff {
 	public String iconTextDisplay() {
 		return Integer.toString(shielding());
 	}
-	
+
 	@Override
 	public String desc() {
 		return Messages.get(this, "desc", shielding());

@@ -79,12 +79,12 @@ public class WaterBridgeEntranceRoom extends WaterBridgeRoom {
 
 		} while (spaceRect.inside(level.cellToPoint(entrance)) || level.findMob(entrance) != null);
 
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			Painter.set(level, entrance + i, Terrain.EMPTY);
 		}
 
-		Painter.set( level, entrance, Terrain.ENTRANCE );
-		if (Dungeon.depth == 1){
+		Painter.set(level, entrance, Terrain.ENTRANCE);
+		if (Dungeon.depth == 1) {
 			level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.SURFACE));
 		} else {
 			level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_ENTRANCE));

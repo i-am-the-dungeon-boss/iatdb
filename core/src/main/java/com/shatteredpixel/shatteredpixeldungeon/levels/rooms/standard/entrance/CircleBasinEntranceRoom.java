@@ -34,7 +34,7 @@ public class CircleBasinEntranceRoom extends CircleBasinRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class CircleBasinEntranceRoom extends CircleBasinRoom {
 		super.paint(level);
 
 		int entrance = level.pointToCell(center());
-		Painter.set( level, entrance, Terrain.ENTRANCE_SP );
+		Painter.set(level, entrance, Terrain.ENTRANCE_SP);
 
 		level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_ENTRANCE));
 	}

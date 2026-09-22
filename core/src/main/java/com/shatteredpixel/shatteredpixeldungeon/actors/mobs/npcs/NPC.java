@@ -40,7 +40,7 @@ public abstract class NPC extends Mob {
 
 	@Override
 	protected boolean act() {
-		if (Dungeon.level.heroFOV[pos]){
+		if (Dungeon.level.heroFOV[pos]) {
 			Bestiary.setSeen(getClass());
 		}
 
@@ -48,7 +48,7 @@ public abstract class NPC extends Mob {
 	}
 
 	@Override
-	public void beckon( int cell ) {
+	public void beckon(int cell) {
 	}
-	
+
 }

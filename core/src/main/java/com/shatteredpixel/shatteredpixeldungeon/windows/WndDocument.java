@@ -34,26 +34,26 @@ public class WndDocument extends Window {
 
 	private ScrollingListPane list;
 
-	public WndDocument(Document doc){
+	public WndDocument(Document doc) {
 		list = new ScrollingListPane();
-		add( list );
+		add(list);
 
 		list.addTitle(Messages.titleCase(doc.title()));
 
-		for (String page : doc.pageNames()){
+		for (String page : doc.pageNames()) {
 			boolean found = doc.isPageFound(page);
 			ScrollingListPane.ListItem item = new ScrollingListPane.ListItem(
 					doc.pageSprite(),
 					null,
-					found ? Messages.titleCase(doc.pageTitle(page)) : Messages.titleCase(Messages.get( this, "missing" ))
-			){
+					found ? Messages.titleCase(doc.pageTitle(page))
+							: Messages.titleCase(Messages.get(this, "missing"))) {
 				@Override
 				public boolean onClick(float x, float y) {
-					if (inside( x, y ) && found) {
-						ShatteredPixelDungeon.scene().addToFront( new WndStory(
+					if (inside(x, y) && found) {
+						ShatteredPixelDungeon.scene().addToFront(new WndStory(
 								doc.pageSprite(page),
 								doc.pageTitle(page),
-								doc.pageBody(page) ));
+								doc.pageBody(page)));
 						doc.readPage(page);
 						hardlight(Window.WHITE);
 						return true;
@@ -62,16 +62,16 @@ public class WndDocument extends Window {
 					}
 				}
 			};
-			if (!found){
+			if (!found) {
 				item.hardlight(0x999999);
 				item.hardlightIcon(0x999999);
-			} else if (!doc.isPageRead(page)){
+			} else if (!doc.isPageRead(page)) {
 				item.hardlight(Window.TITLE_COLOR);
 			}
 			list.addItem(item);
 		}
 
-		resize(120, Math.min(144, (int)list.content().height()));
+		resize(120, Math.min(144, (int) list.content().height()));
 		list.setRect(0, 0, width, height);
 	}
 

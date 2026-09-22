@@ -13,59 +13,59 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GdxTestExtension.class)
 class BossReplacementLogicTest {
 
-    @Test
-    @DisplayName("Uses hero boss when snapshot available on boss depth")
-    void usesHeroBossWhenSnapshotAvailable() {
-        CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
+	@Test
+	@DisplayName("Uses hero boss when snapshot available on boss depth")
+	void usesHeroBossWhenSnapshotAvailable() {
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
+				.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
 
-        boolean should = Dungeon.prefetchEchoBossForDepth(5);
+		boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
-        Assertions.assertThat(should).isTrue();
-        Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
-    }
+		Assertions.assertThat(should).isTrue();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNotNull();
+	}
 
-    @Test
-    @DisplayName("Metadata-only echo does not replace boss")
-    void metadataOnlyEchoDoesNotReplaceBoss() {
-        EchoStorage storage = new EchoStorage();
-        storage.save(EchoTestSupport.warriorEcho(5));
-        CompositeEchoLookup.setEchoLookupForTests(storage);
+	@Test
+	@DisplayName("Metadata-only echo does not replace boss")
+	void metadataOnlyEchoDoesNotReplaceBoss() {
+		EchoStorage storage = new EchoStorage();
+		storage.save(EchoTestSupport.warriorEcho(5));
+		CompositeEchoLookup.setEchoLookupForTests(storage);
 
-        boolean should = Dungeon.prefetchEchoBossForDepth(5);
+		boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
-        Assertions.assertThat(should).isFalse();
-        Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
-    }
+		Assertions.assertThat(should).isFalse();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+	}
 
-    @Test
-    @DisplayName("Falls back when no snapshot available")
-    void fallsBackWhenNoSnapshotAvailable() {
-        CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
+	@Test
+	@DisplayName("Falls back when no snapshot available")
+	void fallsBackWhenNoSnapshotAvailable() {
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoLookupOutcome.notFound());
 
-        boolean should = Dungeon.prefetchEchoBossForDepth(5);
+		boolean should = Dungeon.prefetchEchoBossForDepth(5);
 
-        Assertions.assertThat(should).isFalse();
-    }
+		Assertions.assertThat(should).isFalse();
+	}
 
-    @Test
-    @DisplayName("Non-boss depths never use hero boss even if snapshots exist")
-    void nonBossDepthsNeverUseHeroBoss() {
-        CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
-                .outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
+	@Test
+	@DisplayName("Non-boss depths never use hero boss even if snapshots exist")
+	void nonBossDepthsNeverUseHeroBoss() {
+		CompositeEchoLookup.setEchoLookupForTests(depth -> EchoTestSupport
+				.outcomeWithPolicy(EchoTestSupport.warriorEchoWithData(depth)));
 
-        boolean should = Dungeon.prefetchEchoBossForDepth(4);
+		boolean should = Dungeon.prefetchEchoBossForDepth(4);
 
-        Assertions.assertThat(should).isFalse();
-        Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
-    }
+		Assertions.assertThat(should).isFalse();
+		Assertions.assertThat(Dungeon.getPendingEcho()).isNull();
+	}
 
-    @Test
-    @DisplayName("All boss depths 5/10/15/20/25 are recognized")
-    void allBossDepthsRecognized() {
-        for (int depth : EchoReplacementDecider.BOSS_DEPTHS) {
-            Assertions.assertThat(EchoReplacementDecider.isBossDepth(depth)).isTrue();
-        }
-        Assertions.assertThat(EchoReplacementDecider.isBossDepth(6)).isFalse();
-    }
+	@Test
+	@DisplayName("All boss depths 5/10/15/20/25 are recognized")
+	void allBossDepthsRecognized() {
+		for (int depth : EchoReplacementDecider.BOSS_DEPTHS) {
+			Assertions.assertThat(EchoReplacementDecider.isBossDepth(depth)).isTrue();
+		}
+		Assertions.assertThat(EchoReplacementDecider.isBossDepth(6)).isFalse();
+	}
 }

@@ -45,27 +45,27 @@ public class RoundShield extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(3f*(tier+1)) +   //12 base, down from 20
-				lvl*(tier-1);               //+2 per level, down from +4
+		return Math.round(3f * (tier + 1)) + //12 base, down from 20
+				lvl * (tier - 1); //+2 per level, down from +4
 	}
 
 	@Override
-	public int defenseFactor( Char owner ) {
+	public int defenseFactor(Char owner) {
 		return DRMax();
 	}
 
-	public int DRMax(){
+	public int DRMax() {
 		return DRMax(buffedLvl());
 	}
 
 	//4 extra defence, plus 1 per level
-	public int DRMax(int lvl){
+	public int DRMax(int lvl) {
 		return 4 + lvl;
 	}
 
-	public String statsInfo(){
-		if (isIdentified()){
-			return Messages.get(this, "stats_desc", 4+buffedLvl());
+	public String statsInfo() {
+		if (isIdentified()) {
+			return Messages.get(this, "stats_desc", 4 + buffedLvl());
 		} else {
 			return Messages.get(this, "typical_stats_desc", 4);
 		}
@@ -73,13 +73,13 @@ public class RoundShield extends MeleeWeapon {
 
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		RoundShield.guardAbility(hero, 5+buffedLvl(), this);
+		RoundShield.guardAbility(hero, 5 + buffedLvl(), this);
 	}
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", 5+buffedLvl());
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", 5 + buffedLvl());
 		} else {
 			return Messages.get(this, "typical_ability_desc", 5);
 		}
@@ -90,7 +90,7 @@ public class RoundShield extends MeleeWeapon {
 		return Integer.toString(5 + level);
 	}
 
-	public static void guardAbility(Hero hero, int duration, MeleeWeapon wep){
+	public static void guardAbility(Hero hero, int duration, MeleeWeapon wep) {
 		wep.beforeAbilityUsed(hero, null);
 		Buff.prolong(hero, GuardTracker.class, duration).hasBlocked = false;
 		hero.sprite.operate(hero.pos);
@@ -114,7 +114,7 @@ public class RoundShield extends MeleeWeapon {
 
 		@Override
 		public void tintIcon(Image icon) {
-			if (hasBlocked){
+			if (hasBlocked) {
 				icon.tint(0x651f66, 0.5f);
 			} else {
 				icon.resetColor();

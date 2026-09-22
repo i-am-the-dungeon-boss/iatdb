@@ -50,25 +50,33 @@ public class StatueLineRoom extends StandardRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
-		float[] sidePreferences = new float[]{1, 1, 1, 1};
+		float[] sidePreferences = new float[] { 1, 1, 1, 1 };
 
 		//try to place the deco objects along a wall without doors
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
-			if (door.y == top) sidePreferences[N] -= 2;
-			if (door.y == top+1) sidePreferences[N] -= 1;
+			door.set(Door.Type.REGULAR);
+			if (door.y == top)
+				sidePreferences[N] -= 2;
+			if (door.y == top + 1)
+				sidePreferences[N] -= 1;
 
-			if (door.y == bottom) sidePreferences[S] -= 2;
-			if (door.y == bottom-1) sidePreferences[S] -= 1;
+			if (door.y == bottom)
+				sidePreferences[S] -= 2;
+			if (door.y == bottom - 1)
+				sidePreferences[S] -= 1;
 
-			if (door.x == left) sidePreferences[W] -= 2;
-			if (door.x == left+1) sidePreferences[W] -= 1;
+			if (door.x == left)
+				sidePreferences[W] -= 2;
+			if (door.x == left + 1)
+				sidePreferences[W] -= 1;
 
-			if (door.x == right) sidePreferences[E] -= 2;
-			if (door.x == right-1) sidePreferences[E] -= 1;
+			if (door.x == right)
+				sidePreferences[E] -= 2;
+			if (door.x == right - 1)
+				sidePreferences[E] -= 1;
 		}
 
 		//if there are no walls with no doors, prefer fewer doors (corner doors count for half)
@@ -83,28 +91,29 @@ public class StatueLineRoom extends StandardRoom {
 
 		fillAlongSide(chosenSide, level);
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 			Painter.drawInside(level, this, door, 1, Terrain.EMPTY);
 		}
 	}
 
-	protected int decoTerrain(){
+	protected int decoTerrain() {
 		return Terrain.STATUE;
 	}
 
-	private void fillAlongSide(Integer side, Level level){
-		switch (side){
+	private void fillAlongSide(Integer side, Level level) {
+		switch (side) {
 			case 0: //N
-				Painter.drawLine(level, new Point(left+1, top+1), new Point(right-1, top+1), decoTerrain());
+				Painter.drawLine(level, new Point(left + 1, top + 1), new Point(right - 1, top + 1), decoTerrain());
 				break;
 			case 1: //E
-				Painter.drawLine(level, new Point(right-1, top+1), new Point(right-1, bottom-1), decoTerrain());
+				Painter.drawLine(level, new Point(right - 1, top + 1), new Point(right - 1, bottom - 1), decoTerrain());
 				break;
 			case 2: //S
-				Painter.drawLine(level, new Point(left+1, bottom-1), new Point(right-1, bottom-1), decoTerrain());
+				Painter.drawLine(level, new Point(left + 1, bottom - 1), new Point(right - 1, bottom - 1),
+						decoTerrain());
 				break;
 			case 3: //W
-				Painter.drawLine(level, new Point(left+1, top+1), new Point(left+1, bottom-1), decoTerrain());
+				Painter.drawLine(level, new Point(left + 1, top + 1), new Point(left + 1, bottom - 1), decoTerrain());
 				break;
 		}
 	}

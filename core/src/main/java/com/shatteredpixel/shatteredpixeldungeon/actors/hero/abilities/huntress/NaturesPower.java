@@ -67,10 +67,10 @@ public class NaturesPower extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.GROWING_POWER, Talent.NATURES_WRATH, Talent.WILD_MOMENTUM, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.GROWING_POWER, Talent.NATURES_WRATH, Talent.WILD_MOMENTUM, Talent.HEROIC_ENERGY };
 	}
 
-	public static class naturesPowerTracker extends FlavourBuff{
+	public static class naturesPowerTracker extends FlavourBuff {
 
 		{
 			type = buffType.POSITIVE;
@@ -80,7 +80,7 @@ public class NaturesPower extends ArmorAbility {
 
 		public int extensionsLeft = 2;
 
-		public void extend( int turns ){
+		public void extend(int turns) {
 			if (extensionsLeft > 0 && turns > 0) {
 				spend(turns);
 				extensionsLeft--;

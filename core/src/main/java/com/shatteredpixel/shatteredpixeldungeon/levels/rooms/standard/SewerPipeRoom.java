@@ -51,7 +51,7 @@ public class SewerPipeRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{3, 2, 1};
+		return new float[] { 3, 2, 1 };
 	}
 
 	@Override
@@ -62,78 +62,88 @@ public class SewerPipeRoom extends StandardRoom {
 	@Override
 	public boolean canConnect(Point p) {
 		//refuses connections next to corners
-		return super.canConnect(p) && ((p.x > left+1 && p.x < right-1) || (p.y > top+1 && p.y < bottom-1));
+		return super.canConnect(p) && ((p.x > left + 1 && p.x < right - 1) || (p.y > top + 1 && p.y < bottom - 1));
 	}
 
 	//FIXME this class is a total mess, lots of copy-pasta from tunnel and perimeter rooms here
 	@Override
 	public void paint(Level level) {
 
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
 		Rect c = getConnectionSpace();
 
 		//connect via center with 1 door or 2 doors on standard size, otherwise use edges
 		if (connected.size() == 1 || (connected.size() == 2 && sizeCat == SizeCategory.NORMAL)) {
 			for (Door door : connected.values()) {
-				
+
 				Point start;
 				Point mid;
 				Point end;
-				
+
 				start = new Point(door);
-				if (start.x == left) start.x += 2;
-				else if (start.y == top) start.y += 2;
-				else if (start.x == right) start.x -= 2;
-				else if (start.y == bottom) start.y -= 2;
-				
+				if (start.x == left)
+					start.x += 2;
+				else if (start.y == top)
+					start.y += 2;
+				else if (start.x == right)
+					start.x -= 2;
+				else if (start.y == bottom)
+					start.y -= 2;
+
 				int rightShift;
 				int downShift;
-				
-				if (start.x < c.left) rightShift = c.left - start.x;
-				else if (start.x > c.right) rightShift = c.right - start.x;
-				else rightShift = 0;
-				
-				if (start.y < c.top) downShift = c.top - start.y;
-				else if (start.y > c.bottom) downShift = c.bottom - start.y;
-				else downShift = 0;
-				
+
+				if (start.x < c.left)
+					rightShift = c.left - start.x;
+				else if (start.x > c.right)
+					rightShift = c.right - start.x;
+				else
+					rightShift = 0;
+
+				if (start.y < c.top)
+					downShift = c.top - start.y;
+				else if (start.y > c.bottom)
+					downShift = c.bottom - start.y;
+				else
+					downShift = 0;
+
 				//always goes inward first
 				if (door.x == left || door.x == right) {
 					mid = new Point(start.x + rightShift, start.y);
 					end = new Point(mid.x, mid.y + downShift);
-					
+
 				} else {
 					mid = new Point(start.x, start.y + downShift);
 					end = new Point(mid.x + rightShift, mid.y);
-					
+
 				}
-				
+
 				Painter.drawLine(level, start, mid, Terrain.WATER);
 				Painter.drawLine(level, mid, end, Terrain.WATER);
-				
+
 			}
 		} else {
 			ArrayList<Point> doorPoints = new ArrayList<>(connected.values());
 
 			//if we only have two doors, add a phantom 3rd door along an empty wall
 			//This guarantees a minimum open space for larger pipe rooms
-			if (doorPoints.size() == 2){
+			if (doorPoints.size() == 2) {
 				Point p = new Point();
 				boolean valid;
 
 				do {
 					valid = true;
-					if (Random.Int(2) == 0){
+					if (Random.Int(2) == 0) {
 						p.x = Random.Int(2) == 0 ? left : right;
-						p.y = Random.IntRange(top+2, bottom-2);
+						p.y = Random.IntRange(top + 2, bottom - 2);
 					} else {
-						p.x = Random.IntRange(left+2, right-2);
+						p.x = Random.IntRange(left + 2, right - 2);
 						p.y = Random.Int(2) == 0 ? top : bottom;
 					}
 
 					for (Point door : connected.values()) {
-						if (door.x == p.x || door.y == p.y){
+						if (door.x == p.x || door.y == p.y) {
 							valid = false;
 						}
 					}
@@ -145,29 +155,29 @@ public class SewerPipeRoom extends StandardRoom {
 			ArrayList<Point> pointsToFill = new ArrayList<>();
 			for (Point door : doorPoints) {
 				Point p = new Point(door);
-				if (p.y == top){
-					p.y+=2;
+				if (p.y == top) {
+					p.y += 2;
 				} else if (p.y == bottom) {
-					p.y-=2;
-				} else if (p.x == left){
-					p.x+=2;
+					p.y -= 2;
+				} else if (p.x == left) {
+					p.x += 2;
 				} else {
-					p.x-=2;
+					p.x -= 2;
 				}
-				pointsToFill.add( p );
+				pointsToFill.add(p);
 			}
-			
+
 			ArrayList<Point> pointsFilled = new ArrayList<>();
 			pointsFilled.add(pointsToFill.remove(0));
-			
+
 			Point from = null, to = null;
 			int shortestDistance;
-			while(!pointsToFill.isEmpty()){
+			while (!pointsToFill.isEmpty()) {
 				shortestDistance = Integer.MAX_VALUE;
-				for (Point f : pointsFilled){
-					for (Point t : pointsToFill){
+				for (Point f : pointsFilled) {
+					for (Point t : pointsToFill) {
 						int dist = distanceBetweenPoints(f, t);
-						if (dist < shortestDistance){
+						if (dist < shortestDistance) {
 							from = f;
 							to = t;
 							shortestDistance = dist;
@@ -180,11 +190,11 @@ public class SewerPipeRoom extends StandardRoom {
 			}
 		}
 
-		for(Point p : getPoints()){
+		for (Point p : getPoints()) {
 			int cell = level.pointToCell(p);
-			if (level.map[cell] == Terrain.WATER){
-				for (int i : PathFinder.NEIGHBOURS8){
-					if (level.map[cell + i] == Terrain.WALL){
+			if (level.map[cell] == Terrain.WATER) {
+				for (int i : PathFinder.NEIGHBOURS8) {
+					if (level.map[cell + i] == Terrain.WALL) {
 						Painter.set(level, cell + i, Terrain.EMPTY);
 					}
 				}
@@ -192,24 +202,24 @@ public class SewerPipeRoom extends StandardRoom {
 		}
 
 		for (Room r : connected.keySet()) {
-			if (r instanceof SewerPipeRoom){
+			if (r instanceof SewerPipeRoom) {
 				Point door = connected.get(r);
-				Painter.fill(level, door.x-1, door.y-1, 3, 3, Terrain.EMPTY);
-				if (door.x == left || door.x == right){
-					Painter.fill(level, door.x-1, door.y, 3, 1, Terrain.WATER);
+				Painter.fill(level, door.x - 1, door.y - 1, 3, 3, Terrain.EMPTY);
+				if (door.x == left || door.x == right) {
+					Painter.fill(level, door.x - 1, door.y, 3, 1, Terrain.WATER);
 				} else {
-					Painter.fill(level, door.x, door.y-1, 1, 3, Terrain.WATER);
+					Painter.fill(level, door.x, door.y - 1, 1, 3, Terrain.WATER);
 				}
-				connected.get(r).set( Door.Type.WATER );
+				connected.get(r).set(Door.Type.WATER);
 			} else {
-				connected.get(r).set( Door.Type.REGULAR );
+				connected.get(r).set(Door.Type.REGULAR);
 			}
 		}
 	}
 
 	//returns the space which all doors must connect to (usually 1 cell, but can be more)
 	//Note that, like rooms, this space is inclusive to its right and bottom sides
-	protected Rect getConnectionSpace(){
+	protected Rect getConnectionSpace() {
 		Point c = connected.size() <= 1 ? center() : getDoorCenter();
 
 		return new Rect(c.x, c.y, c.x, c.y);
@@ -221,7 +231,7 @@ public class SewerPipeRoom extends StandardRoom {
 	}
 
 	//returns a point equidistant from all doors this room has
-	protected final Point getDoorCenter(){
+	protected final Point getDoorCenter() {
 		PointF doorCenter = new PointF(0, 0);
 
 		for (Door door : connected.values()) {
@@ -229,47 +239,48 @@ public class SewerPipeRoom extends StandardRoom {
 			doorCenter.y += door.y;
 		}
 
-		Point c = new Point((int)doorCenter.x / connected.size(), (int)doorCenter.y / connected.size());
-		if (Random.Float() < doorCenter.x % 1) c.x++;
-		if (Random.Float() < doorCenter.y % 1) c.y++;
-		c.x = (int) GameMath.gate(left+2, c.x, right-2);
-		c.y = (int)GameMath.gate(top+2, c.y, bottom-2);
+		Point c = new Point((int) doorCenter.x / connected.size(), (int) doorCenter.y / connected.size());
+		if (Random.Float() < doorCenter.x % 1)
+			c.x++;
+		if (Random.Float() < doorCenter.y % 1)
+			c.y++;
+		c.x = (int) GameMath.gate(left + 2, c.x, right - 2);
+		c.y = (int) GameMath.gate(top + 2, c.y, bottom - 2);
 
 		return c;
 	}
 
-	private int spaceBetween(int a, int b){
-		return Math.abs(a - b)-1;
+	private int spaceBetween(int a, int b) {
+		return Math.abs(a - b) - 1;
 	}
 
 	//gets the path distance between two points
-	private int distanceBetweenPoints(Point a, Point b){
+	private int distanceBetweenPoints(Point a, Point b) {
 		//on the same side
-		if (((a.x == left+2 || a.x == right-2) && a.y == b.y)
-				|| ((a.y == top+2 || a.y == bottom-2) && a.x == b.x)){
+		if (((a.x == left + 2 || a.x == right - 2) && a.y == b.y)
+				|| ((a.y == top + 2 || a.y == bottom - 2) && a.x == b.x)) {
 			return Math.max(spaceBetween(a.x, b.x), spaceBetween(a.y, b.y));
 		}
 
 		//otherwise...
 		//subtract 1 at the end to account for overlap
-		return
-				Math.min(spaceBetween(left, a.x) + spaceBetween(left, b.x),
-						spaceBetween(right, a.x) + spaceBetween(right, b.x))
-						+
-						Math.min(spaceBetween(top, a.y) + spaceBetween(top, b.y),
-								spaceBetween(bottom, a.y) + spaceBetween(bottom, b.y))
-						-
-						1;
+		return Math.min(spaceBetween(left, a.x) + spaceBetween(left, b.x),
+				spaceBetween(right, a.x) + spaceBetween(right, b.x))
+				+
+				Math.min(spaceBetween(top, a.y) + spaceBetween(top, b.y),
+						spaceBetween(bottom, a.y) + spaceBetween(bottom, b.y))
+				-
+				1;
 	}
 
 	private Point[] corners;
 
 	//picks the smallest path to fill between two points
-	private void fillBetweenPoints(Level level, Point from, Point to, int floor){
+	private void fillBetweenPoints(Level level, Point from, Point to, int floor) {
 
 		//doors are along the same side
-		if (((from.x == left+2 || from.x == right-2) && from.x == to.x)
-				|| ((from.y == top+2 || from.y == bottom-2) && from.y == to.y)){
+		if (((from.x == left + 2 || from.x == right - 2) && from.x == to.x)
+				|| ((from.y == top + 2 || from.y == bottom - 2) && from.y == to.y)) {
 			Painter.fill(level,
 					Math.min(from.x, to.x),
 					Math.min(from.y, to.y),
@@ -280,17 +291,17 @@ public class SewerPipeRoom extends StandardRoom {
 		}
 
 		//set up corners
-		if (corners == null){
+		if (corners == null) {
 			corners = new Point[4];
-			corners[0] = new Point(left+2, top+2);
-			corners[1] = new Point(right-2, top+2);
-			corners[2] = new Point(right-2, bottom-2);
-			corners[3] = new Point(left+2, bottom-2);
+			corners[0] = new Point(left + 2, top + 2);
+			corners[1] = new Point(right - 2, top + 2);
+			corners[2] = new Point(right - 2, bottom - 2);
+			corners[3] = new Point(left + 2, bottom - 2);
 		}
 
 		//doors on adjacent sides
-		for (Point c : corners){
-			if ((c.x == from.x || c.y == from.y) && (c.x == to.x || c.y == to.y)){
+		for (Point c : corners) {
+			if ((c.x == from.x || c.y == from.y) && (c.x == to.x || c.y == to.y)) {
 				Painter.drawLine(level, from, c, floor);
 				Painter.drawLine(level, c, to, floor);
 				return;
@@ -299,22 +310,22 @@ public class SewerPipeRoom extends StandardRoom {
 
 		//doors on opposite sides
 		Point side;
-		if (from.y == top+2 || from.y == bottom-2){
+		if (from.y == top + 2 || from.y == bottom - 2) {
 			//connect along the left, or right side
-			if (spaceBetween(left, from.x) + spaceBetween(left, to.x) <=
-					spaceBetween(right, from.x) + spaceBetween(right, to.x)){
-				side = new Point(left+2, top + height()/2);
+			if (spaceBetween(left, from.x) + spaceBetween(left, to.x) <= spaceBetween(right, from.x)
+					+ spaceBetween(right, to.x)) {
+				side = new Point(left + 2, top + height() / 2);
 			} else {
-				side = new Point(right-2, top + height()/2);
+				side = new Point(right - 2, top + height() / 2);
 			}
 
 		} else {
 			//connect along the top, or bottom side
-			if (spaceBetween(top, from.y) + spaceBetween(top, to.y) <=
-					spaceBetween(bottom, from.y) + spaceBetween(bottom, to.y)){
-				side = new Point(left + width()/2, top+2);
+			if (spaceBetween(top, from.y) + spaceBetween(top, to.y) <= spaceBetween(bottom, from.y)
+					+ spaceBetween(bottom, to.y)) {
+				side = new Point(left + width() / 2, top + 2);
 			} else {
-				side = new Point(left + width()/2, bottom-2);
+				side = new Point(left + width() / 2, bottom - 2);
 			}
 		}
 		//treat this as two connections with adjacent sides

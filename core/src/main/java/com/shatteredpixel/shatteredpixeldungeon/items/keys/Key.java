@@ -39,7 +39,7 @@ import com.watabou.utils.Bundle;
 public abstract class Key extends Item {
 
 	public static final float TIME_TO_UNLOCK = 1f;
-	
+
 	{
 		stackable = true;
 		unique = true;
@@ -47,10 +47,10 @@ public abstract class Key extends Item {
 
 	//TODO currently keys can only appear on branch = 0, add branch support here if that changes
 	public int depth;
-	
+
 	@Override
-	public boolean isSimilar( Item item ) {
-		return super.isSimilar(item) && ((Key)item).depth == depth;
+	public boolean isSimilar(Item item) {
+		return super.isSimilar(item) && ((Key) item).depth == depth;
 	}
 
 	@Override
@@ -60,11 +60,11 @@ public abstract class Key extends Item {
 		GameScene.pickUpJournal(this, pos);
 		WndJournal.last_index = 0;
 		Notes.add(this);
-		Sample.INSTANCE.play( Assets.Sounds.ITEM );
-		hero.spendAndNext( pickupDelay() );
+		Sample.INSTANCE.play(Assets.Sounds.ITEM);
+		hero.spendAndNext(pickupDelay());
 		GameScene.updateKeyDisplay();
 
-		if (hero.buff(SkeletonKey.KeyReplacementTracker.class) != null){
+		if (hero.buff(SkeletonKey.KeyReplacementTracker.class) != null) {
 			hero.buff(SkeletonKey.KeyReplacementTracker.class).processExcessKeys();
 		}
 
@@ -72,24 +72,24 @@ public abstract class Key extends Item {
 	}
 
 	private static final String DEPTH = "depth";
-	
+
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( DEPTH, depth );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(DEPTH, depth);
 	}
-	
+
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		depth = bundle.getInt( DEPTH );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		depth = bundle.getInt(DEPTH);
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;

@@ -51,8 +51,8 @@ public class Sai extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(2.5f*(tier+1)) +     //10 base, down from 20
-				lvl*Math.round(0.5f*(tier+1));  //+2 per level, down from +4
+		return Math.round(2.5f * (tier + 1)) + //10 base, down from 20
+				lvl * Math.round(0.5f * (tier + 1)); //+2 per level, down from +4
 	}
 
 	@Override
@@ -70,18 +70,19 @@ public class Sai extends MeleeWeapon {
 	@Override
 	public String abilityInfo() {
 		int dmgBoost = levelKnown ? 4 + buffedLvl() : 4;
-		if (levelKnown){
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(dmgBoost));
 		} else {
 			return Messages.get(this, "typical_ability_desc", augment.damageFactor(dmgBoost));
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		return "+" + augment.damageFactor(4 + level);
 	}
 
-	public static void comboStrikeAbility(Hero hero, Integer target, float multiPerHit, int boostPerHit, MeleeWeapon wep){
+	public static void comboStrikeAbility(Hero hero, Integer target, float multiPerHit, int boostPerHit,
+			MeleeWeapon wep) {
 		if (target == null) {
 			return;
 		}
@@ -93,7 +94,7 @@ public class Sai extends MeleeWeapon {
 		}
 
 		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(wep, "ability_target_range"));
 			hero.belongings.abilityWeapon = null;
 			return;
@@ -108,19 +109,20 @@ public class Sai extends MeleeWeapon {
 
 				int recentHits = 0;
 				ComboStrikeTracker buff = hero.buff(ComboStrikeTracker.class);
-				if (buff != null){
+				if (buff != null) {
 					recentHits = buff.hits;
 					buff.detach();
 				}
 
-				boolean hit = hero.attack(enemy, 1f + multiPerHit*recentHits, boostPerHit*recentHits, Char.INFINITE_ACCURACY);
-				if (hit && !enemy.isAlive()){
+				boolean hit = hero.attack(enemy, 1f + multiPerHit * recentHits, boostPerHit * recentHits,
+						Char.INFINITE_ACCURACY);
+				if (hit && !enemy.isAlive()) {
 					wep.onAbilityKill(hero, enemy);
 				}
 
 				Invisibility.dispel();
 				hero.spendAndNext(hero.attackDelay());
-				if (recentHits >= 2 && hit){
+				if (recentHits >= 2 && hit) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
 
@@ -155,7 +157,7 @@ public class Sai extends MeleeWeapon {
 
 		@Override
 		public boolean act() {
-			comboTime-=TICK;
+			comboTime -= TICK;
 			spend(TICK);
 			if (comboTime <= 0) {
 				detach();
@@ -163,23 +165,23 @@ public class Sai extends MeleeWeapon {
 			return true;
 		}
 
-		public void addHit(){
+		public void addHit() {
 			hits++;
 			comboTime = 5f;
 
-			if (hits >= 2 && icon() != BuffIndicator.NONE){
-				GLog.p( Messages.get(Combo.class, "combo", hits) );
+			if (hits >= 2 && icon() != BuffIndicator.NONE) {
+				GLog.p(Messages.get(Combo.class, "combo", hits));
 			}
 		}
 
 		@Override
 		public float iconFadePercent() {
-			return Math.max(0, (DURATION - comboTime)/ DURATION);
+			return Math.max(0, (DURATION - comboTime) / DURATION);
 		}
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)comboTime);
+			return Integer.toString((int) comboTime);
 		}
 
 		@Override
@@ -187,7 +189,7 @@ public class Sai extends MeleeWeapon {
 			return Messages.get(this, "desc", hits, dispTurns(comboTime));
 		}
 
-		private static final String TIME  = "combo_time";
+		private static final String TIME = "combo_time";
 		public static String RECENT_HITS = "recent_hits";
 
 		@Override

@@ -42,9 +42,9 @@ public class ExplosiveTrap extends Trap {
 	@Override
 	public void activate() {
 
-		for( int i : PathFinder.NEIGHBOURS9) {
-			if (Actor.findChar(pos+i) instanceof Mob){
-				Buff.prolong(Actor.findChar(pos+i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
+		for (int i : PathFinder.NEIGHBOURS9) {
+			if (Actor.findChar(pos + i) instanceof Mob) {
+				Buff.prolong(Actor.findChar(pos + i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 			}
 		}
 

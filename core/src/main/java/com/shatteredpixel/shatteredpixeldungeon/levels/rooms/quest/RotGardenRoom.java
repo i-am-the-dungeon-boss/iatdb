@@ -41,14 +41,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class RotGardenRoom extends SpecialRoom {
-	
-	@Override
-	public int minWidth() { return 10; }
-	
-	@Override
-	public int minHeight() { return 10; }
 
-	public void paint( Level level ) {
+	@Override
+	public int minWidth() {
+		return 10;
+	}
+
+	@Override
+	public int minHeight() {
+		return 10;
+	}
+
+	public void paint(Level level) {
 
 		Door entrance = entrance();
 		entrance.set(Door.Type.LOCKED);
@@ -108,7 +112,7 @@ public class RotGardenRoom extends SpecialRoom {
 				closestPos++;
 			}
 
-		//retry if there are no distanc candidates, or more than ~half the room is closed off
+			//retry if there are no distanc candidates, or more than ~half the room is closed off
 		} while (candidates.isEmpty() || openCells < 35);
 		int heartPos = Random.element(candidates);
 		placePlant(level, heartPos, new RotHeart());
@@ -116,14 +120,14 @@ public class RotGardenRoom extends SpecialRoom {
 		//place up to 6 lashers in such a way that there is always a safe path to the heart
 		boolean[] newPassable = Arrays.copyOf(passable, passable.length);
 		int maxLashers = 6;
-		for (int i = 1; i <= maxLashers; i++){
+		for (int i = 1; i <= maxLashers; i++) {
 			int pos;
 			int tries = 50;
 			do {
 				pos = level.pointToCell(random());
 				tries--;
 			} while (tries > 0 && !validPlantPos(passable, newPassable, level, pos, heartPos, entryPos));
-			if (tries <= 0){
+			if (tries <= 0) {
 				break;
 			}
 			placePlant(level, pos, new RotLasher());
@@ -131,21 +135,22 @@ public class RotGardenRoom extends SpecialRoom {
 
 		//look for open diagonals near the hard and create open cardinals near them.
 		//This is important so that the heart can spread gas
-		for (int i = 0; i < PathFinder.CIRCLE8.length; i+=2){
-			if (level.map[heartPos + PathFinder.CIRCLE8[i]] != Terrain.WALL){
-				Painter.set(level, heartPos + PathFinder.CIRCLE8[i+1], Terrain.HIGH_GRASS);
+		for (int i = 0; i < PathFinder.CIRCLE8.length; i += 2) {
+			if (level.map[heartPos + PathFinder.CIRCLE8[i]] != Terrain.WALL) {
+				Painter.set(level, heartPos + PathFinder.CIRCLE8[i + 1], Terrain.HIGH_GRASS);
 			}
 		}
 
 	}
 
-	private static boolean validPlantPos(boolean[] passable, boolean[] newPassable, Level level, int pos, int heartPos, int entryPos){
-		if (level.map[pos] != Terrain.HIGH_GRASS){
+	private static boolean validPlantPos(boolean[] passable, boolean[] newPassable, Level level, int pos, int heartPos,
+			int entryPos) {
+		if (level.map[pos] != Terrain.HIGH_GRASS) {
 			return false;
 		}
 
-		for (int i : PathFinder.NEIGHBOURS9){
-			if (level.findMob(pos+i) != null){
+		for (int i : PathFinder.NEIGHBOURS9) {
+			if (level.findMob(pos + i) != null) {
 				return false;
 			}
 		}
@@ -153,21 +158,21 @@ public class RotGardenRoom extends SpecialRoom {
 		newPassable[pos] = false;
 
 		//if lasher isn't near heart, we can just use cardinal directions
-		if (level.distance(pos, heartPos) > 2){
-			for (int i : PathFinder.NEIGHBOURS4){
-				newPassable[pos+i] = false;
+		if (level.distance(pos, heartPos) > 2) {
+			for (int i : PathFinder.NEIGHBOURS4) {
+				newPassable[pos + i] = false;
 			}
-		//if it is near, has to count as blocking all adjacent
-		// so that we can guarantee a safe tile to stay still in next to the heart
+			//if it is near, has to count as blocking all adjacent
+			// so that we can guarantee a safe tile to stay still in next to the heart
 		} else {
-			for (int i : PathFinder.NEIGHBOURS8){
-				newPassable[pos+i] = false;
+			for (int i : PathFinder.NEIGHBOURS8) {
+				newPassable[pos + i] = false;
 			}
 		}
 
 		PathFinder.buildDistanceMap(heartPos, newPassable);
 
-		if (PathFinder.distance[entryPos] == Integer.MAX_VALUE){
+		if (PathFinder.distance[entryPos] == Integer.MAX_VALUE) {
 			System.arraycopy(passable, 0, newPassable, 0, passable.length);
 			return false;
 		} else {
@@ -176,9 +181,9 @@ public class RotGardenRoom extends SpecialRoom {
 		}
 	}
 
-	private static void placePlant(Level level, int pos, Mob plant){
+	private static void placePlant(Level level, int pos, Mob plant) {
 		plant.pos = pos;
-		level.mobs.add( plant );
+		level.mobs.add(plant);
 
 		Painter.set(level, pos, Terrain.GRASS);
 	}

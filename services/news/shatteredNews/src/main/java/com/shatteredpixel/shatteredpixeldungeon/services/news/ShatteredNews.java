@@ -42,7 +42,7 @@ public class ShatteredNews extends NewsService {
 	@Override
 	public void checkForArticles(boolean useMetered, boolean preferHTTPS, NewsResultCallback callback) {
 
-		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()){
+		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()) {
 			callback.onConnectionFailed();
 			return;
 		}
@@ -63,7 +63,7 @@ public class ShatteredNews extends NewsService {
 
 				SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
-				for (XmlReader.Element xmlArticle : xmlDoc.getChildrenByName("entry")){
+				for (XmlReader.Element xmlArticle : xmlDoc.getChildrenByName("entry")) {
 					NewsArticle article = new NewsArticle();
 					article.title = xmlArticle.get("title");
 					try {
@@ -80,9 +80,9 @@ public class ShatteredNews extends NewsService {
 					Pattern versionCodeMatcher = Pattern.compile("v[0-9]+");
 					try {
 						Array<XmlReader.Element> properties = xmlArticle.getChildrenByName("category");
-						for (XmlReader.Element prop : properties){
+						for (XmlReader.Element prop : properties) {
 							String propVal = prop.getAttribute("term");
-							if (propVal.startsWith("SHPD_ICON")){
+							if (propVal.startsWith("SHPD_ICON")) {
 								Matcher m = versionCodeMatcher.matcher(propVal);
 								if (m.find()) {
 									int iconGameVer = Integer.parseInt(m.group().substring(1));
@@ -92,7 +92,7 @@ public class ShatteredNews extends NewsService {
 								}
 							}
 						}
-					} catch (Exception e){
+					} catch (Exception e) {
 						article.icon = null;
 					}
 

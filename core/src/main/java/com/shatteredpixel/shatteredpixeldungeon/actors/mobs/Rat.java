@@ -35,7 +35,7 @@ public class Rat extends Mob {
 
 	{
 		spriteClass = RatSprite.class;
-		
+
 		HP = HT = 8;
 		defenseSkill = 2;
 
@@ -46,24 +46,26 @@ public class Rat extends Mob {
 	protected boolean act() {
 		if (alignment != Alignment.ALLY
 				&& Dungeon.level.heroFOV[pos]
-				&& Dungeon.hero.armorAbility instanceof Ratmogrify){
+				&& Dungeon.hero.armorAbility instanceof Ratmogrify) {
 			alignment = Alignment.NEUTRAL;
-			if (enemy == Dungeon.hero) enemy = null;
-			if (state == SLEEPING) state = WANDERING;
+			if (enemy == Dungeon.hero)
+				enemy = null;
+			if (state == SLEEPING)
+				state = WANDERING;
 		}
 		return super.act();
 	}
 
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 1, 4 );
+		return Random.NormalIntRange(1, 4);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 8;
 	}
-	
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 1);
@@ -74,12 +76,14 @@ public class Rat extends Mob {
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		if (alignment == Alignment.ALLY) bundle.put(RAT_ALLY, true);
+		if (alignment == Alignment.ALLY)
+			bundle.put(RAT_ALLY, true);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (bundle.contains(RAT_ALLY)) alignment = Alignment.ALLY;
+		if (bundle.contains(RAT_ALLY))
+			alignment = Alignment.ALLY;
 	}
 }

@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 /**
  * The altar's shape and the tiles laid over it.
  *
- * <p>No test here calls {@code create()}. It resolves the texture through the
+ * <p>
+ * No test here calls {@code create()}. It resolves the texture through the
  * texture cache and so needs a GL context the headless harness does not have,
  * which is the whole reason every altar tilemap keeps its tile maths in a pure
  * {@code tileData()} — assert on that instead.
@@ -167,8 +168,7 @@ class EchoAltarTest {
 			for (int j = i + 1; j < regions.length; j++) {
 				boolean sameSheet = AltarQuadrant.textureFor(regions[i])
 						.equals(AltarQuadrant.textureFor(regions[j]));
-				boolean sameTile = AltarQuadrant.floorFor(regions[i])
-						== AltarQuadrant.floorFor(regions[j]);
+				boolean sameTile = AltarQuadrant.floorFor(regions[i]) == AltarQuadrant.floorFor(regions[j]);
 				Assertions.assertThat(sameSheet && sameTile)
 						.as("regions %d and %d would look identical", regions[i], regions[j])
 						.isFalse();

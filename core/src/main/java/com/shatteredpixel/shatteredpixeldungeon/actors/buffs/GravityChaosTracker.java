@@ -46,7 +46,7 @@ import java.util.ArrayList;
 public class GravityChaosTracker extends Buff {
 
 	{
-		actPriority = BUFF_PRIO-10; //acts after other buffs
+		actPriority = BUFF_PRIO - 10; //acts after other buffs
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class GravityChaosTracker extends Buff {
 
 	@Override
 	public void tintIcon(Image icon) {
-		if (positiveOnly){
+		if (positiveOnly) {
 			icon.hardlight(0, 1, 0);
 		} else {
 			icon.hardlight(1, 0, 0);
@@ -76,7 +76,7 @@ public class GravityChaosTracker extends Buff {
 	public boolean act() {
 
 		//wait until all sprites have finished moving
-		for (Char ch : Actor.chars()){
+		for (Char ch : Actor.chars()) {
 			try {
 				synchronized (ch.sprite) {
 					if (ch.sprite.isMoving) {
@@ -88,21 +88,22 @@ public class GravityChaosTracker extends Buff {
 			}
 		}
 
-		if (!blocked.isEmpty()){
+		if (!blocked.isEmpty()) {
 			boolean blockedremoved = false;
-			for (Char ch : blocked.toArray(new Char[0])){
+			for (Char ch : blocked.toArray(new Char[0])) {
 				Ballistica path = new Ballistica(ch.pos, ch.pos + PathFinder.NEIGHBOURS8[idx], Ballistica.MAGIC_BOLT);
-				if (!(path.dist == 1 && Actor.findChar(path.collisionPos) != null)){
-					if (ch instanceof Hero) ((Hero) ch).interrupt();
+				if (!(path.dist == 1 && Actor.findChar(path.collisionPos) != null)) {
+					if (ch instanceof Hero)
+						((Hero) ch).interrupt();
 					WandOfBlastWave.throwChar(ch, path, 3, false, false, this);
 					blocked.remove(ch);
 					blockedremoved = true;
 				}
 			}
-			if (!blockedremoved || blocked.isEmpty()){
+			if (!blockedremoved || blocked.isEmpty()) {
 				blocked.clear();
 				left--;
-				if (left <= 0){
+				if (left <= 0) {
 					GLog.w(Messages.get(CursedWand.class, "gravity_end"));
 					Sample.INSTANCE.play(Assets.Sounds.DEGRADE);
 					detach();
@@ -116,19 +117,20 @@ public class GravityChaosTracker extends Buff {
 		}
 
 		idx = Random.Int(PathFinder.NEIGHBOURS8.length);
-		for (Char ch : Actor.chars()){
+		for (Char ch : Actor.chars()) {
 			if (Char.hasProp(ch, Char.Property.IMMOVABLE) ||
-					(positiveOnly && ch.alignment == Char.Alignment.ALLY)){
+					(positiveOnly && ch.alignment == Char.Alignment.ALLY)) {
 				continue;
 			} else {
-				if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).SLEEPING){
+				if (ch instanceof Mob && ((Mob) ch).state == ((Mob) ch).SLEEPING) {
 					((Mob) ch).state = ((Mob) ch).WANDERING;
 				}
 				Ballistica path = new Ballistica(ch.pos, ch.pos + PathFinder.NEIGHBOURS8[idx], Ballistica.MAGIC_BOLT);
-				if (path.dist == 1 && Actor.findChar(path.collisionPos) != null){
+				if (path.dist == 1 && Actor.findChar(path.collisionPos) != null) {
 					blocked.add(ch);
 				} else {
-					if (ch instanceof Hero) ((Hero) ch).interrupt();
+					if (ch instanceof Hero)
+						((Hero) ch).interrupt();
 					WandOfBlastWave.throwChar(ch, path, 3, false, false, this);
 				}
 			}
@@ -136,9 +138,9 @@ public class GravityChaosTracker extends Buff {
 
 		//if anything was blocked, we don't spend here and re-act
 		// so we can try to re-push chars blocked by other chars
-		if (blocked.isEmpty()){
+		if (blocked.isEmpty()) {
 			left--;
-			if (left <= 0){
+			if (left <= 0) {
 				GLog.w(Messages.get(CursedWand.class, "gravity_end"));
 				Sample.INSTANCE.play(Assets.Sounds.DEGRADE);
 				detach();
@@ -153,7 +155,7 @@ public class GravityChaosTracker extends Buff {
 	@Override
 	public String desc() {
 		String desc = Messages.get(this, "desc_intro");
-		if (positiveOnly){
+		if (positiveOnly) {
 			desc += " " + Messages.get(this, "desc_positive");
 		}
 		desc += "\n\n" + Messages.get(this, "desc_duration");

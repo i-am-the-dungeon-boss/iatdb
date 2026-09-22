@@ -49,18 +49,18 @@ public class GreaterHaste extends Buff {
 		return true;
 	}
 
-	public void spendMove(){
+	public void spendMove() {
 		left--;
-		if (left <= 0){
+		if (left <= 0) {
 			detach();
 		}
 	}
 
-	public void set(int time){
+	public void set(int time) {
 		left = time;
 	}
 
-	public void extend( float duration ) {
+	public void extend(float duration) {
 		left += duration;
 	}
 
@@ -77,7 +77,7 @@ public class GreaterHaste extends Buff {
 	@Override
 	public float iconFadePercent() {
 		//currently tied to the lethal haste talent, as that's the only source
-		float duration = 1 + 2*Dungeon.hero.pointsInTalent(Talent.LETHAL_HASTE);
+		float duration = 1 + 2 * Dungeon.hero.pointsInTalent(Talent.LETHAL_HASTE);
 		return Math.max(0, (duration - left) / duration);
 	}
 
@@ -91,18 +91,18 @@ public class GreaterHaste extends Buff {
 		return Messages.get(this, "desc", left);
 	}
 
-	private static final String LEFT	= "left";
+	private static final String LEFT = "left";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( LEFT, left );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(LEFT, left);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
+	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		left = bundle.getInt( LEFT );
+		left = bundle.getInt(LEFT);
 	}
 
 }

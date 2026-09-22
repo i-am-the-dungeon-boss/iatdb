@@ -37,7 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
-public class CrystalWisp extends Mob{
+public class CrystalWisp extends Mob {
 
 	{
 		spriteClass = CrystalWispSprite.class;
@@ -53,10 +53,11 @@ public class CrystalWisp extends Mob{
 		properties.add(Property.INORGANIC);
 	}
 
-	public CrystalWisp(){
+	public CrystalWisp() {
 		super();
-		switch (Random.Int(3)){
-			case 0: default:
+		switch (Random.Int(3)) {
+			case 0:
+			default:
 				spriteClass = CrystalWispSprite.Blue.class;
 				break;
 			case 1:
@@ -70,7 +71,7 @@ public class CrystalWisp extends Mob{
 
 	@Override
 	public boolean[] modifyPassable(boolean[] passable) {
-		for (int i = 0; i < Dungeon.level.length(); i++){
+		for (int i = 0; i < Dungeon.level.length(); i++) {
 			passable[i] = passable[i] || Dungeon.level.map[i] == Terrain.MINE_CRYSTAL;
 		}
 		return passable;
@@ -78,11 +79,11 @@ public class CrystalWisp extends Mob{
 
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 5, 10 );
+		return Random.NormalIntRange(5, 10);
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 18;
 	}
 
@@ -92,22 +93,22 @@ public class CrystalWisp extends Mob{
 	}
 
 	@Override
-	protected boolean canAttack( Char enemy ) {
+	protected boolean canAttack(Char enemy) {
 		return super.canAttack(enemy)
-				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
+				|| new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
 	}
 
-	protected boolean doAttack(Char enemy ) {
+	protected boolean doAttack(Char enemy) {
 
-		if (Dungeon.level.adjacent( pos, enemy.pos )
-				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {
+		if (Dungeon.level.adjacent(pos, enemy.pos)
+				|| new Ballistica(pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {
 
-			return super.doAttack( enemy );
+			return super.doAttack(enemy);
 
 		} else {
 
 			if (sprite != null && (sprite.visible || enemy.sprite.visible)) {
-				sprite.zap( enemy.pos );
+				sprite.zap(enemy.pos);
 				return false;
 			} else {
 				zap();
@@ -123,25 +124,26 @@ public class CrystalWisp extends Mob{
 	}
 
 	//used so resistances can differentiate between melee and magical attacks
-	public static class LightBeam {}
+	public static class LightBeam {
+	}
 
 	private void zap() {
-		spend( 1f );
+		spend(1f);
 
 		Invisibility.dispel(this);
 		Char enemy = this.enemy;
-		if (hit( this, enemy, true )) {
+		if (hit(this, enemy, true)) {
 
-			int dmg = Random.NormalIntRange( 5, 10 );
-			enemy.damage( dmg, new LightBeam() );
+			int dmg = Random.NormalIntRange(5, 10);
+			enemy.damage(dmg, new LightBeam());
 
 			if (!enemy.isAlive() && enemy == Dungeon.hero) {
 				Badges.validateDeathFromEnemyMagic();
-				Dungeon.fail( this );
-				GLog.n( Messages.get(this, "beam_kill") );
+				Dungeon.fail(this);
+				GLog.n(Messages.get(this, "beam_kill"));
 			}
 		} else {
-			enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );
+			enemy.sprite.showStatus(CharSprite.NEUTRAL, enemy.defenseVerb());
 		}
 	}
 

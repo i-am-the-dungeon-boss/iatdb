@@ -42,16 +42,16 @@ public class Mageroyal extends Plant {
 	}
 
 	@Override
-	public void activate( Char ch ) {
+	public void activate(Char ch) {
 
 		if (ch != null) {
 			PotionOfHealing.cure(ch);
 
 			if (ch instanceof Hero) {
-				GLog.i( Messages.get(this, "refreshed") );
+				GLog.i(Messages.get(this, "refreshed"));
 
-				if (((Hero) ch).subClass == HeroSubClass.WARDEN){
-					Buff.affect(ch, BlobImmunity.class, BlobImmunity.DURATION/2f);
+				if (((Hero) ch).subClass == HeroSubClass.WARDEN) {
+					Buff.affect(ch, BlobImmunity.class, BlobImmunity.DURATION / 2f);
 				}
 			}
 		}

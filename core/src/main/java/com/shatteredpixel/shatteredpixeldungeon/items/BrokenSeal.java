@@ -72,32 +72,32 @@ public class BrokenSeal extends Item {
 
 	private Armor.Glyph glyph;
 
-	public boolean canTransferGlyph(){
-		if (glyph == null){
+	public boolean canTransferGlyph() {
+		if (glyph == null) {
 			return false;
 		}
-		if (Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE) == 2){
+		if (Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE) == 2) {
 			return true;
 		} else if (Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE) == 1
-			&& (Arrays.asList(Armor.Glyph.common).contains(glyph.getClass())
-				|| Arrays.asList(Armor.Glyph.uncommon).contains(glyph.getClass()))){
+				&& (Arrays.asList(Armor.Glyph.common).contains(glyph.getClass())
+						|| Arrays.asList(Armor.Glyph.uncommon).contains(glyph.getClass()))) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	public Armor.Glyph getGlyph(){
+	public Armor.Glyph getGlyph() {
 		return glyph;
 	}
 
-	public void setGlyph( Armor.Glyph glyph ){
+	public void setGlyph(Armor.Glyph glyph) {
 		this.glyph = glyph;
 	}
 
-	public int maxShield( int armTier, int armLvl ){
+	public int maxShield(int armTier, int armLvl) {
 		// 5-15, based on equip tier and iron will
-		return 3 + 2*armTier + Dungeon.hero.pointsInTalent(Talent.IRON_WILL);
+		return 3 + 2 * armTier + Dungeon.hero.pointsInTalent(Talent.IRON_WILL);
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class BrokenSeal extends Item {
 
 	@Override
 	public ArrayList<String> actions(Hero hero) {
-		ArrayList<String> actions =  super.actions(hero);
+		ArrayList<String> actions = super.actions(hero);
 		actions.add(AC_AFFIX);
 		return actions;
 	}
@@ -117,7 +117,7 @@ public class BrokenSeal extends Item {
 
 		super.execute(hero, action);
 
-		if (action.equals(AC_AFFIX)){
+		if (action.equals(AC_AFFIX)) {
 			curItem = this;
 			GameScene.selectItem(armorSelector);
 		} else if (action.equals(AC_INFO)) {
@@ -126,15 +126,15 @@ public class BrokenSeal extends Item {
 	}
 
 	//outgoing is either the seal itself as an item, or an armor the seal is affixed to
-	public void affixToArmor(Armor armor, Item outgoing){
+	public void affixToArmor(Armor armor, Item outgoing) {
 		if (armor != null) {
-			if (!armor.cursedKnown){
+			if (!armor.cursedKnown) {
 				GLog.w(Messages.get(BrokenSeal.class, "unknown_armor"));
 
-			} else if (armor.cursed && (getGlyph() == null || !getGlyph().curse())){
+			} else if (armor.cursed && (getGlyph() == null || !getGlyph().curse())) {
 				GLog.w(Messages.get(BrokenSeal.class, "cursed_armor"));
 
-			}else if (armor.glyph != null && getGlyph() != null
+			} else if (armor.glyph != null && getGlyph() != null
 					&& canTransferGlyph()
 					&& armor.glyph.getClass() != getGlyph().getClass()) {
 
@@ -142,18 +142,20 @@ public class BrokenSeal extends Item {
 						Messages.get(BrokenSeal.class, "choose_title"),
 						Messages.get(BrokenSeal.class, "choose_desc", armor.glyph.name(), getGlyph().name()),
 						armor.glyph.name(),
-						getGlyph().name()){
+						getGlyph().name()) {
 					@Override
 					protected void onSelect(int index) {
-						if (index == -1) return;
+						if (index == -1)
+							return;
 
 						if (outgoing == BrokenSeal.this) {
 							detach(Dungeon.hero.belongings.backpack);
-						} else if (outgoing instanceof Armor){
+						} else if (outgoing instanceof Armor) {
 							((Armor) outgoing).detachSeal();
 						}
 
-						if (index == 0) setGlyph(null);
+						if (index == 0)
+							setGlyph(null);
 						//if index is 1, then the glyph transfer happens in affixSeal
 
 						GLog.p(Messages.get(BrokenSeal.class, "affix"));
@@ -172,7 +174,7 @@ public class BrokenSeal extends Item {
 			} else {
 				if (outgoing == this) {
 					detach(Dungeon.hero.belongings.backpack);
-				} else if (outgoing instanceof Armor){
+				} else if (outgoing instanceof Armor) {
 					((Armor) outgoing).detachSeal();
 				}
 
@@ -187,13 +189,13 @@ public class BrokenSeal extends Item {
 
 	@Override
 	public String name() {
-		return glyph != null ? glyph.name( super.name() ) : super.name();
+		return glyph != null ? glyph.name(super.name()) : super.name();
 	}
 
 	@Override
 	public String info() {
 		String info = super.info();
-		if (glyph != null){
+		if (glyph != null) {
 			info += "\n\n" + Messages.get(this, "inscribed", glyph.name());
 			info += " " + glyph.desc();
 		}
@@ -210,11 +212,11 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public String textPrompt() {
-			return  Messages.get(BrokenSeal.class, "prompt");
+			return Messages.get(BrokenSeal.class, "prompt");
 		}
 
 		@Override
-		public Class<?extends Bag> preferredBag(){
+		public Class<? extends Bag> preferredBag() {
 			return Belongings.Backpack.class;
 		}
 
@@ -224,10 +226,10 @@ public class BrokenSeal extends Item {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
+		public void onSelect(Item item) {
 			if (item instanceof Armor) {
 				BrokenSeal seal = (BrokenSeal) curItem;
-				seal.affixToArmor((Armor)item, seal);
+				seal.affixToArmor((Armor) item, seal);
 			}
 		}
 	};
@@ -243,7 +245,7 @@ public class BrokenSeal extends Item {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		glyph = (Armor.Glyph)bundle.get(GLYPH);
+		glyph = (Armor.Glyph) bundle.get(GLYPH);
 	}
 
 	public static class WarriorShield extends ShieldBuff {
@@ -265,7 +267,7 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public int icon() {
-			if (coolingDown() || shielding() > 0 || cooldown < 0){
+			if (coolingDown() || shielding() > 0 || cooldown < 0) {
 				return BuffIndicator.SEAL_SHIELD;
 			} else {
 				return BuffIndicator.NONE;
@@ -275,7 +277,7 @@ public class BrokenSeal extends Item {
 		@Override
 		public void tintIcon(Image icon) {
 			icon.resetColor();
-			if (coolingDown() && shielding() == 0){
+			if (coolingDown() && shielding() == 0) {
 				icon.brightness(0.3f);
 			} else if (cooldown < 0) {
 				icon.invert();
@@ -284,12 +286,12 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public float iconFadePercent() {
-			if (shielding() > 0){
-				return GameMath.gate(0, 1f - shielding()/(float)initialShield, 1);
-			} else if (coolingDown()){
-				return GameMath.gate(0, cooldown / (float)COOLDOWN_START, 1);
+			if (shielding() > 0) {
+				return GameMath.gate(0, 1f - shielding() / (float) initialShield, 1);
+			} else if (coolingDown()) {
+				return GameMath.gate(0, cooldown / (float) COOLDOWN_START, 1);
 			} else if (cooldown < 0) {
-				return GameMath.gate(0, (COOLDOWN_START+cooldown) / (float)COOLDOWN_START, 1);
+				return GameMath.gate(0, (COOLDOWN_START + cooldown) / (float) COOLDOWN_START, 1);
 			} else {
 				return 0;
 			}
@@ -297,9 +299,9 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public String iconTextDisplay() {
-			if (shielding() > 0){
+			if (shielding() > 0) {
 				return Integer.toString(shielding());
-			} else if (coolingDown() || cooldown < 0){
+			} else if (coolingDown() || cooldown < 0) {
 				return Integer.toString(cooldown);
 			} else {
 				return "";
@@ -319,18 +321,18 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public synchronized boolean act() {
-			if (cooldown > 0 && Regeneration.regenOn()){
+			if (cooldown > 0 && Regeneration.regenOn()) {
 				cooldown--;
 			}
 
-			if (shielding() > 0){
-				if (Dungeon.hero.visibleEnemies() == 0 && Dungeon.hero.buff(Combo.class) == null){
+			if (shielding() > 0) {
+				if (Dungeon.hero.visibleEnemies() == 0 && Dungeon.hero.buff(Combo.class) == null) {
 					turnsSinceEnemies += HoldFast.buffDecayFactor(target);
-					if (turnsSinceEnemies >= 5){
+					if (turnsSinceEnemies >= 5) {
 						if (cooldown > 0) {
-							float percentLeft = shielding() / (float)initialShield;
+							float percentLeft = shielding() / (float) initialShield;
 							//max of 50% cooldown refund
-							cooldown = Math.max(0, (int)(cooldown - COOLDOWN_START * (percentLeft / 2f)));
+							cooldown = Math.max(0, (int) (cooldown - COOLDOWN_START * (percentLeft / 2f)));
 						}
 						decShield(shielding());
 					}
@@ -338,42 +340,42 @@ public class BrokenSeal extends Item {
 					turnsSinceEnemies = 0;
 				}
 			}
-			
-			if (shielding() <= 0 && maxShield() <= 0 && cooldown == 0){
+
+			if (shielding() <= 0 && maxShield() <= 0 && cooldown == 0) {
 				detach();
 			}
-			
+
 			spend(TICK);
 			return true;
 		}
 
 		public synchronized void activate() {
 			incShield(maxShield());
-			cooldown = Math.max(0, cooldown+COOLDOWN_START);
+			cooldown = Math.max(0, cooldown + COOLDOWN_START);
 			turnsSinceEnemies = 0;
 			initialShield = maxShield();
 		}
 
-		public boolean coolingDown(){
+		public boolean coolingDown() {
 			return cooldown > 0;
 		}
 
-		public void reduceCooldown(float percentage){
-			cooldown -= Math.round(COOLDOWN_START*percentage);
+		public void reduceCooldown(float percentage) {
+			cooldown -= Math.round(COOLDOWN_START * percentage);
 			cooldown = Math.max(cooldown, -COOLDOWN_START);
 		}
 
-		public synchronized void setArmor(Armor arm){
+		public synchronized void setArmor(Armor arm) {
 			armor = arm;
 		}
 
 		public synchronized int maxShield() {
 			//metamorphed iron will logic
-			if (((Hero)target).heroClass != HeroClass.WARRIOR && ((Hero) target).hasTalent(Talent.IRON_WILL)){
+			if (((Hero) target).heroClass != HeroClass.WARRIOR && ((Hero) target).hasTalent(Talent.IRON_WILL)) {
 				return ((Hero) target).pointsInTalent(Talent.IRON_WILL);
 			}
 
-			if (armor != null && armor.isEquipped((Hero)target) && armor.checkSeal() != null) {
+			if (armor != null && armor.isEquipped((Hero) target) && armor.checkSeal() != null) {
 				return armor.checkSeal().maxShield(armor.tier, armor.level());
 			} else {
 				return 0;
@@ -400,7 +402,7 @@ public class BrokenSeal extends Item {
 				turnsSinceEnemies = bundle.getFloat(TURNS_SINCE_ENEMIES);
 				initialShield = bundle.getInt(INITIAL_SHIELD);
 
-			//if we have shield from pre-3.1, have it last a bit
+				//if we have shield from pre-3.1, have it last a bit
 			} else if (shielding() > 0) {
 				turnsSinceEnemies = -100;
 				initialShield = shielding();

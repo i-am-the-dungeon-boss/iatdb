@@ -50,45 +50,45 @@ public class PotionOfHealing extends Potion {
 
 		bones = true;
 	}
-	
+
 	@Override
-	public void apply( Char ch ) {
+	public void apply(Char ch) {
 		if (ch instanceof Hero) {
 			identify();
 		}
-		cure( ch );
-		heal( ch );
+		cure(ch);
+		heal(ch);
 	}
 
-	public static void heal( Char ch ){
-		if (ch == Dungeon.hero && Dungeon.isChallenged(Challenges.NO_HEALING)){
+	public static void heal(Char ch) {
+		if (ch == Dungeon.hero && Dungeon.isChallenged(Challenges.NO_HEALING)) {
 			pharmacophobiaProc(Dungeon.hero);
 		} else {
 			//starts out healing 30 hp, equalizes with hero health total at level 11
 			Healing healing = Buff.affect(ch, Healing.class);
 			healing.setHeal((int) (0.8f * ch.HT + 14), 0.25f, 0);
 			healing.applyVialEffect();
-			if (ch == Dungeon.hero){
-				GLog.p( Messages.get(PotionOfHealing.class, "heal") );
+			if (ch == Dungeon.hero) {
+				GLog.p(Messages.get(PotionOfHealing.class, "heal"));
 			}
 		}
 	}
 
-	public static void pharmacophobiaProc( Hero hero ){
+	public static void pharmacophobiaProc(Hero hero) {
 		// harms the hero for ~40% of their max HP in poison
-		Buff.affect( hero, Poison.class).set(4 + hero.lvl/2);
+		Buff.affect(hero, Poison.class).set(4 + hero.lvl / 2);
 	}
-	
-	public static void cure( Char ch ) {
-		Buff.detach( ch, Poison.class );
-		Buff.detach( ch, Cripple.class );
-		Buff.detach( ch, Weakness.class );
-		Buff.detach( ch, Vulnerable.class );
-		Buff.detach( ch, Bleeding.class );
-		Buff.detach( ch, Blindness.class );
-		Buff.detach( ch, Drowsy.class );
-		Buff.detach( ch, Slow.class );
-		Buff.detach( ch, Vertigo.class);
+
+	public static void cure(Char ch) {
+		Buff.detach(ch, Poison.class);
+		Buff.detach(ch, Cripple.class);
+		Buff.detach(ch, Weakness.class);
+		Buff.detach(ch, Vulnerable.class);
+		Buff.detach(ch, Bleeding.class);
+		Buff.detach(ch, Blindness.class);
+		Buff.detach(ch, Drowsy.class);
+		Buff.detach(ch, Slow.class);
+		Buff.detach(ch, Vertigo.class);
 	}
 
 	@Override

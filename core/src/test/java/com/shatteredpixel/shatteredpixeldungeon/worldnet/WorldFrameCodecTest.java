@@ -16,8 +16,7 @@ class WorldFrameCodecTest {
 	@Test
 	@DisplayName("encodes the local avatar as a presence frame")
 	void encodesPresence() throws Exception {
-		JSONObject frame =
-				new JSONObject(WorldFrameCodec.encodePresence(WorldPresence.local("WARRIOR", 512, -1)));
+		JSONObject frame = new JSONObject(WorldFrameCodec.encodePresence(WorldPresence.local("WARRIOR", 512, -1)));
 
 		assertThat(frame.getString("t")).isEqualTo("presence");
 		assertThat(frame.getString("hero_class")).isEqualTo("WARRIOR");
@@ -114,8 +113,8 @@ class WorldFrameCodecTest {
 	@Test
 	@DisplayName("decodes an error frame with its code")
 	void decodesError() {
-		WorldFrame frame =
-				WorldFrameCodec.decode("{\"t\":\"error\",\"code\":\"rate_limited\",\"detail\":\"slow down\"}");
+		WorldFrame frame = WorldFrameCodec
+				.decode("{\"t\":\"error\",\"code\":\"rate_limited\",\"detail\":\"slow down\"}");
 
 		assertThat(frame.kind).isEqualTo(WorldFrame.Kind.ERROR);
 		assertThat(frame.errorCode).isEqualTo("rate_limited");
@@ -159,11 +158,11 @@ class WorldFrameCodecTest {
 		assertThat(frame.messages).hasSize(1);
 		assertThat(frame.messages.get(0).text).isEqualTo("kept");
 	}
-	private static final String FULL_FIGURE =
-			"{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-177\",\"user_name\":\"Somebody\","
-					+ "\"hero_class\":\"WARRIOR\",\"armor_tier\":3,\"lvl\":14,\"hp\":30,\"ht\":40,"
-					+ "\"kill_count\":7,\"timestamp\":1771000000000,"
-					+ "\"badges\":[{\"kind\":\"highest-kills\"},{\"kind\":\"hero-slayer\",\"count\":42}]}";
+
+	private static final String FULL_FIGURE = "{\"post\":\"depth\",\"depth\":5,\"echo_id\":\"5-177\",\"user_name\":\"Somebody\","
+			+ "\"hero_class\":\"WARRIOR\",\"armor_tier\":3,\"lvl\":14,\"hp\":30,\"ht\":40,"
+			+ "\"kill_count\":7,\"timestamp\":1771000000000,"
+			+ "\"badges\":[{\"kind\":\"highest-kills\"},{\"kind\":\"hero-slayer\",\"count\":42}]}";
 
 	private static WorldFrame figures(String... entries) {
 		StringBuilder json = new StringBuilder("{\"t\":\"figures\",\"figures\":[");

@@ -31,15 +31,15 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.watabou.noosa.Image;
 
 public class MagicalSight extends FlavourBuff {
-	
+
 	public static final float DURATION = 50f;
-	
+
 	public static final int DISTANCE = 12;
-	
+
 	{
 		type = buffType.POSITIVE;
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.MIND_VISION;
@@ -57,7 +57,7 @@ public class MagicalSight extends FlavourBuff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
+		if (super.attachTo(target)) {
 			Buff.detach(target, Blindness.class);
 			return true;
 		}

@@ -88,12 +88,7 @@ public class PrisonBossLevel extends Level {
 	}
 
 	public enum State {
-		START,
-		FIGHT_START,
-		FIGHT_PAUSE,
-		FIGHT_ARENA,
-		ECHO_BOSS,
-		WON
+		START, FIGHT_START, FIGHT_PAUSE, FIGHT_ARENA, ECHO_BOSS, WON
 	}
 
 	private State state;

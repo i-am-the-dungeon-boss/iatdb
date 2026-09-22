@@ -44,8 +44,8 @@ public class RegionDecoPatchRoom extends PatchRoom {
 	@Override
 	protected float fill() {
 		//fill scales from ~20% at 4x4, to ~30% at 10x10
-		int scale = Math.min(width()*height(), 10*10);
-		return 0.20f + scale/1024f;
+		int scale = Math.min(width() * height(), 10 * 10);
+		return 0.20f + scale / 1024f;
 	}
 
 	@Override
@@ -65,10 +65,10 @@ public class RegionDecoPatchRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 		for (Room.Door door : connected.values()) {
-			door.set( Room.Door.Type.REGULAR );
+			door.set(Room.Door.Type.REGULAR);
 		}
 
 		setupPatch(level);

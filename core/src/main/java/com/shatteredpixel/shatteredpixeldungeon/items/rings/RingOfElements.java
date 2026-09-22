@@ -49,10 +49,10 @@ public class RingOfElements extends Ring {
 	}
 
 	public String statsInfo() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, soloBuffedBonus()))));
-			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())) {
 				info += "\n\n" + Messages.get(this, "combined_stats",
 						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(owner())))));
 			}
@@ -62,38 +62,40 @@ public class RingOfElements extends Ring {
 		}
 	}
 
-	public String upgradeStat1(int level){
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level+1))) + "%";
+	public String upgradeStat1(int level) {
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level + 1))) + "%";
 	}
 
 	@Override
-	protected RingBuff buff( ) {
+	protected RingBuff buff() {
 		return new Resistance();
 	}
 
 	public static final HashSet<Class> RESISTS = new HashSet<>();
 	static {
-		RESISTS.add( Burning.class );
-		RESISTS.add( Chill.class );
-		RESISTS.add( Frost.class );
-		RESISTS.add( Ooze.class );
-		RESISTS.add( Paralysis.class );
-		RESISTS.add( Poison.class );
-		RESISTS.add( Corrosion.class );
+		RESISTS.add(Burning.class);
+		RESISTS.add(Chill.class);
+		RESISTS.add(Frost.class);
+		RESISTS.add(Ooze.class);
+		RESISTS.add(Paralysis.class);
+		RESISTS.add(Poison.class);
+		RESISTS.add(Corrosion.class);
 
-		RESISTS.add( ToxicGas.class );
-		RESISTS.add( Electricity.class );
+		RESISTS.add(ToxicGas.class);
+		RESISTS.add(Electricity.class);
 
-		RESISTS.addAll( AntiMagic.RESISTS );
+		RESISTS.addAll(AntiMagic.RESISTS);
 	}
 
-	public static float resist( Char target, Class effect ){
-		if (getBuffedBonus(target, Resistance.class) == 0) return 1f;
+	public static float resist(Char target, Class effect) {
+		if (getBuffedBonus(target, Resistance.class) == 0)
+			return 1f;
 
-		for (Class c : RESISTS){
-			if (c.isAssignableFrom(effect)){
-				return (float)Math.pow(0.825, getBuffedBonus(target, Resistance.class));
+		for (Class c : RESISTS) {
+			if (c.isAssignableFrom(effect)) {
+				return (float) Math.pow(0.825, getBuffedBonus(target, Resistance.class));
 			}
 		}
 

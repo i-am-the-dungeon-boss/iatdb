@@ -37,12 +37,12 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.watabou.noosa.Image;
 
 public class WndInfoCell extends Window {
-	
-	private static final float GAP	= 2;
-	
+
+	private static final float GAP = 2;
+
 	private static final int WIDTH = 120;
 
-	public static Image cellImage( int cell ){
+	public static Image cellImage(int cell) {
 		int tile = Dungeon.level.map[cell];
 		if (Dungeon.level.water[cell]) {
 			tile = Terrain.WATER;
@@ -53,16 +53,16 @@ public class WndInfoCell extends Window {
 		Image customImage = null;
 		int x = cell % Dungeon.level.width();
 		int y = cell / Dungeon.level.width();
-		for (CustomTilemap i : Dungeon.level.customTiles){
-			if ((x >= i.tileX && x < i.tileX+i.tileW) &&
-					(y >= i.tileY && y < i.tileY+i.tileH)){
+		for (CustomTilemap i : Dungeon.level.customTiles) {
+			if ((x >= i.tileX && x < i.tileX + i.tileW) &&
+					(y >= i.tileY && y < i.tileY + i.tileH)) {
 				if ((customImage = i.image(x - i.tileX, y - i.tileY)) != null) {
 					break;
 				}
 			}
 		}
 
-		if (customImage != null){
+		if (customImage != null) {
 			return customImage;
 		} else {
 
@@ -76,14 +76,14 @@ public class WndInfoCell extends Window {
 		}
 	}
 
-	public static String cellName( int cell ){
+	public static String cellName(int cell) {
 
 		CustomTilemap customTile = null;
 		int x = cell % Dungeon.level.width();
 		int y = cell / Dungeon.level.width();
-		for (CustomTilemap i : Dungeon.level.customTiles){
-			if ((x >= i.tileX && x < i.tileX+i.tileW) &&
-					(y >= i.tileY && y < i.tileY+i.tileH)){
+		for (CustomTilemap i : Dungeon.level.customTiles) {
+			if ((x >= i.tileX && x < i.tileX + i.tileW) &&
+					(y >= i.tileY && y < i.tileY + i.tileH)) {
 				if (i.image(x - i.tileX, y - i.tileY) != null) {
 					x -= i.tileX;
 					y -= i.tileY;
@@ -93,23 +93,23 @@ public class WndInfoCell extends Window {
 			}
 		}
 
-		if (customTile != null && customTile.name(x, y) != null){
+		if (customTile != null && customTile.name(x, y) != null) {
 			return customTile.name(x, y);
 		} else {
 			return Dungeon.level.tileName(Dungeon.level.map[cell]);
 		}
 	}
-	
-	public WndInfoCell( int cell ) {
-		
+
+	public WndInfoCell(int cell) {
+
 		super();
 
 		CustomTilemap customTile = null;
 		int x = cell % Dungeon.level.width();
 		int y = cell / Dungeon.level.width();
-		for (CustomTilemap i : Dungeon.level.customTiles){
-			if ((x >= i.tileX && x < i.tileX+i.tileW) &&
-					(y >= i.tileY && y < i.tileY+i.tileH)){
+		for (CustomTilemap i : Dungeon.level.customTiles) {
+			if ((x >= i.tileX && x < i.tileX + i.tileW) &&
+					(y >= i.tileY && y < i.tileY + i.tileH)) {
 				if (i.image(x - i.tileX, y - i.tileY) != null) {
 					x -= i.tileX;
 					y -= i.tileY;
@@ -118,7 +118,6 @@ public class WndInfoCell extends Window {
 				}
 			}
 		}
-
 
 		String desc = "";
 
@@ -126,7 +125,7 @@ public class WndInfoCell extends Window {
 		titlebar.icon(cellImage(cell));
 		titlebar.label(cellName(cell));
 
-		if (customTile != null){
+		if (customTile != null) {
 			String customDesc = customTile.desc(x, y);
 			if (customDesc != null) {
 				desc += customDesc;
@@ -154,11 +153,11 @@ public class WndInfoCell extends Window {
 				}
 			}
 		}
-		
-		info.text( desc.length() == 0 ? Messages.get(this, "nothing") : desc );
+
+		info.text(desc.length() == 0 ? Messages.get(this, "nothing") : desc);
 		info.maxWidth(WIDTH);
-		info.setPos(titlebar.left(), titlebar.bottom() + 2*GAP);
-		
-		resize( WIDTH, (int)info.bottom()+2 );
+		info.setPos(titlebar.left(), titlebar.bottom() + 2 * GAP);
+
+		resize(WIDTH, (int) info.bottom() + 2);
 	}
 }

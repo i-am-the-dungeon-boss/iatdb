@@ -36,21 +36,21 @@ import com.watabou.noosa.Tilemap;
 import com.watabou.utils.Point;
 
 public class RitualSiteRoom extends StandardRoom {
-	
+
 	@Override
 	public int minWidth() {
 		return Math.max(super.minWidth(), 9);
 	}
-	
+
 	@Override
 	public int minHeight() {
 		return Math.max(super.minHeight(), 9);
 	}
 
-	public void paint( Level level ) {
+	public void paint(Level level) {
 
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
 
 		Painter.fill(level, this, Terrain.WALL);
@@ -61,8 +61,8 @@ public class RitualSiteRoom extends StandardRoom {
 		vis.pos(c.x - 1, c.y - 1);
 
 		level.customTiles.add(vis);
-		
-		Painter.fill(level, c.x-1, c.y-1, 3, 3, Terrain.CUSTOM_DECO_EMPTY);
+
+		Painter.fill(level, c.x - 1, c.y - 1, 3, 3, Terrain.CUSTOM_DECO_EMPTY);
 
 		level.addItemToSpawn(new CeremonialCandle());
 		level.addItemToSpawn(new CeremonialCandle());
@@ -83,13 +83,13 @@ public class RitualSiteRoom extends StandardRoom {
 	}
 
 	public static class RitualMarker extends CustomTilemap {
-		
+
 		{
 			texture = Assets.Environment.PRISON_QUEST;
-			
+
 			tileW = tileH = 3;
 		}
-		
+
 		final int TEX_WIDTH = 64;
 
 		@Override

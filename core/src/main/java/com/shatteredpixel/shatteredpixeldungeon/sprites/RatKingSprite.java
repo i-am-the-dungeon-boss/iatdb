@@ -34,17 +34,17 @@ import com.watabou.noosa.TextureFilm;
 public class RatKingSprite extends MobSprite {
 
 	public boolean festive;
-	
+
 	public RatKingSprite() {
 		super();
 
 		resetAnims();
 	}
 
-	public void resetAnims(){
+	public void resetAnims() {
 
 		int c;
-		switch (Holiday.getCurrentHoliday()){
+		switch (Holiday.getCurrentHoliday()) {
 			default:
 				c = 0;
 				break;
@@ -56,36 +56,36 @@ public class RatKingSprite extends MobSprite {
 				break;
 		}
 
-		if (Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify){
+		if (Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify) {
 			c = 24;
-			if (parent != null) aura(0xFFFF00, 5);
+			if (parent != null)
+				aura(0xFFFF00, 5);
 		}
 
-		texture( Assets.Sprites.RATKING );
+		texture(Assets.Sprites.RATKING);
 
-		TextureFilm frames = new TextureFilm( texture, 16, 17 );
+		TextureFilm frames = new TextureFilm(texture, 16, 17);
 
-		idle = new Animation( 2, true );
-		idle.frames( frames, c+0, c+0, c+0, c+1 );
+		idle = new Animation(2, true);
+		idle.frames(frames, c + 0, c + 0, c + 0, c + 1);
 
-		run = new Animation( 10, true );
-		run.frames( frames, c+2, c+3, c+4, c+5, c+6 );
+		run = new Animation(10, true);
+		run.frames(frames, c + 2, c + 3, c + 4, c + 5, c + 6);
 
-		attack = new Animation( 15, false );
-		attack.frames( frames, c+0 );
+		attack = new Animation(15, false);
+		attack.frames(frames, c + 0);
 
-		die = new Animation( 10, false );
-		die.frames( frames, c+0 );
+		die = new Animation(10, false);
+		die.frames(frames, c + 0);
 
-		play( idle );
+		play(idle);
 
 	}
-
 
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
-		if (Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify){
+		if (Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify) {
 			aura(0xFFFF00, 5);
 		}
 	}

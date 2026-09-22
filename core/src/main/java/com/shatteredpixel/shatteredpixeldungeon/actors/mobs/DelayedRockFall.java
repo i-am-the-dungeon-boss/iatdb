@@ -46,9 +46,9 @@ public class DelayedRockFall extends FlavourBuff {
 	private int[] rockPositions;
 	private ArrayList<Emitter> rockEmitters = new ArrayList<>();
 
-	public void setRockPositions( List<Integer> rockPositions ) {
+	public void setRockPositions(List<Integer> rockPositions) {
 		this.rockPositions = new int[rockPositions.size()];
-		for (int i = 0; i < rockPositions.size(); i++){
+		for (int i = 0; i < rockPositions.size(); i++) {
 			this.rockPositions[i] = rockPositions.get(i);
 		}
 
@@ -57,44 +57,44 @@ public class DelayedRockFall extends FlavourBuff {
 
 	@Override
 	public boolean act() {
-		for (int i : rockPositions){
-			CellEmitter.get( i ).start( Speck.factory( Speck.ROCK ), 0.07f, 10 );
+		for (int i : rockPositions) {
+			CellEmitter.get(i).start(Speck.factory(Speck.ROCK), 0.07f, 10);
 
 			Char ch = Actor.findChar(i);
-			if (ch != null){
+			if (ch != null) {
 				affectChar(ch);
 			} else {
 				affectCell(i);
 			}
 		}
 
-		PixelScene.shake( 3, 0.7f );
+		PixelScene.shake(3, 0.7f);
 		Sample.INSTANCE.play(Assets.Sounds.ROCKS);
 
 		detach();
 		return super.act();
 	}
 
-	public void affectChar( Char ch ){
+	public void affectChar(Char ch) {
 		//do nothing by default
 	}
 
-	public void affectCell( int cell ){
+	public void affectCell(int cell) {
 		//do nothing by default
 	}
 
 	@Override
 	public void fx(boolean on) {
-		if (on && rockPositions != null){
-			for (int i : this.rockPositions){
+		if (on && rockPositions != null) {
+			for (int i : this.rockPositions) {
 				Emitter e = CellEmitter.get(i);
-				e.y -= DungeonTilemap.SIZE*0.2f;
+				e.y -= DungeonTilemap.SIZE * 0.2f;
 				e.height *= 0.4f;
 				e.pour(EarthParticle.FALLING, 0.1f);
 				rockEmitters.add(e);
 			}
 		} else {
-			for (Emitter e : rockEmitters){
+			for (Emitter e : rockEmitters) {
 				e.on = false;
 			}
 		}

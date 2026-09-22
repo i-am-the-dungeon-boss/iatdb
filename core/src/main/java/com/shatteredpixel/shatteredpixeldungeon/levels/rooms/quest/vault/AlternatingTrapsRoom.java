@@ -37,7 +37,7 @@ public class AlternatingTrapsRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -53,16 +53,16 @@ public class AlternatingTrapsRoom extends StandardRoom {
 		Painter.set(level, c, Terrain.PEDESTAL);
 
 		Item i = level.findPrizeItem();
-		if (i != null){
-			level.drop( i, level.pointToCell(c) );
+		if (i != null) {
+			level.drop(i, level.pointToCell(c));
 		}
 
 		int cell;
 		boolean alternate = false;
-		for (int x = left+1; x <= right-1; x++){
+		for (int x = left + 1; x <= right - 1; x++) {
 
-			for (int y = top+1; y <= bottom-1; y++){
-				cell = x + y*level.width();
+			for (int y = top + 1; y <= bottom - 1; y++) {
+				cell = x + y * level.width();
 
 				if (level.map[cell] != Terrain.PEDESTAL) {
 					VaultLevel.VaultFlameTrap.setupTrap(level, cell, alternate ? 1 : 0, 2, 1);

@@ -34,7 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public abstract class Runestone extends Item {
-	
+
 	{
 		stackable = true;
 		defaultAction = AC_THROW;
@@ -43,41 +43,44 @@ public abstract class Runestone extends Item {
 	//anonymous stones don't count as consumed, do not drop, etc.
 	//useful for stones which are only spawned for their effects
 	protected boolean anonymous = false;
-	public void anonymize(){
+
+	public void anonymize() {
 		image = ItemSpriteSheet.STONE_HOLDER;
 		anonymous = true;
 	}
 
 	@Override
 	protected void onThrow(int cell) {
-		///inventory stones are thrown like normal items, other stones don't trigger when thrown into pits
+		/// inventory stones are thrown like normal items, other stones don't trigger when thrown into pits
 		if (this instanceof InventoryStone ||
 				Dungeon.hero.buff(MagicImmune.class) != null ||
-				(Dungeon.level.pit[cell] && Actor.findChar(cell) == null)){
-			if (!anonymous) super.onThrow( cell );
+				(Dungeon.level.pit[cell] && Actor.findChar(cell) == null)) {
+			if (!anonymous)
+				super.onThrow(cell);
 		} else {
 			if (!anonymous) {
 				Catalog.countUse(getClass());
 				Talent.onRunestoneUsed(curUser, cell, getClass());
 			}
 			activate(cell);
-			if (Actor.findChar(cell) == null) Dungeon.level.pressCell( cell );
+			if (Actor.findChar(cell) == null)
+				Dungeon.level.pressCell(cell);
 			Invisibility.dispel();
 		}
 	}
-	
+
 	protected abstract void activate(int cell);
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
+
 	@Override
 	public int value() {
 		return 15 * quantity;
@@ -89,21 +92,21 @@ public abstract class Runestone extends Item {
 	}
 
 	public static class PlaceHolder extends Runestone {
-		
+
 		{
 			image = ItemSpriteSheet.STONE_HOLDER;
 		}
-		
+
 		@Override
 		protected void activate(int cell) {
 			//does nothing
 		}
-		
+
 		@Override
 		public boolean isSimilar(Item item) {
 			return item instanceof Runestone;
 		}
-		
+
 		@Override
 		public String info() {
 			return "";

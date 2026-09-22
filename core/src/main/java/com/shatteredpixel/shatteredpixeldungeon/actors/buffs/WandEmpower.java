@@ -47,7 +47,7 @@ public class WandEmpower extends Buff {
 
 	@Override
 	public float iconFadePercent() {
-		return Math.max(0, (3-left) / 3f);
+		return Math.max(0, (3 - left) / 3f);
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class WandEmpower extends Buff {
 	public int dmgBoost;
 	public int left;
 
-	public void set(int dmg, int shots){
+	public void set(int dmg, int shots) {
 		dmgBoost = dmg;
 		left = Math.max(left, shots);
 	}
@@ -74,15 +74,15 @@ public class WandEmpower extends Buff {
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		bundle.put( BOOST, dmgBoost );
-		bundle.put( LEFT, left );
+		bundle.put(BOOST, dmgBoost);
+		bundle.put(LEFT, left);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		dmgBoost = bundle.getInt( BOOST );
-		left = bundle.getInt( LEFT );
+		dmgBoost = bundle.getInt(BOOST);
+		left = bundle.getInt(LEFT);
 	}
 
 }

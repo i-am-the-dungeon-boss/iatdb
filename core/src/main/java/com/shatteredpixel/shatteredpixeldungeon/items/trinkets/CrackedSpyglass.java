@@ -27,7 +27,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
-public class CrackedSpyglass extends Trinket{
+public class CrackedSpyglass extends Trinket {
 
 	{
 		image = ItemSpriteSheet.SPYGLASS;
@@ -36,31 +36,33 @@ public class CrackedSpyglass extends Trinket{
 	@Override
 	protected int upgradeEnergyCost() {
 		//6 -> 8(14) -> 10(24) -> 12(36)
-		return 6+2*level();
+		return 6 + 2 * level();
 	}
 
 	@Override
 	public String statsDesc() {
-		if (isIdentified()){
-			if (buffedLvl() >= 2){
-				return Messages.get(this, "stats_desc_upgraded", Messages.decimalFormat("#.##", 100 * (extraLootChance(buffedLvl())-1f)));
+		if (isIdentified()) {
+			if (buffedLvl() >= 2) {
+				return Messages.get(this, "stats_desc_upgraded",
+						Messages.decimalFormat("#.##", 100 * (extraLootChance(buffedLvl()) - 1f)));
 			} else {
-				return Messages.get(this, "stats_desc", Messages.decimalFormat("#.##", 100 * extraLootChance(buffedLvl())));
+				return Messages.get(this, "stats_desc",
+						Messages.decimalFormat("#.##", 100 * extraLootChance(buffedLvl())));
 			}
 		} else {
 			return Messages.get(this, "typical_stats_desc", Messages.decimalFormat("#.##", 100 * extraLootChance(0)));
 		}
 	}
 
-	public static float extraLootChance(){
+	public static float extraLootChance() {
 		return extraLootChance(trinketLevel(CrackedSpyglass.class));
 	}
 
-	public static float extraLootChance(int level ){
-		if (level <= -1){
+	public static float extraLootChance(int level) {
+		if (level <= -1) {
 			return 0;
 		} else {
-			return 0.375f*(level+1);
+			return 0.375f * (level + 1);
 		}
 	}
 

@@ -10,9 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndEchoFetchFailed;
 public final class EchoLookupOutcome {
 
 	public enum Status {
-		FOUND,
-		NOT_FOUND,
-		ERROR
+		FOUND, NOT_FOUND, ERROR
 	}
 
 	/** Why a ranked/local echo lookup failed (for UI hints). */

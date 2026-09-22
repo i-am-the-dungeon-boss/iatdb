@@ -37,7 +37,7 @@ import com.watabou.utils.BArray;
 import com.watabou.utils.PathFinder;
 
 public class FrostBomb extends Bomb {
-	
+
 	{
 		image = ItemSpriteSheet.FROST_BOMB;
 	}
@@ -46,22 +46,22 @@ public class FrostBomb extends Bomb {
 	protected int explosionRange() {
 		return 2;
 	}
-	
+
 	@Override
 	public void explode(int cell) {
 		super.explode(cell);
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange() );
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), explosionRange());
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				GameScene.add(Blob.seed(i, 10, Freezing.class));
 				Char ch = Actor.findChar(i);
-				if (ch != null){
+				if (ch != null) {
 					Buff.affect(ch, Frost.class, 2f);
 				}
 			}
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		//prices of ingredients

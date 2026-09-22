@@ -40,25 +40,25 @@ public class PotionOfLiquidFlame extends Potion {
 	}
 
 	@Override
-	public void shatter( int cell ) {
+	public void shatter(int cell) {
 
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
 			identify();
 
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
-			Sample.INSTANCE.play( Assets.Sounds.BURNING );
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
+			Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		}
 
-		for (int offset : PathFinder.NEIGHBOURS9){
-			if (!Dungeon.level.solid[cell+offset]) {
+		for (int offset : PathFinder.NEIGHBOURS9) {
+			if (!Dungeon.level.solid[cell + offset]) {
 
 				GameScene.add(Blob.seed(cell + offset, 2, Fire.class));
 
 			}
 		}
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 30 * quantity : super.value();

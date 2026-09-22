@@ -34,14 +34,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public enum Music {
-	
+
 	INSTANCE;
-	
+
 	private com.badlogic.gdx.audio.Music player;
-	
+
 	private String lastPlayed;
 	private boolean looping;
-	
+
 	private boolean enabled = true;
 	private float volume = 1f;
 
@@ -53,21 +53,21 @@ public enum Music {
 	float[] trackChances;
 	private final ArrayList<String> trackQueue = new ArrayList<>();
 	boolean shuffle = false;
-	
-	public synchronized void play( String assetName, boolean looping ) {
+
+	public synchronized void play(String assetName, boolean looping) {
 
 		//iOS cannot play ogg, so we use an mp3 alternative instead
-		if (assetName != null && DeviceCompat.isiOS()){
+		if (assetName != null && DeviceCompat.isiOS()) {
 			assetName = assetName.replace(".ogg", ".mp3");
 		}
-		
-		if (isPlaying() && lastPlayed != null && lastPlayed.equals( assetName )) {
+
+		if (isPlaying() && lastPlayed != null && lastPlayed.equals(assetName)) {
 			player.setVolume(volumeWithFade());
 			return;
 		}
-		
+
 		stop();
-		
+
 		lastPlayed = assetName;
 		trackList = null;
 
@@ -81,35 +81,36 @@ public enum Music {
 		play(assetName, null);
 	}
 
-	public synchronized void playTracks( String[] tracks, float[] chances, boolean shuffle){
+	public synchronized void playTracks(String[] tracks, float[] chances, boolean shuffle) {
 
-		if (tracks == null || tracks.length == 0 || tracks.length != chances.length){
+		if (tracks == null || tracks.length == 0 || tracks.length != chances.length) {
 			stop();
 			return;
 		}
 
 		//iOS cannot play ogg, so we use an mp3 alternative instead
-		if (tracks != null && DeviceCompat.isiOS()){
-			for (int i = 0; i < tracks.length; i ++){
+		if (tracks != null && DeviceCompat.isiOS()) {
+			for (int i = 0; i < tracks.length; i++) {
 				tracks[i] = tracks[i].replace(".ogg", ".mp3");
 			}
 		}
 
-		if (isPlaying() && this.trackList != null && tracks.length == trackList.length){
+		if (isPlaying() && this.trackList != null && tracks.length == trackList.length) {
 
 			//lists are considered the same if they are identical or merely shifted
 			// e.g. the regular title theme and the victory theme are considered equivalent
 			boolean sameList = false;
-			for (int ofs = 0; ofs < tracks.length; ofs++){
+			for (int ofs = 0; ofs < tracks.length; ofs++) {
 				sameList = true;
-				for (int j = 0; j < tracks.length; j++){
-					int i = (j+ofs)%tracks.length;
-					if (!tracks[i].equals(trackList[j]) || chances[i] != trackChances[j]){
+				for (int j = 0; j < tracks.length; j++) {
+					int i = (j + ofs) % tracks.length;
+					if (!tracks[i].equals(trackList[j]) || chances[i] != trackChances[j]) {
 						sameList = false;
 						break;
 					}
 				}
-				if (sameList) break;
+				if (sameList)
+					break;
 			}
 
 			if (sameList) {
@@ -125,8 +126,8 @@ public enum Music {
 		trackChances = chances;
 		trackQueue.clear();
 
-		for (int i = 0; i < trackList.length; i++){
-			if (Random.Float() < trackChances[i]){
+		for (int i = 0; i < trackList.length; i++) {
+			if (Random.Float() < trackChances[i]) {
 				trackQueue.add(trackList[i]);
 			}
 		}
@@ -134,26 +135,26 @@ public enum Music {
 		this.looping = false;
 		this.shuffle = shuffle;
 
-		if (!enabled || trackQueue.isEmpty()){
+		if (!enabled || trackQueue.isEmpty()) {
 			return;
 		}
 
 		play(trackQueue.remove(0), trackLooper);
 	}
 
-	public synchronized void fadeOut(float duration, Callback onComplete){
+	public synchronized void fadeOut(float duration, Callback onComplete) {
 		if (fadeTotal == -1f) {
 			fadeTotal = duration;
 			fadeTime = 0f;
 		} else {
-			fadeTime = (fadeTime/fadeTotal) * duration;
+			fadeTime = (fadeTime / fadeTotal) * duration;
 			fadeTotal = duration;
 		}
 		onFadeOut = onComplete;
 	}
 
-	public synchronized void update(){
-		if (fadeTotal > 0f && !paused){
+	public synchronized void update() {
+		if (fadeTotal > 0f && !paused) {
 			fadeTime += Game.elapsed;
 
 			if (player != null) {
@@ -162,7 +163,7 @@ public enum Music {
 
 			if (fadeTime >= fadeTotal) {
 				fadeTime = fadeTotal = -1f;
-				if (onFadeOut != null){
+				if (onFadeOut != null) {
 					onFadeOut.call();
 				}
 			}
@@ -190,8 +191,8 @@ public enum Music {
 		}
 	};
 
-	private synchronized void playNextTrack(com.badlogic.gdx.audio.Music music){
-		if (trackList == null || trackList.length == 0 || music != player || player.isLooping()){
+	private synchronized void playNextTrack(com.badlogic.gdx.audio.Music music) {
+		if (trackList == null || trackList.length == 0 || music != player || player.isLooping()) {
 			return;
 		}
 
@@ -203,7 +204,8 @@ public enum Music {
 					trackQueue.add(trackList[i]);
 				}
 			}
-			if (shuffle) Collections.shuffle(trackQueue);
+			if (shuffle)
+				Collections.shuffle(trackQueue);
 		}
 
 		if (!enabled || trackQueue.isEmpty()) {
@@ -213,23 +215,24 @@ public enum Music {
 		play(trackQueue.remove(0), trackLooper);
 	};
 
-	private synchronized void play(String track, com.badlogic.gdx.audio.Music.OnCompletionListener listener){
+	private synchronized void play(String track, com.badlogic.gdx.audio.Music.OnCompletionListener listener) {
 		try {
 			fadeTime = fadeTotal = -1;
 
 			player = Gdx.audio.newMusic(Gdx.files.internal(track));
 			player.setLooping(looping);
 			player.setVolume(volumeWithFade());
-			if (!paused) player.play();
+			if (!paused)
+				player.play();
 			if (listener != null) {
 				player.setOnCompletionListener(listener);
 			}
-		} catch (Exception e){
+		} catch (Exception e) {
 			Game.reportException(e);
 			player = null;
 		}
 	}
-	
+
 	public synchronized void end() {
 		lastPlayed = null;
 		trackList = null;
@@ -238,17 +241,17 @@ public enum Music {
 
 	private boolean paused = false;
 
-	public synchronized boolean paused(){
+	public synchronized boolean paused() {
 		return paused;
 	}
-	
+
 	public synchronized void pause() {
 		paused = true;
 		if (player != null) {
 			player.pause();
 		}
 	}
-	
+
 	public synchronized void resume() {
 		paused = false;
 		if (player != null) {
@@ -263,42 +266,41 @@ public enum Music {
 			player = null;
 		}
 	}
-	
-	public synchronized void volume( float value ) {
+
+	public synchronized void volume(float value) {
 		volume = value;
 		if (player != null) {
-			player.setVolume( volumeWithFade() );
+			player.setVolume(volumeWithFade());
 		}
 	}
 
-	private synchronized float volumeWithFade(){
-		if (fadeTotal > 0f){
+	private synchronized float volumeWithFade() {
+		if (fadeTotal > 0f) {
 			return Math.max(0, volume * ((fadeTotal - fadeTime) / fadeTotal));
 		} else {
 			return volume;
 		}
 	}
-	
+
 	public synchronized boolean isPlaying() {
 		return player != null && player.isPlaying();
 	}
-	
-	public synchronized void enable( boolean value ) {
+
+	public synchronized void enable(boolean value) {
 		enabled = value;
 		if (isPlaying() && !value) {
 			stop();
-		} else
-		if (!isPlaying() && value) {
-			if (trackList != null){
+		} else if (!isPlaying() && value) {
+			if (trackList != null) {
 				playTracks(trackList, trackChances, shuffle);
 			} else if (lastPlayed != null) {
 				play(lastPlayed, looping);
 			}
 		}
 	}
-	
+
 	public synchronized boolean isEnabled() {
 		return enabled;
 	}
-	
+
 }

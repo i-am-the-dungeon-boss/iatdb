@@ -38,8 +38,8 @@ public class Greatsword extends MeleeWeapon {
 	}
 
 	@Override
-	protected int baseChargeUse(Hero hero, Char target){
-		if (hero.buff(Sword.CleaveTracker.class) != null){
+	protected int baseChargeUse(Hero hero, Char target) {
+		if (hero.buff(Sword.CleaveTracker.class) != null) {
 			return 0;
 		} else {
 			return 1;
@@ -61,16 +61,17 @@ public class Greatsword extends MeleeWeapon {
 	@Override
 	public String abilityInfo() {
 		int dmgBoost = levelKnown ? 7 + buffedLvl() : 7;
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", augment.damageFactor(min() + dmgBoost),
+					augment.damageFactor(max() + dmgBoost));
 		} else {
-			return Messages.get(this, "typical_ability_desc", min(0)+dmgBoost, max(0)+dmgBoost);
+			return Messages.get(this, "typical_ability_desc", min(0) + dmgBoost, max(0) + dmgBoost);
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		int dmgBoost = 7 + level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+		return augment.damageFactor(min(level) + dmgBoost) + "-" + augment.damageFactor(max(level) + dmgBoost);
 	}
 
 }

@@ -65,22 +65,21 @@ import java.util.ArrayList;
 public class HallsLevel extends RegularLevel {
 
 	{
-		
-		viewDistance = Math.min( 26 - Dungeon.depth, viewDistance );
-		
+
+		viewDistance = Math.min(26 - Dungeon.depth, viewDistance);
+
 		color1 = 0x801500;
 		color2 = 0xa68521;
 	}
 
-	public static final String[] HALLS_TRACK_LIST
-			= new String[]{Assets.Music.HALLS_1, Assets.Music.HALLS_2, Assets.Music.HALLS_2,
-			Assets.Music.HALLS_1, Assets.Music.HALLS_3, Assets.Music.HALLS_3};
-	public static final float[] HALLS_TRACK_CHANCES = new float[]{1f, 1f, 0.5f, 0.25f, 1f, 0.5f};
-
+	public static final String[] HALLS_TRACK_LIST = new String[] { Assets.Music.HALLS_1, Assets.Music.HALLS_2,
+			Assets.Music.HALLS_2,
+			Assets.Music.HALLS_1, Assets.Music.HALLS_3, Assets.Music.HALLS_3 };
+	public static final float[] HALLS_TRACK_CHANCES = new float[] { 1f, 1f, 0.5f, 0.25f, 1f, 0.5f };
 
 	@Override
 	public void playLevelMusic() {
-		if (Statistics.amuletObtained){
+		if (Statistics.amuletObtained) {
 			Music.INSTANCE.play(Assets.Music.HALLS_TENSE, true);
 		} else {
 			Music.INSTANCE.playTracks(HALLS_TRACK_LIST, HALLS_TRACK_CHANCES, false);
@@ -98,18 +97,20 @@ public class HallsLevel extends RegularLevel {
 
 	@Override
 	protected int standardRooms(boolean forceMax) {
-		if (forceMax) return 9;
+		if (forceMax)
+			return 9;
 		//8 to 9, average 8.33
-		return 8+Random.chances(new float[]{2, 1});
+		return 8 + Random.chances(new float[] { 2, 1 });
 	}
-	
+
 	@Override
 	protected int specialRooms(boolean forceMax) {
-		if (forceMax) return 3;
+		if (forceMax)
+			return 3;
 		//2 to 3, average 2.5
-		return 2 + Random.chances(new float[]{1, 1});
+		return 2 + Random.chances(new float[] { 1, 1 });
 	}
-	
+
 	@Override
 	protected Painter painter() {
 		return new HallsPainter()
@@ -117,42 +118,43 @@ public class HallsLevel extends RegularLevel {
 				.setGrass(feeling == Feeling.GRASS ? 0.65f : 0.10f, 3)
 				.setTraps(nTraps(), trapClasses(), trapChances());
 	}
-	
+
 	@Override
 	public void create() {
-		addItemToSpawn( new Torch() );
-		addItemToSpawn( new Torch() );
+		addItemToSpawn(new Torch());
+		addItemToSpawn(new Torch());
 		super.create();
 	}
-	
+
 	@Override
 	public String tilesTex() {
 		return Assets.Environment.TILES_HALLS;
 	}
-	
+
 	@Override
 	public String waterTex() {
 		return Assets.Environment.WATER_HALLS;
 	}
-	
+
 	@Override
 	protected Class<?>[] trapClasses() {
-		return new Class[]{
+		return new Class[] {
 				FrostTrap.class, StormTrap.class, CorrosionTrap.class, BlazingTrap.class, DisintegrationTrap.class,
 				RockfallTrap.class, FlashingTrap.class, GuardianTrap.class, WeakeningTrap.class,
-				DisarmingTrap.class, SummoningTrap.class, WarpingTrap.class, CursingTrap.class, GrimTrap.class, PitfallTrap.class, DistortionTrap.class, GatewayTrap.class, GeyserTrap.class };
+				DisarmingTrap.class, SummoningTrap.class, WarpingTrap.class, CursingTrap.class, GrimTrap.class,
+				PitfallTrap.class, DistortionTrap.class, GatewayTrap.class, GeyserTrap.class };
 	}
 
 	@Override
 	protected float[] trapChances() {
-		return new float[]{
+		return new float[] {
 				4, 4, 4, 4, 4,
 				2, 2, 2, 2,
 				1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	}
-	
+
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(HallsLevel.class, "water_name");
@@ -167,10 +169,10 @@ public class HallsLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(HallsLevel.class, "region_deco_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
-	
+
 	@Override
 	public String tileDesc(int tile) {
 		switch (tile) {
@@ -185,63 +187,63 @@ public class HallsLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(HallsLevel.class, "region_deco_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
-	
+
 	@Override
 	public Group addVisuals() {
 		super.addVisuals();
-		addHallsVisuals( this, visuals );
+		addHallsVisuals(this, visuals);
 		return visuals;
 	}
-	
-	public static void addHallsVisuals( Level level, Group group ) {
-		for (int i=0; i < level.length(); i++) {
+
+	public static void addHallsVisuals(Level level, Group group) {
+		for (int i = 0; i < level.length(); i++) {
 			if (level.map[i] == Terrain.WATER) {
-				group.add( new Stream( i ) );
+				group.add(new Stream(i));
 			}
 		}
 	}
-	
+
 	private static class Stream extends Group {
-		
+
 		private int pos;
-		
+
 		private float delay;
-		
-		public Stream( int pos ) {
+
+		public Stream(int pos) {
 			super();
-			
+
 			this.pos = pos;
-			
-			delay = Random.Float( 2 );
+
+			delay = Random.Float(2);
 		}
-		
+
 		@Override
 		public void update() {
 
-			if (!Dungeon.level.water[pos]){
+			if (!Dungeon.level.water[pos]) {
 				killAndErase();
 				return;
 			}
-			
+
 			if (visible = (pos < Dungeon.level.heroFOV.length && Dungeon.level.heroFOV[pos])) {
-				
+
 				super.update();
-				
+
 				if ((delay -= Game.elapsed) <= 0) {
-					
-					delay = Random.Float( 2 );
-					
-					PointF p = DungeonTilemap.tileToWorld( pos );
-					((FireParticle)recycle( FireParticle.class )).reset(
-						p.x + Random.Float( DungeonTilemap.SIZE ),
-						p.y + Random.Float( DungeonTilemap.SIZE ) );
+
+					delay = Random.Float(2);
+
+					PointF p = DungeonTilemap.tileToWorld(pos);
+					((FireParticle) recycle(FireParticle.class)).reset(
+							p.x + Random.Float(DungeonTilemap.SIZE),
+							p.y + Random.Float(DungeonTilemap.SIZE));
 				}
 			}
 		}
-		
+
 		@Override
 		public void draw() {
 			Blending.setLightMode();
@@ -249,30 +251,30 @@ public class HallsLevel extends RegularLevel {
 			Blending.setNormalMode();
 		}
 	}
-	
+
 	public static class FireParticle extends PixelParticle.Shrinking {
-		
+
 		public FireParticle() {
 			super();
-			
-			color( 0xEE7722 );
+
+			color(0xEE7722);
 			lifespan = 1f;
-			
-			acc.set( 0, +80 );
+
+			acc.set(0, +80);
 		}
-		
-		public void reset( float x, float y ) {
+
+		public void reset(float x, float y) {
 			revive();
-			
+
 			this.x = x;
 			this.y = y;
-			
+
 			left = lifespan;
-			
-			speed.set( 0, -40 );
+
+			speed.set(0, -40);
 			size = 4;
 		}
-		
+
 		@Override
 		public void update() {
 			super.update();

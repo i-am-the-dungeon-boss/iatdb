@@ -57,7 +57,7 @@ public abstract class InventoryClericSpell extends ClericSpell {
 		});
 	}
 
-	protected String inventoryPrompt(){
+	protected String inventoryPrompt() {
 		return Messages.get(this, "prompt");
 	}
 
@@ -65,10 +65,10 @@ public abstract class InventoryClericSpell extends ClericSpell {
 		return null; //defaults to no preference
 	}
 
-	protected boolean usableOnItem( Item item ){
+	protected boolean usableOnItem(Item item) {
 		return true;
 	}
 
-	protected abstract void onItemSelected( HolyTome tome, Hero hero, Item item );
+	protected abstract void onItemSelected(HolyTome tome, Hero hero, Item item);
 
 }

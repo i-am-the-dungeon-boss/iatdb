@@ -42,13 +42,13 @@ public class Quarterstaff extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  4*(tier+1) +    //12 base, down from 15
-				lvl*(tier+1);   //scaling unchanged
+		return 4 * (tier + 1) + //12 base, down from 15
+				lvl * (tier + 1); //scaling unchanged
 	}
 
 	@Override
-	public int defenseFactor( Char owner ) {
-		return 2;	//2 extra defence
+	public int defenseFactor(Char owner) {
+		return 2; //2 extra defence
 	}
 
 	@Override
@@ -63,8 +63,8 @@ public class Quarterstaff extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", 4+buffedLvl());
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", 4 + buffedLvl());
 		} else {
 			return Messages.get(this, "typical_ability_desc", 4);
 		}
@@ -72,7 +72,7 @@ public class Quarterstaff extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return Integer.toString(4+level);
+		return Integer.toString(4 + level);
 	}
 
 	public static class DefensiveStance extends FlavourBuff {

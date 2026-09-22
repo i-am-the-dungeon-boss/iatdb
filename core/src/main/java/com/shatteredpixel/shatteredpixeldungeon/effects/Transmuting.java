@@ -39,11 +39,11 @@ public class Transmuting extends Component {
 		FADE_IN, TRANSMUTING, FADE_OUT
 	}
 
-	private static final float FADE_IN_TIME		= 0.2f;
-	private static final float TRANSMUTING_TIME	= 1.4f;
-	private static final float FADE_OUT_TIME	= 0.4f;
+	private static final float FADE_IN_TIME = 0.2f;
+	private static final float TRANSMUTING_TIME = 1.4f;
+	private static final float FADE_OUT_TIME = 0.4f;
 
-	private static final float ALPHA	= 0.6f;
+	private static final float ALPHA = 0.6f;
 
 	Image oldSprite;
 	Image newSprite;
@@ -54,7 +54,7 @@ public class Transmuting extends Component {
 	private float duration;
 	private float passed;
 
-	public Transmuting( Item oldItem, Item newItem ){
+	public Transmuting(Item oldItem, Item newItem) {
 		oldSprite = new ItemSprite(oldItem);
 		oldSprite.originToCenter();
 		add(oldSprite);
@@ -70,7 +70,7 @@ public class Transmuting extends Component {
 		passed = 0;
 	}
 
-	public Transmuting( Talent oldTalent, Talent newTalent ){
+	public Transmuting(Talent oldTalent, Talent newTalent) {
 		oldSprite = new TalentIcon(oldTalent);
 		oldSprite.originToCenter();
 		add(oldSprite);
@@ -100,16 +100,16 @@ public class Transmuting extends Component {
 
 		switch (phase) {
 			case FADE_IN:
-				oldSprite.alpha( passed / duration * ALPHA );
-				oldSprite.scale.set( passed / duration );
+				oldSprite.alpha(passed / duration * ALPHA);
+				oldSprite.scale.set(passed / duration);
 				break;
 			case TRANSMUTING:
-				oldSprite.alpha((TRANSMUTING_TIME - passed)  / duration * ALPHA);
+				oldSprite.alpha((TRANSMUTING_TIME - passed) / duration * ALPHA);
 				newSprite.alpha(passed / duration * ALPHA);
 				break;
 			case FADE_OUT:
-				newSprite.alpha( (1 - passed / duration) * ALPHA );
-				newSprite.scale.set( 1 + passed / duration );
+				newSprite.alpha((1 - passed / duration) * ALPHA);
+				newSprite.scale.set(1 + passed / duration);
 				break;
 		}
 
@@ -132,26 +132,26 @@ public class Transmuting extends Component {
 		}
 	}
 
-	public static void show( Char ch, Item oldItem, Item newItem ) {
+	public static void show(Char ch, Item oldItem, Item newItem) {
 
 		if (!ch.sprite.visible) {
 			return;
 		}
 
-		Transmuting sprite = new Transmuting( oldItem, newItem );
+		Transmuting sprite = new Transmuting(oldItem, newItem);
 		sprite.target = ch;
-		ch.sprite.parent.add( sprite );
+		ch.sprite.parent.add(sprite);
 	}
 
-	public static void show( Char ch, Talent oldTalent, Talent newTalent ) {
+	public static void show(Char ch, Talent oldTalent, Talent newTalent) {
 
 		if (!ch.sprite.visible) {
 			return;
 		}
 
-		Transmuting sprite = new Transmuting( oldTalent, newTalent );
+		Transmuting sprite = new Transmuting(oldTalent, newTalent);
 		sprite.target = ch;
-		ch.sprite.parent.add( sprite );
+		ch.sprite.parent.add(sprite);
 	}
 
 }

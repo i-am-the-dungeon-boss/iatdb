@@ -69,8 +69,7 @@ import java.util.stream.Stream;
 class HeroArmorAbilityUsableTest {
 
 	enum EnemyKind {
-		ECHO_BOSS,
-		NORMAL_MOB
+		ECHO_BOSS, NORMAL_MOB
 	}
 
 	static Stream<Arguments> enemyTargets() {

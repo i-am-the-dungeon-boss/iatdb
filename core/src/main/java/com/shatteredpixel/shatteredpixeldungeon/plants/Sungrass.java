@@ -40,28 +40,28 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.watabou.utils.Bundle;
 
 public class Sungrass extends Plant {
-	
+
 	{
 		image = 3;
 		seedClass = Seed.class;
 	}
-	
+
 	@Override
-	public void activate( Char ch ) {
-		
-		if (ch != null){
+	public void activate(Char ch) {
+
+		if (ch != null) {
 			if (ch instanceof Hero && ((Hero) ch).subClass == HeroSubClass.WARDEN) {
 				Buff.affect(ch, Healing.class).setHeal(ch.HT, 0, 1);
 			} else {
 				Buff.affect(ch, Health.class).boost(ch.HT);
 			}
 		}
-		
+
 		if (Dungeon.level.heroFOV[pos]) {
-			CellEmitter.get( pos ).start( ShaftParticle.FACTORY, 0.2f, 3 );
+			CellEmitter.get(pos).start(ShaftParticle.FACTORY, 0.2f, 3);
 		}
 	}
-	
+
 	public static class Seed extends Plant.Seed {
 		{
 			image = ItemSpriteSheet.SEED_SUNGRASS;
@@ -71,11 +71,11 @@ public class Sungrass extends Plant {
 			bones = true;
 		}
 	}
-	
+
 	public static class Health extends Buff {
-		
+
 		private static final float STEP = 1f;
-		
+
 		private int pos;
 		private float partialHeal;
 		private int level;
@@ -84,25 +84,26 @@ public class Sungrass extends Plant {
 			type = buffType.POSITIVE;
 			announced = true;
 		}
-		
+
 		@Override
 		public boolean act() {
 			if (target.pos != pos) {
 				detach();
 			}
-			
+
 			//for the hero, full heal takes ~50/93/111/120 turns at levels 1/10/20/30
-			partialHeal += (40 + target.HT)/150f;
-			
-			if (partialHeal > 1){
-				int healThisTurn = (int)partialHeal;
+			partialHeal += (40 + target.HT) / 150f;
+
+			if (partialHeal > 1) {
+				int healThisTurn = (int) partialHeal;
 				partialHeal -= healThisTurn;
 				level -= healThisTurn;
 
 				if (target.HP < target.HT) {
 
 					target.HP += healThisTurn;
-					target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healThisTurn), FloatingText.HEALING);
+					target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healThisTurn),
+							FloatingText.HEALING);
 
 					if (target.HP >= target.HT) {
 						target.HP = target.HT;
@@ -112,24 +113,24 @@ public class Sungrass extends Plant {
 					}
 				}
 			}
-			
+
 			if (level <= 0) {
 				detach();
-				if (target instanceof Hero){
-					((Hero)target).resting = false;
+				if (target instanceof Hero) {
+					((Hero) target).resting = false;
 				}
 			}
-			spend( STEP );
+			spend(STEP);
 			return true;
 		}
 
-		public void boost( int amount ){
+		public void boost(int amount) {
 			if (target != null) {
 				level += amount;
 				pos = target.pos;
 			}
 		}
-		
+
 		@Override
 		public int icon() {
 			return BuffIndicator.HERB_HEALING;
@@ -137,7 +138,7 @@ public class Sungrass extends Plant {
 
 		@Override
 		public float iconFadePercent() {
-			return Math.max(0, (target.HT - level) / (float)target.HT);
+			return Math.max(0, (target.HT - level) / (float) target.HT);
 		}
 
 		@Override
@@ -150,24 +151,24 @@ public class Sungrass extends Plant {
 			return Messages.get(this, "desc", level);
 		}
 
-		private static final String POS	= "pos";
+		private static final String POS = "pos";
 		private static final String PARTIAL = "partial_heal";
 		private static final String LEVEL = "level";
 
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			super.storeInBundle( bundle );
-			bundle.put( POS, pos );
-			bundle.put( PARTIAL, partialHeal);
-			bundle.put( LEVEL, level);
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put(POS, pos);
+			bundle.put(PARTIAL, partialHeal);
+			bundle.put(LEVEL, level);
 		}
-		
+
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
-			super.restoreFromBundle( bundle );
-			pos = bundle.getInt( POS );
-			partialHeal = bundle.getFloat( PARTIAL );
-			level = bundle.getInt( LEVEL );
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			pos = bundle.getInt(POS);
+			partialHeal = bundle.getFloat(PARTIAL);
+			level = bundle.getInt(LEVEL);
 
 		}
 	}

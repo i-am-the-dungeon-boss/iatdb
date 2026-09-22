@@ -85,10 +85,7 @@ public class CavesBossLevel extends Level {
 	}
 
 	public enum State {
-		START,
-		FIGHT,
-		ECHO_BOSS,
-		WON
+		START, FIGHT, ECHO_BOSS, WON
 	}
 
 	private State state = State.START;

@@ -49,20 +49,21 @@ public class ScrollOfRecharging extends Scroll {
 		Buff.affect(curUser, Recharging.class, Recharging.DURATION);
 		charge(curUser);
 
-		Sample.INSTANCE.play( Assets.Sounds.READ );
-		Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );
+		Sample.INSTANCE.play(Assets.Sounds.READ);
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
 
-		GLog.i( Messages.get(this, "surge") );
-		SpellSprite.show( curUser, SpellSprite.CHARGE );
+		GLog.i(Messages.get(this, "surge"));
+		SpellSprite.show(curUser, SpellSprite.CHARGE);
 		identify();
 
 		readAnimation();
 	}
 
-	public static void charge( Char user ) {
+	public static void charge(Char user) {
 		if (user.sprite != null) {
 			Emitter e = user.sprite.centerEmitter();
-			if (e != null) e.burst(EnergyParticle.FACTORY, 15);
+			if (e != null)
+				e.burst(EnergyParticle.FACTORY, 15);
 		}
 	}
 

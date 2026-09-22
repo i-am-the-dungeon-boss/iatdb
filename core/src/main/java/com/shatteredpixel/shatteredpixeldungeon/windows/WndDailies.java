@@ -47,10 +47,10 @@ import java.util.TimeZone;
 
 public class WndDailies extends Window {
 
-	private static final int WIDTH			= 115;
-	private static final int HEIGHT			= 144;
+	private static final int WIDTH = 115;
+	private static final int HEIGHT = 144;
 
-	public WndDailies(){
+	public WndDailies() {
 
 		resize(WIDTH, HEIGHT);
 
@@ -66,8 +66,8 @@ public class WndDailies extends Window {
 		title.setPos(0, 0);
 		content.add(title);
 
-		if (Rankings.INSTANCE.latestDailyReplay != null){
-			IconButton replayInfo = new IconButton(Icons.get(Icons.CALENDAR)){
+		if (Rankings.INSTANCE.latestDailyReplay != null) {
+			IconButton replayInfo = new IconButton(Icons.get(Icons.CALENDAR)) {
 				@Override
 				protected void onClick() {
 					ShatteredPixelDungeon.scene().addToFront(new WndRanking(Rankings.INSTANCE.latestDailyReplay));
@@ -80,11 +80,11 @@ public class WndDailies extends Window {
 				}
 			};
 			replayInfo.icon().hardlight(1f, 0.5f, 2f);
-			replayInfo.setRect(WIDTH-16, 0, 16, 16);
+			replayInfo.setRect(WIDTH - 16, 0, 16, 16);
 			add(replayInfo);
 		}
 
-		int top = (int)title.bottom()+3;
+		int top = (int) title.bottom() + 3;
 
 		RenderedTextBlock day = PixelScene.renderTextBlock(Messages.get(this, "date"), 7);
 		day.hardlight(TITLE_COLOR);
@@ -109,7 +109,8 @@ public class WndDailies extends Window {
 
 		boolean first = Rankings.INSTANCE.latestDaily != null;
 		for (long l : dates) {
-			if (first) top += 2;
+			if (first)
+				top += 2;
 
 			ColorBlock sep = new ColorBlock(WIDTH, 1, 0xFF000000);
 			sep.y = top - 3 - (first ? 2 : 0);
@@ -120,14 +121,14 @@ public class WndDailies extends Window {
 			day.setPos(0, top);
 			content.add(day);
 
-			if (first){
-				IconButton latestInfo = new IconButton(Icons.INFO.get()){
+			if (first) {
+				IconButton latestInfo = new IconButton(Icons.INFO.get()) {
 					@Override
 					protected void onClick() {
 						ShatteredPixelDungeon.scene().addToFront(new WndRanking(Rankings.INSTANCE.latestDaily));
 					}
 				};
-				latestInfo.setRect(day.right()+2, top - 5, 16, 16);
+				latestInfo.setRect(day.right() + 2, top - 5, 16, 16);
 				content.add(latestInfo);
 			}
 
@@ -136,7 +137,7 @@ public class WndDailies extends Window {
 			content.add(score);
 
 			top = (int) day.bottom() + 6;
-			if (first){
+			if (first) {
 				top += 2;
 				first = false;
 			}

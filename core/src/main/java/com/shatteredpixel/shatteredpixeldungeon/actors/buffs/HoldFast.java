@@ -52,19 +52,20 @@ public class HoldFast extends Buff {
 		return true;
 	}
 
-	public int armorBonus(){
-		if (pos == target.pos && target instanceof Hero){
-			return Random.NormalIntRange(((Hero) target).pointsInTalent(Talent.HOLD_FAST), 2*((Hero) target).pointsInTalent(Talent.HOLD_FAST));
+	public int armorBonus() {
+		if (pos == target.pos && target instanceof Hero) {
+			return Random.NormalIntRange(((Hero) target).pointsInTalent(Talent.HOLD_FAST),
+					2 * ((Hero) target).pointsInTalent(Talent.HOLD_FAST));
 		} else {
 			detach();
 			return 0;
 		}
 	}
 
-	public static float buffDecayFactor(Char target){
+	public static float buffDecayFactor(Char target) {
 		HoldFast buff = target.buff(HoldFast.class);
-		if (buff != null && target.pos == buff.pos && target instanceof Hero){
-			switch (((Hero) target).pointsInTalent(Talent.HOLD_FAST)){
+		if (buff != null && target.pos == buff.pos && target instanceof Hero) {
+			switch (((Hero) target).pointsInTalent(Talent.HOLD_FAST)) {
 				case 1:
 					return 0.5f;
 				case 2:
@@ -93,8 +94,8 @@ public class HoldFast extends Buff {
 	public String desc() {
 		return Messages.get(this, "desc",
 				Dungeon.hero.pointsInTalent(Talent.HOLD_FAST),
-				2*Dungeon.hero.pointsInTalent(Talent.HOLD_FAST),
-				25 + 25*Dungeon.hero.pointsInTalent(Talent.HOLD_FAST));
+				2 * Dungeon.hero.pointsInTalent(Talent.HOLD_FAST),
+				25 + 25 * Dungeon.hero.pointsInTalent(Talent.HOLD_FAST));
 	}
 
 	private static final String POS = "pos";

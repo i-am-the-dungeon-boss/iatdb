@@ -47,115 +47,115 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class LastShopLevel extends RegularLevel {
-	
+
 	{
 		color1 = 0x4b6636;
 		color2 = 0xf2f2f2;
 	}
-	
+
 	@Override
 	public String tilesTex() {
 		return Assets.Environment.TILES_CITY;
 	}
-	
+
 	@Override
 	public String waterTex() {
 		return Assets.Environment.WATER_CITY;
 	}
-	
+
 	@Override
 	protected boolean build() {
 		feeling = Feeling.CHASM;
-		if (super.build()){
-			
-			for (int i=0; i < length(); i++) {
+		if (super.build()) {
+
+			for (int i = 0; i < length(); i++) {
 				if (map[i] == Terrain.SECRET_DOOR) {
 					map[i] = Terrain.DOOR;
 				}
 			}
-			
+
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	@Override
 	protected ArrayList<Room> initRooms() {
 		ArrayList<Room> rooms = new ArrayList<>();
-		
-		rooms.add ( roomEntrance = new EntranceRoom());
-		rooms.add( new ImpShopRoom() );
-		rooms.add( roomExit = new ExitRoom());
-		
+
+		rooms.add(roomEntrance = new EntranceRoom());
+		rooms.add(new ImpShopRoom());
+		rooms.add(roomExit = new ExitRoom());
+
 		return rooms;
 	}
-	
+
 	@Override
 	protected Builder builder() {
 		return new LineBuilder()
 				.setPathVariance(0f)
-				.setPathLength(1f, new float[]{1})
-				.setTunnelLength(new float[]{0, 0, 1}, new float[]{1});
+				.setPathLength(1f, new float[] { 1 })
+				.setTunnelLength(new float[] { 0, 0, 1 }, new float[] { 1 });
 	}
-	
+
 	@Override
 	protected Painter painter() {
 		return new CityPainter()
-				.setWater( 0.10f, 4 )
-				.setGrass( 0.10f, 3 );
+				.setWater(0.10f, 4)
+				.setGrass(0.10f, 3);
 	}
-	
+
 	@Override
 	public Mob createMob() {
 		return null;
 	}
-	
+
 	@Override
 	protected void createMobs() {
 	}
-	
+
 	public Actor addRespawner() {
 		return null;
 	}
-	
+
 	@Override
 	protected void createItems() {
 		Random.pushGenerator(Random.Long());
-			ArrayList<Item> bonesItems = Bones.get();
-			if (bonesItems != null) {
-				int pos;
-				do {
-					pos = pointToCell(roomEntrance.random());
-				} while (pos == entrance());
-				for (Item i : bonesItems) {
-					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
-				}
+		ArrayList<Item> bonesItems = Bones.get();
+		if (bonesItems != null) {
+			int pos;
+			do {
+				pos = pointToCell(roomEntrance.random());
+			} while (pos == entrance());
+			for (Item i : bonesItems) {
+				drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;
 			}
+		}
 		Random.popGenerator();
 	}
-	
+
 	@Override
-	public int randomRespawnCell( Char ch ) {
+	public int randomRespawnCell(Char ch) {
 		ArrayList<Integer> candidates = new ArrayList<>();
-		for (Point p : roomEntrance.getPoints()){
+		for (Point p : roomEntrance.getPoints()) {
 			int cell = pointToCell(p);
 			if (passable[cell]
 					&& Actor.findChar(cell) == null
-					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){
+					&& (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])) {
 				candidates.add(cell);
 			}
 		}
 
-		if (candidates.isEmpty()){
+		if (candidates.isEmpty()) {
 			return -1;
 		} else {
 			return Random.element(candidates);
 		}
 	}
-	
+
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(CityLevel.class, "water_name");
@@ -165,10 +165,10 @@ public class LastShopLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
-	
+
 	@Override
 	public String tileDesc(int tile) {
 		switch (tile) {
@@ -191,12 +191,12 @@ public class LastShopLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
 
 	@Override
-	public Group addVisuals( ) {
+	public Group addVisuals() {
 		super.addVisuals();
 		CityLevel.addCityVisuals(this, visuals);
 		return visuals;
@@ -205,7 +205,7 @@ public class LastShopLevel extends RegularLevel {
 	@Override
 	public Group addWallVisuals() {
 		super.addWallVisuals();
-		CityLevel.addCityWallVisuals( this, wallVisuals );
+		CityLevel.addCityWallVisuals(this, wallVisuals);
 		return wallVisuals;
 	}
 

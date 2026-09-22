@@ -78,7 +78,8 @@ public class SpiritForm extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", ringLevel(), artifactLevel()) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", ringLevel(), artifactLevel()) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -98,15 +99,15 @@ public class SpiritForm extends ClericSpell {
 
 	}
 
-	public static int ringLevel(){
+	public static int ringLevel() {
 		return Dungeon.hero.pointsInTalent(Talent.SPIRIT_FORM);
 	}
 
-	public static int artifactLevel(){
-		return 2 + 2*Dungeon.hero.pointsInTalent(Talent.SPIRIT_FORM);
+	public static int artifactLevel() {
+		return 2 + 2 * Dungeon.hero.pointsInTalent(Talent.SPIRIT_FORM);
 	}
 
-	public static class SpiritFormBuff extends FlavourBuff{
+	public static class SpiritFormBuff extends FlavourBuff {
 
 		{
 			type = buffType.POSITIVE;
@@ -131,33 +132,33 @@ public class SpiritForm extends ClericSpell {
 			return Math.max(0, (DURATION - visualcooldown()) / DURATION);
 		}
 
-		public void setEffect(Bundlable effect){
+		public void setEffect(Bundlable effect) {
 			this.effect = effect;
-			if (effect instanceof RingOfMight){
+			if (effect instanceof RingOfMight) {
 				((Ring) effect).level(ringLevel());
-				Dungeon.hero.updateHT( false );
+				Dungeon.hero.updateHT(false);
 			}
 		}
 
 		@Override
 		public void detach() {
 			super.detach();
-			if (effect instanceof RingOfMight){
-				Dungeon.hero.updateHT( false );
+			if (effect instanceof RingOfMight) {
+				Dungeon.hero.updateHT(false);
 			}
 		}
 
-		public Ring ring(){
-			if (effect instanceof Ring){
+		public Ring ring() {
+			if (effect instanceof Ring) {
 				((Ring) effect).level(ringLevel());
 				return (Ring) effect;
 			}
 			return null;
 		}
 
-		public Artifact artifact(){
-			if (effect instanceof Artifact){
-				if (((Artifact) effect).visiblyUpgraded() < artifactLevel()){
+		public Artifact artifact() {
+			if (effect instanceof Artifact) {
+				if (((Artifact) effect).visiblyUpgraded() < artifactLevel()) {
 					((Artifact) effect).transferUpgrade(artifactLevel() - ((Artifact) effect).visiblyUpgraded());
 				}
 				return (Artifact) effect;
@@ -167,9 +168,9 @@ public class SpiritForm extends ClericSpell {
 
 		@Override
 		public String desc() {
-			if (ring() != null){
+			if (ring() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(ring().name()), dispTurns());
-			} else if (artifact() != null){
+			} else if (artifact() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(artifact().name()), dispTurns());
 			}
 			return super.desc();
@@ -191,13 +192,13 @@ public class SpiritForm extends ClericSpell {
 
 	}
 
-	public static void applyActiveArtifactEffect(ClassArmor armor, Artifact effect){
-		if (effect instanceof AlchemistsToolkit){
+	public static void applyActiveArtifactEffect(ClassArmor armor, Artifact effect) {
+		if (effect instanceof AlchemistsToolkit) {
 			Talent.onArtifactUsed(Dungeon.hero);
 			AlchemyScene.assignToolkit((AlchemistsToolkit) effect);
 			Game.switchScene(AlchemyScene.class);
 
-		} else if (effect instanceof DriedRose){
+		} else if (effect instanceof DriedRose) {
 			ArrayList<Integer> spawnPoints = new ArrayList<>();
 			for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 				int p = Dungeon.hero.pos + PathFinder.NEIGHBOURS8[i];
@@ -208,49 +209,48 @@ public class SpiritForm extends ClericSpell {
 			if (!spawnPoints.isEmpty()) {
 				Wraith w = Wraith.spawnAt(Random.element(spawnPoints), Wraith.class);
 
-				w.HP = w.HT = 20 + 8*artifactLevel();
+				w.HP = w.HT = 20 + 8 * artifactLevel();
 				Buff.affect(w, Corruption.class);
 			}
 			Talent.onArtifactUsed(Dungeon.hero);
 			Dungeon.hero.spendAndNext(1f);
 
-		} else if (effect instanceof EtherealChains){
+		} else if (effect instanceof EtherealChains) {
 			GameScene.selectCell(((EtherealChains) effect).caster);
 			if (Dungeon.quickslot.contains(armor)) {
 				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));
 			}
 
-		} else if (effect instanceof HornOfPlenty){
+		} else if (effect instanceof HornOfPlenty) {
 			((HornOfPlenty) effect).doEatEffect(Dungeon.hero, 1);
 
-		} else if (effect instanceof MasterThievesArmband){
+		} else if (effect instanceof MasterThievesArmband) {
 			GameScene.selectCell(((MasterThievesArmband) effect).targeter);
 			if (Dungeon.quickslot.contains(armor)) {
 				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));
 			}
 
-		} else if (effect instanceof SandalsOfNature){
+		} else if (effect instanceof SandalsOfNature) {
 			((SandalsOfNature) effect).curSeedEffect = Random.oneOf(
 					Blindweed.Seed.class, Fadeleaf.Seed.class, Firebloom.Seed.class,
-					Icecap.Seed.class, Sorrowmoss.Seed.class, Stormvine.Seed.class
-			);
+					Icecap.Seed.class, Sorrowmoss.Seed.class, Stormvine.Seed.class);
 
 			GameScene.selectCell(((SandalsOfNature) effect).cellSelector);
 			if (Dungeon.quickslot.contains(armor)) {
 				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));
 			}
 
-		} else if (effect instanceof TalismanOfForesight){
+		} else if (effect instanceof TalismanOfForesight) {
 			GameScene.selectCell(((TalismanOfForesight) effect).scry);
 
-		} else if (effect instanceof TimekeepersHourglass){
+		} else if (effect instanceof TimekeepersHourglass) {
 			Buff.affect(Dungeon.hero, Swiftthistle.TimeBubble.class).reset(artifactLevel());
 			Dungeon.hero.spendAndNext(1f);
 
-		} else if (effect instanceof UnstableSpellbook){
+		} else if (effect instanceof UnstableSpellbook) {
 			((UnstableSpellbook) effect).doReadEffect(Dungeon.hero);
 
-		} else if (effect instanceof SkeletonKey){
+		} else if (effect instanceof SkeletonKey) {
 			GameScene.selectCell(((SkeletonKey) effect).targeter);
 		}
 	}

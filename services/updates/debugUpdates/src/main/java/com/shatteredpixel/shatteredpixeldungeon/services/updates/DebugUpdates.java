@@ -24,7 +24,6 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.services.updates;
 
-
 import com.watabou.noosa.Game;
 
 public class DebugUpdates extends UpdateService {
@@ -44,13 +43,13 @@ public class DebugUpdates extends UpdateService {
 	@Override
 	public void checkForUpdate(boolean useMetered, boolean includeBetas, UpdateResultCallback callback) {
 
-		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()){
+		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()) {
 			callback.onConnectionFailed();
 			return;
 		}
 
 		debugUpdateInfo = new AvailableUpdateData();
-		debugUpdateInfo.versionCode = Game.versionCode+1;
+		debugUpdateInfo.versionCode = Game.versionCode + 1;
 		debugUpdateInfo.URL = "http://www.google.com";
 
 		callback.onUpdateAvailable(debugUpdateInfo);
@@ -59,7 +58,7 @@ public class DebugUpdates extends UpdateService {
 
 	@Override
 	public void initializeUpdate(AvailableUpdateData update) {
-		Game.platform.openURI( update.URL );
+		Game.platform.openURI(update.URL);
 	}
 
 	@Override

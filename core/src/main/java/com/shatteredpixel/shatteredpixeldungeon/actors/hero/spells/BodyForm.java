@@ -48,7 +48,8 @@ public class BodyForm extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", duration()) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", duration()) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -68,8 +69,8 @@ public class BodyForm extends ClericSpell {
 
 	}
 
-	public static int duration(){
-		return Math.round(13.33f + 6.67f* Dungeon.hero.pointsInTalent(Talent.BODY_FORM));
+	public static int duration() {
+		return Math.round(13.33f + 6.67f * Dungeon.hero.pointsInTalent(Talent.BODY_FORM));
 	}
 
 	public static class BodyFormBuff extends FlavourBuff {
@@ -95,19 +96,19 @@ public class BodyForm extends ClericSpell {
 			return Math.max(0, (duration() - visualcooldown()) / duration());
 		}
 
-		public void setEffect(Bundlable effect){
+		public void setEffect(Bundlable effect) {
 			this.effect = effect;
 		}
 
-		public Weapon.Enchantment enchant(){
-			if (effect instanceof Weapon.Enchantment){
+		public Weapon.Enchantment enchant() {
+			if (effect instanceof Weapon.Enchantment) {
 				return (Weapon.Enchantment) effect;
 			}
 			return null;
 		}
 
-		public Armor.Glyph glyph(){
-			if (effect instanceof Armor.Glyph){
+		public Armor.Glyph glyph() {
+			if (effect instanceof Armor.Glyph) {
 				return (Armor.Glyph) effect;
 			}
 			return null;
@@ -115,9 +116,9 @@ public class BodyForm extends ClericSpell {
 
 		@Override
 		public String desc() {
-			if (enchant() != null){
+			if (enchant() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(enchant().name()), dispTurns());
-			} else if (glyph() != null){
+			} else if (glyph() != null) {
 				return Messages.get(this, "desc", Messages.titleCase(glyph().name()), dispTurns());
 			}
 			return super.desc();

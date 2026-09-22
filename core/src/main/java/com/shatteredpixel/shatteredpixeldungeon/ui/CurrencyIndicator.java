@@ -32,69 +32,69 @@ import com.watabou.noosa.ui.Component;
 
 public class CurrencyIndicator extends Component {
 
-	private static final float TIME	= 2f;
-	
+	private static final float TIME = 2f;
+
 	private int lastGold = 0;
 	private int lastEnergy = 0;
-	
+
 	private BitmapText gold;
 	private BitmapText energy;
-	
+
 	private float goldTime;
 	private float energyTime;
 
 	public static boolean showGold = false;
-	
+
 	@Override
 	protected void createChildren() {
-		gold = new BitmapText( PixelScene.pixelFont);
-		gold.text( Integer.toString(lastGold) );
+		gold = new BitmapText(PixelScene.pixelFont);
+		gold.text(Integer.toString(lastGold));
 		gold.measure();
-		gold.hardlight( 0xFFFF00 );
-		add( gold );
+		gold.hardlight(0xFFFF00);
+		add(gold);
 
-		energy = new BitmapText( PixelScene.pixelFont);
-		energy.text( Integer.toString(lastEnergy) );
+		energy = new BitmapText(PixelScene.pixelFont);
+		energy.text(Integer.toString(lastEnergy));
 		energy.measure();
-		energy.hardlight( 0x44CCFF );
-		add( energy );
-		
+		energy.hardlight(0x44CCFF);
+		add(energy);
+
 		gold.visible = energy.visible = false;
 	}
-	
+
 	@Override
 	protected void layout() {
-		gold.x = x+1;
+		gold.x = x + 1;
 		gold.y = top() + 1;
 
-		energy.x = x+1;
+		energy.x = x + 1;
 		if (gold.visible) {
 			energy.y = top() + energy.height() - 1;
 		} else {
 			energy.y = top() + 1;
 		}
 	}
-	
+
 	@Override
 	public void update() {
 		super.update();
-		
+
 		if (gold.visible) {
-			
+
 			goldTime -= Game.elapsed;
 			if (goldTime > 0) {
-				gold.alpha( goldTime > TIME / 2 ? 1f : goldTime * 2 / TIME );
+				gold.alpha(goldTime > TIME / 2 ? 1f : goldTime * 2 / TIME);
 			} else {
 				gold.visible = false;
 			}
-			
+
 		}
 
 		if (energy.visible) {
 
 			energyTime -= Game.elapsed;
 			if (energyTime > 0) {
-				energy.alpha( energyTime > TIME / 2 ? 1f : energyTime * 2 / TIME );
+				energy.alpha(energyTime > TIME / 2 ? 1f : energyTime * 2 / TIME);
 			} else {
 				energy.visible = false;
 			}
@@ -102,22 +102,22 @@ public class CurrencyIndicator extends Component {
 		}
 
 		if (Dungeon.gold != lastGold) {
-			
+
 			lastGold = Dungeon.gold;
-			
-			gold.text( Integer.toString(lastGold) );
+
+			gold.text(Integer.toString(lastGold));
 			gold.measure();
-			
+
 			gold.visible = true;
 			goldTime = TIME;
-			
+
 			layout();
 		}
 
 		if (Dungeon.energy != lastEnergy) {
 			lastEnergy = Dungeon.energy;
 
-			energy.text( Integer.toString(lastEnergy) );
+			energy.text(Integer.toString(lastEnergy));
 			energy.measure();
 
 			energy.visible = true;
@@ -126,12 +126,12 @@ public class CurrencyIndicator extends Component {
 			layout();
 		}
 
-		if (showGold){
-			if (!gold.visible){
+		if (showGold) {
+			if (!gold.visible) {
 				gold.visible = true;
 				layout();
 			}
-			goldTime = TIME/2;
+			goldTime = TIME / 2;
 		}
 
 	}

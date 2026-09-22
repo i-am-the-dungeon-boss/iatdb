@@ -48,56 +48,56 @@ public class GnollGeomancerSprite extends MobSprite {
 	}
 
 	@Override
-	public void link( Char ch ) {
-		super.link( ch );
+	public void link(Char ch) {
+		super.link(ch);
 
-		if (ch instanceof GnollGeomancer && ((GnollGeomancer) ch).hasSapper()){
+		if (ch instanceof GnollGeomancer && ((GnollGeomancer) ch).hasSapper()) {
 			setupArmor();
 		}
-		if (ch != null && (ch.buff(GnollGeomancer.RockArmor.class) != null != isStatue)){
+		if (ch != null && (ch.buff(GnollGeomancer.RockArmor.class) != null != isStatue)) {
 			isStatue = !isStatue;
 			updateAnims();
 		}
 	}
 
-	private void updateAnims(){
+	private void updateAnims() {
 
-		TextureFilm frames = new TextureFilm( texture, 12, 16 );
+		TextureFilm frames = new TextureFilm(texture, 12, 16);
 
 		int ofs = isStatue ? 21 : 0;
-		idle = new Animation( isStatue ? 1 : 2, true );
-		idle.frames( frames, ofs+0, ofs+0, ofs+0, ofs+1, ofs+0, ofs+0, ofs+1, ofs+1 );
+		idle = new Animation(isStatue ? 1 : 2, true);
+		idle.frames(frames, ofs + 0, ofs + 0, ofs + 0, ofs + 1, ofs + 0, ofs + 0, ofs + 1, ofs + 1);
 
-		run = new Animation( 12, true );
-		run.frames( frames, ofs+4, ofs+5, ofs+6, ofs+7 );
+		run = new Animation(12, true);
+		run.frames(frames, ofs + 4, ofs + 5, ofs + 6, ofs + 7);
 
-		attack = new Animation( 12, false );
-		attack.frames( frames, ofs+2, ofs+3, ofs+0 );
+		attack = new Animation(12, false);
+		attack.frames(frames, ofs + 2, ofs + 3, ofs + 0);
 
 		zap = attack.clone();
 
-		die = new Animation( 12, false );
-		die.frames( frames, ofs+8, ofs+9, ofs+10 );
+		die = new Animation(12, false);
+		die.frames(frames, ofs + 8, ofs + 9, ofs + 10);
 
 		play(idle);
 
 		play(idle);
 	}
 
-	public void setupArmor(){
+	public void setupArmor() {
 		if (earthArmor == null) {
 			earthArmor = emitter();
 			earthArmor.fillTarget = false;
-			earthArmor.y = height()/2f;
-			earthArmor.x = (2*scale.x);
-			earthArmor.width = width()-(4*scale.x);
-			earthArmor.height = height() - (10*scale.y);
+			earthArmor.y = height() / 2f;
+			earthArmor.x = (2 * scale.x);
+			earthArmor.width = width() - (4 * scale.x);
+			earthArmor.height = height() - (10 * scale.y);
 			earthArmor.pour(EarthParticle.SMALL, 0.15f);
 		}
 	}
 
-	public void loseArmor(){
-		if (earthArmor != null){
+	public void loseArmor() {
+		if (earthArmor != null) {
 			earthArmor.on = false;
 			earthArmor = null;
 		}
@@ -107,7 +107,7 @@ public class GnollGeomancerSprite extends MobSprite {
 	public void update() {
 		super.update();
 
-		if (earthArmor != null){
+		if (earthArmor != null) {
 			earthArmor.visible = visible;
 		}
 	}
@@ -115,7 +115,7 @@ public class GnollGeomancerSprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (earthArmor != null){
+		if (earthArmor != null) {
 			earthArmor.on = false;
 			earthArmor = null;
 		}
@@ -124,24 +124,24 @@ public class GnollGeomancerSprite extends MobSprite {
 	@Override
 	public void kill() {
 		super.kill();
-		if (earthArmor != null){
+		if (earthArmor != null) {
 			earthArmor.on = false;
 			earthArmor = null;
 		}
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 		if (anim == zap) {
 			idle();
 		}
-		super.onComplete( anim );
+		super.onComplete(anim);
 	}
 
 	@Override
 	public void idle() {
 		super.idle();
-		if (ch != null && ch.buff(GnollGeomancer.RockArmor.class) != null != isStatue){
+		if (ch != null && ch.buff(GnollGeomancer.RockArmor.class) != null != isStatue) {
 			isStatue = !isStatue;
 			updateAnims();
 		}

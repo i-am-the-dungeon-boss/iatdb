@@ -136,8 +136,7 @@ class EchoInvisibleSurpriseTest {
 	}
 
 	private static void fillFov(EchoBoss boss) {
-		boss.fieldOfView =
-				new boolean[com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.length()];
+		boss.fieldOfView = new boolean[com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.length()];
 		java.util.Arrays.fill(boss.fieldOfView, true);
 	}
 

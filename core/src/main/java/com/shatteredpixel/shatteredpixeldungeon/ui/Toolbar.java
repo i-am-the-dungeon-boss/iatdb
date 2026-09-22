@@ -78,9 +78,7 @@ public class Toolbar extends Component {
 	private static Toolbar instance;
 
 	public enum Mode {
-		SPLIT,
-		GROUP,
-		CENTER
+		SPLIT, GROUP, CENTER
 	}
 
 	public Toolbar() {

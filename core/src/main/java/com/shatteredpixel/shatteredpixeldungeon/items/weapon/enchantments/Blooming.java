@@ -40,79 +40,79 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class Blooming extends Weapon.Enchantment {
-	
-	private static ItemSprite.Glowing DARK_GREEN = new ItemSprite.Glowing( 0x008800 );
-	
+
+	private static ItemSprite.Glowing DARK_GREEN = new ItemSprite.Glowing(0x008800);
+
 	@Override
 	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
-		int level = Math.max( 0, weapon.buffedLvl() );
+		int level = Math.max(0, weapon.buffedLvl());
 
 		// lvl 0 - 33%
 		// lvl 1 - 50%
 		// lvl 2 - 60%
-		float procChance = (level+1f)/(level+3f) * procChanceMultiplier(attacker);
+		float procChance = (level + 1f) / (level + 3f) * procChanceMultiplier(attacker);
 		if (Random.Float() < procChance) {
 
 			float powerMulti = Math.max(1f, procChance);
 
-			float plants = (1f + 0.1f*level) * powerMulti;
-			if (Random.Float() < plants%1){
-				plants = (float)Math.ceil(plants);
+			float plants = (1f + 0.1f * level) * powerMulti;
+			if (Random.Float() < plants % 1) {
+				plants = (float) Math.ceil(plants);
 			} else {
-				plants = (float)Math.floor(plants);
+				plants = (float) Math.floor(plants);
 			}
-			
-			if (plantGrass(defender.pos)){
+
+			if (plantGrass(defender.pos)) {
 				plants--;
-				if (plants <= 0){
+				if (plants <= 0) {
 					return damage;
 				}
 			}
-			
+
 			ArrayList<Integer> positions = new ArrayList<>();
-			for (int i : PathFinder.NEIGHBOURS8){
+			for (int i : PathFinder.NEIGHBOURS8) {
 				if (defender.pos + i != attacker.pos) {
 					positions.add(defender.pos + i);
 				}
 			}
-			Random.shuffle( positions );
+			Random.shuffle(positions);
 
 			//The attacker's position is always lowest priority
-			if (Dungeon.level.adjacent(attacker.pos, defender.pos)){
+			if (Dungeon.level.adjacent(attacker.pos, defender.pos)) {
 				positions.add(attacker.pos);
 			}
 
-			for (int i : positions){
-				if (plantGrass(i)){
+			for (int i : positions) {
+				if (plantGrass(i)) {
 					plants--;
 					if (plants <= 0) {
 						return damage;
 					}
 				}
 			}
-			
+
 		}
-		
+
 		return damage;
 	}
-	
-	private boolean plantGrass(int cell){
+
+	private boolean plantGrass(int cell) {
 		int t = Dungeon.level.map[cell];
 		if ((t == Terrain.EMPTY || t == Terrain.EMPTY_DECO || t == Terrain.EMBERS
 				|| t == Terrain.GRASS || t == Terrain.FURROWED_GRASS)
-				&& Dungeon.level.plants.get(cell) == null){
-			if (!Regeneration.regenOn()){
+				&& Dungeon.level.plants.get(cell) == null) {
+			if (!Regeneration.regenOn()) {
 				Level.set(cell, Terrain.FURROWED_GRASS);
 			} else {
 				Level.set(cell, Terrain.HIGH_GRASS);
 			}
 			GameScene.updateMap(cell);
-			CellEmitter.get( cell ).burst( LeafParticle.LEVEL_SPECIFIC, 4 );
+			CellEmitter.get(cell).burst(LeafParticle.LEVEL_SPECIFIC, 4);
 			return true;
 		}
 		return false;
 	}
-	
+
 	@Override
 	public ItemSprite.Glowing glowing() {
 		return DARK_GREEN;

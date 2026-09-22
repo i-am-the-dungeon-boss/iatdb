@@ -32,10 +32,10 @@ import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
 public class RuinsRoom extends PatchRoom {
-	
+
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{4, 2, 1};
+		return new float[] { 4, 2, 1 };
 	}
 
 	@Override
@@ -49,8 +49,8 @@ public class RuinsRoom extends PatchRoom {
 		// normal   ~30% to ~40%
 		// large    ~40% to ~50%
 		// giant    ~50% to ~60%
-		int scale = Math.min(width()*height(), 18*18);
-		return 0.30f + scale/1024f;
+		int scale = Math.min(width() * height(), 18 * 18);
+		return 0.30f + scale / 1024f;
 	}
 
 	@Override
@@ -70,12 +70,12 @@ public class RuinsRoom extends PatchRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1 , Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
+			door.set(Door.Type.REGULAR);
 		}
-		
+
 		setupPatch(level);
 		for (int i = top + 1; i < bottom; i++) {
 			for (int j = left + 1; j < right; j++) {
@@ -83,12 +83,16 @@ public class RuinsRoom extends PatchRoom {
 
 					//isolated bits of wall are turned into rubble
 					boolean wall;
-					if (i > top+1 && i < bottom-1 && j >left+1 && j<right-1){
+					if (i > top + 1 && i < bottom - 1 && j > left + 1 && j < right - 1) {
 						int adjacent = 0;
-						if (patch[xyToPatchCoords(j-1, i)]) adjacent++;
-						if (patch[xyToPatchCoords(j+1, i)]) adjacent++;
-						if (patch[xyToPatchCoords(j, i-1)]) adjacent++;
-						if (patch[xyToPatchCoords(j, i+1)]) adjacent++;
+						if (patch[xyToPatchCoords(j - 1, i)])
+							adjacent++;
+						if (patch[xyToPatchCoords(j + 1, i)])
+							adjacent++;
+						if (patch[xyToPatchCoords(j, i - 1)])
+							adjacent++;
+						if (patch[xyToPatchCoords(j, i + 1)])
+							adjacent++;
 						wall = Random.Int(2) < adjacent;
 					} else {
 						wall = true;

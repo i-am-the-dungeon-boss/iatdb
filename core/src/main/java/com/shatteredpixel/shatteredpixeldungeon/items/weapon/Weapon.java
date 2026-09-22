@@ -87,51 +87,50 @@ import java.util.Arrays;
 
 abstract public class Weapon extends KindOfWeapon {
 
-	public float    ACC = 1f;	// Accuracy modifier
-	public float	DLY	= 1f;	// Speed modifier
-	public int      RCH = 1;    // Reach modifier (only applies to melee hits)
+	public float ACC = 1f; // Accuracy modifier
+	public float DLY = 1f; // Speed modifier
+	public int RCH = 1; // Reach modifier (only applies to melee hits)
 
 	public enum Augment {
-		SPEED   (0.7f, 2/3f),
-		DAMAGE  (1.5f, 5/3f),
-		NONE	(1.0f, 1f);
+		SPEED(0.7f, 2 / 3f), DAMAGE(1.5f, 5 / 3f), NONE(1.0f, 1f);
 
 		private float damageFactor;
 		private float delayFactor;
 
-		Augment(float dmg, float dly){
+		Augment(float dmg, float dly) {
 			damageFactor = dmg;
 			delayFactor = dly;
 		}
 
-		public int damageFactor(int dmg){
+		public int damageFactor(int dmg) {
 			return Math.round(dmg * damageFactor);
 		}
 
-		public float damageFactor(float dmg){
+		public float damageFactor(float dmg) {
 			return dmg * damageFactor;
 		}
 
-		public float delayFactor(float dly){
+		public float delayFactor(float dly) {
 			return dly * delayFactor;
 		}
 	}
-	
+
 	public Augment augment = Augment.NONE;
 
-	protected int usesToID(){
+	protected int usesToID() {
 		return 20;
 	}
+
 	protected float usesLeftToID = usesToID();
-	protected float availableUsesToID = usesToID()/2f;
-	
+	protected float availableUsesToID = usesToID() / 2f;
+
 	public Enchantment enchantment;
 	public boolean enchantHardened = false;
 	public boolean curseInfusionBonus = false;
 	public boolean masteryPotionBonus = false;
-	
+
 	@Override
-	public int proc( Char attacker, Char defender, int damage ) {
+	public int proc(Char attacker, Char defender, int damage) {
 
 		boolean becameAlly = false;
 		boolean wasAlly = defender.alignment == Char.Alignment.ALLY;
@@ -139,28 +138,31 @@ abstract public class Weapon extends KindOfWeapon {
 			Enchantment trinityEnchant = null;
 			//only when it's the hero or a char that uses the hero's weapon
 			if (Dungeon.hero.buff(BodyForm.BodyFormBuff.class) != null && this instanceof MeleeWeapon
-					&& (attacker == Dungeon.hero || attacker instanceof MirrorImage || attacker instanceof ShadowClone.ShadowAlly)){
+					&& (attacker == Dungeon.hero || attacker instanceof MirrorImage
+							|| attacker instanceof ShadowClone.ShadowAlly)) {
 				trinityEnchant = Dungeon.hero.buff(BodyForm.BodyFormBuff.class).enchant();
-				if (enchantment != null && trinityEnchant != null && trinityEnchant.getClass() == enchantment.getClass()){
+				if (enchantment != null && trinityEnchant != null
+						&& trinityEnchant.getClass() == enchantment.getClass()) {
 					trinityEnchant = null;
 				}
 			}
 
 			if (attacker instanceof Hero && isEquipped((Hero) attacker)
-					&& attacker.buff(HolyWeapon.HolyWepBuff.class) != null){
+					&& attacker.buff(HolyWeapon.HolyWepBuff.class) != null) {
 				if (enchantment != null &&
-						(((Hero) attacker).subClass == HeroSubClass.PALADIN || hasCurseEnchant())){
+						(((Hero) attacker).subClass == HeroSubClass.PALADIN || hasCurseEnchant())) {
 					damage = enchantment.proc(this, attacker, defender, damage);
-					if (defender.alignment == Char.Alignment.ALLY && !wasAlly){
+					if (defender.alignment == Char.Alignment.ALLY && !wasAlly) {
 						becameAlly = true;
 					}
 				}
-				if (defender.isAlive() && !becameAlly && trinityEnchant != null){
+				if (defender.isAlive() && !becameAlly && trinityEnchant != null) {
 					damage = trinityEnchant.proc(this, attacker, defender, damage);
 				}
 				if (defender.isAlive() && !becameAlly) {
 					int dmg = ((Hero) attacker).subClass == HeroSubClass.PALADIN ? 6 : 2;
-					defender.damage(Math.round(dmg * Enchantment.genericProcChanceMultiplier(attacker)), HolyWeapon.INSTANCE);
+					defender.damage(Math.round(dmg * Enchantment.genericProcChanceMultiplier(attacker)),
+							HolyWeapon.INSTANCE);
 				}
 
 			} else {
@@ -171,13 +173,13 @@ abstract public class Weapon extends KindOfWeapon {
 					}
 				}
 
-				if (defender.isAlive() && !becameAlly && trinityEnchant != null){
+				if (defender.isAlive() && !becameAlly && trinityEnchant != null) {
 					damage = trinityEnchant.proc(this, attacker, defender, damage);
 				}
 			}
 
 			if (attacker instanceof Hero && isEquipped((Hero) attacker) &&
-					attacker.buff(Smite.SmiteTracker.class) != null && !becameAlly){
+					attacker.buff(Smite.SmiteTracker.class) != null && !becameAlly) {
 				defender.damage(Smite.bonusDmg((Hero) attacker, defender), Smite.INSTANCE);
 			}
 		}
@@ -186,17 +188,17 @@ abstract public class Weapon extends KindOfWeapon {
 		// up it's last shot, as in this case there's nothing left to ID anyway
 		if (this instanceof MissileWeapon
 				&& ((MissileWeapon) this).durabilityLeft() <= ((MissileWeapon) this).durabilityPerUse()
-				&& ((MissileWeapon) this).parent == null){
+				&& ((MissileWeapon) this).parent == null) {
 			return damage;
 		}
-		
+
 		if (!levelKnown && attacker == Dungeon.hero) {
-			float uses = Math.min( availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this) );
+			float uses = Math.min(availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this));
 			availableUsesToID -= uses;
 			usesLeftToID -= uses;
 			if (usesLeftToID <= 0) {
-				if (ShardOfOblivion.passiveIDDisabled()){
-					if (usesLeftToID > -1){
+				if (ShardOfOblivion.passiveIDDisabled()) {
+					if (usesLeftToID > -1) {
 						GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready"), name());
 					}
 					setIDReady();
@@ -210,60 +212,60 @@ abstract public class Weapon extends KindOfWeapon {
 
 		return damage;
 	}
-	
-	public void onHeroGainExp( float levelPercent, Hero hero ){
+
+	public void onHeroGainExp(float levelPercent, Hero hero) {
 		levelPercent *= Talent.itemIDSpeedFactor(hero, this);
 		if (!levelKnown && (isEquipped(hero) || this instanceof MissileWeapon)
-				&& availableUsesToID <= usesToID()/2f) {
+				&& availableUsesToID <= usesToID() / 2f) {
 			//gains enough uses to ID over 0.5 levels
-			availableUsesToID = Math.min(usesToID()/2f, availableUsesToID + levelPercent * usesToID());
+			availableUsesToID = Math.min(usesToID() / 2f, availableUsesToID + levelPercent * usesToID());
 		}
 	}
-	
+
 	private static final String USES_LEFT_TO_ID = "uses_left_to_id";
-	private static final String AVAILABLE_USES  = "available_uses";
-	private static final String ENCHANTMENT	    = "enchantment";
+	private static final String AVAILABLE_USES = "available_uses";
+	private static final String ENCHANTMENT = "enchantment";
 	private static final String ENCHANT_HARDENED = "enchant_hardened";
 	private static final String CURSE_INFUSION_BONUS = "curse_infusion_bonus";
 	private static final String MASTERY_POTION_BONUS = "mastery_potion_bonus";
-	private static final String AUGMENT	        = "augment";
+	private static final String AUGMENT = "augment";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( USES_LEFT_TO_ID, usesLeftToID );
-		bundle.put( AVAILABLE_USES, availableUsesToID );
-		bundle.put( ENCHANTMENT, enchantment );
-		bundle.put( ENCHANT_HARDENED, enchantHardened );
-		bundle.put( CURSE_INFUSION_BONUS, curseInfusionBonus );
-		bundle.put( MASTERY_POTION_BONUS, masteryPotionBonus );
-		bundle.put( AUGMENT, augment );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(USES_LEFT_TO_ID, usesLeftToID);
+		bundle.put(AVAILABLE_USES, availableUsesToID);
+		bundle.put(ENCHANTMENT, enchantment);
+		bundle.put(ENCHANT_HARDENED, enchantHardened);
+		bundle.put(CURSE_INFUSION_BONUS, curseInfusionBonus);
+		bundle.put(MASTERY_POTION_BONUS, masteryPotionBonus);
+		bundle.put(AUGMENT, augment);
 	}
-	
+
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		usesLeftToID = bundle.getFloat( USES_LEFT_TO_ID );
-		availableUsesToID = bundle.getFloat( AVAILABLE_USES );
-		enchantment = (Enchantment)bundle.get( ENCHANTMENT );
-		enchantHardened = bundle.getBoolean( ENCHANT_HARDENED );
-		curseInfusionBonus = bundle.getBoolean( CURSE_INFUSION_BONUS );
-		masteryPotionBonus = bundle.getBoolean( MASTERY_POTION_BONUS );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		usesLeftToID = bundle.getFloat(USES_LEFT_TO_ID);
+		availableUsesToID = bundle.getFloat(AVAILABLE_USES);
+		enchantment = (Enchantment) bundle.get(ENCHANTMENT);
+		enchantHardened = bundle.getBoolean(ENCHANT_HARDENED);
+		curseInfusionBonus = bundle.getBoolean(CURSE_INFUSION_BONUS);
+		masteryPotionBonus = bundle.getBoolean(MASTERY_POTION_BONUS);
 
 		augment = bundle.getEnum(AUGMENT, Augment.class);
 	}
-	
+
 	@Override
 	public void reset() {
 		super.reset();
 		usesLeftToID = usesToID();
-		availableUsesToID = usesToID()/2f;
+		availableUsesToID = usesToID() / 2f;
 	}
 
 	@Override
 	public boolean collect(Bag container) {
-		if(super.collect(container)){
-			if (Dungeon.hero != null && Dungeon.hero.isAlive() && isIdentified() && enchantment != null){
+		if (super.collect(container)) {
+			if (Dungeon.hero != null && Dungeon.hero.isAlive() && isIdentified() && enchantment != null) {
 				Catalog.setSeen(enchantment.getClass());
 				Statistics.itemTypesDiscovered.add(enchantment.getClass());
 			}
@@ -275,60 +277,60 @@ abstract public class Weapon extends KindOfWeapon {
 
 	@Override
 	public Item identify(boolean byHero) {
-		if (enchantment != null && byHero && Dungeon.hero != null && Dungeon.hero.isAlive()){
+		if (enchantment != null && byHero && Dungeon.hero != null && Dungeon.hero.isAlive()) {
 			Catalog.setSeen(enchantment.getClass());
 			Statistics.itemTypesDiscovered.add(enchantment.getClass());
 		}
 		return super.identify(byHero);
 	}
 
-	public void setIDReady(){
+	public void setIDReady() {
 		usesLeftToID = -1;
 	}
 
-	public boolean readyToIdentify(){
+	public boolean readyToIdentify() {
 		return !isIdentified() && usesLeftToID <= 0;
 	}
-	
+
 	@Override
 	public float accuracyFactor(Char owner, Char target) {
-		
+
 		int encumbrance = 0;
-		
-		if( owner instanceof Hero ){
-			encumbrance = STRReq() - ((Hero)owner).STR();
+
+		if (owner instanceof Hero) {
+			encumbrance = STRReq() - ((Hero) owner).STR();
 		}
 
 		float ACC = this.ACC;
 
-		if (owner.buff(Wayward.WaywardBuff.class) != null && enchantment instanceof Wayward){
+		if (owner.buff(Wayward.WaywardBuff.class) != null && enchantment instanceof Wayward) {
 			ACC /= 5;
 		}
 
-		return encumbrance > 0 ? (float)(ACC / Math.pow( 1.5, encumbrance )) : ACC;
-	}
-	
-	@Override
-	public float delayFactor( Char owner ) {
-		return baseDelay(owner) * (1f/speedMultiplier(owner));
+		return encumbrance > 0 ? (float) (ACC / Math.pow(1.5, encumbrance)) : ACC;
 	}
 
-	protected float baseDelay( Char owner ){
+	@Override
+	public float delayFactor(Char owner) {
+		return baseDelay(owner) * (1f / speedMultiplier(owner));
+	}
+
+	protected float baseDelay(Char owner) {
 		float delay = augment.delayFactor(this.DLY);
 		if (owner instanceof Hero) {
-			int encumbrance = STRReq() - ((Hero)owner).STR();
-			if (encumbrance > 0){
-				delay *= Math.pow( 1.2, encumbrance );
+			int encumbrance = STRReq() - ((Hero) owner).STR();
+			if (encumbrance > 0) {
+				delay *= Math.pow(1.2, encumbrance);
 			}
 		}
 
 		return delay;
 	}
 
-	protected float speedMultiplier(Char owner ){
+	protected float speedMultiplier(Char owner) {
 		float multi = RingOfFuror.attackSpeedMultiplier(owner);
 
-		if (owner.buff(Scimitar.SwordDance.class) != null){
+		if (owner.buff(Scimitar.SwordDance.class) != null) {
 			multi += 0.6f;
 		}
 
@@ -338,86 +340,90 @@ abstract public class Weapon extends KindOfWeapon {
 	@Override
 	public int reachFactor(Char owner) {
 		int reach = RCH;
-		if (owner instanceof Hero && RingOfForce.fightingUnarmed((Hero) owner)){
+		if (owner instanceof Hero && RingOfForce.fightingUnarmed((Hero) owner)) {
 			reach = 1; //brawlers stance benefits from enchantments, but not innate reach
-			if (!RingOfForce.unarmedGetsWeaponEnchantment((Hero) owner)){
+			if (!RingOfForce.unarmedGetsWeaponEnchantment((Hero) owner)) {
 				return reach;
 			}
 		}
-		if (owner instanceof Hero && owner.buff(AscendedForm.AscendBuff.class) != null){
+		if (owner instanceof Hero && owner.buff(AscendedForm.AscendBuff.class) != null) {
 			reach += 2;
 		}
-		if (hasEnchant(Projecting.class, owner)){
+		if (hasEnchant(Projecting.class, owner)) {
 			return reach + Math.round(Enchantment.genericProcChanceMultiplier(owner));
 		} else {
 			return reach;
 		}
 	}
 
-	public int STRReq(){
+	public int STRReq() {
 		return STRReq(level());
 	}
 
 	public abstract int STRReq(int lvl);
 
-	protected static int STRReq(int tier, int lvl){
+	protected static int STRReq(int tier, int lvl) {
 		lvl = Math.max(0, lvl);
 
 		//strength req decreases at +1,+3,+6,+10,etc.
-		return (8 + tier * 2) - (int)(Math.sqrt(8 * lvl + 1) - 1)/2;
+		return (8 + tier * 2) - (int) (Math.sqrt(8 * lvl + 1) - 1) / 2;
 	}
 
 	@Override
 	public int level() {
 		int level = super.level();
-		if (curseInfusionBonus) level += 1 + level/6;
+		if (curseInfusionBonus)
+			level += 1 + level / 6;
 		return level;
 	}
-	
+
 	@Override
 	public Item upgrade() {
 		return upgrade(false);
 	}
-	
-	public Item upgrade(boolean enchant ) {
 
-		if (enchant){
-			if (enchantment == null){
+	public Item upgrade(boolean enchant) {
+
+		if (enchant) {
+			if (enchantment == null) {
 				enchant(Enchantment.random());
 			}
 		} else if (enchantment != null) {
 			//chance to lose harden buff is 10/20/40/80/100% when upgrading from +6/7/8/9/10
-			if (enchantHardened){
-				if (level() >= 6 && Random.Float(10) < Math.pow(2, level()-6)){
+			if (enchantHardened) {
+				if (level() >= 6 && Random.Float(10) < Math.pow(2, level() - 6)) {
 					enchantHardened = false;
 				}
 
-			//chance to remove curse is a static 33%
+				//chance to remove curse is a static 33%
 			} else if (hasCurseEnchant()) {
-				if (Random.Int(3) == 0) enchant(null);
+				if (Random.Int(3) == 0)
+					enchant(null);
 
-			//otherwise chance to lose enchant is 10/20/40/80/100% when upgrading from +4/5/6/7/8
-			} else if (level() >= 4 && Random.Float(10) < Math.pow(2, level()-4)){
+				//otherwise chance to lose enchant is 10/20/40/80/100% when upgrading from +4/5/6/7/8
+			} else if (level() >= 4 && Random.Float(10) < Math.pow(2, level() - 4)) {
 				enchant(null);
 			}
 		}
-		
+
 		cursed = false;
 
 		return super.upgrade();
 	}
-	
+
 	@Override
 	public String name() {
 		if (isEquipped(Dungeon.hero) && !hasCurseEnchant() && Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null
-			&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
-				return Messages.get(HolyWeapon.class, "ench_name", super.name());
-			} else {
-				return enchantment != null && (cursedKnown || !enchantment.curse()) ? enchantment.name(super.name()) : super.name();
+				&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)) {
+			return Messages.get(HolyWeapon.class, "ench_name", super.name());
+		} else {
+			return enchantment != null && (cursedKnown || !enchantment.curse())
+					? enchantment.name(super.name())
+					: super.name();
 
 		}
 	}
-	
+
 	@Override
 	public Item random() {
 		//+0: 75% (3/4)
@@ -436,27 +442,28 @@ abstract public class Weapon extends KindOfWeapon {
 		//does not affect levelgen
 		Random.pushGenerator(Random.Long());
 
-			//30% chance to be cursed
-			//10% chance to be enchanted
-			float effectRoll = Random.Float();
-			if (effectRoll < 0.3f * ParchmentScrap.curseChanceMultiplier()) {
-				enchant(Enchantment.randomCurse());
-				cursed = true;
-			} else if (effectRoll >= 1f - (0.1f * ParchmentScrap.enchantChanceMultiplier())){
-				enchant();
-			}
+		//30% chance to be cursed
+		//10% chance to be enchanted
+		float effectRoll = Random.Float();
+		if (effectRoll < 0.3f * ParchmentScrap.curseChanceMultiplier()) {
+			enchant(Enchantment.randomCurse());
+			cursed = true;
+		} else if (effectRoll >= 1f - (0.1f * ParchmentScrap.enchantChanceMultiplier())) {
+			enchant();
+		}
 
 		Random.popGenerator();
 
 		return this;
 	}
-	
-	public Weapon enchant( Enchantment ench ) {
-		if (ench == null || !ench.curse()) curseInfusionBonus = false;
+
+	public Weapon enchant(Enchantment ench) {
+		if (ench == null || !ench.curse())
+			curseInfusionBonus = false;
 		enchantment = ench;
 		updateQuickslot();
 		if (ench != null && isIdentified() && Dungeon.hero != null
-				&& Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(this)){
+				&& Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(this)) {
 			Catalog.setSeen(ench.getClass());
 			Statistics.itemTypesDiscovered.add(ench.getClass());
 		}
@@ -466,12 +473,12 @@ abstract public class Weapon extends KindOfWeapon {
 	public Weapon enchant() {
 
 		Class<? extends Enchantment> oldEnchantment = enchantment != null ? enchantment.getClass() : null;
-		Enchantment ench = Enchantment.random( oldEnchantment );
+		Enchantment ench = Enchantment.random(oldEnchantment);
 
-		return enchant( ench );
+		return enchant(ench);
 	}
 
-	public boolean hasEnchant(Class<?extends Enchantment> type, Char owner) {
+	public boolean hasEnchant(Class<? extends Enchantment> type, Char owner) {
 		if (owner.buff(MagicImmune.class) != null) {
 			return false;
 		} else if (enchantment != null
@@ -483,7 +490,7 @@ abstract public class Weapon extends KindOfWeapon {
 			return false;
 		} else if (owner.buff(BodyForm.BodyFormBuff.class) != null
 				&& owner.buff(BodyForm.BodyFormBuff.class).enchant() != null
-				&& owner.buff(BodyForm.BodyFormBuff.class).enchant().getClass().equals(type)){
+				&& owner.buff(BodyForm.BodyFormBuff.class).enchant().getClass().equals(type)) {
 			return true;
 		} else if (enchantment != null) {
 			return enchantment.getClass() == type;
@@ -491,22 +498,22 @@ abstract public class Weapon extends KindOfWeapon {
 			return false;
 		}
 	}
-	
+
 	//these are not used to process specific enchant effects, so magic immune doesn't affect them
-	public boolean hasGoodEnchant(){
+	public boolean hasGoodEnchant() {
 		return enchantment != null && !enchantment.curse();
 	}
 
-	public boolean hasCurseEnchant(){
+	public boolean hasCurseEnchant() {
 		return enchantment != null && enchantment.curse();
 	}
 
-	private static ItemSprite.Glowing HOLY = new ItemSprite.Glowing( 0xFFFF00 );
+	private static ItemSprite.Glowing HOLY = new ItemSprite.Glowing(0xFFFF00);
 
 	@Override
 	public ItemSprite.Glowing glowing() {
 		if (isEquipped(Dungeon.hero) && !hasCurseEnchant() && Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null
-				&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
+				&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)) {
 			return HOLY;
 		} else {
 			return enchantment != null && (cursedKnown || !enchantment.curse()) ? enchantment.glowing() : null;
@@ -515,61 +522,60 @@ abstract public class Weapon extends KindOfWeapon {
 
 	public static abstract class Enchantment implements Bundlable {
 
-		public static final Class<?>[] common = new Class<?>[]{
-				Blazing.class, Chilling.class, Kinetic.class, Shocking.class};
+		public static final Class<?>[] common = new Class<?>[] {
+				Blazing.class, Chilling.class, Kinetic.class, Shocking.class };
 
-		public static final Class<?>[] uncommon = new Class<?>[]{
+		public static final Class<?>[] uncommon = new Class<?>[] {
 				Blocking.class, Blooming.class, Elastic.class,
-				Lucky.class, Projecting.class, Unstable.class};
+				Lucky.class, Projecting.class, Unstable.class };
 
-		public static final Class<?>[] rare = new Class<?>[]{
-				Corrupting.class, Grim.class, Vampiric.class};
+		public static final Class<?>[] rare = new Class<?>[] {
+				Corrupting.class, Grim.class, Vampiric.class };
 
-		public static final float[] typeChances = new float[]{
+		public static final float[] typeChances = new float[] {
 				50, //12.5% each
 				40, //6.67% each
-				10  //3.33% each
+				10 //3.33% each
 		};
 
-		public static final Class<?>[] curses = new Class<?>[]{
+		public static final Class<?>[] curses = new Class<?>[] {
 				Annoying.class, Displacing.class, Dazzling.class, Explosive.class,
 				Sacrificial.class, Wayward.class, Polarized.class, Friendly.class
 		};
-		
-			
-		public abstract int proc( Weapon weapon, Char attacker, Char defender, int damage );
 
-		protected float procChanceMultiplier( Char attacker ){
-			return genericProcChanceMultiplier( attacker );
+		public abstract int proc(Weapon weapon, Char attacker, Char defender, int damage);
+
+		protected float procChanceMultiplier(Char attacker) {
+			return genericProcChanceMultiplier(attacker);
 		}
 
-		public static float genericProcChanceMultiplier( Char attacker ){
+		public static float genericProcChanceMultiplier(Char attacker) {
 			float multi = RingOfArcana.enchantPowerMultiplier(attacker);
 			Berserk rage = attacker.buff(Berserk.class);
 			if (rage != null) {
 				multi = rage.enchantFactor(multi);
 			}
 
-			if (attacker.buff(RunicBlade.RunicSlashTracker.class) != null){
+			if (attacker.buff(RunicBlade.RunicSlashTracker.class) != null) {
 				multi += attacker.buff(RunicBlade.RunicSlashTracker.class).boost;
 				attacker.buff(RunicBlade.RunicSlashTracker.class).detach();
 			}
 
-			if (attacker.buff(Smite.SmiteTracker.class) != null){
+			if (attacker.buff(Smite.SmiteTracker.class) != null) {
 				multi += 3f;
 			}
 
-			if (attacker.buff(ElementalStrike.DirectedPowerTracker.class) != null){
+			if (attacker.buff(ElementalStrike.DirectedPowerTracker.class) != null) {
 				multi += attacker.buff(ElementalStrike.DirectedPowerTracker.class).enchBoost;
 				attacker.buff(ElementalStrike.DirectedPowerTracker.class).detach();
 			}
 
 			if (attacker.buff(Talent.SpiritBladesTracker.class) != null
-					&& ((Hero)attacker).pointsInTalent(Talent.SPIRIT_BLADES) == 4){
+					&& ((Hero) attacker).pointsInTalent(Talent.SPIRIT_BLADES) == 4) {
 				multi += 0.1f;
 			}
 			if (attacker.buff(Talent.StrikingWaveTracker.class) != null
-					&& ((Hero)attacker).pointsInTalent(Talent.STRIKING_WAVE) == 4){
+					&& ((Hero) attacker).pointsInTalent(Talent.STRIKING_WAVE) == 4) {
 				multi += 0.2f;
 			}
 
@@ -578,12 +584,12 @@ abstract public class Weapon extends KindOfWeapon {
 
 		public String name() {
 			if (!curse())
-				return name( Messages.get(this, "enchant"));
+				return name(Messages.get(this, "enchant"));
 			else
-				return name( Messages.get(Item.class, "curse"));
+				return name(Messages.get(Item.class, "curse"));
 		}
 
-		public String name( String weaponName ) {
+		public String name(String weaponName) {
 			return Messages.get(this, "name", weaponName);
 		}
 
@@ -596,29 +602,30 @@ abstract public class Weapon extends KindOfWeapon {
 		}
 
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
+		public void restoreFromBundle(Bundle bundle) {
 		}
 
 		@Override
-		public void storeInBundle( Bundle bundle ) {
+		public void storeInBundle(Bundle bundle) {
 		}
-		
+
 		public abstract ItemSprite.Glowing glowing();
-		
+
 		@SuppressWarnings("unchecked")
-		public static Enchantment random( Class<? extends Enchantment> ... toIgnore ) {
-			switch(Random.chances(typeChances)){
-				case 0: default:
-					return randomCommon( toIgnore );
+		public static Enchantment random(Class<? extends Enchantment>... toIgnore) {
+			switch (Random.chances(typeChances)) {
+				case 0:
+				default:
+					return randomCommon(toIgnore);
 				case 1:
-					return randomUncommon( toIgnore );
+					return randomUncommon(toIgnore);
 				case 2:
-					return randomRare( toIgnore );
+					return randomRare(toIgnore);
 			}
 		}
-		
+
 		@SuppressWarnings("unchecked")
-		public static Enchantment randomCommon( Class<? extends Enchantment> ... toIgnore ) {
+		public static Enchantment randomCommon(Class<? extends Enchantment>... toIgnore) {
 			ArrayList<Class<?>> enchants = new ArrayList<>(Arrays.asList(common));
 			enchants.removeAll(Arrays.asList(toIgnore));
 			if (enchants.isEmpty()) {
@@ -627,9 +634,9 @@ abstract public class Weapon extends KindOfWeapon {
 				return (Enchantment) Reflection.newInstance(Random.element(enchants));
 			}
 		}
-		
+
 		@SuppressWarnings("unchecked")
-		public static Enchantment randomUncommon( Class<? extends Enchantment> ... toIgnore ) {
+		public static Enchantment randomUncommon(Class<? extends Enchantment>... toIgnore) {
 			ArrayList<Class<?>> enchants = new ArrayList<>(Arrays.asList(uncommon));
 			enchants.removeAll(Arrays.asList(toIgnore));
 			if (enchants.isEmpty()) {
@@ -638,9 +645,9 @@ abstract public class Weapon extends KindOfWeapon {
 				return (Enchantment) Reflection.newInstance(Random.element(enchants));
 			}
 		}
-		
+
 		@SuppressWarnings("unchecked")
-		public static Enchantment randomRare( Class<? extends Enchantment> ... toIgnore ) {
+		public static Enchantment randomRare(Class<? extends Enchantment>... toIgnore) {
 			ArrayList<Class<?>> enchants = new ArrayList<>(Arrays.asList(rare));
 			enchants.removeAll(Arrays.asList(toIgnore));
 			if (enchants.isEmpty()) {
@@ -651,7 +658,7 @@ abstract public class Weapon extends KindOfWeapon {
 		}
 
 		@SuppressWarnings("unchecked")
-		public static Enchantment randomCurse( Class<? extends Enchantment> ... toIgnore ){
+		public static Enchantment randomCurse(Class<? extends Enchantment>... toIgnore) {
 			ArrayList<Class<?>> enchants = new ArrayList<>(Arrays.asList(curses));
 			enchants.removeAll(Arrays.asList(toIgnore));
 			if (enchants.isEmpty()) {
@@ -660,6 +667,6 @@ abstract public class Weapon extends KindOfWeapon {
 				return (Enchantment) Reflection.newInstance(Random.element(enchants));
 			}
 		}
-		
+
 	}
 }

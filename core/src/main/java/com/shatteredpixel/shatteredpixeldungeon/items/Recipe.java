@@ -67,28 +67,28 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 
 public abstract class Recipe {
-	
+
 	public abstract boolean testIngredients(ArrayList<Item> ingredients);
-	
+
 	public abstract int cost(ArrayList<Item> ingredients);
-	
+
 	public abstract Item brew(ArrayList<Item> ingredients);
-	
+
 	public abstract Item sampleOutput(ArrayList<Item> ingredients);
-	
+
 	//subclass for the common situation of a recipe with static inputs and outputs
 	public static abstract class SimpleRecipe extends Recipe {
-		
+
 		//*** These elements must be filled in by subclasses
-		protected Class<?extends Item>[] inputs; //each class should be unique
+		protected Class<? extends Item>[] inputs; //each class should be unique
 		protected int[] inQuantity;
-		
+
 		protected int cost;
-		
-		protected Class<?extends Item> output;
+
+		protected Class<? extends Item> output;
 		protected int outQuantity;
 		//***
-		
+
 		//gets a simple list of items based on inputs
 		public ArrayList<Item> getIngredients() {
 			ArrayList<Item> result = new ArrayList<>();
@@ -99,42 +99,44 @@ public abstract class Recipe {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public boolean testIngredients(ArrayList<Item> ingredients) {
-			
+
 			int[] needed = inQuantity.clone();
-			
-			for (Item ingredient : ingredients){
-				if (!ingredient.isIdentified()) return false;
-				for (int i = 0; i < inputs.length; i++){
-					if (ingredient.getClass() == inputs[i]){
+
+			for (Item ingredient : ingredients) {
+				if (!ingredient.isIdentified())
+					return false;
+				for (int i = 0; i < inputs.length; i++) {
+					if (ingredient.getClass() == inputs[i]) {
 						needed[i] -= ingredient.quantity();
 						break;
 					}
 				}
 			}
-			
-			for (int i : needed){
-				if (i > 0){
+
+			for (int i : needed) {
+				if (i > 0) {
 					return false;
 				}
 			}
-			
+
 			return true;
 		}
-		
-		public int cost(ArrayList<Item> ingredients){
+
+		public int cost(ArrayList<Item> ingredients) {
 			return cost;
 		}
-		
+
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
-			if (!testIngredients(ingredients)) return null;
-			
+			if (!testIngredients(ingredients))
+				return null;
+
 			int[] needed = inQuantity.clone();
-			
-			for (Item ingredient : ingredients){
+
+			for (Item ingredient : ingredients) {
 				for (int i = 0; i < inputs.length; i++) {
 					if (ingredient.getClass() == inputs[i] && needed[i] > 0) {
 						if (needed[i] <= ingredient.quantity()) {
@@ -147,119 +149,118 @@ public abstract class Recipe {
 					}
 				}
 			}
-			
+
 			//sample output and real output are identical in this case.
 			return sampleOutput(null);
 		}
-		
+
 		//ingredients are ignored, as output doesn't vary
-		public Item sampleOutput(ArrayList<Item> ingredients){
+		public Item sampleOutput(ArrayList<Item> ingredients) {
 			try {
 				Item result = Reflection.newInstance(output);
 				result.quantity(outQuantity);
 				return result;
 			} catch (Exception e) {
-				ShatteredPixelDungeon.reportException( e );
+				ShatteredPixelDungeon.reportException(e);
 				return null;
 			}
 		}
 	}
-	
-	
+
 	//*******
 	// Static members
 	//*******
 
-	private static Recipe[] variableRecipes = new Recipe[]{
+	private static Recipe[] variableRecipes = new Recipe[] {
 			//none for now
 	};
-	
-	private static Recipe[] oneIngredientRecipes = new Recipe[]{
-		new Scroll.ScrollToStone(),
-		new ExoticPotion.PotionToExotic(),
-		new ExoticScroll.ScrollToExotic(),
-		new ArcaneResin.Recipe(),
-		new LiquidMetal.Recipe(),
-		new BlizzardBrew.Recipe(),
-		new InfernalBrew.Recipe(),
-		new AquaBrew.Recipe(),
-		new ShockingBrew.Recipe(),
-		new ElixirOfDragonsBlood.Recipe(),
-		new ElixirOfIcyTouch.Recipe(),
-		new ElixirOfToxicEssence.Recipe(),
-		new ElixirOfMight.Recipe(),
-		new ElixirOfFeatherFall.Recipe(),
-		new MagicalInfusion.Recipe(),
-		new BeaconOfReturning.Recipe(),
-		new PhaseShift.Recipe(),
-		new Recycle.Recipe(),
-		new TelekineticGrab.Recipe(),
-		new SummonElemental.Recipe(),
-		new StewedMeat.oneMeat(),
-		new TrinketCatalyst.Recipe(),
-		new Trinket.UpgradeTrinket()
+
+	private static Recipe[] oneIngredientRecipes = new Recipe[] {
+			new Scroll.ScrollToStone(),
+			new ExoticPotion.PotionToExotic(),
+			new ExoticScroll.ScrollToExotic(),
+			new ArcaneResin.Recipe(),
+			new LiquidMetal.Recipe(),
+			new BlizzardBrew.Recipe(),
+			new InfernalBrew.Recipe(),
+			new AquaBrew.Recipe(),
+			new ShockingBrew.Recipe(),
+			new ElixirOfDragonsBlood.Recipe(),
+			new ElixirOfIcyTouch.Recipe(),
+			new ElixirOfToxicEssence.Recipe(),
+			new ElixirOfMight.Recipe(),
+			new ElixirOfFeatherFall.Recipe(),
+			new MagicalInfusion.Recipe(),
+			new BeaconOfReturning.Recipe(),
+			new PhaseShift.Recipe(),
+			new Recycle.Recipe(),
+			new TelekineticGrab.Recipe(),
+			new SummonElemental.Recipe(),
+			new StewedMeat.oneMeat(),
+			new TrinketCatalyst.Recipe(),
+			new Trinket.UpgradeTrinket()
 	};
-	
-	private static Recipe[] twoIngredientRecipes = new Recipe[]{
-		new Blandfruit.CookFruit(),
-		new Bomb.EnhanceBomb(),
-		new UnstableBrew.Recipe(),
-		new CausticBrew.Recipe(),
-		new ElixirOfArcaneArmor.Recipe(),
-		new ElixirOfAquaticRejuvenation.Recipe(),
-		new ElixirOfHoneyedHealing.Recipe(),
-		new UnstableSpell.Recipe(),
-		new Alchemize.Recipe(),
-		new CurseInfusion.Recipe(),
-		new ReclaimTrap.Recipe(),
-		new WildEnergy.Recipe(),
-		new StewedMeat.twoMeat()
+
+	private static Recipe[] twoIngredientRecipes = new Recipe[] {
+			new Blandfruit.CookFruit(),
+			new Bomb.EnhanceBomb(),
+			new UnstableBrew.Recipe(),
+			new CausticBrew.Recipe(),
+			new ElixirOfArcaneArmor.Recipe(),
+			new ElixirOfAquaticRejuvenation.Recipe(),
+			new ElixirOfHoneyedHealing.Recipe(),
+			new UnstableSpell.Recipe(),
+			new Alchemize.Recipe(),
+			new CurseInfusion.Recipe(),
+			new ReclaimTrap.Recipe(),
+			new WildEnergy.Recipe(),
+			new StewedMeat.twoMeat()
 	};
-	
-	private static Recipe[] threeIngredientRecipes = new Recipe[]{
-		new Potion.SeedToPotion(),
-		new StewedMeat.threeMeat(),
-		new MeatPie.Recipe()
+
+	private static Recipe[] threeIngredientRecipes = new Recipe[] {
+			new Potion.SeedToPotion(),
+			new StewedMeat.threeMeat(),
+			new MeatPie.Recipe()
 	};
-	
-	public static ArrayList<Recipe> findRecipes(ArrayList<Item> ingredients){
+
+	public static ArrayList<Recipe> findRecipes(ArrayList<Item> ingredients) {
 
 		ArrayList<Recipe> result = new ArrayList<>();
 
-		for (Recipe recipe : variableRecipes){
-			if (recipe.testIngredients(ingredients)){
+		for (Recipe recipe : variableRecipes) {
+			if (recipe.testIngredients(ingredients)) {
 				result.add(recipe);
 			}
 		}
 
-		if (ingredients.size() == 1){
-			for (Recipe recipe : oneIngredientRecipes){
-				if (recipe.testIngredients(ingredients)){
+		if (ingredients.size() == 1) {
+			for (Recipe recipe : oneIngredientRecipes) {
+				if (recipe.testIngredients(ingredients)) {
 					result.add(recipe);
 				}
 			}
-			
-		} else if (ingredients.size() == 2){
-			for (Recipe recipe : twoIngredientRecipes){
-				if (recipe.testIngredients(ingredients)){
+
+		} else if (ingredients.size() == 2) {
+			for (Recipe recipe : twoIngredientRecipes) {
+				if (recipe.testIngredients(ingredients)) {
 					result.add(recipe);
 				}
 			}
-			
-		} else if (ingredients.size() == 3){
-			for (Recipe recipe : threeIngredientRecipes){
-				if (recipe.testIngredients(ingredients)){
+
+		} else if (ingredients.size() == 3) {
+			for (Recipe recipe : threeIngredientRecipes) {
+				if (recipe.testIngredients(ingredients)) {
 					result.add(recipe);
 				}
 			}
 		}
-		
+
 		return result;
 	}
-	
-	public static boolean usableInRecipe(Item item){
+
+	public static boolean usableInRecipe(Item item) {
 		//only upgradeable thrown weapons and wands allowed among equipment items
-		if (item instanceof EquipableItem){
+		if (item instanceof EquipableItem) {
 			return item.cursedKnown && !item.cursed &&
 					item instanceof MissileWeapon && item.isUpgradable();
 		} else if (item instanceof Wand) {
@@ -270,5 +271,3 @@ public abstract class Recipe {
 		}
 	}
 }
-
-

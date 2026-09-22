@@ -38,37 +38,37 @@ public class VaultBookcaseTreasureRoom extends VaultTreasureRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
+		Painter.fill(level, this, Terrain.WALL);
 
 		Door entrance = entrance();
-		entrance.set( Door.Type.REGULAR );
+		entrance.set(Door.Type.REGULAR);
 
 		int firstItem;
 		int secondItem;
 
-		if (entrance.x == left || entrance.x == right){
-			int bookTop = (int)GameMath.gate(top+1, entrance.y-2, bottom-5);
-			Painter.fill(level, left+1, bookTop, 9, 5, Terrain.BOOKSHELF);
-			Painter.fill(level, left+2, bookTop+1, 3, 3, Terrain.EMPTY_SP);
-			Painter.fill(level, left+6, bookTop+1, 3, 3, Terrain.EMPTY_SP);
-			if (entrance.x == left){
-				firstItem = (left + 3) + level.width()*(bookTop+2);
-				secondItem = (right - 3) + level.width()*(bookTop+2);
+		if (entrance.x == left || entrance.x == right) {
+			int bookTop = (int) GameMath.gate(top + 1, entrance.y - 2, bottom - 5);
+			Painter.fill(level, left + 1, bookTop, 9, 5, Terrain.BOOKSHELF);
+			Painter.fill(level, left + 2, bookTop + 1, 3, 3, Terrain.EMPTY_SP);
+			Painter.fill(level, left + 6, bookTop + 1, 3, 3, Terrain.EMPTY_SP);
+			if (entrance.x == left) {
+				firstItem = (left + 3) + level.width() * (bookTop + 2);
+				secondItem = (right - 3) + level.width() * (bookTop + 2);
 			} else {
-				firstItem = (right - 3) + level.width()*(bookTop+2);
-				secondItem = (left + 3) + level.width()*(bookTop+2);
+				firstItem = (right - 3) + level.width() * (bookTop + 2);
+				secondItem = (left + 3) + level.width() * (bookTop + 2);
 			}
 		} else {
-			int bookLeft = (int)GameMath.gate(left+1, entrance.x-2, right-5);
-			Painter.fill(level, bookLeft, top+1, 5, 9, Terrain.BOOKSHELF);
-			Painter.fill(level, bookLeft+1, top+2, 3, 3, Terrain.EMPTY_SP);
-			Painter.fill(level, bookLeft+1, top+6, 3, 3, Terrain.EMPTY_SP);
-			if (entrance.y == top){
-				firstItem = (bookLeft + 2) + level.width()*(top+3);
-				secondItem = (bookLeft + 2) + level.width()*(bottom-3);
+			int bookLeft = (int) GameMath.gate(left + 1, entrance.x - 2, right - 5);
+			Painter.fill(level, bookLeft, top + 1, 5, 9, Terrain.BOOKSHELF);
+			Painter.fill(level, bookLeft + 1, top + 2, 3, 3, Terrain.EMPTY_SP);
+			Painter.fill(level, bookLeft + 1, top + 6, 3, 3, Terrain.EMPTY_SP);
+			if (entrance.y == top) {
+				firstItem = (bookLeft + 2) + level.width() * (top + 3);
+				secondItem = (bookLeft + 2) + level.width() * (bottom - 3);
 			} else {
-				firstItem = (bookLeft + 2) + level.width()*(bottom-3);
-				secondItem = (bookLeft + 2) + level.width()*(top+3);
+				firstItem = (bookLeft + 2) + level.width() * (bottom - 3);
+				secondItem = (bookLeft + 2) + level.width() * (top + 3);
 			}
 		}
 
@@ -76,20 +76,20 @@ public class VaultBookcaseTreasureRoom extends VaultTreasureRoom {
 		Painter.set(level, secondItem, Terrain.PEDESTAL);
 
 		Item treasureItem = level.findPrizeItem();
-		if (treasureItem != null){
+		if (treasureItem != null) {
 			level.drop(treasureItem, firstItem);
 		}
 
 		treasureItem = Generator.randomUsingDefaults(Generator.Category.WEP_T4);
-		if (treasureItem.cursed){
+		if (treasureItem.cursed) {
 			treasureItem.cursed = false;
-			if (((MeleeWeapon) treasureItem).hasCurseEnchant()){
+			if (((MeleeWeapon) treasureItem).hasCurseEnchant()) {
 				((MeleeWeapon) treasureItem).enchant(null);
 			}
 		}
 		//not true ID
 		treasureItem.levelKnown = treasureItem.cursedKnown = true;
-		level.drop(treasureItem,secondItem).type = Heap.Type.CHEST;
+		level.drop(treasureItem, secondItem).type = Heap.Type.CHEST;
 
 		level.addItemToSpawn(new PotionOfLiquidFlame());
 

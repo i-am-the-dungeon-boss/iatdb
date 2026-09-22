@@ -40,14 +40,18 @@ import java.util.ArrayList;
 public class MineSmallRoom extends CaveRoom {
 
 	@Override
-	public int minWidth() { return Math.max(6, super.minWidth()); }
+	public int minWidth() {
+		return Math.max(6, super.minWidth());
+	}
 
 	@Override
-	public int minHeight() { return Math.max(6, super.minHeight()); }
+	public int minHeight() {
+		return Math.max(6, super.minHeight());
+	}
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{1, 0, 0};
+		return new float[] { 1, 0, 0 };
 	}
 
 	@Override
@@ -59,8 +63,8 @@ public class MineSmallRoom extends CaveRoom {
 	public void paint(Level level) {
 		super.paint(level);
 
-		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){
-			for (int i = 0; i < width()*height()/3; i ++){
+		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL) {
+			for (int i = 0; i < width() * height() / 3; i++) {
 				Point r = random(1);
 				if (level.map[level.pointToCell(r)] != Terrain.WALL) {
 					Painter.set(level, r, Terrain.MINE_CRYSTAL);
@@ -69,9 +73,9 @@ public class MineSmallRoom extends CaveRoom {
 		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL) {
 
 			//connections to non-secret rooms have a 9/10 chance to become empty, otherwise wall
-			for (Room n : connected.keySet()){
-				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR){
-					if (Random.Int(10) == 0){
+			for (Room n : connected.keySet()) {
+				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR) {
+					if (Random.Int(10) == 0) {
 						connected.get(n).set(Door.Type.EMPTY);
 					} else {
 						connected.get(n).set(Door.Type.WALL);
@@ -81,24 +85,24 @@ public class MineSmallRoom extends CaveRoom {
 			}
 
 			ArrayList<Door> doors = new ArrayList<>();
-			for (Door d : connected.values()){
-				if (d.type == Door.Type.WALL){
+			for (Door d : connected.values()) {
+				if (d.type == Door.Type.WALL) {
 					doors.add(d);
 				}
 			}
 
-			for (Point p : getPoints()){
+			for (Point p : getPoints()) {
 				int cell = level.pointToCell(p);
-				if (level.map[cell] == Terrain.EMPTY){
+				if (level.map[cell] == Terrain.EMPTY) {
 					float dist = 1000;
-					for (Door d : doors){
+					for (Door d : doors) {
 						dist = Math.min(dist, Point.distance(p, d));
 					}
 					dist = GameMath.gate(1f, dist, 5f);
 					float val = Random.Float((float) Math.pow(dist, 2));
 					if (val <= 0.75f || dist <= 1) {
 						Painter.set(level, cell, Terrain.MINE_BOULDER);
-					} else if (val <= 5f && dist <= 2){
+					} else if (val <= 5f && dist <= 2) {
 						Painter.set(level, cell, Terrain.EMPTY_DECO);
 					}
 				}

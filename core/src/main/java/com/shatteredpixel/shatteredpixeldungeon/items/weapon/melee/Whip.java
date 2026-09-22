@@ -42,13 +42,13 @@ public class Whip extends MeleeWeapon {
 		hitSoundPitch = 1.1f;
 
 		tier = 3;
-		RCH = 3;    //lots of extra reach
+		RCH = 3; //lots of extra reach
 	}
 
 	@Override
 	public int max(int lvl) {
-		return  5*(tier) +      //15 base, down from 20
-				lvl*(tier);     //+3 per level, down from +4
+		return 5 * (tier) + //15 base, down from 20
+				lvl * (tier); //+3 per level, down from +4
 	}
 
 	@Override
@@ -58,13 +58,14 @@ public class Whip extends MeleeWeapon {
 		Char closest = null;
 
 		hero.belongings.abilityWeapon = this;
-		for (Char ch : Actor.chars()){
+		for (Char ch : Actor.chars()) {
 			if (ch.alignment == Char.Alignment.ENEMY
 					&& !hero.isCharmedBy(ch)
 					&& Dungeon.level.heroFOV[ch.pos]
-					&& hero.canAttack(ch)){
+					&& hero.canAttack(ch)) {
 				targets.add(ch);
-				if (closest == null || Dungeon.level.trueDistance(hero.pos, closest.pos) > Dungeon.level.trueDistance(hero.pos, ch.pos)){
+				if (closest == null || Dungeon.level.trueDistance(hero.pos, closest.pos) > Dungeon.level
+						.trueDistance(hero.pos, ch.pos)) {
 					closest = ch;
 				}
 			}
@@ -85,7 +86,7 @@ public class Whip extends MeleeWeapon {
 				for (Char ch : targets) {
 					//ability does no extra damage
 					hero.attack(ch, 1, 0, Char.INFINITE_ACCURACY);
-					if (!ch.isAlive()){
+					if (!ch.isAlive()) {
 						onAbilityKill(hero, ch);
 					}
 				}
@@ -98,14 +99,14 @@ public class Whip extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(min()), augment.damageFactor(max()));
 		} else {
 			return Messages.get(this, "typical_ability_desc", min(0), max(0));
 		}
 	}
 
-	public String upgradeAbilityStat(int level){
+	public String upgradeAbilityStat(int level) {
 		return augment.damageFactor(min(level)) + "-" + augment.damageFactor(max(level));
 	}
 }

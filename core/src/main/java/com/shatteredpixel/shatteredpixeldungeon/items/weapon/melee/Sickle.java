@@ -49,8 +49,8 @@ public class Sickle extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  Math.round(6.67f*(tier+1)) +    //20 base, up from 15
-				lvl*(tier+1);                   //scaling unchanged
+		return Math.round(6.67f * (tier + 1)) + //20 base, up from 15
+				lvl * (tier + 1); //scaling unchanged
 	}
 
 	@Override
@@ -61,14 +61,14 @@ public class Sickle extends MeleeWeapon {
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
 		//replaces damage with 15+2.5*lvl bleed, roughly 138% avg base dmg, 125% avg scaling
-		int bleedAmt = augment.damageFactor(Math.round(15f + 2.5f*buffedLvl()));
+		int bleedAmt = augment.damageFactor(Math.round(15f + 2.5f * buffedLvl()));
 		Sickle.harvestAbility(hero, target, 0f, bleedAmt, this);
 	}
 
 	@Override
 	public String abilityInfo() {
-		int bleedAmt = levelKnown ? Math.round(15f + 2.5f*buffedLvl()) : 15;
-		if (levelKnown){
+		int bleedAmt = levelKnown ? Math.round(15f + 2.5f * buffedLvl()) : 15;
+		if (levelKnown) {
 			return Messages.get(this, "ability_desc", augment.damageFactor(bleedAmt));
 		} else {
 			return Messages.get(this, "typical_ability_desc", bleedAmt);
@@ -77,10 +77,10 @@ public class Sickle extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return Integer.toString(augment.damageFactor(Math.round(15f + 2.5f*level)));
+		return Integer.toString(augment.damageFactor(Math.round(15f + 2.5f * level)));
 	}
 
-	public static void harvestAbility(Hero hero, Integer target, float bleedMulti, int bleedBoost, MeleeWeapon wep){
+	public static void harvestAbility(Hero hero, Integer target, float bleedMulti, int bleedBoost, MeleeWeapon wep) {
 
 		if (target == null) {
 			return;
@@ -93,7 +93,7 @@ public class Sickle extends MeleeWeapon {
 		}
 
 		hero.belongings.abilityWeapon = wep;
-		if (!hero.canAttack(enemy)){
+		if (!hero.canAttack(enemy)) {
 			GLog.w(Messages.get(wep, "ability_target_range"));
 			hero.belongings.abilityWeapon = null;
 			return;
@@ -107,13 +107,13 @@ public class Sickle extends MeleeWeapon {
 				AttackIndicator.target(enemy);
 
 				Buff.affect(enemy, HarvestBleedTracker.class, 0);
-				if (hero.attack(enemy, bleedMulti, bleedBoost, Char.INFINITE_ACCURACY)){
+				if (hero.attack(enemy, bleedMulti, bleedBoost, Char.INFINITE_ACCURACY)) {
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
 
 				Invisibility.dispel();
 				hero.spendAndNext(hero.attackDelay());
-				if (!enemy.isAlive()){
+				if (!enemy.isAlive()) {
 					wep.onAbilityKill(hero, enemy);
 				}
 				wep.afterAbilityUsed(hero);
@@ -122,6 +122,7 @@ public class Sickle extends MeleeWeapon {
 
 	}
 
-	public static class HarvestBleedTracker extends FlavourBuff{};
+	public static class HarvestBleedTracker extends FlavourBuff {
+	};
 
 }

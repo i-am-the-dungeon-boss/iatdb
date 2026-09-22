@@ -46,14 +46,18 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class MassGraveRoom extends SpecialRoom {
-	
+
 	@Override
-	public int minWidth() { return 7; }
-	
+	public int minWidth() {
+		return 7;
+	}
+
 	@Override
-	public int minHeight() { return 7; }
-	
-	public void paint(Level level){
+	public int minHeight() {
+		return 7;
+	}
+
+	public void paint(Level level) {
 
 		Door entrance = entrance();
 		entrance.set(Door.Type.BARRICADE);
@@ -64,11 +68,11 @@ public class MassGraveRoom extends SpecialRoom {
 
 		Bones b = new Bones();
 
-		b.setRect(left+1, top, width()-2, height()-1);
+		b.setRect(left + 1, top, width() - 2, height() - 1);
 		level.customTiles.add(b);
 
 		//50% 1 skeleton, 50% 2 skeletons
-		for (int i = 0; i <= Random.Int(2); i++){
+		for (int i = 0; i <= Random.Int(2); i++) {
 			Skeleton skele = new Skeleton();
 
 			int pos;
@@ -76,7 +80,7 @@ public class MassGraveRoom extends SpecialRoom {
 				pos = level.pointToCell(random());
 			} while (level.map[pos] != Terrain.CUSTOM_DECO_EMPTY || level.findMob(pos) != null);
 			skele.pos = pos;
-			level.mobs.add( skele );
+			level.mobs.add(skele);
 		}
 
 		ArrayList<Item> items = new ArrayList<>();
@@ -84,12 +88,16 @@ public class MassGraveRoom extends SpecialRoom {
 		items.add(new CorpseDust());
 		items.add(new Gold(1));
 		items.add(new Gold(1));
-		if (Random.Float() <= 0.3f) items.add(new Gold());
-		if (Random.Float() <= 0.3f) items.add(new Gold());
-		if (Random.Float() <= 0.6f) items.add(Generator.random());
-		if (Random.Float() <= 0.3f) items.add(Generator.randomArmor());
+		if (Random.Float() <= 0.3f)
+			items.add(new Gold());
+		if (Random.Float() <= 0.3f)
+			items.add(new Gold());
+		if (Random.Float() <= 0.6f)
+			items.add(Generator.random());
+		if (Random.Float() <= 0.3f)
+			items.add(Generator.randomArmor());
 
-		for (Item item : items){
+		for (Item item : items) {
 			int pos;
 			do {
 				pos = level.pointToCell(random());
@@ -102,21 +110,21 @@ public class MassGraveRoom extends SpecialRoom {
 
 	@Override
 	public boolean canConnect(Room r) {
-		if (r.isEntrance()){
+		if (r.isEntrance()) {
 			return false;
 		}
 
 		//must have at least 3 rooms between it and the entrance room
 		for (Room r1 : r.connected.keySet()) {
-			if (r1.isEntrance()){
+			if (r1.isEntrance()) {
 				return false;
 			}
 			for (Room r2 : r1.connected.keySet()) {
-				if (r2.isEntrance()){
+				if (r2.isEntrance()) {
 					return false;
 				}
 				for (Room r3 : r2.connected.keySet()) {
-					if (r3.isEntrance()){
+					if (r3.isEntrance()) {
 						return false;
 					}
 				}
@@ -128,8 +136,8 @@ public class MassGraveRoom extends SpecialRoom {
 
 	public static class Bones extends CustomTilemap {
 
-		private static final int WALL_OVERLAP   = 3;
-		private static final int FLOOR          = 7;
+		private static final int WALL_OVERLAP = 3;
+		private static final int FLOOR = 7;
 
 		{
 			texture = Assets.Environment.PRISON_QUEST;
@@ -138,19 +146,23 @@ public class MassGraveRoom extends SpecialRoom {
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
-			int[] data = new int[tileW*tileH];
-			for (int i = 0; i < data.length; i++){
-				if (i < tileW)  data[i] = WALL_OVERLAP;
-				else            data[i] = FLOOR;
+			int[] data = new int[tileW * tileH];
+			for (int i = 0; i < data.length; i++) {
+				if (i < tileW)
+					data[i] = WALL_OVERLAP;
+				else
+					data[i] = FLOOR;
 			}
-			v.map( data, tileW );
+			v.map(data, tileW);
 			return v;
 		}
 
 		@Override
 		public Image image(int tileX, int tileY) {
-			if (tileY == 0) return null;
-			else            return super.image(tileX, tileY);
+			if (tileY == 0)
+				return null;
+			else
+				return super.image(tileX, tileY);
 		}
 
 		@Override

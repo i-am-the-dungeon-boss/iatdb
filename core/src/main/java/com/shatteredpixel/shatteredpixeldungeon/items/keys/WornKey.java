@@ -37,23 +37,23 @@ import com.watabou.utils.Callback;
 import java.io.IOException;
 
 public class WornKey extends Key {
-	
+
 	{
 		image = ItemSpriteSheet.WORN_KEY;
 	}
-	
+
 	public WornKey() {
-		this( 0 );
+		this(0);
 	}
-	
-	public WornKey( int depth ) {
+
+	public WornKey(int depth) {
 		super();
 		this.depth = depth;
 	}
 
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
-		if(SupportPrompts.externalSupportEnabled() && !SPDSettings.supportNagged()){
+		if (SupportPrompts.externalSupportEnabled() && !SPDSettings.supportNagged()) {
 			try {
 				Dungeon.saveAll();
 				Game.runOnRenderThread(new Callback() {
@@ -65,9 +65,9 @@ public class WornKey extends Key {
 			} catch (IOException e) {
 				ShatteredPixelDungeon.reportException(e);
 			}
-			
+
 		}
-		
+
 		return super.doPickUp(hero, pos);
 	}
 

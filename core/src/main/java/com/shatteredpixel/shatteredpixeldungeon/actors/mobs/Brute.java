@@ -41,34 +41,32 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 public class Brute extends Mob {
-	
+
 	{
 		spriteClass = BruteSprite.class;
-		
+
 		HP = HT = 40;
 		defenseSkill = 15;
-		
+
 		EXP = 8;
 		maxLvl = 16;
-		
+
 		loot = Gold.class;
 		lootChance = 0.5f;
 	}
-	
+
 	protected boolean hasRaged = false;
-	
+
 	@Override
 	public int damageRoll() {
-		return buff(BruteRage.class) != null ?
-				Random.NormalIntRange( 15, 40 ) :
-				Random.NormalIntRange( 5, 25 );
+		return buff(BruteRage.class) != null ? Random.NormalIntRange(15, 40) : Random.NormalIntRange(5, 25);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 20;
 	}
-	
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 8);
@@ -78,7 +76,7 @@ public class Brute extends Mob {
 	public void die(Object cause) {
 		super.die(cause);
 
-		if (cause == Chasm.class){
+		if (cause == Chasm.class) {
 			hasRaged = true; //don't let enrage trigger for chasm deaths
 		}
 	}
@@ -88,71 +86,71 @@ public class Brute extends Mob {
 
 	@Override
 	public boolean isAlive() {
-		if (super.isAlive()){
+		if (super.isAlive()) {
 			return true;
 		} else {
-			if (!hasRaged){
+			if (!hasRaged) {
 				triggerEnrage();
 			}
-			if (rage == null){
-				for (BruteRage b : buffs(BruteRage.class)){
+			if (rage == null) {
+				for (BruteRage b : buffs(BruteRage.class)) {
 					rage = b;
 				}
 			}
 			return rage != null && rage.shielding() > 0;
 		}
 	}
-	
-	protected void triggerEnrage(){
+
+	protected void triggerEnrage() {
 		rage = Buff.affect(this, BruteRage.class);
-		rage.setShield(HT/2 + 4);
-		sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(HT/2), FloatingText.SHIELDING );
+		rage.setShield(HT / 2 + 4);
+		sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(HT / 2), FloatingText.SHIELDING);
 		if (Dungeon.level.heroFOV[pos]) {
-			SpellSprite.show( this, SpellSprite.BERSERK);
+			SpellSprite.show(this, SpellSprite.BERSERK);
 		}
-		spend( TICK );
+		spend(TICK);
 		hasRaged = true;
 	}
-	
+
 	private static final String HAS_RAGED = "has_raged";
-	
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(HAS_RAGED, hasRaged);
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		hasRaged = bundle.getBoolean(HAS_RAGED);
 	}
-	
+
 	public static class BruteRage extends ShieldBuff {
-		
+
 		{
 			type = buffType.POSITIVE;
 		}
-		
+
 		@Override
 		public boolean act() {
-			
-			if (target.HP > 0){
+
+			if (target.HP > 0) {
 				detach();
 				return true;
 			}
-			
-			absorbDamage( Math.round(4*AscensionChallenge.statModifier(target)));
-			
-			if (shielding() <= 0){
+
+			absorbDamage(Math.round(4 * AscensionChallenge.statModifier(target)));
+
+			if (shielding() <= 0) {
 				target.die(null);
 			}
-			
-			spend( TICK );
-			
+
+			spend(TICK);
+
 			return true;
 		}
-		
+
 		@Override
 		public void detach() {
 			super.detach();
@@ -160,12 +158,12 @@ public class Brute extends Mob {
 		}
 
 		@Override
-		public int icon () {
+		public int icon() {
 			return BuffIndicator.FURY;
 		}
-		
+
 		@Override
-		public String desc () {
+		public String desc() {
 			return Messages.get(this, "desc", shielding());
 		}
 

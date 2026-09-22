@@ -39,7 +39,7 @@ import com.watabou.utils.Signal;
 public class Button extends Component {
 
 	public static float longClick = 0.5f;
-	
+
 	protected PointerArea hotArea;
 	protected Tooltip hoverTip;
 
@@ -50,17 +50,18 @@ public class Button extends Component {
 
 	@Override
 	protected void createChildren() {
-		hotArea = new PointerArea( 0, 0, 0, 0 ) {
+		hotArea = new PointerArea(0, 0, 0, 0) {
 			@Override
-			protected void onPointerDown( PointerEvent event ) {
+			protected void onPointerDown(PointerEvent event) {
 				pressedButton = Button.this;
 				pressTime = 0;
 				clickReady = true;
 				Button.this.onPointerDown();
 			}
+
 			@Override
-			protected void onPointerUp( PointerEvent event ) {
-				if (pressedButton == Button.this){
+			protected void onPointerUp(PointerEvent event) {
+				if (pressedButton == Button.this) {
 					pressedButton = null;
 				} else {
 					//cancel any potential click, only one button can be activated at a time
@@ -68,12 +69,14 @@ public class Button extends Component {
 				}
 				Button.this.onPointerUp();
 			}
+
 			@Override
-			protected void onClick( PointerEvent event ) {
+			protected void onClick(PointerEvent event) {
 				if (clickReady) {
 					killTooltip();
-					switch (event.button){
-						case PointerEvent.LEFT: default:
+					switch (event.button) {
+						case PointerEvent.LEFT:
+						default:
 							Button.this.onClick();
 							break;
 						case PointerEvent.RIGHT:
@@ -90,17 +93,18 @@ public class Button extends Component {
 			@Override
 			protected void onHoverStart(PointerEvent event) {
 				String text = hoverText();
-				if (text != null){
+				if (text != null) {
 					int key = 0;
-					if (keyAction() != null){
+					if (keyAction() != null) {
 						key = KeyBindings.getFirstKeyForAction(keyAction(), ControllerHandler.controllerActive);
 					}
 
-					if (key == 0 && secondaryTooltipAction() != null){
-						key = KeyBindings.getFirstKeyForAction(secondaryTooltipAction(), ControllerHandler.controllerActive);
+					if (key == 0 && secondaryTooltipAction() != null) {
+						key = KeyBindings.getFirstKeyForAction(secondaryTooltipAction(),
+								ControllerHandler.controllerActive);
 					}
 
-					if (key != 0){
+					if (key != 0) {
 						text += " _(" + KeyBindings.getKeyName(key) + ")_";
 					}
 					hoverTip = new Tooltip(Button.this, text, 80);
@@ -115,13 +119,13 @@ public class Button extends Component {
 				killTooltip();
 			}
 		};
-		add( hotArea );
-		
-		KeyEvent.addKeyListener( keyListener = new Signal.Listener<KeyEvent>() {
+		add(hotArea);
+
+		KeyEvent.addKeyListener(keyListener = new Signal.Listener<KeyEvent>() {
 			@Override
-			public boolean onSignal ( KeyEvent event ) {
-				if ( active && KeyBindings.getActionForKey( event ) == keyAction()){
-					if (event.pressed){
+			public boolean onSignal(KeyEvent event) {
+				if (active && KeyBindings.getActionForKey(event) == keyAction()) {
+					if (event.pressed) {
 						pressedButton = Button.this;
 						pressTime = 0;
 						clickReady = true;
@@ -130,7 +134,8 @@ public class Button extends Component {
 						Button.this.onPointerUp();
 						if (pressedButton == Button.this) {
 							pressedButton = null;
-							if (clickReady) onClick();
+							if (clickReady)
+								onClick();
 						}
 					}
 					return true;
@@ -139,24 +144,24 @@ public class Button extends Component {
 			}
 		});
 	}
-	
+
 	private Signal.Listener<KeyEvent> keyListener;
-	
-	public GameAction keyAction(){
+
+	public GameAction keyAction() {
 		return null;
 	}
 
 	//used in cases where the main key action isn't bound, but a secondary action can be used for the tooltip
-	public GameAction secondaryTooltipAction(){
+	public GameAction secondaryTooltipAction() {
 		return null;
 	}
 
 	@Override
 	public void update() {
 		super.update();
-		
+
 		hotArea.active = visible;
-		
+
 		if (pressedButton == this && (pressTime += Game.elapsed) >= longClick) {
 			pressedButton = null;
 			if (onLongClick()) {
@@ -171,12 +176,22 @@ public class Button extends Component {
 			}
 		}
 	}
-	
-	protected void onPointerDown() {}
-	protected void onPointerUp() {}
-	protected void onClick() {} //left click, default key type
-	protected void onRightClick() {}
-	protected void onMiddleClick() {}
+
+	protected void onPointerDown() {
+	}
+
+	protected void onPointerUp() {
+	}
+
+	protected void onClick() {
+	} //left click, default key type
+
+	protected void onRightClick() {
+	}
+
+	protected void onMiddleClick() {
+	}
+
 	protected boolean onLongClick() {
 		return false;
 	}
@@ -186,26 +201,26 @@ public class Button extends Component {
 	}
 
 	//TODO might be nice for more flexibility here
-	private void alignTooltip( Tooltip tip ){
-		tip.setPos(x, y-tip.height()-1);
+	private void alignTooltip(Tooltip tip) {
+		tip.setPos(x, y - tip.height() - 1);
 		Camera cam = camera();
 		//shift left if there's no room on the right
-		if (tip.right() > (cam.width+cam.scroll.x)){
-			tip.setPos(tip.left() - (tip.right() - (cam.width+cam.scroll.x)), tip.top());
+		if (tip.right() > (cam.width + cam.scroll.x)) {
+			tip.setPos(tip.left() - (tip.right() - (cam.width + cam.scroll.x)), tip.top());
 		}
 		//move to the bottom if there's no room on top
-		if (tip.top() < 0){
-			tip.setPos(tip.left(), bottom()+1);
+		if (tip.top() < 0) {
+			tip.setPos(tip.left(), bottom() + 1);
 		}
 	}
 
-	public void killTooltip(){
-		if (hoverTip != null){
+	public void killTooltip() {
+		if (hoverTip != null) {
 			hoverTip.killAndErase();
 			hoverTip = null;
 		}
 	}
-	
+
 	@Override
 	protected void layout() {
 		hotArea.x = x;
@@ -213,16 +228,16 @@ public class Button extends Component {
 		hotArea.width = width;
 		hotArea.height = height;
 	}
-	
+
 	@Override
-	public synchronized void destroy () {
+	public synchronized void destroy() {
 		super.destroy();
-		KeyEvent.removeKeyListener( keyListener );
+		KeyEvent.removeKeyListener(keyListener);
 		killTooltip();
 	}
 
-	public void givePointerPriority(){
+	public void givePointerPriority() {
 		hotArea.givePointerPriority();
 	}
-	
+
 }

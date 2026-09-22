@@ -40,8 +40,8 @@ public class DemonSpawnerRoom extends SpecialRoom {
 	@Override
 	public void paint(Level level) {
 
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Point c = center();
 		int cx = c.x;
@@ -54,10 +54,10 @@ public class DemonSpawnerRoom extends SpecialRoom {
 		spawner.pos = cx + cy * level.width();
 		Statistics.spawnersAlive++;
 		spawner.spawnRecorded = true;
-		level.mobs.add( spawner );
+		level.mobs.add(spawner);
 
 		CustomFloor vis = new CustomFloor();
-		vis.setRect(left+1, top+1, width()-2, height()-2);
+		vis.setRect(left + 1, top + 1, width() - 2, height() - 2);
 		level.customTiles.add(vis);
 
 	}
@@ -65,8 +65,10 @@ public class DemonSpawnerRoom extends SpecialRoom {
 	@Override
 	public boolean connect(Room room) {
 		//cannot connect to entrance, otherwise works normally
-		if (room.isExit())  return false;
-		else                return super.connect(room);
+		if (room.isExit())
+			return false;
+		else
+			return super.connect(room);
 	}
 
 	@Override
@@ -95,20 +97,20 @@ public class DemonSpawnerRoom extends SpecialRoom {
 			Tilemap v = super.create();
 			int cell = tileX + tileY * Dungeon.level.width();
 			int[] map = Dungeon.level.map;
-			int[] data = new int[tileW*tileH];
-			for (int i = 0; i < data.length; i++){
-				if (i % tileW == 0){
+			int[] data = new int[tileW * tileH];
+			for (int i = 0; i < data.length; i++) {
+				if (i % tileW == 0) {
 					cell = tileX + (tileY + i / tileW) * Dungeon.level.width();
 				}
 
-				if (Dungeon.level.findMob(cell) instanceof DemonSpawner){
-					data[i-1] = 5 + 4*8;
-					data[i] = 6 + 4*8;
-					data[i+1] = 7 + 4*8;
+				if (Dungeon.level.findMob(cell) instanceof DemonSpawner) {
+					data[i - 1] = 5 + 4 * 8;
+					data[i] = 6 + 4 * 8;
+					data[i + 1] = 7 + 4 * 8;
 					i++;
 					cell++;
 				} else if (map[cell] == Terrain.EMPTY_DECO) {
-					if (Statistics.amuletObtained){
+					if (Statistics.amuletObtained) {
 						data[i] = 31;
 					} else {
 						data[i] = 27;
@@ -119,7 +121,7 @@ public class DemonSpawnerRoom extends SpecialRoom {
 
 				cell++;
 			}
-			v.map( data, tileW );
+			v.map(data, tileW);
 			return v;
 		}
 

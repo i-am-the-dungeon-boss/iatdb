@@ -35,7 +35,7 @@ public class Amok extends FlavourBuff {
 		type = buffType.NEGATIVE;
 		announced = true;
 	}
-	
+
 	@Override
 	public int icon() {
 		return BuffIndicator.AMOK;
@@ -50,7 +50,7 @@ public class Amok extends FlavourBuff {
 					if (m.alignment == Char.Alignment.ENEMY && m.isTargeting(target)) {
 						m.aggro(null);
 					}
-					if (target instanceof Mob && ((Mob) target).isTargeting(m)){
+					if (target instanceof Mob && ((Mob) target).isTargeting(m)) {
 						((Mob) target).aggro(null);
 					}
 				}

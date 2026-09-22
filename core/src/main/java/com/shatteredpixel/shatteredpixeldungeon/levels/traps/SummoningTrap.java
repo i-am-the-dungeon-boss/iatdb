@@ -49,9 +49,9 @@ public class SummoningTrap extends Trap {
 	public void activate() {
 
 		int nMobs = 1;
-		if (Random.Int( 2 ) == 0) {
+		if (Random.Int(2) == 0) {
 			nMobs++;
-			if (Random.Int( 2 ) == 0) {
+			if (Random.Int(2) == 0) {
 				nMobs++;
 			}
 		}
@@ -60,17 +60,17 @@ public class SummoningTrap extends Trap {
 
 		for (int i = 0; i < PathFinder.NEIGHBOURS8.length; i++) {
 			int p = pos + PathFinder.NEIGHBOURS8[i];
-			if (Actor.findChar( p ) == null && (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {
-				candidates.add( p );
+			if (Actor.findChar(p) == null && (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {
+				candidates.add(p);
 			}
 		}
 
 		ArrayList<Integer> respawnPoints = new ArrayList<>();
 
 		while (nMobs > 0 && candidates.size() > 0) {
-			int index = Random.index( candidates );
+			int index = Random.index(candidates);
 
-			respawnPoints.add( candidates.remove( index ) );
+			respawnPoints.add(candidates.remove(index));
 			nMobs--;
 		}
 
@@ -78,7 +78,7 @@ public class SummoningTrap extends Trap {
 
 		for (Integer point : respawnPoints) {
 			Mob mob = Dungeon.level.createMob();
-			while (Char.hasProp(mob, Char.Property.LARGE) && !Dungeon.level.openSpace[point]){
+			while (Char.hasProp(mob, Char.Property.LARGE) && !Dungeon.level.openSpace[point]) {
 				mob = Dungeon.level.createMob();
 			}
 			if (mob != null) {
@@ -93,10 +93,11 @@ public class SummoningTrap extends Trap {
 
 		//important to process the visuals and pressing of cells last, so spawned mobs have a chance to occupy cells first
 		Trap t;
-		for (Mob mob : mobs){
+		for (Mob mob : mobs) {
 			//manually trigger traps first to avoid sfx spam
-			if ((t = Dungeon.level.traps.get(mob.pos)) != null && t.active){
-				if (t.disarmedByActivation) t.disarm();
+			if ((t = Dungeon.level.traps.get(mob.pos)) != null && t.active) {
+				if (t.disarmedByActivation)
+					t.disarm();
 				t.reveal();
 				Bestiary.setSeen(t.getClass());
 				Bestiary.countEncounter(t.getClass());

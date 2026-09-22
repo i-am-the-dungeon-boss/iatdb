@@ -36,8 +36,7 @@ class WebSocketHandshakeTest {
 
 	/** A handshake exchange against a canned server response. */
 	private static void perform(String response) throws IOException {
-		DataInputStream in =
-				new DataInputStream(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)));
+		DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)));
 		WebSocketHandshake.perform(in, new ByteArrayOutputStream(), TARGET, headers(), new SecureRandom());
 	}
 

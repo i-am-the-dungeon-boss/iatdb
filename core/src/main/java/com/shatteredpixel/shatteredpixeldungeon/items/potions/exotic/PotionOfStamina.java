@@ -32,11 +32,11 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class PotionOfStamina extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_STAMINA;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		if (ch instanceof Hero) {
@@ -45,5 +45,5 @@ public class PotionOfStamina extends ExoticPotion {
 		}
 		Buff.prolong(ch, Stamina.class, Stamina.DURATION);
 	}
-	
+
 }

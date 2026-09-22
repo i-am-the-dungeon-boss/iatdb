@@ -31,11 +31,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class ChillingDart extends TippedDart {
-	
+
 	{
 		image = ItemSpriteSheet.CHILLING_DART;
 	}
-	
+
 	@Override
 	public int proc(Char attacker, Char defender, int damage) {
 
@@ -47,7 +47,7 @@ public class ChillingDart extends TippedDart {
 				Buff.prolong(defender, Chill.class, 6f);
 			}
 		}
-		
+
 		return super.proc(attacker, defender, damage);
 	}
 }

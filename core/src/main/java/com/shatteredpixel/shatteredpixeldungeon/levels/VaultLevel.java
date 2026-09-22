@@ -70,21 +70,21 @@ public class VaultLevel extends CityLevel {
 	protected boolean build() {
 		itemsToSpawn.clear();
 
-		for (int i = 0; i < 10; i++){
+		for (int i = 0; i < 10; i++) {
 			Item item = Generator.randomUsingDefaults(Random.oneOf(
 					Generator.Category.WEP_T2, Generator.Category.WEP_T2,
 					Generator.Category.ARMOR, Generator.Category.ARMOR,
 					Generator.Category.WAND,
 					Generator.Category.RING));
 			//regrowth is disallowed as it can be used to farm HP regen
-			if (item instanceof WandOfRegrowth){
+			if (item instanceof WandOfRegrowth) {
 				continue;
 			}
-			if (item.cursed){
+			if (item.cursed) {
 				item.cursed = false;
-				if (item instanceof MeleeWeapon && ((MeleeWeapon) item).hasCurseEnchant()){
+				if (item instanceof MeleeWeapon && ((MeleeWeapon) item).hasCurseEnchant()) {
 					((MeleeWeapon) item).enchant(null);
-				} else if (item instanceof Armor && ((Armor) item).hasCurseGlyph()){
+				} else if (item instanceof Armor && ((Armor) item).hasCurseGlyph()) {
 					((Armor) item).inscribe(null);
 				}
 			}
@@ -169,7 +169,7 @@ public class VaultLevel extends CityLevel {
 		//copypasta from super.createItems
 		for (Item item : itemsToSpawn) {
 			int cell = randomDropCell();
-			drop( item, cell ).type = Heap.Type.HEAP;
+			drop(item, cell).type = Heap.Type.HEAP;
 			if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {
 				map[cell] = Terrain.GRASS;
 				losBlocking[cell] = false;
@@ -178,8 +178,8 @@ public class VaultLevel extends CityLevel {
 	}
 
 	@Override
-	public int randomRespawnCell( Char ch ) {
-		return entrance()-width();
+	public int randomRespawnCell(Char ch) {
+		return entrance() - width();
 	}
 
 	public static class VaultFlameTrap extends Trap {
@@ -197,7 +197,7 @@ public class VaultLevel extends CityLevel {
 			//does nothing, this trap is just decoration and is always deactivated
 		}
 
-		public static void setupTrap(Level level, int cell, int initialCD, int afterTriggerCD, int triggers){
+		public static void setupTrap(Level level, int cell, int initialCD, int afterTriggerCD, int triggers) {
 			VaultFlameTraps traps = Blob.seed(0, 0, VaultFlameTraps.class, level);
 			traps.curCooldowns[cell] = initialCD;
 			traps.afterTriggerCooldowns[cell] = afterTriggerCD;

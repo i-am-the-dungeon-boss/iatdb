@@ -43,146 +43,151 @@ public class StyledButton extends Button {
 
 	public boolean multiline;
 	private float fadeAlpha = 1f;
-	
-	public StyledButton(Chrome.Type type, String label ) {
+
+	public StyledButton(Chrome.Type type, String label) {
 		this(type, label, 9);
 	}
-	
-	public StyledButton(Chrome.Type type, String label, int size ){
+
+	public StyledButton(Chrome.Type type, String label, int size) {
 		super();
-		
-		bg = Chrome.get( type );
-		addToBack( bg );
-		
-		text = PixelScene.renderTextBlock( size );
-		text.text( label );
-		add( text );
+
+		bg = Chrome.get(type);
+		addToBack(bg);
+
+		text = PixelScene.renderTextBlock(size);
+		text.text(label);
+		add(text);
 	}
-	
+
 	@Override
 	protected void layout() {
-		
+
 		super.layout();
-		
+
 		bg.x = x;
 		bg.y = y;
-		bg.size( width, height );
-		
+		bg.size(width, height);
+
 		float componentWidth = 0;
-		
-		if (icon != null) componentWidth += icon.width() + 2;
-		
-		if (text != null && !text.text().equals("")){
-			if (multiline) text.maxWidth( (int)(width - componentWidth - bg.marginHor() - 2));
+
+		if (icon != null)
+			componentWidth += icon.width() + 2;
+
+		if (text != null && !text.text().equals("")) {
+			if (multiline)
+				text.maxWidth((int) (width - componentWidth - bg.marginHor() - 2));
 			componentWidth += text.width() + 2;
 
 			text.setPos(
-					x + (width() + componentWidth)/2f - text.width() - 1,
-					y + (height() - text.height()) / 2f
-			);
+					x + (width() + componentWidth) / 2f - text.width() - 1,
+					y + (height() - text.height()) / 2f);
 			PixelScene.align(text);
-			
+
 		}
-		
+
 		if (icon != null) {
-			
-			icon.x = x + (width() - componentWidth)/2f + 1;
+
+			icon.x = x + (width() - componentWidth) / 2f + 1;
 			icon.y = y + (height() - icon.height()) / 2f;
 			PixelScene.align(icon);
 		}
 
-		if (leftJustify){
-			if (icon != null){
+		if (leftJustify) {
+			if (icon != null) {
 				icon.x = x + bg.marginLeft() + 1;
 				PixelScene.align(icon);
-				text.setPos( icon.x + icon.width() + 1, text.top());
+				text.setPos(icon.x + icon.width() + 1, text.top());
 				PixelScene.align(text);
 			} else if (text != null) {
-				text.setPos( x + bg.marginLeft() + 1, text.top());
+				text.setPos(x + bg.marginLeft() + 1, text.top());
 				PixelScene.align(text);
 			}
 		}
 
 	}
-	
+
 	@Override
 	protected void onPointerDown() {
-		bg.brightness( 1.2f );
-		Sample.INSTANCE.play( Assets.Sounds.CLICK );
+		bg.brightness(1.2f);
+		Sample.INSTANCE.play(Assets.Sounds.CLICK);
 	}
-	
+
 	@Override
 	protected void onPointerUp() {
 		bg.resetColor();
 	}
-	
-	public void enable( boolean value ) {
+
+	public void enable(boolean value) {
 		active = value;
 		updateVisualAlpha();
 	}
-	
-	public void text( String value ) {
-		text.text( value );
+
+	public void text(String value) {
+		text.text(value);
 		layout();
 	}
 
-	public String text(){
+	public String text() {
 		return text.text();
 	}
-	
-	public void textColor( int value ) {
-		text.hardlight( value );
+
+	public void textColor(int value) {
+		text.hardlight(value);
 	}
-	
-	public void icon( Image icon ) {
+
+	public void icon(Image icon) {
 		if (this.icon != null) {
-			remove( this.icon );
+			remove(this.icon);
 		}
 		this.icon = icon;
 		if (this.icon != null) {
-			add( this.icon );
+			add(this.icon);
 			layout();
 		}
 	}
-	
-	public Image icon(){
+
+	public Image icon() {
 		return icon;
 	}
 
-	public void alpha(float value){
+	public void alpha(float value) {
 		fadeAlpha = value;
 		updateVisualAlpha();
 	}
 
-	public float alpha(){
-		if (bg != null)     return bg.alpha();
+	public float alpha() {
+		if (bg != null)
+			return bg.alpha();
 		return fadeAlpha * (active ? 1f : DISABLED_ALPHA);
 	}
 
 	private void updateVisualAlpha() {
 		float value = fadeAlpha * (active ? 1f : DISABLED_ALPHA);
-		if (bg != null)     bg.alpha(value);
-		if (text != null)   text.alpha(value);
-		if (icon != null)   icon.alpha(value);
+		if (bg != null)
+			bg.alpha(value);
+		if (text != null)
+			text.alpha(value);
+		if (icon != null)
+			icon.alpha(value);
 	}
-	
+
 	public float reqWidth() {
 		float reqWidth = 0;
-		if (icon != null){
+		if (icon != null) {
 			reqWidth += icon.width() + 2;
 		}
-		if (text != null && !text.text().equals("")){
+		if (text != null && !text.text().equals("")) {
 			reqWidth += text.width() + 2;
 		}
 		return reqWidth;
 	}
-	
+
 	public float reqHeight() {
 		float reqHeight = 0;
-		if (icon != null){
+		if (icon != null) {
 			reqHeight = Math.max(icon.height() + 4, reqHeight);
 		}
-		if (text != null && !text.text().equals("")){
+		if (text != null && !text.text().equals("")) {
 			reqHeight = Math.max(text.height() + 4, reqHeight);
 		}
 		return reqHeight;

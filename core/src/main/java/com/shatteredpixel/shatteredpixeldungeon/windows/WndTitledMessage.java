@@ -32,64 +32,65 @@ import com.watabou.noosa.ui.Component;
 
 public class WndTitledMessage extends Window {
 
-	protected static final int WIDTH_MIN    = 120;
-	protected static final int WIDTH_MAX    = 220;
-	protected static final int GAP	= 2;
+	protected static final int WIDTH_MIN = 120;
+	protected static final int WIDTH_MAX = 220;
+	protected static final int GAP = 2;
 
-	public WndTitledMessage( Image icon, String title, String message ) {
-		
-		this( new IconTitle( icon, title ), message );
+	public WndTitledMessage(Image icon, String title, String message) {
+
+		this(new IconTitle(icon, title), message);
 
 	}
-	
-	public WndTitledMessage( Component titlebar, String message ) {
+
+	public WndTitledMessage(Component titlebar, String message) {
 
 		super();
 
-		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
-		if (!useHighlighting()) text.setHightlighting(false);
-		text.text( message, WIDTH_MIN );
+		RenderedTextBlock text = PixelScene.renderTextBlock(6);
+		if (!useHighlighting())
+			text.setHightlighting(false);
+		text.text(message, WIDTH_MIN);
 
-		layoutBody( titlebar, text );
+		layoutBody(titlebar, text);
 
 	}
 
 	//for bodies that are more than one run of same-coloured text, and so have to
 	//be built as several blocks by the caller rather than from one string here
-	public WndTitledMessage( Component titlebar, RenderedTextBlock text ) {
+	public WndTitledMessage(Component titlebar, RenderedTextBlock text) {
 
 		super();
 
-		layoutBody( titlebar, text );
+		layoutBody(titlebar, text);
 
 	}
 
-	private void layoutBody( Component titlebar, RenderedTextBlock text ) {
+	private void layoutBody(Component titlebar, RenderedTextBlock text) {
 
 		int width = WIDTH_MIN;
 
-		titlebar.setRect( 0, 0, width, 0 );
+		titlebar.setRect(0, 0, width, 0);
 		add(titlebar);
 
-		text.maxWidth( width );
-		text.setPos( titlebar.left(), titlebar.bottom() + 2*GAP );
-		add( text );
+		text.maxWidth(width);
+		text.setPos(titlebar.left(), titlebar.bottom() + 2 * GAP);
+		add(text);
 
 		while (PixelScene.landscape()
 				&& text.bottom() > targetHeight()
-				&& width < WIDTH_MAX){
+				&& width < WIDTH_MAX) {
 			width += 20;
 			titlebar.setRect(0, 0, width, 0);
-			text.setPos( titlebar.left(), titlebar.bottom() + 2*GAP );
+			text.setPos(titlebar.left(), titlebar.bottom() + 2 * GAP);
 			text.maxWidth(width);
 		}
 
 		bringToFront(titlebar);
 
-		resize( width, (int)text.bottom() + 2 );
+		resize(width, (int) text.bottom() + 2);
 	}
 
-	protected boolean useHighlighting(){
+	protected boolean useHighlighting() {
 		return true;
 	}
 

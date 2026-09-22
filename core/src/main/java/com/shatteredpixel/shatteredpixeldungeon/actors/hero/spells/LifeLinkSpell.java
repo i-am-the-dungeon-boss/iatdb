@@ -50,7 +50,9 @@ public class LifeLinkSpell extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 4 + 2*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK), 30 + 5*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", 4 + 2 * Dungeon.hero.pointsInTalent(Talent.LIFE_LINK),
+				30 + 5 * Dungeon.hero.pointsInTalent(Talent.LIFE_LINK)) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -68,7 +70,7 @@ public class LifeLinkSpell extends ClericSpell {
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
 
-		int duration = Math.round(6.67f + 3.33f*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
+		int duration = Math.round(6.67f + 3.33f * Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
 
 		Char ally = PowerOfMany.getPoweredAlly();
 
@@ -76,7 +78,7 @@ public class LifeLinkSpell extends ClericSpell {
 			hero.sprite.zap(ally.pos);
 			hero.sprite.parent.add(
 					new Beam.HealthRay(hero.sprite.center(), ally.sprite.center()));
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
 
 			Buff.prolong(hero, LifeLink.class, duration).object = ally.id();
 		} else {
@@ -84,13 +86,13 @@ public class LifeLinkSpell extends ClericSpell {
 			hero.sprite.operate(hero.pos);
 			hero.sprite.parent.add(
 					new Beam.HealthRay(DungeonTilemap.tileCenterToWorld(hero.pos), hero.sprite.center()));
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
 		}
 
 		Buff.prolong(ally, LifeLink.class, duration).object = hero.id();
 		Buff.prolong(ally, LifeLinkSpellBuff.class, duration);
 
-		if (ally == Stasis.getStasisAlly()){
+		if (ally == Stasis.getStasisAlly()) {
 			ally.buff(LifeLink.class).clearTime();
 			ally.buff(LifeLinkSpellBuff.class).clearTime();
 		}
@@ -101,7 +103,7 @@ public class LifeLinkSpell extends ClericSpell {
 
 	}
 
-	public static class LifeLinkSpellBuff extends FlavourBuff{
+	public static class LifeLinkSpellBuff extends FlavourBuff {
 
 		{
 			type = buffType.POSITIVE;
@@ -114,7 +116,7 @@ public class LifeLinkSpell extends ClericSpell {
 
 		@Override
 		public float iconFadePercent() {
-			int duration = Math.round(6.67f + 3.33f*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
+			int duration = Math.round(6.67f + 3.33f * Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
 			return Math.max(0, (duration - visualcooldown()) / duration);
 		}
 	}

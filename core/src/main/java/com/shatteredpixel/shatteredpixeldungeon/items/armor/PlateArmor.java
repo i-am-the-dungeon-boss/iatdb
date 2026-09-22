@@ -31,9 +31,9 @@ public class PlateArmor extends Armor {
 	{
 		image = ItemSpriteSheet.ARMOR_PLATE;
 	}
-	
+
 	public PlateArmor() {
-		super( 5 );
+		super(5);
 	}
 
 }

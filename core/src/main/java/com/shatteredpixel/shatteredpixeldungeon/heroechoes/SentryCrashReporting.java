@@ -62,15 +62,14 @@ public final class SentryCrashReporting {
 
 	private static final Reporter DEFAULT = Sentry::captureException;
 
-	private static final MessageReporter DEFAULT_MESSAGE = (message, username) ->
-			Sentry.withScope(scope -> {
-				if (!username.isEmpty()) {
-					User user = new User();
-					user.setUsername(username);
-					scope.setUser(user);
-				}
-				Sentry.captureMessage(message, USER_REPORT_LEVEL);
-			});
+	private static final MessageReporter DEFAULT_MESSAGE = (message, username) -> Sentry.withScope(scope -> {
+		if (!username.isEmpty()) {
+			User user = new User();
+			user.setUsername(username);
+			scope.setUser(user);
+		}
+		Sentry.captureMessage(message, USER_REPORT_LEVEL);
+	});
 
 	private static Reporter reporter = DEFAULT;
 

@@ -136,8 +136,8 @@ class EchoPlantCoverRetreatTest {
 	}
 
 	private static EchoBoss openRoomBoss(Hero hero) {
-		com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy policy =
-				EchoTestSupport.policyWithCapabilities(
+		com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy.EchoPolicy policy = EchoTestSupport
+				.policyWithCapabilities(
 						new org.json.JSONObject().put("MELEE", EchoTestSupport.capability("*melee")));
 		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
 		EchoTestSupport.installEchoBossLevel(hero, boss, 0);

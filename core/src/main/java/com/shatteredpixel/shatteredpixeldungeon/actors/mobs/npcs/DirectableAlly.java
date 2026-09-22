@@ -49,26 +49,26 @@ public class DirectableAlly extends NPC {
 	protected int defendingPos = -1;
 	protected boolean movingToDefendPos = false;
 
-	public void defendPos( int cell ){
+	public void defendPos(int cell) {
 		defendingPos = cell;
 		movingToDefendPos = true;
 		aggro(null);
 		state = WANDERING;
 	}
 
-	public void clearDefensingPos(){
+	public void clearDefensingPos() {
 		defendingPos = -1;
 		movingToDefendPos = false;
 	}
 
-	public void followHero(){
+	public void followHero() {
 		defendingPos = -1;
 		movingToDefendPos = false;
 		aggro(null);
 		state = WANDERING;
 	}
 
-	public void targetChar( Char ch ){
+	public void targetChar(Char ch) {
 		defendingPos = -1;
 		movingToDefendPos = false;
 		aggro(ch);
@@ -78,23 +78,23 @@ public class DirectableAlly extends NPC {
 	@Override
 	public void aggro(Char ch) {
 		enemy = ch;
-		if (!movingToDefendPos && state != PASSIVE){
+		if (!movingToDefendPos && state != PASSIVE) {
 			state = HUNTING;
 		}
 	}
 
-	public void directTocell( int cell ){
+	public void directTocell(int cell) {
 		if (!Dungeon.level.heroFOV[cell]
 				|| Actor.findChar(cell) == null
-				|| (Actor.findChar(cell) != Dungeon.hero && Actor.findChar(cell).alignment != Char.Alignment.ENEMY)){
-			defendPos( cell );
+				|| (Actor.findChar(cell) != Dungeon.hero && Actor.findChar(cell).alignment != Char.Alignment.ENEMY)) {
+			defendPos(cell);
 			return;
 		}
 
-		if (Actor.findChar(cell) == Dungeon.hero){
+		if (Actor.findChar(cell) == Dungeon.hero) {
 			followHero();
 
-		} else if (Actor.findChar(cell).alignment == Char.Alignment.ENEMY){
+		} else if (Actor.findChar(cell).alignment == Char.Alignment.ENEMY) {
 			targetChar(Actor.findChar(cell));
 
 		}
@@ -113,15 +113,16 @@ public class DirectableAlly extends NPC {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (bundle.contains(DEFEND_POS)) defendingPos = bundle.getInt(DEFEND_POS);
+		if (bundle.contains(DEFEND_POS))
+			defendingPos = bundle.getInt(DEFEND_POS);
 		movingToDefendPos = bundle.getBoolean(MOVING_TO_DEFEND);
 	}
 
 	private class Wandering extends Mob.Wandering {
 
 		@Override
-		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
-			if ( enemyInFOV
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+			if (enemyInFOV
 					&& attacksAutomatically
 					&& !movingToDefendPos
 					&& (defendingPos == -1 || !Dungeon.level.heroFOV[defendingPos] || canAttack(enemy))) {
@@ -140,17 +141,18 @@ public class DirectableAlly extends NPC {
 				int oldPos = pos;
 				target = defendingPos != -1 ? defendingPos : Dungeon.hero.pos;
 				//always move towards the hero when wandering
-				if (getCloser( target )) {
-					spend( 1 / speed() );
-					if (pos == defendingPos) movingToDefendPos = false;
-					return moveSprite( oldPos, pos );
+				if (getCloser(target)) {
+					spend(1 / speed());
+					if (pos == defendingPos)
+						movingToDefendPos = false;
+					return moveSprite(oldPos, pos);
 				} else {
 					//if it can't move closer to defending pos, then give up and defend current position
-					if (movingToDefendPos){
+					if (movingToDefendPos) {
 						defendingPos = pos;
 						movingToDefendPos = false;
 					}
-					spend( TICK );
+					spend(TICK);
 				}
 
 			}
@@ -163,7 +165,7 @@ public class DirectableAlly extends NPC {
 
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
-			if (enemyInFOV && defendingPos != -1 && Dungeon.level.heroFOV[defendingPos] && !canAttack(enemy)){
+			if (enemyInFOV && defendingPos != -1 && Dungeon.level.heroFOV[defendingPos] && !canAttack(enemy)) {
 				target = defendingPos;
 				state = WANDERING;
 				return true;

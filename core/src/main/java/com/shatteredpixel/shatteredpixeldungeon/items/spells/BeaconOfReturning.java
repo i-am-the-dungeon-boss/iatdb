@@ -58,14 +58,14 @@ public class BeaconOfReturning extends Spell {
 	{
 		image = ItemSpriteSheet.RETURN_BEACON;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	//This class has a variety of code for compat with pre-v3.3.0 saves
 	//Previously the destination was an item property, but in 3.3.0 this was changed to use a buff
 
-	public int returnDepth	= -1;
-	public int returnBranch	= 0;
+	public int returnDepth = -1;
+	public int returnBranch = 0;
 	public int returnPos;
 
 	@Override
@@ -73,19 +73,19 @@ public class BeaconOfReturning extends Spell {
 
 		BeaconTracker tracker = hero.buff(BeaconTracker.class);
 
-		if (tracker == null && returnDepth == -1){
+		if (tracker == null && returnDepth == -1) {
 			setBeacon(hero);
 		} else {
 			GameScene.show(new WndOptions(new ItemSprite(this),
 					Messages.titleCase(name()),
 					Messages.get(BeaconOfReturning.class, "wnd_body"),
 					Messages.get(BeaconOfReturning.class, "wnd_set"),
-					Messages.get(BeaconOfReturning.class, "wnd_return")){
+					Messages.get(BeaconOfReturning.class, "wnd_return")) {
 				@Override
 				protected void onSelect(int index) {
-					if (index == 0){
+					if (index == 0) {
 						setBeacon(hero);
-					} else if (index == 1){
+					} else if (index == 1) {
 						returnBeacon(hero);
 					}
 				}
@@ -117,11 +117,11 @@ public class BeaconOfReturning extends Spell {
 		super.doDrop(hero);
 	}
 
-	private void setBeacon(Hero hero ){
-		if (returnDepth != -1){
+	private void setBeacon(Hero hero) {
+		if (returnDepth != -1) {
 			Notes.remove(Notes.Landmark.BEACON_LOCATION, returnDepth);
 		}
-		if (hero.buff(BeaconTracker.class) != null){
+		if (hero.buff(BeaconTracker.class) != null) {
 			Notes.remove(Notes.Landmark.BEACON_LOCATION,
 					hero.buff(BeaconTracker.class).returnDepth);
 		}
@@ -133,22 +133,22 @@ public class BeaconOfReturning extends Spell {
 
 		Notes.add(Notes.Landmark.BEACON_LOCATION, tracker.returnDepth);
 
-		hero.spend( 1f );
+		hero.spend(1f);
 		hero.busy();
 
-		GLog.i( Messages.get(this, "set") );
+		GLog.i(Messages.get(this, "set"));
 
-		hero.sprite.operate( hero.pos );
-		Sample.INSTANCE.play( Assets.Sounds.BEACON );
+		hero.sprite.operate(hero.pos);
+		Sample.INSTANCE.play(Assets.Sounds.BEACON);
 		updateQuickslot();
 	}
 
-	private void returnBeacon( Hero hero ){
+	private void returnBeacon(Hero hero) {
 
 		BeaconTracker tracker = hero.buff(BeaconTracker.class);
 
-		if (tracker == null){
-			if (returnDepth == -1){
+		if (tracker == null) {
+			if (returnDepth == -1) {
 				return;
 			}
 			tracker = new BeaconTracker();
@@ -160,35 +160,35 @@ public class BeaconOfReturning extends Spell {
 		if (tracker.returnDepth == Dungeon.depth && tracker.returnBranch == Dungeon.branch) {
 
 			Char existing = Actor.findChar(tracker.returnPos);
-			if (existing != null && existing != hero){
+			if (existing != null && existing != hero) {
 				Char toPush = Char.hasProp(existing, Char.Property.IMMOVABLE) ? hero : existing;
 
 				ArrayList<Integer> candidates = new ArrayList<>();
 				for (int n : PathFinder.NEIGHBOURS8) {
 					int cell = tracker.returnPos + n;
-					if (!Dungeon.level.solid[cell] && Actor.findChar( cell ) == null
+					if (!Dungeon.level.solid[cell] && Actor.findChar(cell) == null
 							&& (!Char.hasProp(toPush, Char.Property.LARGE) || Dungeon.level.openSpace[cell])) {
-						candidates.add( cell );
+						candidates.add(cell);
 					}
 				}
 				Random.shuffle(candidates);
 
-				if (!candidates.isEmpty()){
-					if (toPush == hero){
+				if (!candidates.isEmpty()) {
+					if (toPush == hero) {
 						tracker.returnPos = candidates.get(0);
 					} else {
-						Actor.add( new Pushing( toPush, toPush.pos, candidates.get(0) ) );
+						Actor.add(new Pushing(toPush, toPush.pos, candidates.get(0)));
 						toPush.pos = candidates.get(0);
 						Dungeon.level.occupyCell(toPush);
 					}
 				} else {
-					GLog.w( Messages.get(ScrollOfTeleportation.class, "no_tele") );
+					GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
 					return;
 				}
 			}
 
-			if (ScrollOfTeleportation.teleportToLocation(hero, tracker.returnPos)){
-				hero.spendAndNext( 1f );
+			if (ScrollOfTeleportation.teleportToLocation(hero, tracker.returnPos)) {
+				hero.spendAndNext(1f);
 			} else {
 				return;
 			}
@@ -196,13 +196,13 @@ public class BeaconOfReturning extends Spell {
 		} else {
 
 			if (!Dungeon.interfloorTeleportAllowed()) {
-				GLog.w( Messages.get(this, "preventing") );
+				GLog.w(Messages.get(this, "preventing"));
 				return;
 			}
 
 			//cannot return to mining level
-			if (tracker.returnDepth >= 11 && tracker.returnDepth <= 14 && tracker.returnBranch == 1){
-				GLog.w( Messages.get(ScrollOfTeleportation.class, "no_tele") );
+			if (tracker.returnDepth >= 11 && tracker.returnDepth <= 14 && tracker.returnBranch == 1) {
+				GLog.w(Messages.get(ScrollOfTeleportation.class, "no_tele"));
 				return;
 			}
 
@@ -212,15 +212,16 @@ public class BeaconOfReturning extends Spell {
 			InterlevelScene.returnDepth = tracker.returnDepth;
 			InterlevelScene.returnBranch = tracker.returnBranch;
 			InterlevelScene.returnPos = tracker.returnPos;
-			Game.switchScene( InterlevelScene.class );
+			Game.switchScene(InterlevelScene.class);
 		}
-		if (quantity == 1){
+		if (quantity == 1) {
 			Notes.remove(Notes.Landmark.BEACON_LOCATION, tracker.returnDepth);
-			if (tracker.target != null) tracker.detach();
+			if (tracker.target != null)
+				tracker.detach();
 		}
 		detach(hero.belongings.backpack);
 		Catalog.countUse(getClass());
-		if (Random.Float() < talentChance){
+		if (Random.Float() < talentChance) {
 			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());
 		}
 	}
@@ -230,7 +231,7 @@ public class BeaconOfReturning extends Spell {
 		String desc = super.desc();
 		if (owner() != null) {
 			BeaconTracker tracker = owner().buff(BeaconTracker.class);
-			if (tracker != null){
+			if (tracker != null) {
 				desc += "\n\n" + Messages.get(this, "desc_set", tracker.returnDepth);
 			} else if (returnDepth != -1) {
 				desc += "\n\n" + Messages.get(this, "desc_set", returnDepth);
@@ -239,43 +240,43 @@ public class BeaconOfReturning extends Spell {
 		return desc;
 	}
 
-	private static final ItemSprite.Glowing WHITE = new ItemSprite.Glowing( 0xFFFFFF );
+	private static final ItemSprite.Glowing WHITE = new ItemSprite.Glowing(0xFFFFFF);
 
 	@Override
 	public ItemSprite.Glowing glowing() {
 		return returnDepth != -1 ? WHITE : null;
 	}
 
-	private static final String DEPTH	= "depth";
-	private static final String BRANCH	= "branch";
-	private static final String POS		= "pos";
+	private static final String DEPTH = "depth";
+	private static final String BRANCH = "branch";
+	private static final String POS = "pos";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( DEPTH, returnDepth );
-		bundle.put( BRANCH, returnBranch );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(DEPTH, returnDepth);
+		bundle.put(BRANCH, returnBranch);
 		if (returnDepth != -1) {
-			bundle.put( POS, returnPos );
+			bundle.put(POS, returnPos);
 		}
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
+	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		returnDepth	= bundle.getInt( DEPTH );
-		returnBranch = bundle.getInt( BRANCH );
-		returnPos	= bundle.getInt( POS );
+		returnDepth = bundle.getInt(DEPTH);
+		returnBranch = bundle.getInt(BRANCH);
+		returnPos = bundle.getInt(POS);
 	}
 
 	@Override
 	public int value() {
-		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (60 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (12 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
@@ -283,8 +284,8 @@ public class BeaconOfReturning extends Spell {
 		private static final int OUT_QUANTITY = 5;
 
 		{
-			inputs =  new Class[]{ScrollOfPassage.class};
-			inQuantity = new int[]{1};
+			inputs = new Class[] { ScrollOfPassage.class };
+			inQuantity = new int[] { 1 };
 
 			cost = 12;
 
@@ -300,30 +301,30 @@ public class BeaconOfReturning extends Spell {
 			revivePersists = true;
 		}
 
-		public int returnDepth	= -1;
-		public int returnBranch	= 0;
+		public int returnDepth = -1;
+		public int returnBranch = 0;
 		public int returnPos;
 
-		private static final String DEPTH	= "depth";
-		private static final String BRANCH	= "branch";
-		private static final String POS		= "pos";
+		private static final String DEPTH = "depth";
+		private static final String BRANCH = "branch";
+		private static final String POS = "pos";
 
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			super.storeInBundle( bundle );
-			bundle.put( DEPTH, returnDepth );
-			bundle.put( BRANCH, returnBranch );
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put(DEPTH, returnDepth);
+			bundle.put(BRANCH, returnBranch);
 			if (returnDepth != -1) {
-				bundle.put( POS, returnPos );
+				bundle.put(POS, returnPos);
 			}
 		}
 
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
+		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
-			returnDepth	= bundle.getInt( DEPTH );
-			returnBranch = bundle.getInt( BRANCH );
-			returnPos	= bundle.getInt( POS );
+			returnDepth = bundle.getInt(DEPTH);
+			returnBranch = bundle.getInt(BRANCH);
+			returnPos = bundle.getInt(POS);
 		}
 	}
 }

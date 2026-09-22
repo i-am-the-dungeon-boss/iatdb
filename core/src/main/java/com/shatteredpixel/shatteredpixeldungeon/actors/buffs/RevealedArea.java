@@ -32,7 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.watabou.noosa.Image;
 import com.watabou.utils.Bundle;
 
-public class RevealedArea extends FlavourBuff{
+public class RevealedArea extends FlavourBuff {
 
 	{
 		type = Buff.buffType.POSITIVE;
@@ -58,13 +58,13 @@ public class RevealedArea extends FlavourBuff{
 
 	@Override
 	public float iconFadePercent() {
-		float max = 5*Dungeon.hero.pointsInTalent(Talent.SEER_SHOT);
-		return Math.max(0, (max-visualcooldown()) / max);
+		float max = 5 * Dungeon.hero.pointsInTalent(Talent.SEER_SHOT);
+		return Math.max(0, (max - visualcooldown()) / max);
 	}
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", (int)visualcooldown());
+		return Messages.get(this, "desc", (int) visualcooldown());
 	}
 
 	private static final String BRANCH = "branch";

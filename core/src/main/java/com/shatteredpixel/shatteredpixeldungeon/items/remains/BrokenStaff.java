@@ -40,7 +40,7 @@ public class BrokenStaff extends RemainsItem {
 	protected void doEffect(Hero hero) {
 		hero.belongings.charge(1f);
 		ScrollOfRecharging.charge(hero);
-		Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
 	}
 
 }

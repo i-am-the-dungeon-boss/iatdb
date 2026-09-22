@@ -212,6 +212,7 @@ class VillageFiguresTest {
 		Assertions.assertThat(diff.removed).hasSize(2);
 		Assertions.assertThat(diff.kept).isEmpty();
 	}
+
 	@Test
 	@DisplayName("stands a pushed body in the village and puts it on the actor clock")
 	void applyStandsABody() {

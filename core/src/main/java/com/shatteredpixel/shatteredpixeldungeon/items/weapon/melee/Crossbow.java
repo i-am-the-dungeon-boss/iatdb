@@ -48,10 +48,10 @@ public class Crossbow extends MeleeWeapon {
 
 	@Override
 	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
-		if (super.doUnequip(hero, collect, single)){
+		if (super.doUnequip(hero, collect, single)) {
 			if (hero.buff(ChargedShot.class) != null &&
 					!(hero.belongings.weapon() instanceof Crossbow)
-					&& !(hero.belongings.secondWep() instanceof Crossbow)){
+					&& !(hero.belongings.secondWep() instanceof Crossbow)) {
 				//clear charged shot if no crossbow is equipped
 				hero.buff(ChargedShot.class).detach();
 			}
@@ -63,13 +63,16 @@ public class Crossbow extends MeleeWeapon {
 
 	@Override
 	public float accuracyFactor(Char owner, Char target) {
-		if (owner.buff(Crossbow.ChargedShot.class) != null){
+		if (owner.buff(Crossbow.ChargedShot.class) != null) {
 			Actor.add(new Actor() {
-				{ actPriority = VFX_PRIO; }
+				{
+					actPriority = VFX_PRIO;
+				}
+
 				@Override
 				protected boolean act() {
-					if (owner instanceof Hero && !target.isAlive()){
-						onAbilityKill((Hero)owner, target);
+					if (owner instanceof Hero && !target.isAlive()) {
+						onAbilityKill((Hero) owner, target);
 					}
 					Actor.remove(this);
 					return true;
@@ -89,11 +92,12 @@ public class Crossbow extends MeleeWeapon {
 		if (attacker == Dungeon.hero
 				&& Dungeon.hero.buff(ChargedShot.class) != null
 				//not proccing from a dart
-				&& Dungeon.hero.belongings.attackingWeapon() == this){
+				&& Dungeon.hero.belongings.attackingWeapon() == this) {
 			//trace a ballistica to our target (which will also extend past them
 			Ballistica trajectory = new Ballistica(attacker.pos, defender.pos, Ballistica.STOP_TARGET);
 			//trim it to just be the part that goes past them
-			trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size()-1), Ballistica.PROJECTILE);
+			trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1),
+					Ballistica.PROJECTILE);
 			//knock them back along that ballistica
 			WandOfBlastWave.throwChar(defender,
 					trajectory,
@@ -108,30 +112,30 @@ public class Crossbow extends MeleeWeapon {
 
 	@Override
 	public int max(int lvl) {
-		return  4*(tier+1) +    //20 base, down from 25
-				lvl*(tier);     //+4 per level, down from +5
+		return 4 * (tier + 1) + //20 base, down from 25
+				lvl * (tier); //+4 per level, down from +5
 	}
 
-	public int dartMin(){
+	public int dartMin() {
 		return dartMin(buffedLvl());
 	}
 
-	public int dartMin(int lvl){
-		return  4 +     //4 base, up from dart base of 1
-				lvl;    //+1 per level
+	public int dartMin(int lvl) {
+		return 4 + //4 base, up from dart base of 1
+				lvl; //+1 per level
 	}
 
-	public int dartMax(){
+	public int dartMax() {
 		return dartMax(buffedLvl());
 	}
 
-	public int dartMax(int lvl){
-		return  12 +    //12 base, up from dart base of 2
-				3*lvl;  //+3 per crossbow level
+	public int dartMax(int lvl) {
+		return 12 + //12 base, up from dart base of 2
+				3 * lvl; //+3 per crossbow level
 	}
 
-	public String statsInfo(){
-		if (isIdentified()){
+	public String statsInfo() {
+		if (isIdentified()) {
 			return Messages.get(this, "stats_desc", dartMin(), dartMax());
 		} else {
 			return Messages.get(this, "typical_stats_desc", dartMin(0), dartMax(0));
@@ -140,7 +144,7 @@ public class Crossbow extends MeleeWeapon {
 
 	@Override
 	protected void duelistAbility(Hero hero, Integer target) {
-		if (hero.buff(ChargedShot.class) != null){
+		if (hero.buff(ChargedShot.class) != null) {
 			GLog.w(Messages.get(this, "ability_cant_use"));
 			return;
 		}
@@ -154,8 +158,8 @@ public class Crossbow extends MeleeWeapon {
 
 	@Override
 	public String abilityInfo() {
-		if (levelKnown){
-			return Messages.get(this, "ability_desc", 3+buffedLvl(), 3+buffedLvl());
+		if (levelKnown) {
+			return Messages.get(this, "ability_desc", 3 + buffedLvl(), 3 + buffedLvl());
 		} else {
 			return Messages.get(this, "typical_ability_desc", 3, 3);
 		}
@@ -166,7 +170,7 @@ public class Crossbow extends MeleeWeapon {
 		return Integer.toString(3 + level);
 	}
 
-	public static class ChargedShot extends Buff{
+	public static class ChargedShot extends Buff {
 
 		{
 			announced = true;

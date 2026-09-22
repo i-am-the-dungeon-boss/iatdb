@@ -42,12 +42,12 @@ public class LibraryHallEntranceRoom extends LibraryHallRoom {
 	public void paint(Level level) {
 		super.paint(level);
 
-		while (true){
+		while (true) {
 			Point p = random(2);
 
-			if (level.map[level.pointToCell(p)] == Terrain.REGION_DECO){
+			if (level.map[level.pointToCell(p)] == Terrain.REGION_DECO) {
 				int entrance = level.pointToCell(p);
-				Painter.set( level, entrance, Terrain.ENTRANCE );
+				Painter.set(level, entrance, Terrain.ENTRANCE);
 
 				level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_ENTRANCE));
 				return;

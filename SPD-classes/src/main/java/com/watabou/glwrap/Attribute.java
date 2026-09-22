@@ -31,28 +31,28 @@ import java.nio.FloatBuffer;
 public class Attribute {
 
 	private int location;
-	
-	public Attribute( int location ) {
+
+	public Attribute(int location) {
 		this.location = location;
 	}
-	
+
 	public int location() {
 		return location;
 	}
-	
+
 	public void enable() {
-		Gdx.gl.glEnableVertexAttribArray( location );
-	}
-	
-	public void disable() {
-		Gdx.gl.glDisableVertexAttribArray( location );
-	}
-	
-	public void vertexPointer( int size, int stride, FloatBuffer ptr ) {
-		Gdx.gl.glVertexAttribPointer( location, size, Gdx.gl.GL_FLOAT, false, stride * 4, ptr );
+		Gdx.gl.glEnableVertexAttribArray(location);
 	}
 
-	public void vertexBuffer( int size, int stride, int offset) {
+	public void disable() {
+		Gdx.gl.glDisableVertexAttribArray(location);
+	}
+
+	public void vertexPointer(int size, int stride, FloatBuffer ptr) {
+		Gdx.gl.glVertexAttribPointer(location, size, Gdx.gl.GL_FLOAT, false, stride * 4, ptr);
+	}
+
+	public void vertexBuffer(int size, int stride, int offset) {
 		Gdx.gl.glVertexAttribPointer(location, size, Gdx.gl.GL_FLOAT, false, stride * 4, offset * 4);
 	}
 }

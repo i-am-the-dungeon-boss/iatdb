@@ -39,19 +39,19 @@ public class PotionOfParalyticGas extends Potion {
 	}
 
 	@Override
-	public void shatter( int cell ) {
+	public void shatter(int cell) {
 
-		splash( cell );
+		splash(cell);
 		if (Dungeon.level.heroFOV[cell]) {
 			identify();
 
-			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
-			Sample.INSTANCE.play( Assets.Sounds.GAS );
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER);
+			Sample.INSTANCE.play(Assets.Sounds.GAS);
 		}
 
-		GameScene.add( Blob.seed( cell, 1000, ParalyticGas.class ) );
+		GameScene.add(Blob.seed(cell, 1000, ParalyticGas.class));
 	}
-	
+
 	@Override
 	public int value() {
 		return isKnown() ? 40 * quantity : super.value();

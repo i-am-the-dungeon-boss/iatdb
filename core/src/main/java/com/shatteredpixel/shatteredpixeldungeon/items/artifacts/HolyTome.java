@@ -54,9 +54,9 @@ public class HolyTome extends Artifact {
 		exp = 0;
 		levelCap = 10;
 
-		charge = Math.min(level()+3, 10);
+		charge = Math.min(level() + 3, 10);
 		partialCharge = 0;
-		chargeCap = Math.min(level()+3, 10);
+		chargeCap = Math.min(level() + 3, 10);
 
 		defaultAction = AC_CAST;
 
@@ -67,9 +67,9 @@ public class HolyTome extends Artifact {
 	public static final String AC_CAST = "CAST";
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if ((isEquipped( hero ) || hero.hasTalent(Talent.LIGHT_READING))
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if ((isEquipped(hero) || hero.hasTalent(Talent.LIGHT_READING))
 				&& !cursed
 				&& hero.buff(MagicImmune.class) == null) {
 			actions.add(AC_CAST);
@@ -78,16 +78,19 @@ public class HolyTome extends Artifact {
 	}
 
 	@Override
-	public void execute( Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 
 		super.execute(hero, action);
 
-		if (hero.buff(MagicImmune.class) != null) return;
+		if (hero.buff(MagicImmune.class) != null)
+			return;
 
 		if (action.equals(AC_CAST)) {
 
-			if (!isEquipped(hero) && !hero.hasTalent(Talent.LIGHT_READING)) GLog.i(Messages.get(Artifact.class, "need_to_equip"));
-			else if (cursed)       GLog.i( Messages.get(this, "cursed") );
+			if (!isEquipped(hero) && !hero.hasTalent(Talent.LIGHT_READING))
+				GLog.i(Messages.get(Artifact.class, "need_to_equip"));
+			else if (cursed)
+				GLog.i(Messages.get(this, "cursed"));
 			else {
 
 				GameScene.show(new WndClericSpells(this, hero, false));
@@ -105,14 +108,14 @@ public class HolyTome extends Artifact {
 		if (targetingSpell == null || targetingSpell.targetingFlags() == -1) {
 			return super.targetingPos(user, dst);
 		} else {
-			return new Ballistica( user.pos, dst, targetingSpell.targetingFlags() ).collisionPos;
+			return new Ballistica(user.pos, dst, targetingSpell.targetingFlags()).collisionPos;
 		}
 	}
 
 	@Override
 	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
-		if (super.doUnequip(hero, collect, single)){
-			if (collect && hero.hasTalent(Talent.LIGHT_READING)){
+		if (super.doUnequip(hero, collect, single)) {
+			if (collect && hero.hasTalent(Talent.LIGHT_READING)) {
 				activate(hero);
 			}
 
@@ -122,49 +125,49 @@ public class HolyTome extends Artifact {
 	}
 
 	@Override
-	public boolean collect( Bag container ) {
-		if (super.collect(container)){
+	public boolean collect(Bag container) {
+		if (super.collect(container)) {
 			if (container.owner instanceof Hero
 					&& passiveBuff == null
-					&& ((Hero) container.owner).hasTalent(Talent.LIGHT_READING)){
+					&& ((Hero) container.owner).hasTalent(Talent.LIGHT_READING)) {
 				activate((Hero) container.owner);
 			}
 			return true;
-		} else{
+		} else {
 			return false;
 		}
 	}
 
 	@Override
 	protected void onDetach() {
-		if (passiveBuff != null){
+		if (passiveBuff != null) {
 			passiveBuff.detach();
 			passiveBuff = null;
 		}
 	}
 
-	public boolean canCast( Hero hero, ClericSpell spell ){
+	public boolean canCast(Hero hero, ClericSpell spell) {
 		return (isEquipped(hero) || (Dungeon.hero.hasTalent(Talent.LIGHT_READING) && hero.belongings.contains(this)))
 				&& hero.buff(MagicImmune.class) == null
 				&& charge >= spell.chargeUse(hero)
 				&& spell.canCast(hero);
 	}
 
-	public void spendCharge( float chargesSpent ){
+	public void spendCharge(float chargesSpent) {
 		partialCharge -= chargesSpent;
-		while (partialCharge < 0){
+		while (partialCharge < 0) {
 			charge--;
 			partialCharge++;
 		}
 
 		//target hero level is 1 + 2*tome level
-		int lvlDiffFromTarget = Dungeon.hero.lvl - (1+level()*2);
+		int lvlDiffFromTarget = Dungeon.hero.lvl - (1 + level() * 2);
 		//plus an extra one for each level after 6
-		if (level() >= 7){
-			lvlDiffFromTarget -= level()-6;
+		if (level() >= 7) {
+			lvlDiffFromTarget -= level() - 6;
 		}
 
-		if (lvlDiffFromTarget >= 0){
+		if (lvlDiffFromTarget >= 0) {
 			exp += Math.round(chargesSpent * 10f * Math.pow(1.1f, lvlDiffFromTarget));
 		} else {
 			exp += Math.round(chargesSpent * 10f * Math.pow(0.75f, -lvlDiffFromTarget));
@@ -181,14 +184,14 @@ public class HolyTome extends Artifact {
 		updateQuickslot();
 	}
 
-	public void directCharge(float amount){
+	public void directCharge(float amount) {
 		if (charge < chargeCap) {
 			partialCharge += amount;
 			while (partialCharge >= 1f) {
 				charge++;
 				partialCharge--;
 			}
-			if (charge >= chargeCap){
+			if (charge >= chargeCap) {
 				partialCharge = 0;
 				charge = chargeCap;
 			}
@@ -210,16 +213,18 @@ public class HolyTome extends Artifact {
 
 	@Override
 	public void charge(Hero target, float amount) {
-		if (cursed || target.buff(MagicImmune.class) != null) return;
+		if (cursed || target.buff(MagicImmune.class) != null)
+			return;
 
 		if (charge < chargeCap) {
-			if (!isEquipped(target)) amount *= 0.75f*target.pointsInTalent(Talent.LIGHT_READING)/3f;
-			partialCharge += 0.25f*amount;
+			if (!isEquipped(target))
+				amount *= 0.75f * target.pointsInTalent(Talent.LIGHT_READING) / 3f;
+			partialCharge += 0.25f * amount;
 			while (partialCharge >= 1f) {
 				charge++;
 				partialCharge--;
 			}
-			if (charge >= chargeCap){
+			if (charge >= chargeCap) {
 				partialCharge = 0;
 				charge = chargeCap;
 			}
@@ -229,15 +234,15 @@ public class HolyTome extends Artifact {
 
 	private ClericSpell quickSpell = null;
 
-	public void setQuickSpell(ClericSpell spell){
-		if (quickSpell == spell){
+	public void setQuickSpell(ClericSpell spell) {
+		if (quickSpell == spell) {
 			quickSpell = null; //re-assigning the same spell clears the quick spell
-			if (passiveBuff != null){
+			if (passiveBuff != null) {
 				ActionIndicator.clearAction((ActionIndicator.Action) passiveBuff);
 			}
 		} else {
 			quickSpell = spell;
-			if (passiveBuff != null){
+			if (passiveBuff != null) {
 				ActionIndicator.setAction((ActionIndicator.Action) passiveBuff);
 			}
 		}
@@ -256,10 +261,10 @@ public class HolyTome extends Artifact {
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		if (bundle.contains(QUICK_CLS)){
+		if (bundle.contains(QUICK_CLS)) {
 			Class quickCls = bundle.getClass(QUICK_CLS);
-			for (ClericSpell spell : ClericSpell.getAllSpells()){
-				if (spell.getClass() == quickCls){
+			for (ClericSpell spell : ClericSpell.getAllSpells()) {
+				if (spell.getClass() == quickCls) {
 					quickSpell = spell;
 				}
 			}
@@ -271,7 +276,8 @@ public class HolyTome extends Artifact {
 		@Override
 		public boolean attachTo(Char target) {
 			if (super.attachTo(target)) {
-				if (quickSpell != null) ActionIndicator.setAction(this);
+				if (quickSpell != null)
+					ActionIndicator.setAction(this);
 				return true;
 			} else {
 				return false;
@@ -289,12 +295,13 @@ public class HolyTome extends Artifact {
 			if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null) {
 				if (Regeneration.regenOn()) {
 					float missing = (chargeCap - charge);
-					if (level() > 7) missing += 5*(level() - 7)/3f;
+					if (level() > 7)
+						missing += 5 * (level() - 7) / 3f;
 					float turnsToCharge = (45 - missing);
 					turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);
 					float chargeToGain = (1f / turnsToCharge);
-					if (!isEquipped(Dungeon.hero)){
-						chargeToGain *= 0.75f*Dungeon.hero.pointsInTalent(Talent.LIGHT_READING)/3f;
+					if (!isEquipped(Dungeon.hero)) {
+						chargeToGain *= 0.75f * Dungeon.hero.pointsInTalent(Talent.LIGHT_READING) / 3f;
 					}
 					partialCharge += chargeToGain;
 				}
@@ -302,7 +309,7 @@ public class HolyTome extends Artifact {
 				while (partialCharge >= 1) {
 					charge++;
 					partialCharge -= 1;
-					if (charge == chargeCap){
+					if (charge == chargeCap) {
 						partialCharge = 0;
 					}
 
@@ -313,7 +320,7 @@ public class HolyTome extends Artifact {
 
 			updateQuickslot();
 
-			spend( TICK );
+			spend(TICK);
 
 			return true;
 		}
@@ -330,7 +337,7 @@ public class HolyTome extends Artifact {
 
 		@Override
 		public int indicatorColor() {
-			if (quickSpell == GuidingLight.INSTANCE && quickSpell.chargeUse(Dungeon.hero) == 0){
+			if (quickSpell == GuidingLight.INSTANCE && quickSpell.chargeUse(Dungeon.hero) == 0) {
 				return 0x0063ff;
 			} else {
 				return 0x002157;
@@ -339,12 +346,12 @@ public class HolyTome extends Artifact {
 
 		@Override
 		public void doAction() {
-			if (cursed){
+			if (cursed) {
 				GLog.w(Messages.get(HolyTome.this, "cursed"));
 				return;
 			}
 
-			if (!canCast(Dungeon.hero, quickSpell)){
+			if (!canCast(Dungeon.hero, quickSpell)) {
 				GLog.w(Messages.get(HolyTome.this, "no_spell"));
 				return;
 			}
@@ -354,16 +361,16 @@ public class HolyTome extends Artifact {
 				targetingSpell = quickSpell;
 				int cell = QuickSlotButton.autoAim(QuickSlotButton.lastTarget, HolyTome.this);
 
-				if (cell != -1){
+				if (cell != -1) {
 					GameScene.handleCell(cell);
 				} else {
 					//couldn't auto-aim, just target the position and hope for the best.
-					GameScene.handleCell( QuickSlotButton.lastTarget.pos );
+					GameScene.handleCell(QuickSlotButton.lastTarget.pos);
 				}
 			} else {
 				quickSpell.onCast(HolyTome.this, Dungeon.hero);
 
-				if (quickSpell.targetingFlags() != -1 && Dungeon.quickslot.contains(HolyTome.this)){
+				if (quickSpell.targetingFlags() != -1 && Dungeon.quickslot.contains(HolyTome.this)) {
 					targetingSpell = quickSpell;
 					QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(HolyTome.this));
 				}

@@ -60,22 +60,22 @@ public class RegionDecoPatchExitRoom extends RegionDecoPatchRoom {
 			exit = level.pointToCell(random(2));
 
 			//need extra logic here as these rooms can spawn small and cramped in very rare cases
-			if (tries-- > 0){
+			if (tries-- > 0) {
 				valid = level.map[exit] != Terrain.REGION_DECO && level.findMob(exit) == null;
 			} else {
 				valid = false;
-				for (int i : PathFinder.NEIGHBOURS4){
-					if (level.map[exit+i] != Terrain.REGION_DECO){
+				for (int i : PathFinder.NEIGHBOURS4) {
+					if (level.map[exit + i] != Terrain.REGION_DECO) {
 						valid = true;
 					}
 				}
 				valid = valid && level.findMob(exit) == null;
 			}
 		} while (!valid);
-		Painter.set( level, exit, Terrain.EXIT );
+		Painter.set(level, exit, Terrain.EXIT);
 
-		for (int i : PathFinder.NEIGHBOURS8){
-			Painter.set( level, exit+i, Terrain.EMPTY );
+		for (int i : PathFinder.NEIGHBOURS8) {
+			Painter.set(level, exit + i, Terrain.EMPTY);
 		}
 
 		level.transitions.add(new LevelTransition(level, exit, LevelTransition.Type.REGULAR_EXIT));

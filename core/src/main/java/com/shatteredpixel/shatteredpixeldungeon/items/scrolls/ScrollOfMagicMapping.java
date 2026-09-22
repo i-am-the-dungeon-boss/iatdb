@@ -53,7 +53,7 @@ public class ScrollOfMagicMapping extends Scroll {
 
 		boolean noticed = false;
 
-		for (int i=0; i < length; i++) {
+		for (int i = 0; i < length; i++) {
 
 			int terr = map[i];
 
@@ -62,11 +62,11 @@ public class ScrollOfMagicMapping extends Scroll {
 				mapped[i] = true;
 				if ((Terrain.flags[terr] & Terrain.SECRET) != 0) {
 
-					Dungeon.level.discover( i );
+					Dungeon.level.discover(i);
 
 					if (Dungeon.level.heroFOV[i]) {
-						GameScene.discoverTile( i, terr );
-						discover( i );
+						GameScene.discoverTile(i, terr);
+						discover(i);
 
 						noticed = true;
 					}
@@ -75,13 +75,13 @@ public class ScrollOfMagicMapping extends Scroll {
 		}
 		GameScene.updateFog();
 
-		GLog.i( Messages.get(this, "layout") );
+		GLog.i(Messages.get(this, "layout"));
 		if (noticed) {
-			Sample.INSTANCE.play( Assets.Sounds.SECRET );
+			Sample.INSTANCE.play(Assets.Sounds.SECRET);
 		}
 
-		SpellSprite.show( curUser, SpellSprite.MAP );
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		SpellSprite.show(curUser, SpellSprite.MAP);
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 
 		identify();
 
@@ -93,7 +93,7 @@ public class ScrollOfMagicMapping extends Scroll {
 		return isKnown() ? 40 * quantity : super.value();
 	}
 
-	public static void discover( int cell ) {
-		CellEmitter.get( cell ).start( Speck.factory( Speck.DISCOVER ), 0.1f, 4 );
+	public static void discover(int cell) {
+		CellEmitter.get(cell).start(Speck.factory(Speck.DISCOVER), 0.1f, 4);
 	}
 }

@@ -171,10 +171,8 @@ public interface WorldNetEngine {
 	void applyServerMute(long mutedUntil);
 
 	enum Status {
-		CONNECTING,
-		CONNECTED,
+		CONNECTING, CONNECTED,
 		/** Reachable but failing — backing off, or a send was rejected. */
-		DEGRADED,
-		DISCONNECTED
+		DEGRADED, DISCONNECTED
 	}
 }

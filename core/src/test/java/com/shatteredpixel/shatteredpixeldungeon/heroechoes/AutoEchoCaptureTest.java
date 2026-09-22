@@ -20,119 +20,119 @@ import java.io.File;
 @ExtendWith(GdxTestExtension.class)
 class AutoEchoCaptureTest {
 
-    @Test
-    @DisplayName("shouldCapture is true on boss depths when hero is alive")
-    void shouldCaptureOnEligibleBossKill() {
-        Assertions.assertThat(EchoCaptureTrigger.shouldCapture(5, true)).isTrue();
-        Assertions.assertThat(EchoCaptureTrigger.shouldCapture(10, true)).isTrue();
-    }
+	@Test
+	@DisplayName("shouldCapture is true on boss depths when hero is alive")
+	void shouldCaptureOnEligibleBossKill() {
+		Assertions.assertThat(EchoCaptureTrigger.shouldCapture(5, true)).isTrue();
+		Assertions.assertThat(EchoCaptureTrigger.shouldCapture(10, true)).isTrue();
+	}
 
-    @Test
-    @DisplayName("shouldCapture is false when hero is dead")
-    void skipsWhenHeroDead() {
-        Assertions.assertThat(EchoCaptureTrigger.shouldCapture(5, false)).isFalse();
-    }
+	@Test
+	@DisplayName("shouldCapture is false when hero is dead")
+	void skipsWhenHeroDead() {
+		Assertions.assertThat(EchoCaptureTrigger.shouldCapture(5, false)).isFalse();
+	}
 
-    @Test
-    @DisplayName("shouldCapture is false on non-boss depths")
-    void skipsWhenNotBossDepth() {
-        Assertions.assertThat(EchoCaptureTrigger.shouldCapture(4, true)).isFalse();
-    }
+	@Test
+	@DisplayName("shouldCapture is false on non-boss depths")
+	void skipsWhenNotBossDepth() {
+		Assertions.assertThat(EchoCaptureTrigger.shouldCapture(4, true)).isFalse();
+	}
 
-    @Test
-    @DisplayName("saveEcho writes a snapshot file for the boss depth")
-    void saveEchoWritesSnapshotFile() {
-        EchoStorage storage = new EchoStorage();
+	@Test
+	@DisplayName("saveEcho writes a snapshot file for the boss depth")
+	void saveEchoWritesSnapshotFile() {
+		EchoStorage storage = new EchoStorage();
 
-        EchoCaptureTrigger.saveEcho(
-                EchoTestSupport.warriorEchoWithData(5), 5, storage);
+		EchoCaptureTrigger.saveEcho(
+				EchoTestSupport.warriorEchoWithData(5), 5, storage);
 
-        Assertions.assertThat(EchoTestSupport.countEchoFiles()).isGreaterThan(0);
-        Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
-                .isNotNull();
-    }
+		Assertions.assertThat(EchoTestSupport.countEchoFiles()).isGreaterThan(0);
+		Assertions.assertThat(storage.loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION))
+				.isNotNull();
+	}
 
-    @Test
-    @DisplayName("saveEcho does not write when guards fail")
-    void saveEchoRespectsGuards() {
-        EchoStorage storage = new EchoStorage();
+	@Test
+	@DisplayName("saveEcho does not write when guards fail")
+	void saveEchoRespectsGuards() {
+		EchoStorage storage = new EchoStorage();
 
-        EchoCaptureTrigger.saveEcho(
-                EchoTestSupport.warriorEcho(5), 4, storage);
-        EchoCaptureTrigger.saveEcho(
-                null, 5, storage);
+		EchoCaptureTrigger.saveEcho(
+				EchoTestSupport.warriorEcho(5), 4, storage);
+		EchoCaptureTrigger.saveEcho(
+				null, 5, storage);
 
-        Assertions.assertThat(EchoTestSupport.countEchoFiles()).isZero();
-    }
+		Assertions.assertThat(EchoTestSupport.countEchoFiles()).isZero();
+	}
 
-    @Test
-    @DisplayName("ranked capture uploads to backend and writes no local echo file")
-    void rankedCaptureUploadsWithoutLocalFile() throws Exception {
-        Dungeon.echoPlayMode = EchoPlayMode.RANKED;
-        EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
-        transport.enqueue(201, "{}");
-        EchoOnlineSettings.setOnlineEnabled(true);
-        EchoOnlineSettings.setBackendUrl("https://echo.test");
-        EchoOnlineSettings.setApiKey("secret");
-        EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
-        EchoOnlineSync sync = new EchoOnlineSync(
-                new EchoClient("https://echo.test", "secret", transport));
-        EchoOnlineSync.setDefaultForTests(sync);
+	@Test
+	@DisplayName("ranked capture uploads to backend and writes no local echo file")
+	void rankedCaptureUploadsWithoutLocalFile() throws Exception {
+		Dungeon.echoPlayMode = EchoPlayMode.RANKED;
+		EchoClientTest.FakeEchoHttpTransport transport = new EchoClientTest.FakeEchoHttpTransport();
+		transport.enqueue(201, "{}");
+		EchoOnlineSettings.setOnlineEnabled(true);
+		EchoOnlineSettings.setBackendUrl("https://echo.test");
+		EchoOnlineSettings.setApiKey("secret");
+		EchoPlayerSession.applyAuthResponse("jwt", "Hero", false, null, 0L);
+		EchoOnlineSync sync = new EchoOnlineSync(
+				new EchoClient("https://echo.test", "secret", transport));
+		EchoOnlineSync.setDefaultForTests(sync);
 
-        Hero hero = new Hero();
-        Dungeon.hero = hero;
-        HeroClass.WARRIOR.initHero(hero);
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
 
-        EchoCaptureTrigger.captureBossVictory(hero, 5, new EchoStorage());
-        sync.awaitBackgroundTasksForTests();
+		EchoCaptureTrigger.captureBossVictory(hero, 5, new EchoStorage());
+		sync.awaitBackgroundTasksForTests();
 
-        Assertions.assertThat(transport.requests).hasSize(1);
-        Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/echoes");
-        Assertions.assertThat(transport.requests.get(0).body).contains("\"depth\":5");
-        Assertions.assertThat(FileUtils.fileExists("echoes-ranked/depth-5.dat")).isFalse();
-        Assertions.assertThat(EchoTestSupport.countEchoFiles()).isZero();
-    }
+		Assertions.assertThat(transport.requests).hasSize(1);
+		Assertions.assertThat(transport.requests.get(0).url).endsWith("/v1/echoes");
+		Assertions.assertThat(transport.requests.get(0).body).contains("\"depth\":5");
+		Assertions.assertThat(FileUtils.fileExists("echoes-ranked/depth-5.dat")).isFalse();
+		Assertions.assertThat(EchoTestSupport.countEchoFiles()).isZero();
+	}
 
-    @Test
-    @DisplayName("solo onBossDefeated snapshots the living hero into echoes-solo")
-    void soloOnBossDefeatedSnapshotsLivingHero() {
-        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-        Dungeon.depth = 5;
-        Dungeon.hero = livingWarriorWithPlate();
+	@Test
+	@DisplayName("solo onBossDefeated snapshots the living hero into echoes-solo")
+	void soloOnBossDefeatedSnapshotsLivingHero() {
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+		Dungeon.depth = 5;
+		Dungeon.hero = livingWarriorWithPlate();
 
-        EchoCaptureTrigger.onBossDefeated();
+		EchoCaptureTrigger.onBossDefeated();
 
-        Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
-        Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
-        Assertions.assertThat(loaded.heroClass).isEqualTo("WARRIOR");
-        Assertions.assertThat(EchoHeroSnapshot.restoreHero(loaded).belongings.armor())
-                .isInstanceOf(PlateArmor.class);
-    }
+		Echo loaded = new EchoStorage().loadForDepth(5, EchoTestSupport.TEST_GAME_VERSION);
+		Assertions.assertThat(new File("echoes-solo/depth-5.dat")).exists();
+		Assertions.assertThat(loaded.heroClass).isEqualTo("WARRIOR");
+		Assertions.assertThat(EchoHeroSnapshot.restoreHero(loaded).belongings.armor())
+				.isInstanceOf(PlateArmor.class);
+	}
 
-    @Test
-    @DisplayName("solo capture writes policy so findEchoForDepth can load the boss echo")
-    void soloCaptureWritesPolicyForLookup() {
-        Dungeon.echoPlayMode = EchoPlayMode.SOLO;
-        Dungeon.depth = 5;
-        Dungeon.hero = livingWarriorWithPlate();
+	@Test
+	@DisplayName("solo capture writes policy so findEchoForDepth can load the boss echo")
+	void soloCaptureWritesPolicyForLookup() {
+		Dungeon.echoPlayMode = EchoPlayMode.SOLO;
+		Dungeon.depth = 5;
+		Dungeon.hero = livingWarriorWithPlate();
 
-        EchoCaptureTrigger.onBossDefeated();
+		EchoCaptureTrigger.onBossDefeated();
 
-        var outcome = new EchoStorage().findEchoForDepth(5);
-        Assertions.assertThat(outcome.isFound()).isTrue();
-        Assertions.assertThat(outcome.result.policy).isNotNull();
-        Assertions.assertThat(outcome.result.echo.hasCombatData()).isTrue();
-    }
+		var outcome = new EchoStorage().findEchoForDepth(5);
+		Assertions.assertThat(outcome.isFound()).isTrue();
+		Assertions.assertThat(outcome.result.policy).isNotNull();
+		Assertions.assertThat(outcome.result.echo.hasCombatData()).isTrue();
+	}
 
-    private static Hero livingWarriorWithPlate() {
-        Hero hero = new Hero();
-        Dungeon.hero = hero;
-        HeroClass.WARRIOR.initHero(hero);
-        hero.lvl = 12;
-        hero.HP = hero.HT = 80;
-        PlateArmor armor = new PlateArmor();
-        armor.identify();
-        hero.belongings.armor = armor;
-        return hero;
-    }
+	private static Hero livingWarriorWithPlate() {
+		Hero hero = new Hero();
+		Dungeon.hero = hero;
+		HeroClass.WARRIOR.initHero(hero);
+		hero.lvl = 12;
+		hero.HP = hero.HT = 80;
+		PlateArmor armor = new PlateArmor();
+		armor.identify();
+		hero.belongings.armor = armor;
+		return hero;
+	}
 }

@@ -51,11 +51,18 @@ public class ImpShopRoom extends ShopRoom {
 	public int minWidth() {
 		return 9;
 	}
+
 	public int minHeight() {
 		return 9;
 	}
-	public int maxWidth() { return 9; }
-	public int maxHeight() { return 9; }
+
+	public int maxWidth() {
+		return 9;
+	}
+
+	public int maxHeight() {
+		return 9;
+	}
 
 	@Override
 	public int maxConnections(int direction) {
@@ -76,8 +83,8 @@ public class ImpShopRoom extends ShopRoom {
 
 		int pos = level.pointToCell(center());
 
-		for (Point p : getPoints()){
-			if (level.map[level.pointToCell(p)] == Terrain.PEDESTAL){
+		for (Point p : getPoints()) {
+			if (level.map[level.pointToCell(p)] == Terrain.PEDESTAL) {
 				pos = level.pointToCell(p);
 				break;
 			}
@@ -96,10 +103,10 @@ public class ImpShopRoom extends ShopRoom {
 	//fix for connections not being bundled normally
 	@Override
 	public Door entrance() {
-		return connected.isEmpty() ? new Door((left+right)/2 + 1, bottom-1) : super.entrance();
+		return connected.isEmpty() ? new Door((left + right) / 2 + 1, bottom - 1) : super.entrance();
 	}
 
-	public void spawnShop(Level level){
+	public void spawnShop(Level level) {
 		impSpawned = true;
 		placeShopkeeper(level);
 		placeItems(level);
@@ -110,27 +117,28 @@ public class ImpShopRoom extends ShopRoom {
 		ArrayList<Item> existing = new ArrayList<>();
 
 		//check if there are existing items and remove them
-		for (Heap h : level.heaps.valueList()){
-			if (inside(level.cellToPoint(h.pos))){
+		for (Heap h : level.heaps.valueList()) {
+			if (inside(level.cellToPoint(h.pos))) {
 				existing.addAll(h.items);
 				level.heaps.remove(h.pos);
-				if (h.sprite != null) h.sprite.kill();
+				if (h.sprite != null)
+					h.sprite.kill();
 			}
 		}
 
 		super.placeItems(level);
 
 		//place any existing items below the room
-		if (!existing.isEmpty()){
-			int pos = level.pointToCell(new Point(left+2, bottom+2));
-			for (Item i :existing){
+		if (!existing.isEmpty()) {
+			int pos = level.pointToCell(new Point(left + 2, bottom + 2));
+			for (Item i : existing) {
 				level.drop(i, pos + Random.Int(5));
 			}
 		}
 
 	}
 
-	public boolean shopSpawned(){
+	public boolean shopSpawned() {
 		return impSpawned;
 	}
 
@@ -141,14 +149,15 @@ public class ImpShopRoom extends ShopRoom {
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(IMP, impSpawned);
-		if (itemsToSpawn != null) bundle.put(ITEMS, itemsToSpawn);
+		if (itemsToSpawn != null)
+			bundle.put(ITEMS, itemsToSpawn);
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		impSpawned = bundle.getBoolean(IMP);
-		if (bundle.contains( ITEMS )) {
+		if (bundle.contains(ITEMS)) {
 			itemsToSpawn = new ArrayList<>((Collection<Item>) ((Collection<?>) bundle.getCollection(ITEMS)));
 		}
 	}
@@ -157,7 +166,7 @@ public class ImpShopRoom extends ShopRoom {
 	public void onLevelLoad(Level level) {
 		super.onLevelLoad(level);
 
-		if (Imp.Quest.isCompleted() && !impSpawned){
+		if (Imp.Quest.isCompleted() && !impSpawned) {
 			spawnShop(level);
 		}
 	}

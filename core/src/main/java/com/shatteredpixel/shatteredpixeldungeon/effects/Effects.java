@@ -29,20 +29,12 @@ import com.watabou.noosa.Image;
 
 public class Effects {
 
-	public enum  Type {
-		RIPPLE,
-		LIGHTNING,
-		WOUND,
-		EXCLAMATION,
-		CHAIN,
-		ETHEREAL_CHAIN,
-		DEATH_RAY,
-		LIGHT_RAY,
-		HEALTH_RAY
+	public enum Type {
+		RIPPLE, LIGHTNING, WOUND, EXCLAMATION, CHAIN, ETHEREAL_CHAIN, DEATH_RAY, LIGHT_RAY, HEALTH_RAY
 	}
-	
-	public static Image get( Type type ) {
-		Image icon = new Image( Assets.Effects.EFFECTS );
+
+	public static Image get(Type type) {
+		Image icon = new Image(Assets.Effects.EFFECTS);
 		switch (type) {
 			case RIPPLE:
 				icon.frame(icon.texture.uvRect(0, 0, 16, 16));

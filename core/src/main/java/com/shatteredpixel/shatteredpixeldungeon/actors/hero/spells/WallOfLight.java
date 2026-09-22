@@ -55,18 +55,19 @@ public class WallOfLight extends TargetedClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 1 + 2*Dungeon.hero.pointsInTalent(Talent.WALL_OF_LIGHT)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", 1 + 2 * Dungeon.hero.pointsInTalent(Talent.WALL_OF_LIGHT)) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
-	public int targetingFlags(){
+	public int targetingFlags() {
 		return -1; //auto-targeting behaviour is often wrong, so we don't use it
 	}
 
 	@Override
 	public float chargeUse(Hero hero) {
 		if (Dungeon.level.blobs.get(LightWall.class) != null
-			&& Dungeon.level.blobs.get(LightWall.class).volume > 0){
+				&& Dungeon.level.blobs.get(LightWall.class).volume > 0) {
 			return 0f;
 		}
 		return 3f;
@@ -80,7 +81,7 @@ public class WallOfLight extends TargetedClericSpell {
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
 		if (Dungeon.level.blobs.get(LightWall.class) != null
-				&& Dungeon.level.blobs.get(LightWall.class).volume > 0){
+				&& Dungeon.level.blobs.get(LightWall.class).volume > 0) {
 			Dungeon.level.blobs.get(LightWall.class).fullyClear();
 			GLog.i(Messages.get(this, "early_end"));
 			return;
@@ -90,11 +91,11 @@ public class WallOfLight extends TargetedClericSpell {
 
 	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
-		if (target == hero.pos){
+		if (target == hero.pos) {
 			GLog.w(Messages.get(this, "invalid_target"));
 			return;
 		}
@@ -102,10 +103,10 @@ public class WallOfLight extends TargetedClericSpell {
 		int closest = hero.pos;
 		int closestIdx = -1;
 
-		for (int i = 0; i < PathFinder.CIRCLE8.length; i++){
+		for (int i = 0; i < PathFinder.CIRCLE8.length; i++) {
 			int ofs = PathFinder.CIRCLE8[i];
-			if (Dungeon.level.trueDistance(target, hero.pos+ofs) < Dungeon.level.trueDistance(target, closest)){
-				closest = hero.pos+ofs;
+			if (Dungeon.level.trueDistance(target, hero.pos + ofs) < Dungeon.level.trueDistance(target, closest)) {
+				closest = hero.pos + ofs;
 				closestIdx = i;
 			}
 		}
@@ -118,7 +119,7 @@ public class WallOfLight extends TargetedClericSpell {
 
 		int steps = Dungeon.hero.pointsInTalent(Talent.WALL_OF_LIGHT);
 
-		switch (closestIdx){
+		switch (closestIdx) {
 			case 0: //top left
 				leftDirX = -1;
 				leftDirY = 1;
@@ -165,7 +166,7 @@ public class WallOfLight extends TargetedClericSpell {
 				break;
 		}
 
-		if (Dungeon.level.blobs.get(LightWall.class) != null){
+		if (Dungeon.level.blobs.get(LightWall.class) != null) {
 			Dungeon.level.blobs.get(LightWall.class).fullyClear();
 		}
 
@@ -175,8 +176,8 @@ public class WallOfLight extends TargetedClericSpell {
 
 		//if all 3 tiles infront of Paladin are blocked, assume cast was in error and cancel
 		if (Dungeon.level.solid[closest]
-				&& Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx+1)%8]]
-				&& Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx+7)%8]]){
+				&& Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx + 1) % 8]]
+				&& Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx + 7) % 8]]) {
 			GLog.w(Messages.get(this, "invalid_target"));
 			return;
 		}
@@ -193,14 +194,14 @@ public class WallOfLight extends TargetedClericSpell {
 		for (int i = 0; i < steps; i++) {
 			if (leftDirY != 0) {
 				leftPos += leftDirY * Dungeon.level.width();
-				if (!Dungeon.level.insideMap(leftPos)){
+				if (!Dungeon.level.insideMap(leftPos)) {
 					break;
 				}
 				placeWall(leftPos, knockBackDir);
 			}
 			if (leftDirX != 0) {
 				leftPos += leftDirX;
-				if (!Dungeon.level.insideMap(leftPos)){
+				if (!Dungeon.level.insideMap(leftPos)) {
 					break;
 				}
 				placeWall(leftPos, knockBackDir);
@@ -209,14 +210,14 @@ public class WallOfLight extends TargetedClericSpell {
 		for (int i = 0; i < steps; i++) {
 			if (rightDirX != 0) {
 				rightPos += rightDirX;
-				if (!Dungeon.level.insideMap(rightPos)){
+				if (!Dungeon.level.insideMap(rightPos)) {
 					break;
 				}
 				placeWall(rightPos, knockBackDir);
 			}
 			if (rightDirY != 0) {
 				rightPos += rightDirY * Dungeon.level.width();
-				if (!Dungeon.level.insideMap(rightPos)){
+				if (!Dungeon.level.insideMap(rightPos)) {
 					break;
 				}
 				placeWall(rightPos, knockBackDir);
@@ -229,13 +230,14 @@ public class WallOfLight extends TargetedClericSpell {
 		Dungeon.hero.spendAndNext(1f);
 	}
 
-	private void placeWall( int pos, int knockbackDIR){
+	private void placeWall(int pos, int knockbackDIR) {
 		if (!Dungeon.level.solid[pos]) {
 			GameScene.add(Blob.seed(pos, 20, LightWall.class));
 
 			Char ch = Actor.findChar(pos);
-			if (ch != null && ch.alignment == Char.Alignment.ENEMY){
-				WandOfBlastWave.throwChar(ch, new Ballistica(pos, pos+knockbackDIR, Ballistica.PROJECTILE), 1, false, false, WallOfLight.INSTANCE);
+			if (ch != null && ch.alignment == Char.Alignment.ENEMY) {
+				WandOfBlastWave.throwChar(ch, new Ballistica(pos, pos + knockbackDIR, Ballistica.PROJECTILE), 1, false,
+						false, WallOfLight.INSTANCE);
 				Buff.affect(ch, Paralysis.class, ch.cooldown());
 			}
 		}
@@ -249,14 +251,14 @@ public class WallOfLight extends TargetedClericSpell {
 			int cell;
 
 			Level l = Dungeon.level;
-			for (int i = area.left; i < area.right; i++){
-				for (int j = area.top; j < area.bottom; j++){
-					cell = i + j*l.width();
+			for (int i = area.left; i < area.right; i++) {
+				for (int j = area.top; j < area.bottom; j++) {
+					cell = i + j * l.width();
 					off[cell] = cur[cell] > 0 ? cur[cell] - 1 : 0;
 
 					volume += off[cell];
 
-					if (off[cell] == 0 && cur[cell] > 0){
+					if (off[cell] == 0 && cur[cell] > 0) {
 						cellsToFlagUpdate.add(cell);
 					}
 				}
@@ -272,7 +274,8 @@ public class WallOfLight extends TargetedClericSpell {
 		@Override
 		public void clear(int cell) {
 			super.clear(cell);
-			if (cur == null) return;
+			if (cur == null)
+				return;
 			Dungeon.level.updateCellFlags(cell);
 		}
 
@@ -284,8 +287,8 @@ public class WallOfLight extends TargetedClericSpell {
 
 		@Override
 		public void onBuildFlagMaps(Level l) {
-			if (volume > 0){
-				for (int i=0; i < l.length(); i++) {
+			if (volume > 0) {
+				for (int i = 0; i < l.length(); i++) {
 					onUpdateCellFlags(l, i);
 				}
 			}
@@ -303,8 +306,8 @@ public class WallOfLight extends TargetedClericSpell {
 
 		@Override
 		public void use(BlobEmitter emitter) {
-			super.use( emitter );
-			emitter.pour( MagicMissile.WhiteParticle.WALL, 0.02f );
+			super.use(emitter);
+			emitter.pour(MagicMissile.WhiteParticle.WALL, 0.02f);
 		}
 
 		@Override

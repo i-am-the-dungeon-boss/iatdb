@@ -244,13 +244,13 @@ class EchoInventoryTest {
 				.put("items", new JSONArray().put("WandOfMagicMissile").put("Javelin"));
 
 		Assertions.assertThat(
-						EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
+				EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
 				.isEqualTo("WandOfMagicMissile");
 
 		wand.curCharges = 0;
 
 		Assertions.assertThat(
-						EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
+				EchoRoleResolver.resolveItemId(ranged, EchoInventory.availableIds(hero)))
 				.isEqualTo("Javelin");
 	}
 

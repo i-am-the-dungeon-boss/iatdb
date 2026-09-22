@@ -38,14 +38,14 @@ public class ScrollEmpower extends Buff {
 
 	private int left = 0;
 
-	public void reset(int left){
+	public void reset(int left) {
 		this.left = Math.max(this.left, left);
 		Item.updateQuickslot();
 	}
 
-	public void use(){
+	public void use() {
 		left--;
-		if (left <= 0){
+		if (left <= 0) {
 			detach();
 		}
 	}

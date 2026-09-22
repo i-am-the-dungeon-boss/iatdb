@@ -30,7 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 
 public class Obfuscation extends Armor.Glyph {
 
-	private static ItemSprite.Glowing GREY = new ItemSprite.Glowing( 0x888888 );
+	private static ItemSprite.Glowing GREY = new ItemSprite.Glowing(0x888888);
 
 	@Override
 	public int proc(Armor armor, Char attacker, Char defender, int damage) {
@@ -38,7 +38,7 @@ public class Obfuscation extends Armor.Glyph {
 		return damage;
 	}
 
-	public static float stealthBoost( Char owner, int level ){
+	public static float stealthBoost(Char owner, int level) {
 		if (level == -1) {
 			return 0;
 		} else {

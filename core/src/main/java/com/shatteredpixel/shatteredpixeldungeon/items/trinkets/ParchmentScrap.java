@@ -36,24 +36,26 @@ public class ParchmentScrap extends Trinket {
 	@Override
 	protected int upgradeEnergyCost() {
 		//6 -> 10(16) -> 15(31) -> 20(51)
-		return 10+5*level();
+		return 10 + 5 * level();
 	}
 
 	@Override
 	public String statsDesc() {
-		if (isIdentified()){
-			return Messages.get(this, "stats_desc", (int)enchantChanceMultiplier(buffedLvl()), Messages.decimalFormat("#.##", curseChanceMultiplier(buffedLvl())));
+		if (isIdentified()) {
+			return Messages.get(this, "stats_desc", (int) enchantChanceMultiplier(buffedLvl()),
+					Messages.decimalFormat("#.##", curseChanceMultiplier(buffedLvl())));
 		} else {
-			return Messages.get(this, "typical_stats_desc", (int)enchantChanceMultiplier(0), Messages.decimalFormat("#.##", curseChanceMultiplier(0)));
+			return Messages.get(this, "typical_stats_desc", (int) enchantChanceMultiplier(0),
+					Messages.decimalFormat("#.##", curseChanceMultiplier(0)));
 		}
 	}
 
-	public static float enchantChanceMultiplier(){
+	public static float enchantChanceMultiplier() {
 		return enchantChanceMultiplier(trinketLevel(ParchmentScrap.class));
 	}
 
-	public static float enchantChanceMultiplier( int level ){
-		switch (level){
+	public static float enchantChanceMultiplier(int level) {
+		switch (level) {
 			default:
 				return 1;
 			case 0:
@@ -67,12 +69,12 @@ public class ParchmentScrap extends Trinket {
 		}
 	}
 
-	public static float curseChanceMultiplier(){
+	public static float curseChanceMultiplier() {
 		return curseChanceMultiplier(trinketLevel(ParchmentScrap.class));
 	}
 
-	public static float curseChanceMultiplier( int level ){
-		switch (level){
+	public static float curseChanceMultiplier(int level) {
+		switch (level) {
 			default:
 				return 1;
 			case 0:

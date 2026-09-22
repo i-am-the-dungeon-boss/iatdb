@@ -84,14 +84,14 @@ public class CityLevel extends RegularLevel {
 		color2 = 0xf2f2f2;
 	}
 
-	public static final String[] CITY_TRACK_LIST
-			= new String[]{Assets.Music.CITY_1, Assets.Music.CITY_2, Assets.Music.CITY_2,
-			Assets.Music.CITY_1, Assets.Music.CITY_3, Assets.Music.CITY_3};
-	public static final float[] CITY_TRACK_CHANCES = new float[]{1f, 1f, 0.5f, 0.25f, 1f, 0.5f};
+	public static final String[] CITY_TRACK_LIST = new String[] { Assets.Music.CITY_1, Assets.Music.CITY_2,
+			Assets.Music.CITY_2,
+			Assets.Music.CITY_1, Assets.Music.CITY_3, Assets.Music.CITY_3 };
+	public static final float[] CITY_TRACK_CHANCES = new float[] { 1f, 1f, 0.5f, 0.25f, 1f, 0.5f };
 
 	@Override
 	public void playLevelMusic() {
-		if (Statistics.amuletObtained){
+		if (Statistics.amuletObtained) {
 			Music.INSTANCE.play(Assets.Music.CITY_TENSE, true);
 		} else {
 			Music.INSTANCE.playTracks(CITY_TRACK_LIST, CITY_TRACK_CHANCES, false);
@@ -100,16 +100,18 @@ public class CityLevel extends RegularLevel {
 
 	@Override
 	protected int standardRooms(boolean forceMax) {
-		if (forceMax) return 8;
+		if (forceMax)
+			return 8;
 		//6 to 8, average 7
-		return 6+Random.chances(new float[]{1, 3, 1});
+		return 6 + Random.chances(new float[] { 1, 3, 1 });
 	}
 
 	@Override
 	protected int specialRooms(boolean forceMax) {
-		if (forceMax) return 3;
+		if (forceMax)
+			return 3;
 		//2 to 3, average 2.33
-		return 2 + Random.chances(new float[]{2, 1});
+		return 2 + Random.chances(new float[] { 2, 1 });
 	}
 
 	@Override
@@ -132,15 +134,16 @@ public class CityLevel extends RegularLevel {
 
 	@Override
 	protected Class<?>[] trapClasses() {
-		return new Class[]{
+		return new Class[] {
 				FrostTrap.class, StormTrap.class, CorrosionTrap.class, BlazingTrap.class, DisintegrationTrap.class,
 				RockfallTrap.class, FlashingTrap.class, GuardianTrap.class, WeakeningTrap.class,
-				DisarmingTrap.class, SummoningTrap.class, WarpingTrap.class, CursingTrap.class, PitfallTrap.class, DistortionTrap.class, GatewayTrap.class, GeyserTrap.class };
+				DisarmingTrap.class, SummoningTrap.class, WarpingTrap.class, CursingTrap.class, PitfallTrap.class,
+				DistortionTrap.class, GatewayTrap.class, GeyserTrap.class };
 	}
 
 	@Override
 	protected float[] trapChances() {
-		return new float[]{
+		return new float[] {
 				4, 4, 4, 4, 4,
 				2, 2, 2, 2,
 				1, 1, 1, 1, 1, 1, 1, 1 };
@@ -151,29 +154,29 @@ public class CityLevel extends RegularLevel {
 		if (transition.type == LevelTransition.Type.BRANCH_EXIT) {
 
 			if (hero.buff(AscensionChallenge.class) != null
-					|| hero.buff(LostInventory.class) != null){
+					|| hero.buff(LostInventory.class) != null) {
 				return false;
 			}
 
 			Game.runOnRenderThread(new Callback() {
 				@Override
 				public void call() {
-					GameScene.show( new WndOptions( Icons.SHPX.get(),
+					GameScene.show(new WndOptions(Icons.SHPX.get(),
 							Messages.titleCase(Messages.get(CityLevel.class, "upcoming_quest_intro_title")),
 							Messages.get(CityLevel.class, "upcoming_quest_intro_body"),
 							Messages.get(CityLevel.class, "upcoming_quest_intro_yes"),
-							Messages.get(CityLevel.class, "upcoming_quest_intro_no")){
+							Messages.get(CityLevel.class, "upcoming_quest_intro_no")) {
 						@Override
 						protected void onSelect(int index) {
-							if (index == 0){
+							if (index == 0) {
 
 								//for full release this will remove any non revive persists buff, but for now just do item buffs
-								for (Buff b : hero.buffs()){
+								for (Buff b : hero.buffs()) {
 									if (b instanceof Wand.Charger
 											|| b instanceof Artifact.ArtifactBuff
 											|| b instanceof Ring.RingBuff
-											//not melee charger, Duelist should retain her charge count
-											|| b instanceof ClassArmor.Charger){
+									//not melee charger, Duelist should retain her charge count
+											|| b instanceof ClassArmor.Charger) {
 										b.detach();
 									}
 								}
@@ -187,11 +190,11 @@ public class CityLevel extends RegularLevel {
 								}
 								hero.belongings.armor = new ClothArmor();
 								hero.belongings.armor.identify();
-								hero.updateHT( false );
+								hero.updateHT(false);
 								CityLevel.super.activateTransition(hero, transition);
 							}
 						}
-					} );
+					});
 				}
 			});
 			return false;
@@ -205,9 +208,9 @@ public class CityLevel extends RegularLevel {
 	protected ArrayList<Room> initRooms() {
 		return Imp.Quest.spawn(super.initRooms());
 	}
-	
+
 	@Override
-	public String tileName( int tile ) {
+	public String tileName(int tile) {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(CityLevel.class, "water_name");
@@ -217,10 +220,10 @@ public class CityLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_name");
 			default:
-				return super.tileName( tile );
+				return super.tileName(tile);
 		}
 	}
-	
+
 	@Override
 	public String tileDesc(int tile) {
 		switch (tile) {
@@ -243,21 +246,21 @@ public class CityLevel extends RegularLevel {
 			case Terrain.REGION_DECO_ALT:
 				return Messages.get(CityLevel.class, "region_deco_desc");
 			default:
-				return super.tileDesc( tile );
+				return super.tileDesc(tile);
 		}
 	}
-	
+
 	@Override
 	public Group addVisuals() {
 		super.addVisuals();
-		addCityVisuals( this, visuals );
+		addCityVisuals(this, visuals);
 		return visuals;
 	}
 
-	public static void addCityVisuals( Level level, Group group ) {
-		for (int i=0; i < level.length(); i++) {
+	public static void addCityVisuals(Level level, Group group) {
+		for (int i = 0; i < level.length(); i++) {
 			if (level.map[i] == Terrain.WALL_DECO) {
-				group.add( new Smoke( i ) );
+				group.add(new Smoke(i));
 			}
 		}
 	}
@@ -265,14 +268,14 @@ public class CityLevel extends RegularLevel {
 	@Override
 	public Group addWallVisuals() {
 		super.addWallVisuals();
-		addCityWallVisuals( this, wallVisuals );
+		addCityWallVisuals(this, wallVisuals);
 		return wallVisuals;
 	}
 
-	public static void addCityWallVisuals( Level level, Group group ) {
-		for (int i=0; i < level.length(); i++) {
+	public static void addCityWallVisuals(Level level, Group group) {
+		for (int i = 0; i < level.length(); i++) {
 			if (level.map[i] == Terrain.REGION_DECO || level.map[i] == Terrain.REGION_DECO_ALT) {
-				group.add( new GreenFlame( i ) );
+				group.add(new GreenFlame(i));
 			}
 		}
 	}
@@ -283,25 +286,26 @@ public class CityLevel extends RegularLevel {
 
 		public static final Emitter.Factory factory = new Factory() {
 			@Override
-			public void emit( Emitter emitter, int index, float x, float y ) {
-				GreenFlameParticle p = (GreenFlameParticle)emitter.recycle( GreenFlameParticle.class );
-				p.reset( x, y );
+			public void emit(Emitter emitter, int index, float x, float y) {
+				GreenFlameParticle p = (GreenFlameParticle) emitter.recycle(GreenFlameParticle.class);
+				p.reset(x, y);
 			}
+
 			@Override
 			public boolean lightMode() {
 				return true;
 			}
 		};
 
-		public GreenFlame( int pos ) {
+		public GreenFlame(int pos) {
 			super();
 
 			this.pos = pos;
 
-			PointF p = DungeonTilemap.raisedTileCenterToWorld( pos );
-			pos( p.x - 2, p.y - 5, 4, 4 );
+			PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);
+			pos(p.x - 2, p.y - 5, 4, 4);
 
-			pour( factory, 0.1f );
+			pour(factory, 0.1f);
 		}
 
 		@Override
@@ -315,38 +319,37 @@ public class CityLevel extends RegularLevel {
 
 	public static class GreenFlameParticle extends ElmoParticle {
 
-		public GreenFlameParticle(){
+		public GreenFlameParticle() {
 			super();
-			acc.set( 0, -40 );
+			acc.set(0, -40);
 		}
 
 	}
 
-	
 	public static class Smoke extends Emitter {
-		
+
 		private int pos;
 
 		public static final Emitter.Factory factory = new Factory() {
-			
+
 			@Override
-			public void emit( Emitter emitter, int index, float x, float y ) {
-				SmokeParticle p = (SmokeParticle)emitter.recycle( SmokeParticle.class );
-				p.reset( x, y );
+			public void emit(Emitter emitter, int index, float x, float y) {
+				SmokeParticle p = (SmokeParticle) emitter.recycle(SmokeParticle.class);
+				p.reset(x, y);
 			}
 		};
-		
-		public Smoke( int pos ) {
+
+		public Smoke(int pos) {
 			super();
-			
+
 			this.pos = pos;
-			
-			PointF p = DungeonTilemap.tileCenterToWorld( pos );
-			pos( p.x - 6, p.y - 4, 12, 12 );
-			
-			pour( factory, 0.2f );
+
+			PointF p = DungeonTilemap.tileCenterToWorld(pos);
+			pos(p.x - 6, p.y - 4, 12, 12);
+
+			pour(factory, 0.2f);
 		}
-		
+
 		@Override
 		public void update() {
 			if (visible = (pos < Dungeon.level.heroFOV.length && Dungeon.level.heroFOV[pos])) {
@@ -354,31 +357,31 @@ public class CityLevel extends RegularLevel {
 			}
 		}
 	}
-	
+
 	public static final class SmokeParticle extends PixelParticle {
-		
+
 		public SmokeParticle() {
 			super();
-			
-			color( 0x000000 );
-			speed.set( Random.Float( -2, 4 ), -Random.Float( 3, 6 ) );
+
+			color(0x000000);
+			speed.set(Random.Float(-2, 4), -Random.Float(3, 6));
 		}
-		
-		public void reset( float x, float y ) {
+
+		public void reset(float x, float y) {
 			revive();
-			
+
 			this.x = x;
 			this.y = y;
-			
+
 			left = lifespan = 2f;
 		}
-		
+
 		@Override
 		public void update() {
 			super.update();
 			float p = left / lifespan;
 			am = p > 0.8f ? 1 - p : p * 0.25f;
-			size( 6 - p * 3 );
+			size(6 - p * 3);
 		}
 	}
 }

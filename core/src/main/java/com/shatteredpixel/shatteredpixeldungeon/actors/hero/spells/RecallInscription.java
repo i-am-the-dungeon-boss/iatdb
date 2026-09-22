@@ -56,13 +56,14 @@ public class RecallInscription extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", Dungeon.hero.pointsInTalent(Talent.RECALL_INSCRIPTION) == 2 ? 300 : 10) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", Dungeon.hero.pointsInTalent(Talent.RECALL_INSCRIPTION) == 2 ? 300 : 10)
+				+ "\n\n" + Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
 	public void onCast(HolyTome tome, Hero hero) {
 
-		if (hero.buff(UsedItemTracker.class) == null){
+		if (hero.buff(UsedItemTracker.class) == null) {
 			return;
 		}
 
@@ -73,13 +74,13 @@ public class RecallInscription extends ClericSpell {
 		hero.sprite.operate(hero.pos);
 		Enchanting.show(hero, item);
 
-		if (item instanceof Scroll){
+		if (item instanceof Scroll) {
 			((Scroll) item).anonymize();
 			((Scroll) item).talentChance = 0; //does not trigger on-scroll effects
 			((Scroll) item).doRead();
-		} else if (item instanceof Runestone){
+		} else if (item instanceof Runestone) {
 			((Runestone) item).anonymize();
-			if (item instanceof InventoryStone){
+			if (item instanceof InventoryStone) {
 				((InventoryStone) item).directActivate();
 			} else {
 				//we're already on the render thread, but we want to delay this
@@ -94,7 +95,7 @@ public class RecallInscription extends ClericSpell {
 		}
 
 		onSpellCast(tome, hero);
-		if (hero.buff(UsedItemTracker.class) != null){
+		if (hero.buff(UsedItemTracker.class) != null) {
 			hero.buff(UsedItemTracker.class).detach();
 		}
 
@@ -102,22 +103,22 @@ public class RecallInscription extends ClericSpell {
 
 	@Override
 	public float chargeUse(Hero hero) {
-		if (hero.buff(UsedItemTracker.class) != null){
+		if (hero.buff(UsedItemTracker.class) != null) {
 			Class<? extends Item> item = hero.buff(UsedItemTracker.class).item;
-			if (ExoticScroll.class.isAssignableFrom(item)){
-				if (item == ScrollOfMetamorphosis.class || item == ScrollOfEnchantment.class){
+			if (ExoticScroll.class.isAssignableFrom(item)) {
+				if (item == ScrollOfMetamorphosis.class || item == ScrollOfEnchantment.class) {
 					return 8;
 				} else {
 					return 4;
 				}
-			} else if (Scroll.class.isAssignableFrom(item)){
-				if (item == ScrollOfTransmutation.class){
+			} else if (Scroll.class.isAssignableFrom(item)) {
+				if (item == ScrollOfTransmutation.class) {
 					return 6;
 				} else {
 					return 3;
 				}
-			} else if (Runestone.class.isAssignableFrom(item)){
-				if (item == StoneOfAugmentation.class || item == StoneOfEnchantment.class){
+			} else if (Runestone.class.isAssignableFrom(item)) {
+				if (item == StoneOfAugmentation.class || item == StoneOfEnchantment.class) {
 					return 4;
 				} else {
 					return 2;
@@ -140,7 +141,7 @@ public class RecallInscription extends ClericSpell {
 			type = buffType.POSITIVE;
 		}
 
-		public Class<?extends Item> item;
+		public Class<? extends Item> item;
 
 		@Override
 		public int icon() {

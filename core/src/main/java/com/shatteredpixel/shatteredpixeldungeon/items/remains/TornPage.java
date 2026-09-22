@@ -39,10 +39,10 @@ public class TornPage extends RemainsItem {
 
 	@Override
 	protected void doEffect(Hero hero) {
-		int toHeal = Math.round(hero.HT/10f);
+		int toHeal = Math.round(hero.HT / 10f);
 		hero.HP = Math.min(hero.HP + toHeal, hero.HT);
-		hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(toHeal), FloatingText.HEALING );
-		Sample.INSTANCE.play( Assets.Sounds.READ );
+		hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(toHeal), FloatingText.HEALING);
+		Sample.INSTANCE.play(Assets.Sounds.READ);
 	}
 
 }

@@ -46,17 +46,17 @@ public class CorrosiveGas extends Blob {
 	protected void evolve() {
 		super.evolve();
 
-		if (volume == 0){
+		if (volume == 0) {
 			strength = 0;
 			source = null;
 		} else {
 			Char ch;
 			int cell;
 
-			for (int i = area.left; i < area.right; i++){
-				for (int j = area.top; j < area.bottom; j++){
-					cell = i + j*Dungeon.level.width();
-					if (cur[cell] > 0 && (ch = Actor.findChar( cell )) != null) {
+			for (int i = area.left; i < area.right; i++) {
+				for (int j = area.top; j < area.bottom; j++) {
+					cell = i + j * Dungeon.level.width();
+					if (cur[cell] > 0 && (ch = Actor.findChar(cell)) != null) {
 						if (!ch.isImmune(this.getClass()))
 							Buff.affect(ch, Corrosion.class).set(2f, strength, source);
 					}
@@ -65,11 +65,11 @@ public class CorrosiveGas extends Blob {
 		}
 	}
 
-	public CorrosiveGas setStrength(int str){
+	public CorrosiveGas setStrength(int str) {
 		return setStrength(str, null);
 	}
 
-	public CorrosiveGas setStrength(int str, Class source){
+	public CorrosiveGas setStrength(int str, Class source) {
 		if (str > strength) {
 			strength = str;
 			this.source = source;
@@ -78,27 +78,27 @@ public class CorrosiveGas extends Blob {
 	}
 
 	private static final String STRENGTH = "strength";
-	private static final String SOURCE	= "source";
+	private static final String SOURCE = "source";
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
-		strength = bundle.getInt( STRENGTH );
-		source = bundle.getClass( SOURCE );
+		strength = bundle.getInt(STRENGTH);
+		source = bundle.getClass(SOURCE);
 	}
 
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
-		bundle.put( STRENGTH, strength );
-		bundle.put( SOURCE, source );
+		bundle.put(STRENGTH, strength);
+		bundle.put(SOURCE, source);
 	}
 
 	@Override
-	public void use( BlobEmitter emitter ) {
-		super.use( emitter );
+	public void use(BlobEmitter emitter) {
+		super.use(emitter);
 
-		emitter.pour( Speck.factory(Speck.CORROSION), 0.4f );
+		emitter.pour(Speck.factory(Speck.CORROSION), 0.4f);
 	}
 
 	@Override

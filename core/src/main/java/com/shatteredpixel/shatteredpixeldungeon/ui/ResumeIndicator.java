@@ -39,12 +39,12 @@ public class ResumeIndicator extends Tag {
 	public ResumeIndicator() {
 		super(0xA3A695);
 
-		setSize( SIZE, SIZE );
+		setSize(SIZE, SIZE);
 
 		visible = false;
 
 	}
-	
+
 	@Override
 	public GameAction keyAction() {
 		return SPDAction.TAG_RESUME;
@@ -54,16 +54,18 @@ public class ResumeIndicator extends Tag {
 	protected void createChildren() {
 		super.createChildren();
 
-		icon = Icons.get( Icons.ARROW);
-		add( icon );
+		icon = Icons.get(Icons.ARROW);
+		add(icon);
 	}
 
 	@Override
 	protected void layout() {
 		super.layout();
 
-		if (!flipped)   icon.x = x + (SIZE - icon.width()) / 2f + 1;
-		else            icon.x = x + width - (SIZE + icon.width()) / 2f - 1;
+		if (!flipped)
+			icon.x = x + (SIZE - icon.width()) / 2f + 1;
+		else
+			icon.x = x + width - (SIZE + icon.width()) / 2f - 1;
 		icon.y = y + (height - icon.height) / 2f;
 		PixelScene.align(icon);
 	}
@@ -85,7 +87,7 @@ public class ResumeIndicator extends Tag {
 	public void update() {
 		if (!Dungeon.hero.isAlive())
 			visible = false;
-		else if (visible != (Dungeon.hero.lastAction != null)){
+		else if (visible != (Dungeon.hero.lastAction != null)) {
 			visible = Dungeon.hero.lastAction != null;
 			if (visible)
 				flash();

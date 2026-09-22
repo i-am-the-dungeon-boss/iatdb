@@ -41,33 +41,33 @@ public class VaultManyScansRoom extends VaultTreasureRoom {
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY_SP );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY_SP);
 
 		ArrayList<Integer> corners = new ArrayList<>();
 		int w = level.width();
 		Point c = center();
-		corners.add(left+1  + w*(top+1));
-		corners.add(c.x     + w*(top+1));
-		corners.add(right-1 + w*(top+1));
-		corners.add(left+1  + w*(c.y));
+		corners.add(left + 1 + w * (top + 1));
+		corners.add(c.x + w * (top + 1));
+		corners.add(right - 1 + w * (top + 1));
+		corners.add(left + 1 + w * (c.y));
 		//skip center
-		corners.add(right-1 + w*(c.y));
-		corners.add(left+1  + w*(bottom-1));
-		corners.add(c.x     +  w*(bottom-1));
-		corners.add(right-1 +  w*(bottom-1));
+		corners.add(right - 1 + w * (c.y));
+		corners.add(left + 1 + w * (bottom - 1));
+		corners.add(c.x + w * (bottom - 1));
+		corners.add(right - 1 + w * (bottom - 1));
 
 		Door entrance = entrance();
-		entrance.set( Door.Type.REGULAR );
+		entrance.set(Door.Type.REGULAR);
 
-		for (int cell : corners){
-			if (level.trueDistance(cell, level.pointToCell(entrance)) >= 2){
+		for (int cell : corners) {
+			if (level.trueDistance(cell, level.pointToCell(entrance)) >= 2) {
 				VaultSentry sentry = new VaultSentry();
 				sentry.pos = cell;
 				sentry.scanLength = 7;
 				sentry.scanWidth = 70;
-				sentry.scanDirs = new int[][]{
-						new int[]{c.x + w*c.y}
+				sentry.scanDirs = new int[][] {
+						new int[] { c.x + w * c.y }
 				};
 				level.mobs.add(sentry);
 			}
@@ -75,15 +75,15 @@ public class VaultManyScansRoom extends VaultTreasureRoom {
 
 		Painter.set(level, c, Terrain.PEDESTAL);
 		Item treasureItem = Generator.randomUsingDefaults(Generator.Category.WEP_T5);
-		if (treasureItem.cursed){
+		if (treasureItem.cursed) {
 			treasureItem.cursed = false;
-			if (((MeleeWeapon) treasureItem).hasCurseEnchant()){
+			if (((MeleeWeapon) treasureItem).hasCurseEnchant()) {
 				((MeleeWeapon) treasureItem).enchant(null);
 			}
 		}
 		//not true ID
 		treasureItem.levelKnown = treasureItem.cursedKnown = true;
-		level.drop(treasureItem, c.x + w*c.y).type = Heap.Type.CHEST;
+		level.drop(treasureItem, c.x + w * c.y).type = Heap.Type.CHEST;
 
 		level.addItemToSpawn(new PotionOfInvisibility());
 

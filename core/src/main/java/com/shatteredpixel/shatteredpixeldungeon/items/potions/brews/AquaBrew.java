@@ -34,7 +34,7 @@ public class AquaBrew extends Brew {
 	{
 		image = ItemSpriteSheet.BREW_AQUA;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	@Override
@@ -44,9 +44,9 @@ public class AquaBrew extends Brew {
 		geyser.source = this;
 
 		int userPos = curUser == null ? cell : curUser.pos;
-		if (userPos != cell){
+		if (userPos != cell) {
 			Ballistica aim = new Ballistica(userPos, cell, Ballistica.STOP_TARGET);
-			if (aim.path.size() > aim.dist+1) {
+			if (aim.path.size() > aim.dist + 1) {
 				geyser.centerKnockBackDirection = aim.path.get(aim.dist + 1);
 			}
 		}
@@ -55,12 +55,12 @@ public class AquaBrew extends Brew {
 
 	@Override
 	public int value() {
-		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (60 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (12 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
@@ -68,8 +68,8 @@ public class AquaBrew extends Brew {
 		private static final int OUT_QUANTITY = 8;
 
 		{
-			inputs =  new Class[]{PotionOfStormClouds.class};
-			inQuantity = new int[]{1};
+			inputs = new Class[] { PotionOfStormClouds.class };
+			inQuantity = new int[] { 1 };
 
 			cost = 8;
 

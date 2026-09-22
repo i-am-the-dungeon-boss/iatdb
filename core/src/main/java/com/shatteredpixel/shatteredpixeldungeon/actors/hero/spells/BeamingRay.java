@@ -59,7 +59,9 @@ public class BeamingRay extends TargetedClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 4*Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY), 30 + 5*Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.get(this, "desc", 4 * Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY),
+				30 + 5 * Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY)) + "\n\n"
+				+ Messages.get(this, "charge_cost", (int) chargeUse(Dungeon.hero));
 	}
 
 	@Override
@@ -76,86 +78,88 @@ public class BeamingRay extends TargetedClericSpell {
 
 	@Override
 	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
-		if (target == null){
+		if (target == null) {
 			return;
 		}
 
 		Char ally = PowerOfMany.getPoweredAlly();
 
-		if (ally == null){
+		if (ally == null) {
 			//temporary, for distance checks
 			ally = Dungeon.hero;
 		}
 
 		int telePos = target;
 
-		if (!Dungeon.level.insideMap(telePos)){
+		if (!Dungeon.level.insideMap(telePos)) {
 			GLog.w(Messages.get(this, "no_space"));
 			return;
 		}
 
-		if (Dungeon.level.solid[telePos] || !Dungeon.level.heroFOV[telePos] || Actor.findChar(telePos) != null){
+		if (Dungeon.level.solid[telePos] || !Dungeon.level.heroFOV[telePos] || Actor.findChar(telePos) != null) {
 			telePos = -1;
-			for (int i : PathFinder.NEIGHBOURS8){
-				if (Actor.findChar(target+i) == null && Dungeon.level.heroFOV[target+i]
-						&& (Dungeon.level.passable[target+i] || (ally.flying && Dungeon.level.avoid[target+i])) ){
-					if (telePos == -1 || Dungeon.level.trueDistance(telePos, ally.pos) > Dungeon.level.trueDistance(target+i, ally.pos)){
-						telePos =  target+i;
+			for (int i : PathFinder.NEIGHBOURS8) {
+				if (Actor.findChar(target + i) == null && Dungeon.level.heroFOV[target + i]
+						&& (Dungeon.level.passable[target + i] || (ally.flying && Dungeon.level.avoid[target + i]))) {
+					if (telePos == -1 || Dungeon.level.trueDistance(telePos, ally.pos) > Dungeon.level
+							.trueDistance(target + i, ally.pos)) {
+						telePos = target + i;
 					}
 				}
 			}
 		}
 
-		if (telePos == -1){
+		if (telePos == -1) {
 			GLog.w(Messages.get(this, "no_space"));
 			return;
 		}
 
-		if (ally == Dungeon.hero){
+		if (ally == Dungeon.hero) {
 			ally = Stasis.getStasisAlly();
 		}
 
-		int range = 4*hero.pointsInTalent(Talent.BEAMING_RAY);
-		if (Char.hasProp(ally, Char.Property.IMMOVABLE)){
+		int range = 4 * hero.pointsInTalent(Talent.BEAMING_RAY);
+		if (Char.hasProp(ally, Char.Property.IMMOVABLE)) {
 			range /= 2;
 		}
-		if (Dungeon.level.distance(ally.pos, telePos) > range){
+		if (Dungeon.level.distance(ally.pos, telePos) > range) {
 			GLog.w(Messages.get(this, "out_of_range"));
 			return;
 		}
 
 		Char chTarget = null;
-		if (Actor.findChar(target) != null && Actor.findChar(target).alignment == Char.Alignment.ENEMY){
+		if (Actor.findChar(target) != null && Actor.findChar(target).alignment == Char.Alignment.ENEMY) {
 			chTarget = Actor.findChar(target);
-			if (hero.subClass == HeroSubClass.PRIEST){
+			if (hero.subClass == HeroSubClass.PRIEST) {
 				Buff.affect(chTarget, GuidingLight.Illuminated.class);
 			}
 		}
 
-		if (ally == Stasis.getStasisAlly()){
+		if (ally == Stasis.getStasisAlly()) {
 			ally.pos = telePos;
 			GameScene.add((Mob) ally);
 			hero.buff(Stasis.StasisBuff.class).detach();
 			hero.sprite.parent.add(
 					new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)));
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
 
-			if (ally.buff(LifeLink.class) != null){
+			if (ally.buff(LifeLink.class) != null) {
 				Buff.prolong(Dungeon.hero, LifeLink.class, ally.buff(LifeLink.class).cooldown()).object = ally.id();
 			}
 		} else {
 			hero.sprite.parent.add(
 					new Beam.SunRay(ally.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)));
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
 		}
 
 		hero.sprite.zap(telePos);
 		ScrollOfTeleportation.appear(ally, telePos);
 
-		if (chTarget == null){
-			for (Char ch : Actor.chars()){
-				if (ch.alignment == Char.Alignment.ENEMY && Dungeon.level.distance(ch.pos, telePos) <= 4){
-					if (chTarget == null || Dungeon.level.trueDistance(chTarget.pos, ally.pos) < Dungeon.level.trueDistance(ch.pos,  ally.pos)) {
+		if (chTarget == null) {
+			for (Char ch : Actor.chars()) {
+				if (ch.alignment == Char.Alignment.ENEMY && Dungeon.level.distance(ch.pos, telePos) <= 4) {
+					if (chTarget == null || Dungeon.level.trueDistance(chTarget.pos, ally.pos) < Dungeon.level
+							.trueDistance(ch.pos, ally.pos)) {
 						chTarget = ch;
 					}
 				}
@@ -194,18 +198,18 @@ public class BeamingRay extends TargetedClericSpell {
 
 		public static final float DURATION = 10f;
 
-		private static final String OBJECT  = "object";
+		private static final String OBJECT = "object";
 
 		@Override
-		public void storeInBundle( Bundle bundle ) {
-			super.storeInBundle( bundle );
-			bundle.put( OBJECT, object );
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put(OBJECT, object);
 		}
 
 		@Override
-		public void restoreFromBundle( Bundle bundle ) {
-			super.restoreFromBundle( bundle );
-			object = bundle.getInt( OBJECT );
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			object = bundle.getInt(OBJECT);
 		}
 
 		@Override

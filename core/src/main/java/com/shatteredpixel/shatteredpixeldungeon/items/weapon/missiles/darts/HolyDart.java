@@ -44,34 +44,35 @@ public class HolyDart extends TippedDart {
 	@Override
 	public int damageRoll(Char owner) {
 		if (owner instanceof Hero) {
-			if (((Hero) owner).attackTarget().alignment == owner.alignment){
+			if (((Hero) owner).attackTarget().alignment == owner.alignment) {
 				return 0; //does not deal damage to allies
 			}
 		}
 		return super.damageRoll(owner);
 	}
-	
+
 	@Override
 	public int proc(Char attacker, Char defender, int damage) {
 
 		//do nothing to the hero when processing charged shot
-		if (processingChargedShot && defender == attacker){
+		if (processingChargedShot && defender == attacker) {
 			return super.proc(attacker, defender, damage);
 		}
 
-		if (attacker.alignment == defender.alignment){
+		if (attacker.alignment == defender.alignment) {
 			Buff.affect(defender, Bless.class, Math.round(Bless.DURATION));
 		}
 
-		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)){
-			defender.sprite.emitter().start( ShadowParticle.UP, 0.05f, 10+buffedLvl() );
+		if (Char.hasProp(defender, Char.Property.UNDEAD) || Char.hasProp(defender, Char.Property.DEMONIC)) {
+			defender.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10 + buffedLvl());
 			Sample.INSTANCE.play(Assets.Sounds.BURNING);
-			defender.damage(Random.NormalIntRange(10 + Dungeon.scalingDepth()/3, 20 + Dungeon.scalingDepth()/3), this);
-		//also do not bless enemies if processing charged shot
-		} else if (!processingChargedShot){
+			defender.damage(Random.NormalIntRange(10 + Dungeon.scalingDepth() / 3, 20 + Dungeon.scalingDepth() / 3),
+					this);
+			//also do not bless enemies if processing charged shot
+		} else if (!processingChargedShot) {
 			Buff.affect(defender, Bless.class, Math.round(Bless.DURATION));
 		}
-		
+
 		return super.proc(attacker, defender, damage);
 	}
 }

@@ -42,8 +42,8 @@ public class Patch {
 	 * and then by manually filling in or emptying cells after clustering, until the fill rate is
 	 * achieved. This is tracked with the fillDiff variable.
 	*/
-	public static boolean[] generate( int w, int h, float fill, int clustering, boolean forceFillRate ) {
-		
+	public static boolean[] generate(int w, int h, float fill, int clustering, boolean forceFillRate) {
+
 		int length = w * h;
 
 		boolean[] cur = new boolean[length];
@@ -55,63 +55,74 @@ public class Patch {
 			fill += (0.5f - fill) * 0.5f;
 		}
 
-		for (int i=0; i < length; i++) {
+		for (int i = 0; i < length; i++) {
 			off[i] = Random.Float() < fill;
-			if (off[i]) fillDiff++;
+			if (off[i])
+				fillDiff++;
 		}
-		
-		for (int i=0; i < clustering; i++) {
 
-			for (int y=0; y < h; y++) {
-				for (int x=0; x < w; x++) {
-					
+		for (int i = 0; i < clustering; i++) {
+
+			for (int y = 0; y < h; y++) {
+				for (int x = 0; x < w; x++) {
+
 					int pos = x + y * w;
 					int count = 0;
 					int neighbours = 0;
 
 					if (y > 0) {
-						if (x > 0){
-							if (off[pos - w - 1]) count++;
+						if (x > 0) {
+							if (off[pos - w - 1])
+								count++;
 							neighbours++;
 						}
-						if (off[pos - w]) count++;
+						if (off[pos - w])
+							count++;
 						neighbours++;
-						if (x < (w - 1)){
-							if (off[pos - w + 1]) count++;
+						if (x < (w - 1)) {
+							if (off[pos - w + 1])
+								count++;
 							neighbours++;
 						}
 					}
 
-					if (x > 0){
-						if (off[pos - 1]) count++;
+					if (x > 0) {
+						if (off[pos - 1])
+							count++;
 						neighbours++;
 					}
-					if (off[pos]) count++;
+					if (off[pos])
+						count++;
 					neighbours++;
-					if (x < (w-1)){
-						if (off[pos + 1]) count++;
+					if (x < (w - 1)) {
+						if (off[pos + 1])
+							count++;
 						neighbours++;
 					}
 
-					if (y < (h-1)) {
-						if (x > 0){
-							if (off[pos + w - 1]) count++;
+					if (y < (h - 1)) {
+						if (x > 0) {
+							if (off[pos + w - 1])
+								count++;
 							neighbours++;
 						}
-						if (off[pos + w]) count++;
+						if (off[pos + w])
+							count++;
 						neighbours++;
-						if (x < (w-1)){
-							if (off[pos + w + 1]) count++;
+						if (x < (w - 1)) {
+							if (off[pos + w + 1])
+								count++;
 							neighbours++;
 						}
 					}
 
-					cur[pos] = 2*count >= neighbours;
-					if (cur[pos] != off[pos]) fillDiff += cur[pos] ? +1 : -1;
+					cur[pos] = 2 * count >= neighbours;
+					if (cur[pos] != off[pos])
+						fillDiff += cur[pos] ? +1 : -1;
 
 				}
 			}
-			
+
 			boolean[] tmp = cur;
 			cur = off;
 			off = tmp;
@@ -119,7 +130,7 @@ public class Patch {
 
 		//even if force fill rate is on, only do this if we have some kind of border
 		if (forceFillRate && Math.min(w, h) > 2) {
-			int[] neighbours = new int[]{-w - 1, -w, -w + 1, -1, 0, +1, +w - 1, +w, +w + 1};
+			int[] neighbours = new int[] { -w - 1, -w, -w + 1, -1, 0, +1, +w - 1, +w, +w + 1 };
 			boolean growing = fillDiff < 0;
 
 			while (fillDiff != 0) {
@@ -141,7 +152,7 @@ public class Patch {
 				}
 			}
 		}
-		
+
 		return off;
 	}
 }

@@ -49,7 +49,7 @@ public class DM201 extends DM200 {
 
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 15, 25 );
+		return Random.NormalIntRange(15, 25);
 	}
 
 	private boolean threatened = false;
@@ -65,18 +65,18 @@ public class DM201 extends DM200 {
 		super.damage(dmg, src);
 	}
 
-	public void onZapComplete(){
+	public void onZapComplete() {
 		zap();
 		next();
 	}
 
-	private void zap( ){
+	private void zap() {
 		threatened = false;
 		spend(TICK);
 
 		GameScene.add(Blob.seed(enemy.pos, 15, CorrosiveGas.class).setStrength(8));
-		for (int i : PathFinder.NEIGHBOURS8){
-			if (!Dungeon.level.solid[enemy.pos+i]) {
+		for (int i : PathFinder.NEIGHBOURS8) {
+			if (!Dungeon.level.solid[enemy.pos + i]) {
 				GameScene.add(Blob.seed(enemy.pos + i, 5, CorrosiveGas.class).setStrength(8));
 			}
 		}
@@ -100,7 +100,8 @@ public class DM201 extends DM200 {
 
 	@Override
 	public void rollToDropLoot() {
-		if (Dungeon.hero.lvl > maxLvl + 2) return;
+		if (Dungeon.hero.lvl > maxLvl + 2)
+			return;
 
 		super.rollToDropLoot();
 
@@ -108,24 +109,24 @@ public class DM201 extends DM200 {
 		do {
 			ofs = PathFinder.NEIGHBOURS8[Random.Int(8)];
 		} while (Dungeon.level.solid[pos + ofs] && !Dungeon.level.passable[pos + ofs]);
-		Dungeon.level.drop( new MetalShard(), pos + ofs ).sprite.drop( pos );
+		Dungeon.level.drop(new MetalShard(), pos + ofs).sprite.drop(pos);
 	}
 
 	private class Hunting extends Mob.Hunting {
 
 		@Override
-		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 
-			if (threatened && enemyInFOV){
+			if (threatened && enemyInFOV) {
 				if (sprite != null && (sprite.visible || enemy.sprite.visible)) {
-					sprite.zap( enemy.pos );
+					sprite.zap(enemy.pos);
 					return false;
 				} else {
 					zap();
 					return true;
 				}
 			} else {
-				return super.act( enemyInFOV, justAlerted );
+				return super.act(enemyInFOV, justAlerted);
 			}
 
 		}

@@ -60,7 +60,8 @@ public class RotLasher extends Mob {
 	@Override
 	protected boolean act() {
 		if (HP < HT && (enemy == null || !Dungeon.level.adjacent(pos, enemy.pos))) {
-			sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(Math.min(5, HT - HP)), FloatingText.HEALING);
+			sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(Math.min(5, HT - HP)),
+					FloatingText.HEALING);
 			HP = Math.min(HT, HP + 5);
 		}
 		return super.act();
@@ -78,7 +79,7 @@ public class RotLasher extends Mob {
 
 	@Override
 	public boolean attack(Char enemy, float dmgMulti, float dmgBonus, float accMulti) {
-		if (enemy == Dungeon.hero){
+		if (enemy == Dungeon.hero) {
 			Statistics.questScores[1] -= 100;
 		}
 		return super.attack(enemy, dmgMulti, dmgBonus, accMulti);
@@ -86,8 +87,8 @@ public class RotLasher extends Mob {
 
 	@Override
 	public int attackProc(Char enemy, int damage) {
-		damage = super.attackProc( enemy, damage );
-		Buff.affect( enemy, Cripple.class, 2f );
+		damage = super.attackProc(enemy, damage);
+		Buff.affect(enemy, Cripple.class, 2f);
 		return super.attackProc(enemy, damage);
 	}
 
@@ -112,7 +113,7 @@ public class RotLasher extends Mob {
 	}
 
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 25;
 	}
 
@@ -120,12 +121,12 @@ public class RotLasher extends Mob {
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 8);
 	}
-	
+
 	{
-		immunities.add( ToxicGas.class );
+		immunities.add(ToxicGas.class);
 	}
 
-	private class Waiting extends Mob.Wandering{
+	private class Waiting extends Mob.Wandering {
 
 		@Override
 		protected boolean noticeEnemy() {

@@ -42,77 +42,77 @@ import com.watabou.noosa.audio.Sample;
 import java.util.ArrayList;
 
 public class Stylus extends Item {
-	
+
 	private static final float TIME_TO_INSCRIBE = 2;
-	
+
 	private static final String AC_INSCRIBE = "INSCRIBE";
-	
+
 	{
 		image = ItemSpriteSheet.STYLUS;
-		
+
 		stackable = true;
 
 		defaultAction = AC_INSCRIBE;
 
 		bones = true;
 	}
-	
+
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		actions.add( AC_INSCRIBE );
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		actions.add(AC_INSCRIBE);
 		return actions;
 	}
-	
-	@Override
-	public void execute( Hero hero, String action ) {
 
-		super.execute( hero, action );
+	@Override
+	public void execute(Hero hero, String action) {
+
+		super.execute(hero, action);
 
 		if (action.equals(AC_INSCRIBE)) {
 
 			curUser = hero;
-			GameScene.selectItem( itemSelector );
-			
+			GameScene.selectItem(itemSelector);
+
 		}
 	}
-	
+
 	@Override
 	public boolean isUpgradable() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isIdentified() {
 		return true;
 	}
-	
-	private void inscribe( Armor armor ) {
 
-		if (!armor.cursedKnown){
-			GLog.w( Messages.get(this, "identify"));
+	private void inscribe(Armor armor) {
+
+		if (!armor.cursedKnown) {
+			GLog.w(Messages.get(this, "identify"));
 			return;
-		} else if (armor.cursed || armor.hasCurseGlyph()){
-			GLog.w( Messages.get(this, "cursed"));
+		} else if (armor.cursed || armor.hasCurseGlyph()) {
+			GLog.w(Messages.get(this, "cursed"));
 			return;
 		}
-		
+
 		detach(curUser.belongings.backpack);
 		Catalog.countUse(getClass());
 
-		GLog.w( Messages.get(this, "inscribed"));
+		GLog.w(Messages.get(this, "inscribed"));
 
 		armor.inscribe();
-		
+
 		curUser.sprite.operate(curUser.pos);
 		curUser.sprite.centerEmitter().start(PurpleParticle.BURST, 0.05f, 10);
 		Enchanting.show(curUser, armor);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
-		
+
 		curUser.spend(TIME_TO_INSCRIBE);
 		curUser.busy();
 	}
-	
+
 	@Override
 	public int value() {
 		return 30 * quantity;
@@ -126,7 +126,7 @@ public class Stylus extends Item {
 		}
 
 		@Override
-		public Class<?extends Bag> preferredBag(){
+		public Class<? extends Bag> preferredBag() {
 			return Belongings.Backpack.class;
 		}
 
@@ -136,9 +136,9 @@ public class Stylus extends Item {
 		}
 
 		@Override
-		public void onSelect( Item item ) {
+		public void onSelect(Item item) {
 			if (item != null) {
-				Stylus.this.inscribe( (Armor)item );
+				Stylus.this.inscribe((Armor) item);
 			}
 		}
 	};

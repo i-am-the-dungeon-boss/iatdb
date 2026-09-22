@@ -38,10 +38,7 @@ import com.watabou.utils.PointF;
 public class ControllerHandler implements ControllerListener {
 
 	public enum ControllerType {
-		XBOX,
-		PLAYSTATION,
-		NINTENDO,
-		OTHER
+		XBOX, PLAYSTATION, NINTENDO, OTHER
 	}
 
 	public static ControllerType lastUsedType = ControllerType.OTHER;
@@ -51,12 +48,12 @@ public class ControllerHandler implements ControllerListener {
 	//19 is the max to avoid array overflow when interacting with some libGDX graphics objects
 	public static final int CONTROLLER_POINTER_ID = 19;
 
-	private static void setControllerType(Controller controller){
-		if (controller.getName().contains("Xbox")){
+	private static void setControllerType(Controller controller) {
+		if (controller.getName().contains("Xbox")) {
 			lastUsedType = ControllerType.XBOX;
-		} else if (controller.getName().contains("PS")){
+		} else if (controller.getName().contains("PS")) {
 			lastUsedType = ControllerType.PLAYSTATION;
-		} else if (controller.getName().contains("Nintendo")){
+		} else if (controller.getName().contains("Nintendo")) {
 			lastUsedType = ControllerType.NINTENDO;
 		} else {
 			lastUsedType = ControllerType.OTHER;
@@ -69,7 +66,7 @@ public class ControllerHandler implements ControllerListener {
 	public static boolean controllersSupported() {
 		if (failedInit) {
 			return false;
-		} else if (initialized){
+		} else if (initialized) {
 			return true;
 		} else {
 			try {
@@ -78,7 +75,7 @@ public class ControllerHandler implements ControllerListener {
 				Controllers.getCurrent();
 				initialized = true;
 				return true;
-			} catch (Exception e){
+			} catch (Exception e) {
 				Game.reportException(e);
 				failedInit = true;
 				return false;
@@ -86,22 +83,22 @@ public class ControllerHandler implements ControllerListener {
 		}
 	}
 
-	public static boolean vibrationSupported(){
+	public static boolean vibrationSupported() {
 		try {
 			//library can throw a NPE here is controller was disconnected during sleep
 			return isControllerConnected() && Controllers.getCurrent().canVibrate();
-		} catch (Exception e){
+		} catch (Exception e) {
 			return false;
 		}
 	}
 
-	public static void vibrate( int millis ){
+	public static void vibrate(int millis) {
 		if (vibrationSupported()) {
 			Controllers.getCurrent().startVibration(millis, 1f);
 		}
 	}
 
-	public static boolean isControllerConnected(){
+	public static boolean isControllerConnected() {
 		return controllersSupported() && Controllers.getCurrent() != null;
 	}
 
@@ -121,7 +118,7 @@ public class ControllerHandler implements ControllerListener {
 		setControllerType(controller);
 		controllerActive = true;
 		int keyCode = buttonToKey(controller, buttonCode);
-		if (keyCode != Input.Keys.UNKNOWN){
+		if (keyCode != Input.Keys.UNKNOWN) {
 			KeyEvent.addKeyEvent(new KeyEvent(keyCode, true));
 			return true;
 		}
@@ -133,7 +130,7 @@ public class ControllerHandler implements ControllerListener {
 		setControllerType(controller);
 		controllerActive = true;
 		int keyCode = buttonToKey(controller, buttonCode);
-		if (keyCode != Input.Keys.UNKNOWN){
+		if (keyCode != Input.Keys.UNKNOWN) {
 			KeyEvent.addKeyEvent(new KeyEvent(keyCode, false));
 			return true;
 		}
@@ -150,29 +147,33 @@ public class ControllerHandler implements ControllerListener {
 	public boolean axisMoved(Controller controller, int axisCode, float value) {
 		setControllerType(controller);
 		ControllerMapping mapping = controller.getMapping();
-		if (mapping.axisRightX == axisCode)         rightStickPosition.x = value;
-		else if (mapping.axisRightY == axisCode)    rightStickPosition.y = value;
-		else if (mapping.axisLeftX == axisCode)     leftStickPosition.x = value;
-		else if (mapping.axisLeftY == axisCode)     leftStickPosition.y = value;
+		if (mapping.axisRightX == axisCode)
+			rightStickPosition.x = value;
+		else if (mapping.axisRightY == axisCode)
+			rightStickPosition.y = value;
+		else if (mapping.axisLeftX == axisCode)
+			leftStickPosition.x = value;
+		else if (mapping.axisLeftY == axisCode)
+			leftStickPosition.y = value;
 
 		//L2 and R2 triggers on Desktop
 		else if (axisCode == 4 && Gdx.app.getType() == Application.ApplicationType.Desktop && L2Trigger != value) {
 
-			if (value == 1){
+			if (value == 1) {
 				KeyEvent.addKeyEvent(new KeyEvent(Input.Keys.BUTTON_L2, true));
 				controllerActive = true;
-			} else if (value == 0){
+			} else if (value == 0) {
 				KeyEvent.addKeyEvent(new KeyEvent(Input.Keys.BUTTON_L2, false));
 				controllerActive = true;
 			}
 			L2Trigger = value;
 
-		} else if (axisCode == 5 && Gdx.app.getType() == Application.ApplicationType.Desktop && R2Trigger != value){
+		} else if (axisCode == 5 && Gdx.app.getType() == Application.ApplicationType.Desktop && R2Trigger != value) {
 
-			if (value == 1){
+			if (value == 1) {
 				KeyEvent.addKeyEvent(new KeyEvent(Input.Keys.BUTTON_R2, true));
 				controllerActive = true;
-			} else if (value == 0){
+			} else if (value == 0) {
 				KeyEvent.addKeyEvent(new KeyEvent(Input.Keys.BUTTON_R2, false));
 				controllerActive = true;
 			}
@@ -186,32 +187,35 @@ public class ControllerHandler implements ControllerListener {
 	private static boolean controllerPointerActive = false;
 	private static PointF controllerPointerPos;
 
-	public static void setControllerPointer( boolean active ){
-		if (active) controllerActive = true;
-		if (controllerPointerActive == active) return;
+	public static void setControllerPointer(boolean active) {
+		if (active)
+			controllerActive = true;
+		if (controllerPointerActive == active)
+			return;
 		controllerPointerActive = active;
-		if (active){
+		if (active) {
 			Gdx.input.setCursorCatched(true);
 			controllerPointerPos = new PointF(PointerEvent.currentHoverPos());
 		} else if (!Cursor.isCursorCaptured()) {
 			Gdx.input.setCursorCatched(false);
-			Gdx.input.setCursorPosition((int)controllerPointerPos.x, (int)controllerPointerPos.y);
+			Gdx.input.setCursorPosition((int) controllerPointerPos.x, (int) controllerPointerPos.y);
 		}
 	}
 
-	public static boolean controllerPointerActive(){
+	public static boolean controllerPointerActive() {
 		return controllerPointerActive && !Cursor.isCursorCaptured();
 	}
 
-	public static PointF getControllerPointerPos(){
+	public static PointF getControllerPointerPos() {
 		return controllerPointerPos.clone();
 	}
 
-	public static void updateControllerPointer(PointF pos, boolean sendEvent){
+	public static void updateControllerPointer(PointF pos, boolean sendEvent) {
 		controllerPointerPos.set(pos);
 		if (sendEvent) {
 			controllerActive = true;
-			PointerEvent.addPointerEvent(new PointerEvent((int) controllerPointerPos.x, (int) controllerPointerPos.y, 10_000, PointerEvent.Type.HOVER, PointerEvent.NONE));
+			PointerEvent.addPointerEvent(new PointerEvent((int) controllerPointerPos.x, (int) controllerPointerPos.y,
+					10_000, PointerEvent.Type.HOVER, PointerEvent.NONE));
 		} else {
 			PointerEvent.setHoverPos(pos);
 		}
@@ -221,80 +225,96 @@ public class ControllerHandler implements ControllerListener {
 	public static int DPAD_KEY_OFFSET = 1000;
 
 	//converts controller button codes to keyEvent codes
-	public static int buttonToKey(Controller controller, int btnCode){
+	public static int buttonToKey(Controller controller, int btnCode) {
 		ControllerMapping mapping = controller.getMapping();
-		if (btnCode == mapping.buttonA)         return Input.Keys.BUTTON_A;
-		if (btnCode == mapping.buttonB)         return Input.Keys.BUTTON_B;
+		if (btnCode == mapping.buttonA)
+			return Input.Keys.BUTTON_A;
+		if (btnCode == mapping.buttonB)
+			return Input.Keys.BUTTON_B;
 		//C button?
-		if (btnCode == mapping.buttonX)         return Input.Keys.BUTTON_X;
-		if (btnCode == mapping.buttonY)         return Input.Keys.BUTTON_Y;
-		if (btnCode == mapping.buttonBack)      return Input.Keys.BUTTON_SELECT;
-		if (btnCode == mapping.buttonStart)     return Input.Keys.BUTTON_START;
+		if (btnCode == mapping.buttonX)
+			return Input.Keys.BUTTON_X;
+		if (btnCode == mapping.buttonY)
+			return Input.Keys.BUTTON_Y;
+		if (btnCode == mapping.buttonBack)
+			return Input.Keys.BUTTON_SELECT;
+		if (btnCode == mapping.buttonStart)
+			return Input.Keys.BUTTON_START;
 
-		if (btnCode == mapping.buttonL1)        return Input.Keys.BUTTON_L1;
-		if (btnCode == mapping.buttonL2)        return Input.Keys.BUTTON_L2;
-		if (btnCode == mapping.buttonR1)        return Input.Keys.BUTTON_R1;
-		if (btnCode == mapping.buttonR2)        return Input.Keys.BUTTON_R2;
+		if (btnCode == mapping.buttonL1)
+			return Input.Keys.BUTTON_L1;
+		if (btnCode == mapping.buttonL2)
+			return Input.Keys.BUTTON_L2;
+		if (btnCode == mapping.buttonR1)
+			return Input.Keys.BUTTON_R1;
+		if (btnCode == mapping.buttonR2)
+			return Input.Keys.BUTTON_R2;
 
-		if (btnCode == mapping.buttonDpadUp)    return Input.Keys.DPAD_UP       + DPAD_KEY_OFFSET;
-		if (btnCode == mapping.buttonDpadDown)  return Input.Keys.DPAD_DOWN     + DPAD_KEY_OFFSET;
-		if (btnCode == mapping.buttonDpadLeft)  return Input.Keys.DPAD_LEFT     + DPAD_KEY_OFFSET;
-		if (btnCode == mapping.buttonDpadRight) return Input.Keys.DPAD_RIGHT    + DPAD_KEY_OFFSET;
+		if (btnCode == mapping.buttonDpadUp)
+			return Input.Keys.DPAD_UP + DPAD_KEY_OFFSET;
+		if (btnCode == mapping.buttonDpadDown)
+			return Input.Keys.DPAD_DOWN + DPAD_KEY_OFFSET;
+		if (btnCode == mapping.buttonDpadLeft)
+			return Input.Keys.DPAD_LEFT + DPAD_KEY_OFFSET;
+		if (btnCode == mapping.buttonDpadRight)
+			return Input.Keys.DPAD_RIGHT + DPAD_KEY_OFFSET;
 
-		if (btnCode == mapping.buttonLeftStick) return Input.Keys.BUTTON_THUMBL;
-		if (btnCode == mapping.buttonRightStick)return Input.Keys.BUTTON_THUMBR;
+		if (btnCode == mapping.buttonLeftStick)
+			return Input.Keys.BUTTON_THUMBL;
+		if (btnCode == mapping.buttonRightStick)
+			return Input.Keys.BUTTON_THUMBR;
 
 		return Input.Keys.UNKNOWN;
 	}
 
-	public static boolean icControllerKey(int keyCode){
-		if (keyCode == 0){
+	public static boolean icControllerKey(int keyCode) {
+		if (keyCode == 0) {
 			return true;
 		}
 
 		if (keyCode >= Input.Keys.BUTTON_A
-				&& keyCode <= Input.Keys.BUTTON_MODE){
+				&& keyCode <= Input.Keys.BUTTON_MODE) {
 			return true;
 		}
 
-		if (keyCode >= Input.Keys.DPAD_UP+DPAD_KEY_OFFSET
-				&& keyCode <= Input.Keys.DPAD_RIGHT+DPAD_KEY_OFFSET){
+		if (keyCode >= Input.Keys.DPAD_UP + DPAD_KEY_OFFSET
+				&& keyCode <= Input.Keys.DPAD_RIGHT + DPAD_KEY_OFFSET) {
 			return true;
 		}
 
 		return false;
 	}
 
-	public static String customButtonName(int keyCode){
-		if (lastUsedType == ControllerType.PLAYSTATION){
-			if (keyCode == Input.Keys.BUTTON_A){
+	public static String customButtonName(int keyCode) {
+		if (lastUsedType == ControllerType.PLAYSTATION) {
+			if (keyCode == Input.Keys.BUTTON_A) {
 				return "Cross Button";
-			} else if (keyCode == Input.Keys.BUTTON_B){
+			} else if (keyCode == Input.Keys.BUTTON_B) {
 				return "Circle Button";
-			} else if (keyCode == Input.Keys.BUTTON_X){
+			} else if (keyCode == Input.Keys.BUTTON_X) {
 				return "Square Button";
-			} else if (keyCode == Input.Keys.BUTTON_Y){
+			} else if (keyCode == Input.Keys.BUTTON_Y) {
 				return "Triangle Button";
 			}
-		} else if (lastUsedType == ControllerType.XBOX){
-			if (keyCode == Input.Keys.BUTTON_L1){
+		} else if (lastUsedType == ControllerType.XBOX) {
+			if (keyCode == Input.Keys.BUTTON_L1) {
 				return "Left Bumper";
-			} else if (keyCode == Input.Keys.BUTTON_L2){
+			} else if (keyCode == Input.Keys.BUTTON_L2) {
 				return "Left Trigger";
-			} else if (keyCode == Input.Keys.BUTTON_R1){
+			} else if (keyCode == Input.Keys.BUTTON_R1) {
 				return "Right Bumper";
-			} else if (keyCode == Input.Keys.BUTTON_R2){
+			} else if (keyCode == Input.Keys.BUTTON_R2) {
 				return "Right Trigger";
 			}
 		}
 
-		if (keyCode == Input.Keys.DPAD_UP + DPAD_KEY_OFFSET){
+		if (keyCode == Input.Keys.DPAD_UP + DPAD_KEY_OFFSET) {
 			return Input.Keys.toString(Input.Keys.DPAD_UP);
-		} else if (keyCode == Input.Keys.DPAD_DOWN + DPAD_KEY_OFFSET){
+		} else if (keyCode == Input.Keys.DPAD_DOWN + DPAD_KEY_OFFSET) {
 			return Input.Keys.toString(Input.Keys.DPAD_DOWN);
-		} else if (keyCode == Input.Keys.DPAD_LEFT + DPAD_KEY_OFFSET){
+		} else if (keyCode == Input.Keys.DPAD_LEFT + DPAD_KEY_OFFSET) {
 			return Input.Keys.toString(Input.Keys.DPAD_LEFT);
-		} else if (keyCode == Input.Keys.DPAD_RIGHT + DPAD_KEY_OFFSET){
+		} else if (keyCode == Input.Keys.DPAD_RIGHT + DPAD_KEY_OFFSET) {
 			return Input.Keys.toString(Input.Keys.DPAD_RIGHT);
 		}
 

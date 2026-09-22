@@ -49,7 +49,7 @@ public class MineEntrance extends CaveRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{1, 0, 0};
+		return new float[] { 1, 0, 0 };
 	}
 
 	@Override
@@ -76,19 +76,19 @@ public class MineEntrance extends CaveRoom {
 		do {
 			valid = false;
 			entrance = level.pointToCell(random(3));
-			for (int i : PathFinder.NEIGHBOURS9){
-				if (level.map[entrance+i] != Terrain.WALL){
+			for (int i : PathFinder.NEIGHBOURS9) {
+				if (level.map[entrance + i] != Terrain.WALL) {
 					valid = true;
 				}
 			}
-			if (height() == 7 && width() == 7){
+			if (height() == 7 && width() == 7) {
 				valid = true;
 			}
 		} while (level.findMob(entrance) != null || !valid);
-		Painter.set( level, entrance, Terrain.ENTRANCE );
+		Painter.set(level, entrance, Terrain.ENTRANCE);
 
-		for (int i : PathFinder.NEIGHBOURS8){
-			Painter.set( level, entrance+i, Terrain.EMPTY );
+		for (int i : PathFinder.NEIGHBOURS8) {
+			Painter.set(level, entrance + i, Terrain.EMPTY);
 		}
 
 		QuestExit vis = new QuestExit();
@@ -103,20 +103,20 @@ public class MineEntrance extends CaveRoom {
 				0,
 				LevelTransition.Type.BRANCH_EXIT));
 
-		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){
-			for (int i = 0; i < width()*height()/2; i ++){
+		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL) {
+			for (int i = 0; i < width() * height() / 2; i++) {
 				Point r = random(1);
 				if (level.distance(level.pointToCell(r), entrance) > 1
-					&& level.map[level.pointToCell(r)] != Terrain.WALL) {
+						&& level.map[level.pointToCell(r)] != Terrain.WALL) {
 					Painter.set(level, r, Terrain.MINE_CRYSTAL);
 				}
 			}
 		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL) {
 
 			//connections to non-secret rooms have a 9/10 chance to become empty, otherwise wall
-			for (Room n : connected.keySet()){
-				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR){
-					if (Random.Int(10) == 0){
+			for (Room n : connected.keySet()) {
+				if (!(n instanceof SecretRoom) && connected.get(n).type == Door.Type.REGULAR) {
+					if (Random.Int(10) == 0) {
 						connected.get(n).set(Door.Type.EMPTY);
 					} else {
 						connected.get(n).set(Door.Type.WALL);
@@ -126,24 +126,24 @@ public class MineEntrance extends CaveRoom {
 			}
 
 			ArrayList<Door> doors = new ArrayList<>();
-			for (Door d : connected.values()){
-				if (d.type == Door.Type.WALL){
+			for (Door d : connected.values()) {
+				if (d.type == Door.Type.WALL) {
 					doors.add(d);
 				}
 			}
 
-			for (Point p : getPoints()){
+			for (Point p : getPoints()) {
 				int cell = level.pointToCell(p);
-				if (level.distance(cell, entrance) > 1 && level.map[cell] == Terrain.EMPTY){
+				if (level.distance(cell, entrance) > 1 && level.map[cell] == Terrain.EMPTY) {
 					float dist = 1000;
-					for (Door d : doors){
+					for (Door d : doors) {
 						dist = Math.min(dist, Point.distance(p, d));
 					}
-					dist = GameMath.gate(1f, dist-0.5f, 5f);
+					dist = GameMath.gate(1f, dist - 0.5f, 5f);
 					float val = Random.Float((float) Math.pow(dist, 2));
 					if (val <= 0.75f || dist <= 1) {
 						Painter.set(level, cell, Terrain.MINE_BOULDER);
-					} else if (val <= 5f && dist <= 3){
+					} else if (val <= 5f && dist <= 3) {
 						Painter.set(level, cell, Terrain.EMPTY_DECO);
 					}
 				}
@@ -171,7 +171,7 @@ public class MineEntrance extends CaveRoom {
 
 		@Override
 		public String name(int tileX, int tileY) {
-			if (tileX == 1 && tileY == 1){
+			if (tileX == 1 && tileY == 1) {
 				return Messages.get(this, "name");
 			}
 			return super.name(tileX, tileY);
@@ -179,7 +179,7 @@ public class MineEntrance extends CaveRoom {
 
 		@Override
 		public String desc(int tileX, int tileY) {
-			if (tileX == 1 && tileY == 1){
+			if (tileX == 1 && tileY == 1) {
 				return Messages.get(this, "desc");
 			}
 			return super.desc(tileX, tileY);
@@ -187,7 +187,7 @@ public class MineEntrance extends CaveRoom {
 
 		@Override
 		public Image image(int tileX, int tileY) {
-			if (tileX == 1 && tileY == 1){
+			if (tileX == 1 && tileY == 1) {
 				return super.image(tileX, tileY);
 			}
 			return null;

@@ -117,7 +117,6 @@ public final class EchoHeroSnapshot {
 		}
 	}
 
-
 	/**
 	 * Echo fight kits start fully charged so drained captures still fight with
 	 * their arsenal (wands, artifacts, class armor, duelist charger).

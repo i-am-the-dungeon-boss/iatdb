@@ -66,27 +66,29 @@ public abstract class ChampionEnemy extends Buff {
 
 	@Override
 	public void fx(boolean on) {
-		if (on) target.sprite.aura( color, rays );
-		else target.sprite.clearAura();
+		if (on)
+			target.sprite.aura(color, rays);
+		else
+			target.sprite.clearAura();
 	}
 
-	public void onAttackProc(Char enemy ){
+	public void onAttackProc(Char enemy) {
 
 	}
 
-	public boolean canAttackWithExtraReach( Char enemy ){
+	public boolean canAttackWithExtraReach(Char enemy) {
 		return false;
 	}
 
-	public float meleeDamageFactor(){
+	public float meleeDamageFactor() {
 		return 1f;
 	}
 
-	public float damageTakenFactor(){
+	public float damageTakenFactor() {
 		return 1f;
 	}
 
-	public float evasionAndAccuracyFactor(){
+	public float evasionAndAccuracyFactor() {
 		return 1f;
 	}
 
@@ -94,32 +96,49 @@ public abstract class ChampionEnemy extends Buff {
 		immunities.add(AllyBuff.class);
 	}
 
-	public static void rollForChampion(Mob m){
+	public static void rollForChampion(Mob m) {
 		Dungeon.mobsToChampion--;
 
 		//we roll for a champion enemy even if we aren't spawning one to ensure that
 		//mobsToChampion does not affect levelgen RNG (number of calls to Random.Int() is constant)
-		Class<?extends ChampionEnemy> buffCls;
-		switch (Random.Int(6)){
-			case 0: default:    buffCls = Blazing.class;      break;
-			case 1:             buffCls = Projecting.class;   break;
-			case 2:             buffCls = AntiMagic.class;    break;
-			case 3:             buffCls = Giant.class;        break;
-			case 4:             buffCls = Blessed.class;      break;
-			case 5:             buffCls = Growing.class;      break;
+		Class<? extends ChampionEnemy> buffCls;
+		switch (Random.Int(6)) {
+			case 0:
+			default:
+				buffCls = Blazing.class;
+				break;
+			case 1:
+				buffCls = Projecting.class;
+				break;
+			case 2:
+				buffCls = AntiMagic.class;
+				break;
+			case 3:
+				buffCls = Giant.class;
+				break;
+			case 4:
+				buffCls = Blessed.class;
+				break;
+			case 5:
+				buffCls = Growing.class;
+				break;
 		}
 
 		if (Dungeon.mobsToChampion <= 0 && Dungeon.isChallenged(Challenges.CHAMPION_ENEMIES)) {
 
 			//we block certain standout enemies on floor <10 from becoming champions
-			if (m instanceof Crab  && Dungeon.scalingDepth() <= 3) return;
-			if (m instanceof Thief && Dungeon.scalingDepth() <= 4) return;
-			if (m instanceof Guard && Dungeon.scalingDepth() <= 7) return;
-			if (m instanceof Bat   && Dungeon.scalingDepth() <= 9) return;
+			if (m instanceof Crab && Dungeon.scalingDepth() <= 3)
+				return;
+			if (m instanceof Thief && Dungeon.scalingDepth() <= 4)
+				return;
+			if (m instanceof Guard && Dungeon.scalingDepth() <= 7)
+				return;
+			if (m instanceof Bat && Dungeon.scalingDepth() <= 9)
+				return;
 
 			Buff.affect(m, buffCls);
 			//numbers of mobs until a champion scales from 1/8 to 1/6 as depths increases
-			Dungeon.mobsToChampion += 8 - Math.min(20, Dungeon.scalingDepth()-1)/10f;
+			Dungeon.mobsToChampion += 8 - Math.min(20, Dungeon.scalingDepth() - 1) / 10f;
 			if (m.state != m.PASSIVE) {
 				m.state = m.WANDERING;
 			}
@@ -177,7 +196,7 @@ public abstract class ChampionEnemy extends Buff {
 
 		@Override
 		public boolean canAttackWithExtraReach(Char enemy) {
-			if (Dungeon.level.distance( target.pos, enemy.pos ) > 4){
+			if (Dungeon.level.distance(target.pos, enemy.pos) > 4) {
 				return false;
 			} else {
 				boolean[] passable = BArray.not(Dungeon.level.solid, null);
@@ -226,7 +245,7 @@ public abstract class ChampionEnemy extends Buff {
 
 		@Override
 		public boolean canAttackWithExtraReach(Char enemy) {
-			if (Dungeon.level.distance( target.pos, enemy.pos ) > 2){
+			if (Dungeon.level.distance(target.pos, enemy.pos) > 2) {
 				return false;
 			} else {
 				boolean[] passable = BArray.not(Dungeon.level.solid, null);
@@ -267,7 +286,7 @@ public abstract class ChampionEnemy extends Buff {
 		@Override
 		public boolean act() {
 			multiplier += 0.01f;
-			spend(4*TICK);
+			spend(4 * TICK);
 			return true;
 		}
 
@@ -278,7 +297,7 @@ public abstract class ChampionEnemy extends Buff {
 
 		@Override
 		public float damageTakenFactor() {
-			return 1f/multiplier;
+			return 1f / multiplier;
 		}
 
 		@Override
@@ -288,7 +307,7 @@ public abstract class ChampionEnemy extends Buff {
 
 		@Override
 		public String desc() {
-			return Messages.get(this, "desc", (int)(100*(multiplier-1)), (int)(100*(1 - 1f/multiplier)));
+			return Messages.get(this, "desc", (int) (100 * (multiplier - 1)), (int) (100 * (1 - 1f / multiplier)));
 		}
 
 		private static final String MULTIPLIER = "multiplier";

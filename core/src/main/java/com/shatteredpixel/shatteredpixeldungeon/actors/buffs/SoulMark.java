@@ -30,7 +30,7 @@ import com.watabou.noosa.Image;
 
 public class SoulMark extends FlavourBuff {
 
-	public static final float DURATION	= 10f;
+	public static final float DURATION = 10f;
 
 	{
 		type = buffType.NEGATIVE;
@@ -54,7 +54,9 @@ public class SoulMark extends FlavourBuff {
 
 	@Override
 	public void fx(boolean on) {
-		if (on) target.sprite.add(CharSprite.State.MARKED);
-		else target.sprite.remove(CharSprite.State.MARKED);
+		if (on)
+			target.sprite.add(CharSprite.State.MARKED);
+		else
+			target.sprite.remove(CharSprite.State.MARKED);
 	}
 }

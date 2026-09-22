@@ -66,5 +66,4 @@ public class StatueLineExitRoom extends StatueLineRoom {
 		return super.canPlaceCharacter(p, l) && l.pointToCell(p) != l.exit();
 	}
 
-
 }

@@ -41,7 +41,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class GooSprite extends MobSprite {
-	
+
 	private Animation pump;
 	private Animation pumpAttack;
 
@@ -53,29 +53,29 @@ public class GooSprite extends MobSprite {
 
 	public GooSprite() {
 		super();
-		
-		texture( Assets.Sprites.GOO );
-		
-		TextureFilm frames = new TextureFilm( texture, 20, 14 );
-		
-		idle = new Animation( 10, true );
-		idle.frames( frames, 2, 1, 0, 0, 1 );
-		
-		run = new Animation( 15, true );
-		run.frames( frames, 3, 2, 1, 2 );
-		
-		pump = new Animation( 20, true );
-		pump.frames( frames, 4, 3, 2, 1, 0 );
 
-		pumpAttack = new Animation ( 20, false );
-		pumpAttack.frames( frames, 4, 3, 2, 1, 0, 7);
+		texture(Assets.Sprites.GOO);
 
-		attack = new Animation( 10, false );
-		attack.frames( frames, 8, 9, 10 );
-		
-		die = new Animation( 10, false );
-		die.frames( frames, 5, 6, 7 );
-		
+		TextureFilm frames = new TextureFilm(texture, 20, 14);
+
+		idle = new Animation(10, true);
+		idle.frames(frames, 2, 1, 0, 0, 1);
+
+		run = new Animation(15, true);
+		run.frames(frames, 3, 2, 1, 2);
+
+		pump = new Animation(20, true);
+		pump.frames(frames, 4, 3, 2, 1, 0);
+
+		pumpAttack = new Animation(20, false);
+		pumpAttack.frames(frames, 4, 3, 2, 1, 0, 7);
+
+		attack = new Animation(10, false);
+		attack.frames(frames, 8, 9, 10);
+
+		die = new Animation(10, false);
+		die.frames(frames, 5, 6, 7);
+
 		play(idle);
 
 		spray = centerEmitter();
@@ -89,20 +89,20 @@ public class GooSprite extends MobSprite {
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
-		if (ch.HP*2 <= ch.HT)
+		if (ch.HP * 2 <= ch.HT)
 			spray(true);
 	}
 
-	public void pumpUp( int warnDist ) {
+	public void pumpUp(int warnDist) {
 		pumpUpEmitterDist = warnDist;
-		if (warnDist > 0){
+		if (warnDist > 0) {
 			play(pump);
-			Sample.INSTANCE.play( Assets.Sounds.CHARGEUP, 1f, warnDist == 1 ? 0.8f : 1f );
+			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 1f, warnDist == 1 ? 0.8f : 1f);
 		}
 		updateEmitters();
 	}
 
-	public void updateEmitters( ){
+	public void updateEmitters() {
 		clearEmitters();
 		if (pumpUpEmitterDist > 0 && ch != null) {
 			lastPumpUpPos = ch.pos;
@@ -113,8 +113,11 @@ public class GooSprite extends MobSprite {
 			for (int i = 0; i < Dungeon.level.length(); i++) {
 				if (ch.fieldOfView != null && ch.fieldOfView[i]
 						&& Dungeon.level.distance(i, ch.pos) <= pumpUpEmitterDist
-						&& new Ballistica(ch.pos, i, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos == i
-						&& new Ballistica(i, ch.pos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos == ch.pos) {
+						&& new Ballistica(ch.pos, i,
+								Ballistica.STOP_TARGET | Ballistica.STOP_SOLID
+										| Ballistica.IGNORE_SOFT_SOLID).collisionPos == i
+						&& new Ballistica(i, ch.pos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID
+								| Ballistica.IGNORE_SOFT_SOLID).collisionPos == ch.pos) {
 					Emitter e = CellEmitter.get(i);
 					e.pour(GooParticle.FACTORY, 0.04f);
 					pumpUpEmitters.add(e);
@@ -123,27 +126,29 @@ public class GooSprite extends MobSprite {
 		}
 	}
 
-	public void clearEmitters(){
-		for (Emitter e : pumpUpEmitters){
+	public void clearEmitters() {
+		for (Emitter e : pumpUpEmitters) {
 			e.on = false;
 		}
 		pumpUpEmitters.clear();
 	}
 
-	public void triggerEmitters(){
-		for (Emitter e : pumpUpEmitters){
+	public void triggerEmitters() {
+		for (Emitter e : pumpUpEmitters) {
 			e.burst(ElmoParticle.FACTORY, 10);
 		}
-		Sample.INSTANCE.play( Assets.Sounds.BURNING );
+		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		pumpUpEmitterDist = 0;
 		pumpUpEmitters.clear();
 	}
 
-	public void pumpAttack() { play(pumpAttack); }
+	public void pumpAttack() {
+		play(pumpAttack);
+	}
 
 	@Override
 	public void play(Animation anim) {
-		if (anim != pump && anim != pumpAttack){
+		if (anim != pump && anim != pumpAttack) {
 			pumpUpEmitterDist = 0;
 			clearEmitters();
 		}
@@ -155,7 +160,7 @@ public class GooSprite extends MobSprite {
 		return 0xFF000000;
 	}
 
-	public void spray(boolean on){
+	public void spray(boolean on) {
 		spray.on = on;
 	}
 
@@ -166,7 +171,7 @@ public class GooSprite extends MobSprite {
 			spray.pos(center());
 			spray.visible = visible;
 		}
-		if (pumpUpEmitterDist > 0 && ch != null && ch.pos != lastPumpUpPos){
+		if (pumpUpEmitterDist > 0 && ch != null && ch.pos != lastPumpUpPos) {
 			updateEmitters();
 		}
 	}
@@ -175,21 +180,21 @@ public class GooSprite extends MobSprite {
 
 		public static final Emitter.Factory FACTORY = new Factory() {
 			@Override
-			public void emit( Emitter emitter, int index, float x, float y ) {
-				((GooParticle)emitter.recycle( GooParticle.class )).reset( x, y );
+			public void emit(Emitter emitter, int index, float x, float y) {
+				((GooParticle) emitter.recycle(GooParticle.class)).reset(x, y);
 			}
 		};
 
 		public GooParticle() {
 			super();
 
-			color( 0x000000 );
+			color(0x000000);
 			lifespan = 0.3f;
 
-			acc.set( 0, +50 );
+			acc.set(0, +50);
 		}
 
-		public void reset( float x, float y ) {
+		public void reset(float x, float y) {
 			revive();
 
 			this.x = x;
@@ -198,7 +203,7 @@ public class GooSprite extends MobSprite {
 			left = lifespan;
 
 			size = 4;
-			speed.polar( -Random.Float( PointF.PI ), Random.Float( 32, 48 ) );
+			speed.polar(-Random.Float(PointF.PI), Random.Float(32, 48));
 		}
 
 		@Override
@@ -210,7 +215,7 @@ public class GooSprite extends MobSprite {
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
+	public void onComplete(Animation anim) {
 		super.onComplete(anim);
 
 		if (anim == pumpAttack) {

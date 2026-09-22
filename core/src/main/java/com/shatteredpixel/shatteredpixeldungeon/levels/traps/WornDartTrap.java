@@ -47,7 +47,7 @@ public class WornDartTrap extends Trap {
 	{
 		color = GREY;
 		shape = CROSSHAIR;
-		
+
 		canBeHidden = false;
 		avoidsHallways = true;
 	}
@@ -70,42 +70,45 @@ public class WornDartTrap extends Trap {
 				//find the closest char that can be aimed at
 				//can't target beyond view distance, with a min of 6 (torch range)
 				//add 0.5 for better consistency with vision radius shape
-				float range = Math.max(6, Dungeon.level.viewDistance)+0.5f;
-				if (target == null){
+				float range = Math.max(6, Dungeon.level.viewDistance) + 0.5f;
+				if (target == null) {
 					float closestDist = Float.MAX_VALUE;
-					for (Char ch : Actor.chars()){
-						if (!ch.isAlive()) continue;
+					for (Char ch : Actor.chars()) {
+						if (!ch.isAlive())
+							continue;
 						float curDist = Dungeon.level.trueDistance(pos, ch.pos);
 						//invis targets are considered to be at max range
-						if (ch.invisible > 0) curDist = Math.max(curDist, range);
+						if (ch.invisible > 0)
+							curDist = Math.max(curDist, range);
 						Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);
 						if (bolt.collisionPos == ch.pos
-								&& ( curDist < closestDist || (curDist == closestDist && target instanceof Hero))){
+								&& (curDist < closestDist || (curDist == closestDist && target instanceof Hero))) {
 							target = ch;
 							closestDist = curDist;
 						}
 					}
-					if (closestDist > range){
+					if (closestDist > range) {
 						target = null;
 					}
 				}
 
 				if (target != null) {
-					if (target instanceof Mob){
+					if (target instanceof Mob) {
 						Buff.prolong(target, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 					}
 					final Char finalTarget = target;
 					if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[target.pos]) {
-						((MissileSprite) ShatteredPixelDungeon.scene().recycle(MissileSprite.class)).
-								reset(pos, finalTarget.sprite, new Dart(), new Callback() {
+						((MissileSprite) ShatteredPixelDungeon.scene().recycle(MissileSprite.class)).reset(pos,
+								finalTarget.sprite, new Dart(), new Callback() {
 									@Override
 									public void call() {
 										int dmg = Random.NormalIntRange(4, 8) - finalTarget.drRoll();
 										finalTarget.damage(dmg, WornDartTrap.this);
-										if (finalTarget == Dungeon.hero && !finalTarget.isAlive()){
-											Dungeon.fail( WornDartTrap.this  );
+										if (finalTarget == Dungeon.hero && !finalTarget.isAlive()) {
+											Dungeon.fail(WornDartTrap.this);
 											GLog.n(Messages.get(WornDartTrap.class, "ondeath"));
-											if (reclaimed) Badges.validateDeathFromFriendlyMagic();
+											if (reclaimed)
+												Badges.validateDeathFromFriendlyMagic();
 										}
 										Sample.INSTANCE.play(Assets.Sounds.HIT, 1, 1, Random.Float(0.8f, 1.25f));
 										finalTarget.sprite.bloodBurstA(finalTarget.sprite.center(), dmg);

@@ -37,30 +37,30 @@ public class Bat extends Mob {
 
 	{
 		spriteClass = BatSprite.class;
-		
+
 		HP = HT = 30;
 		defenseSkill = 15;
 		baseSpeed = 2f;
-		
+
 		EXP = 7;
 		maxLvl = 15;
-		
+
 		flying = true;
-		
+
 		loot = PotionOfHealing.class;
 		lootChance = 0.1667f; //by default, see lootChance()
 	}
-	
+
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 5, 18 );
+		return Random.NormalIntRange(5, 18);
 	}
-	
+
 	@Override
-	public int attackSkill( Char target ) {
+	public int attackSkill(Char target) {
 		return 16;
 	}
-	
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 4);
@@ -73,27 +73,27 @@ public class Bat extends Mob {
 	}
 
 	@Override
-	public int attackProc( Char enemy, int damage ) {
-		damage = super.attackProc( enemy, damage );
-		int reg = Math.min( damage - 4, HT - HP );
-		
+	public int attackProc(Char enemy, int damage) {
+		damage = super.attackProc(enemy, damage);
+		int reg = Math.min(damage - 4, HT - HP);
+
 		if (reg > 0) {
 			HP += reg;
 			sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(reg), FloatingText.HEALING);
 		}
-		
+
 		return damage;
 	}
-	
+
 	@Override
-	public float lootChance(){
+	public float lootChance() {
 		return super.lootChance() * ((7f - Dungeon.LimitedDrops.BAT_HP.count) / 7f);
 	}
-	
+
 	@Override
-	public Item createLoot(){
+	public Item createLoot() {
 		Dungeon.LimitedDrops.BAT_HP.count++;
 		return super.createLoot();
 	}
-	
+
 }

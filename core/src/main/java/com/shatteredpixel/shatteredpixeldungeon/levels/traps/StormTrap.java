@@ -37,28 +37,28 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.PathFinder;
 
 public class StormTrap extends Trap {
-	
+
 	{
 		color = YELLOW;
 		shape = STARS;
 	}
-	
+
 	@Override
 	public void activate() {
-		
-		if (Dungeon.level.heroFOV[pos]){
-			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
+
+		if (Dungeon.level.heroFOV[pos]) {
+			Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 		}
-		
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				GameScene.add(Blob.seed(i, 20, Electricity.class));
-				if (Actor.findChar(i) instanceof Mob){
+				if (Actor.findChar(i) instanceof Mob) {
 					Buff.prolong(Actor.findChar(i), Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 				}
 			}
 		}
 	}
-	
+
 }

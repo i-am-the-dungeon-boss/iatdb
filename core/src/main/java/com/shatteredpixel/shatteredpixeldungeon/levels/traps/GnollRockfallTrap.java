@@ -58,60 +58,62 @@ public class GnollRockfallTrap extends RockfallTrap {
 		ArrayList<Integer> rockCells = new ArrayList<>();
 
 		//drop rocks in a 5x5 grid, ignoring cells next to barricades
-		PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );
+		PathFinder.buildDistanceMap(pos, BArray.not(Dungeon.level.solid, null), 2);
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
-				if (Dungeon.level instanceof MiningLevel){
+				if (Dungeon.level instanceof MiningLevel) {
 					boolean barricade = false;
-					for (int j : PathFinder.NEIGHBOURS9){
-						if (Dungeon.level.map[i+j] == Terrain.BARRICADE){
+					for (int j : PathFinder.NEIGHBOURS9) {
+						if (Dungeon.level.map[i + j] == Terrain.BARRICADE) {
 							barricade = true;
 						}
 					}
-					if (barricade) continue;
+					if (barricade)
+						continue;
 				}
 				rockCells.add(i);
 			}
 		}
 
 		boolean seen = false;
-		for (int cell : rockCells){
+		for (int cell : rockCells) {
 
-			if (Dungeon.level.heroFOV[ cell ]){
-				CellEmitter.get( cell - Dungeon.level.width() ).start(Speck.factory(Speck.ROCK), 0.07f, 10);
+			if (Dungeon.level.heroFOV[cell]) {
+				CellEmitter.get(cell - Dungeon.level.width()).start(Speck.factory(Speck.ROCK), 0.07f, 10);
 				seen = true;
 			}
 
-			Char ch = Actor.findChar( cell );
+			Char ch = Actor.findChar(cell);
 
-			if (ch != null && ch.isAlive() && !(ch instanceof GnollGeomancer)){
-				if (ch instanceof Mob){
+			if (ch != null && ch.isAlive() && !(ch instanceof GnollGeomancer)) {
+				if (ch instanceof Mob) {
 					Buff.prolong(ch, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
 				}
 
 				//deals notably less damage than a regular rockfall trap, but ignores armor
 				int damage = Random.NormalIntRange(6, 12);
-				ch.damage( Math.max(damage, 0) , this);
+				ch.damage(Math.max(damage, 0), this);
 
 				//guards take full paralysis, otherwise just a little
 				Buff.prolong(ch, Paralysis.class, ch instanceof GnollGuard ? 10 : 3);
 
-				if (!ch.isAlive() && ch == Dungeon.hero){
-					Dungeon.fail( this );
-					GLog.n( Messages.get(this, "ondeath") );
-					if (reclaimed) Badges.validateDeathFromFriendlyMagic();
+				if (!ch.isAlive() && ch == Dungeon.hero) {
+					Dungeon.fail(this);
+					GLog.n(Messages.get(this, "ondeath"));
+					if (reclaimed)
+						Badges.validateDeathFromFriendlyMagic();
 				}
 			} else if (ch == null
 					&& Dungeon.level instanceof MiningLevel
 					&& Dungeon.level.traps.get(cell) == null
 					&& Dungeon.level.plants.get(cell) == null
-					&& Random.Int(2) == 0){
-				Level.set( cell, Terrain.MINE_BOULDER );
+					&& Random.Int(2) == 0) {
+				Level.set(cell, Terrain.MINE_BOULDER);
 				GameScene.updateMap(cell);
 			}
 		}
 
-		if (seen){
+		if (seen) {
 			PixelScene.shake(3, 0.7f);
 			Sample.INSTANCE.play(Assets.Sounds.ROCKS);
 		}

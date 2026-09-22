@@ -77,7 +77,7 @@ public class AscendedForm extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		return new Talent[]{Talent.DIVINE_INTERVENTION, Talent.JUDGEMENT, Talent.FLASH, Talent.HEROIC_ENERGY};
+		return new Talent[] { Talent.DIVINE_INTERVENTION, Talent.JUDGEMENT, Talent.FLASH, Talent.HEROIC_ENERGY };
 	}
 
 	public static class AscendBuff extends ShieldBuff {
@@ -103,13 +103,15 @@ public class AscendedForm extends ArmorAbility {
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)left);
+			return Integer.toString((int) left);
 		}
 
 		@Override
 		public void fx(boolean on) {
-			if (on) target.sprite.add(CharSprite.State.GLOWING);
-			else    target.sprite.remove(CharSprite.State.GLOWING);
+			if (on)
+				target.sprite.add(CharSprite.State.GLOWING);
+			else
+				target.sprite.remove(CharSprite.State.GLOWING);
 		}
 
 		public int left = 10;
@@ -117,22 +119,22 @@ public class AscendedForm extends ArmorAbility {
 		public int flashCasts = 0;
 		public boolean divineInverventionCast = false;
 
-		public void reset(){
+		public void reset() {
 			setShield(30);
-			left = (int)DURATION;
+			left = (int) DURATION;
 		}
 
-		public void extend( int amt ){
+		public void extend(int amt) {
 			left += amt;
 		}
 
 		@Override
 		public boolean act() {
 			left--;
-			if (left <= 0){
+			if (left <= 0) {
 				detach();
-				for (Char ch : Actor.chars()){
-					if (ch.buff(DivineIntervention.DivineShield.class) != null){
+				for (Char ch : Actor.chars()) {
+					if (ch.buff(DivineIntervention.DivineShield.class) != null) {
 						ch.buff(DivineIntervention.DivineShield.class).detach();
 					}
 				}

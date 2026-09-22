@@ -48,7 +48,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 public class FlashBangBomb extends Bomb {
-	
+
 	{
 		image = ItemSpriteSheet.FLASHBANG;
 	}
@@ -63,7 +63,7 @@ public class FlashBangBomb extends Bomb {
 		super.explode(cell);
 
 		ArrayList<Char> affected = new ArrayList<>();
-		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange() );
+		PathFinder.buildDistanceMap(cell, BArray.not(Dungeon.level.solid, null), explosionRange());
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE && Actor.findChar(i) != null) {
 				affected.add(Actor.findChar(i));
@@ -71,14 +71,16 @@ public class FlashBangBomb extends Bomb {
 		}
 
 		ArrayList<Lightning.Arc> arcs = new ArrayList<>();
-		for (Char ch : affected){
+		for (Char ch : affected) {
 			//25% bonus damage and 10 turns of stun
-			int damage = Math.round(Random.NormalIntRange(4 + Dungeon.scalingDepth(), 12 + 3*Dungeon.scalingDepth()) / 4f);
+			int damage = Math
+					.round(Random.NormalIntRange(4 + Dungeon.scalingDepth(), 12 + 3 * Dungeon.scalingDepth()) / 4f);
 			ch.damage(damage, new Electricity());
-			if (ch.isAlive()) Buff.prolong(ch, Paralysis.class, Paralysis.DURATION);
+			if (ch.isAlive())
+				Buff.prolong(ch, Paralysis.class, Paralysis.DURATION);
 			arcs.add(new Lightning.Arc(DungeonTilemap.tileCenterToWorld(cell), ch.sprite.center()));
 
-			if (ch == Dungeon.hero){
+			if (ch == Dungeon.hero) {
 				GameScene.flash(0x80FFFFFF);
 			}
 
@@ -91,9 +93,9 @@ public class FlashBangBomb extends Bomb {
 
 		CellEmitter.center(cell).burst(SparkParticle.FACTORY, 20);
 		Dungeon.hero.sprite.parent.addToFront(new Lightning(arcs, null));
-		Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
+		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 	}
-	
+
 	@Override
 	public int value() {
 		//prices of ingredients

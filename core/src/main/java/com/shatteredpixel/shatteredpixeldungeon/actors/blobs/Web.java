@@ -38,23 +38,23 @@ public class Web extends Blob {
 
 	{
 		//acts before the hero, to ensure terrain is adjusted correctly
-		actPriority = HERO_PRIO+1;
+		actPriority = HERO_PRIO + 1;
 	}
-	
+
 	@Override
 	protected void evolve() {
 
 		int cell;
 
 		Level l = Dungeon.level;
-		for (int i = area.left; i < area.right; i++){
-			for (int j = area.top; j < area.bottom; j++){
-				cell = i + j*l.width();
+		for (int i = area.left; i < area.right; i++) {
+			for (int j = area.top; j < area.bottom; j++) {
+				cell = i + j * l.width();
 				off[cell] = cur[cell] > 0 ? cur[cell] - 1 : 0;
 
 				volume += off[cell];
 
-				if (off[cell] == 0 && cur[cell] > 0){
+				if (off[cell] == 0 && cur[cell] > 0) {
 					cellsToFlagUpdate.add(cell);
 				}
 			}
@@ -68,21 +68,22 @@ public class Web extends Blob {
 	}
 
 	//affects characters as they step on it. See Level.OccupyCell and Level.PressCell
-	public static void affectChar( Char ch ){
-		Buff.prolong( ch, Roots.class, Roots.DURATION );
+	public static void affectChar(Char ch) {
+		Buff.prolong(ch, Roots.class, Roots.DURATION);
 	}
-	
+
 	@Override
-	public void use( BlobEmitter emitter ) {
-		super.use( emitter );
-		
-		emitter.pour( WebParticle.FACTORY, 0.25f );
+	public void use(BlobEmitter emitter) {
+		super.use(emitter);
+
+		emitter.pour(WebParticle.FACTORY, 0.25f);
 	}
 
 	@Override
 	public void clear(int cell) {
 		super.clear(cell);
-		if (cur == null) return;
+		if (cur == null)
+			return;
 		Dungeon.level.updateCellFlags(cell);
 	}
 
@@ -94,8 +95,8 @@ public class Web extends Blob {
 
 	@Override
 	public void onBuildFlagMaps(Level l) {
-		if (volume > 0){
-			for (int i=0; i < l.length(); i++) {
+		if (volume > 0) {
+			for (int i = 0; i < l.length(); i++) {
 				onUpdateCellFlags(l, i);
 			}
 		}

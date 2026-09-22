@@ -42,25 +42,25 @@ public class PhantomPiranhaSprite extends MobSprite {
 		renderShadow = false;
 		perspectiveRaise = 0.2f;
 
-		texture( Assets.Sprites.PIRANHA );
+		texture(Assets.Sprites.PIRANHA);
 
-		TextureFilm frames = new TextureFilm( texture, 12, 16 );
+		TextureFilm frames = new TextureFilm(texture, 12, 16);
 
 		int c = 21;
 
-		idle = new MovieClip.Animation( 8, true );
-		idle.frames( frames, c+0, c+1, c+2, c+1 );
+		idle = new MovieClip.Animation(8, true);
+		idle.frames(frames, c + 0, c + 1, c + 2, c + 1);
 
-		run = new MovieClip.Animation( 20, true );
-		run.frames( frames, c+0, c+1, c+2, c+1 );
+		run = new MovieClip.Animation(20, true);
+		run.frames(frames, c + 0, c + 1, c + 2, c + 1);
 
-		attack = new MovieClip.Animation( 20, false );
-		attack.frames( frames, c+3, c+4, c+5, c+6, c+7, c+8, c+9, c+10, c+11 );
+		attack = new MovieClip.Animation(20, false);
+		attack.frames(frames, c + 3, c + 4, c + 5, c + 6, c + 7, c + 8, c + 9, c + 10, c + 11);
 
-		die = new MovieClip.Animation( 4, false );
-		die.frames( frames, c+12, c+13, c+14 );
+		die = new MovieClip.Animation(4, false);
+		die.frames(frames, c + 12, c + 13, c + 14);
 
-		play( idle );
+		play(idle);
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class PhantomPiranhaSprite extends MobSprite {
 
 		if (sparkles == null) {
 			sparkles = emitter();
-			sparkles.pour( Speck.factory( Speck.LIGHT ), 0.5f );
+			sparkles.pour(Speck.factory(Speck.LIGHT), 0.5f);
 		}
 	}
 
@@ -102,12 +102,11 @@ public class PhantomPiranhaSprite extends MobSprite {
 	}
 
 	@Override
-	public void onComplete( MovieClip.Animation anim ) {
-		super.onComplete( anim );
+	public void onComplete(MovieClip.Animation anim) {
+		super.onComplete(anim);
 
 		if (anim == attack) {
-			GameScene.ripple( ch.pos );
+			GameScene.ripple(ch.pos);
 		}
 	}
 }
-

@@ -40,39 +40,39 @@ public class Pushing extends Actor {
 	private CharSprite sprite;
 	private int from;
 	private int to;
-	
+
 	private Effect effect;
 	private Char ch;
 
 	private Callback callback;
 
 	{
-		actPriority = VFX_PRIO+10;
+		actPriority = VFX_PRIO + 10;
 	}
-	
-	public Pushing( Char ch, int from, int to ) {
+
+	public Pushing(Char ch, int from, int to) {
 		this.ch = ch;
 		sprite = ch.sprite;
 		this.from = from;
 		this.to = to;
 		this.callback = null;
 
-		if (ch == Dungeon.hero){
+		if (ch == Dungeon.hero) {
 			Camera.main.panFollow(ch.sprite, 20f);
 		}
 	}
 
-	public Pushing( Char ch, int from, int to, Callback callback ) {
+	public Pushing(Char ch, int from, int to, Callback callback) {
 		this(ch, from, to);
 		this.callback = callback;
 	}
-	
+
 	@Override
 	protected boolean act() {
-		Actor.remove( Pushing.this );
+		Actor.remove(Pushing.this);
 
 		if (sprite != null && sprite.parent != null) {
-			if (Dungeon.level.heroFOV[from] || Dungeon.level.heroFOV[to]){
+			if (Dungeon.level.heroFOV[from] || Dungeon.level.heroFOV[to]) {
 				sprite.visible = true;
 			}
 			if (effect == null) {
@@ -83,7 +83,7 @@ public class Pushing extends Actor {
 		}
 
 		//so that all pushing effects at the same time go simultaneously
-		for ( Actor actor : Actor.all() ){
+		for (Actor actor : Actor.all()) {
 			if (actor instanceof Pushing && actor.cooldown() == 0)
 				return true;
 		}
@@ -92,8 +92,8 @@ public class Pushing extends Actor {
 	}
 
 	public static boolean pushingExistsForChar(Char ch) {
-		for (Actor a : all()){
-			if (a instanceof Pushing && ((Pushing)a).ch == ch){
+		for (Actor a : all()) {
+			if (a instanceof Pushing && ((Pushing) a).ch == ch) {
 				return true;
 			}
 		}
@@ -103,42 +103,43 @@ public class Pushing extends Actor {
 	public class Effect extends Visual {
 
 		private static final float DELAY = 0.15f;
-		
+
 		private PointF end;
-		
+
 		private float delay;
-		
+
 		public Effect() {
-			super( 0, 0, 0, 0 );
-			
-			point( sprite.worldToCamera( from ) );
-			end = sprite.worldToCamera( to );
-			
-			speed.set( 2 * (end.x - x) / DELAY, 2 * (end.y - y) / DELAY );
-			acc.set( -speed.x / DELAY, -speed.y / DELAY );
-			
+			super(0, 0, 0, 0);
+
+			point(sprite.worldToCamera(from));
+			end = sprite.worldToCamera(to);
+
+			speed.set(2 * (end.x - x) / DELAY, 2 * (end.y - y) / DELAY);
+			acc.set(-speed.x / DELAY, -speed.y / DELAY);
+
 			delay = 0;
 
 			if (sprite.parent != null)
-				sprite.parent.add( this );
+				sprite.parent.add(this);
 		}
-		
+
 		@Override
 		public void update() {
 			super.update();
-			
+
 			if ((delay += Game.elapsed) < DELAY) {
-				
+
 				sprite.x = x;
 				sprite.y = y;
-				
+
 			} else {
-				
+
 				sprite.point(end);
-				
+
 				killAndErase();
 				Actor.remove(Pushing.this);
-				if (callback != null) callback.call();
+				if (callback != null)
+					callback.call();
 				GameScene.sortMobSprites();
 
 				next();

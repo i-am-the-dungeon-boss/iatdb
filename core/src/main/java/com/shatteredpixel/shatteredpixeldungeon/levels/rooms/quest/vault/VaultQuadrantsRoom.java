@@ -36,28 +36,28 @@ public class VaultQuadrantsRoom extends StandardRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
 	public void paint(Level level) {
-		Painter.fill( level, this, Terrain.WALL );
-		Painter.fill( level, this, 1, Terrain.EMPTY );
+		Painter.fill(level, this, Terrain.WALL);
+		Painter.fill(level, this, 1, Terrain.EMPTY);
 
 		Point c = center();
-		Painter.drawInside( level, this, new Point(left, c.y), 3, Terrain.WALL);
-		Painter.drawInside( level, this, new Point(right, c.y), 3, Terrain.WALL);
-		Painter.drawInside( level, this, new Point(c.x, top), 3, Terrain.WALL);
-		Painter.drawInside( level, this, new Point(c.x, bottom), 3, Terrain.WALL);
+		Painter.drawInside(level, this, new Point(left, c.y), 3, Terrain.WALL);
+		Painter.drawInside(level, this, new Point(right, c.y), 3, Terrain.WALL);
+		Painter.drawInside(level, this, new Point(c.x, top), 3, Terrain.WALL);
+		Painter.drawInside(level, this, new Point(c.x, bottom), 3, Terrain.WALL);
 
 		//TODO 4x laser?
-		Painter.set( level, c, Terrain.STATUE);
+		Painter.set(level, c, Terrain.STATUE);
 
 		VaultLaser laser = new VaultLaser();
 		//laser.laserDirs = new int[];
 
 		for (Room.Door door : connected.values()) {
-			door.set( Room.Door.Type.REGULAR );
+			door.set(Room.Door.Type.REGULAR);
 		}
 	}
 

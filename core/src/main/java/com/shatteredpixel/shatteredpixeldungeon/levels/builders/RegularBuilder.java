@@ -38,33 +38,33 @@ import java.util.LinkedHashSet;
 //Introduces the concept of a main path, and branches
 // with tunnels padding rooms placed in them
 public abstract class RegularBuilder extends Builder {
-	
+
 	// *** Parameter values for level building logic ***
 	// note that implementations do not have to use al of these variables
-	
+
 	protected float pathVariance = 45f;
-	
-	public RegularBuilder setPathVariance( float var ){
+
+	public RegularBuilder setPathVariance(float var) {
 		pathVariance = var;
 		return this;
 	}
-	
+
 	//path length is the percentage of pathable rooms that are on the main path
 	protected float pathLength = 0.25f;
 	//The chance weights for extra rooms to be added to the path
-	protected float[] pathLenJitterChances = new float[]{0, 0, 0, 1};
+	protected float[] pathLenJitterChances = new float[] { 0, 0, 0, 1 };
 	//default is 25% of multi connection rooms, plus 3
-	
-	public RegularBuilder setPathLength( float len, float[] jitter ){
+
+	public RegularBuilder setPathLength(float len, float[] jitter) {
 		pathLength = len;
 		pathLenJitterChances = jitter;
 		return this;
 	}
-	
-	protected float[] pathTunnelChances = new float[]{2, 2, 1};
-	protected float[] branchTunnelChances = new float[]{1, 1, 0};
-	
-	public RegularBuilder setTunnelLength( float[] path, float[] branch){
+
+	protected float[] pathTunnelChances = new float[] { 2, 2, 1 };
+	protected float[] branchTunnelChances = new float[] { 1, 1, 0 };
+
+	public RegularBuilder setTunnelLength(float[] path, float[] branch) {
 		pathTunnelChances = path;
 		branchTunnelChances = branch;
 		return this;
@@ -72,14 +72,14 @@ public abstract class RegularBuilder extends Builder {
 
 	//each adjacency is processed twice, so this gives a ~50% chance to connect two adjacent rooms
 	protected float extraConnectionChance = 0.30f;
-	
-	public RegularBuilder setExtraConnectionChance( float chance ){
+
+	public RegularBuilder setExtraConnectionChance(float chance) {
 		extraConnectionChance = chance;
 		return this;
 	}
-	
+
 	// *** Room Setup ***
-	
+
 	protected Room entrance = null;
 	protected Room exit = null;
 	protected Room shop = null;
@@ -88,26 +88,26 @@ public abstract class RegularBuilder extends Builder {
 
 	protected ArrayList<Room> multiConnections = new ArrayList<>();
 	protected ArrayList<Room> singleConnections = new ArrayList<>();
-	
-	protected void setupRooms(ArrayList<Room> rooms){
-		for(Room r : rooms){
+
+	protected void setupRooms(ArrayList<Room> rooms) {
+		for (Room r : rooms) {
 			r.setEmpty();
 		}
-		
+
 		entrance = exit = shop = null;
 		mainPathRooms.clear();
 		singleConnections.clear();
 		multiConnections.clear();
-		for (Room r : rooms){
-			if (r.isEntrance()){
+		for (Room r : rooms) {
+			if (r.isEntrance()) {
 				entrance = r;
 			} else if (r.isExit()) {
 				exit = r;
-			} else if (r instanceof ShopRoom && r.maxConnections(Room.ALL) == 1){
+			} else if (r instanceof ShopRoom && r.maxConnections(Room.ALL) == 1) {
 				shop = r;
-			} else if (r.maxConnections(Room.ALL) > 1){
+			} else if (r.maxConnections(Room.ALL) > 1) {
 				multiConnections.add(r);
-			} else if (r.maxConnections(Room.ALL) == 1){
+			} else if (r.maxConnections(Room.ALL) == 1) {
 				singleConnections.add(r);
 			}
 		}
@@ -119,11 +119,11 @@ public abstract class RegularBuilder extends Builder {
 		//shuffle one more time to ensure that the actual ordering of the path doesn't put big rooms early
 		Random.shuffle(multiConnections);
 
-		int roomsOnMainPath = (int)(multiConnections.size()*pathLength) + Random.chances(pathLenJitterChances);
+		int roomsOnMainPath = (int) (multiConnections.size() * pathLength) + Random.chances(pathLenJitterChances);
 
-		while (roomsOnMainPath > 0 && !multiConnections.isEmpty()){
+		while (roomsOnMainPath > 0 && !multiConnections.isEmpty()) {
 			Room r = multiConnections.remove(0);
-			if (r instanceof StandardRoom){
+			if (r instanceof StandardRoom) {
 				roomsOnMainPath -= ((StandardRoom) r).sizeFactor();
 			} else {
 				roomsOnMainPath--;
@@ -131,23 +131,23 @@ public abstract class RegularBuilder extends Builder {
 			mainPathRooms.add(r);
 		}
 	}
-	
+
 	// *** Branch Placement ***
-	
-	protected void weightRooms(ArrayList<Room> rooms){
-		for (Room r : rooms.toArray(new Room[0])){
-			if (r instanceof StandardRoom){
+
+	protected void weightRooms(ArrayList<Room> rooms) {
+		for (Room r : rooms.toArray(new Room[0])) {
+			if (r instanceof StandardRoom) {
 				for (int i = 1; i < ((StandardRoom) r).connectionWeight(); i++)
 					rooms.add(r);
 			}
 		}
 	}
-	
+
 	//places the rooms in roomsToBranch into branches from rooms in branchable.
 	//note that the three arrays should be separate, they may contain the same rooms however
 	protected boolean createBranches(ArrayList<Room> rooms, ArrayList<Room> branchable,
-	                                     ArrayList<Room> roomsToBranch, float[] connChances){
-		
+			ArrayList<Room> roomsToBranch, float[] connChances) {
+
 		int i = 0;
 		float angle;
 		int tries;
@@ -155,39 +155,39 @@ public abstract class RegularBuilder extends Builder {
 		ArrayList<Room> connectingRoomsThisBranch = new ArrayList<>();
 		int failedBranchAttempts = 0;
 		float[] connectionChances = connChances.clone();
-		while (i < roomsToBranch.size()){
+		while (i < roomsToBranch.size()) {
 
-			if (failedBranchAttempts > 100){
+			if (failedBranchAttempts > 100) {
 				return false;
 			}
-			
+
 			Room r = roomsToBranch.get(i);
-			
+
 			connectingRoomsThisBranch.clear();
-			
+
 			do {
 				curr = Random.element(branchable);
-			} while( r instanceof SecretRoom && curr instanceof ConnectionRoom);
-			
+			} while (r instanceof SecretRoom && curr instanceof ConnectionRoom);
+
 			int connectingRooms = Random.chances(connectionChances);
-			if (connectingRooms == -1){
+			if (connectingRooms == -1) {
 				connectionChances = connChances.clone();
 				connectingRooms = Random.chances(connectionChances);
 			}
 			connectionChances[connectingRooms]--;
-			
-			for (int j = 0; j < connectingRooms; j++){
+
+			for (int j = 0; j < connectingRooms; j++) {
 				ConnectionRoom t = r instanceof SecretRoom ? new MazeConnectionRoom() : ConnectionRoom.createRoom();
 				tries = 3;
-				
+
 				do {
 					angle = placeRoom(rooms, curr, t, randomBranchAngle(curr));
 					tries--;
 				} while (angle == -1 && tries > 0);
-				
+
 				if (angle == -1) {
 					t.clearConnections();
-					for (Room c : connectingRoomsThisBranch){
+					for (Room c : connectingRoomsThisBranch) {
 						c.clearConnections();
 						rooms.remove(c);
 					}
@@ -197,25 +197,25 @@ public abstract class RegularBuilder extends Builder {
 					connectingRoomsThisBranch.add(t);
 					rooms.add(t);
 				}
-				
+
 				curr = t;
 			}
-			
-			if (connectingRoomsThisBranch.size() != connectingRooms){
+
+			if (connectingRoomsThisBranch.size() != connectingRooms) {
 				failedBranchAttempts++;
 				continue;
 			}
-			
+
 			tries = 10;
-			
+
 			do {
 				angle = placeRoom(rooms, curr, r, randomBranchAngle(curr));
 				tries--;
 			} while (angle == -1 && tries > 0);
-			
-			if (angle == -1){
+
+			if (angle == -1) {
 				r.clearConnections();
-				for (Room t : connectingRoomsThisBranch){
+				for (Room t : connectingRoomsThisBranch) {
 					t.clearConnections();
 					rooms.remove(t);
 				}
@@ -223,28 +223,29 @@ public abstract class RegularBuilder extends Builder {
 				failedBranchAttempts++;
 				continue;
 			}
-			
-			for (int j = 0; j <connectingRoomsThisBranch.size(); j++){
-				if (Random.Int(3) <= 1) branchable.add(connectingRoomsThisBranch.get(j));
+
+			for (int j = 0; j < connectingRoomsThisBranch.size(); j++) {
+				if (Random.Int(3) <= 1)
+					branchable.add(connectingRoomsThisBranch.get(j));
 			}
 			if (r.maxConnections(Room.ALL) > 1 && Random.Int(3) == 0) {
-				if (r instanceof StandardRoom){
-					for (int j = 0; j < ((StandardRoom) r).connectionWeight(); j++){
+				if (r instanceof StandardRoom) {
+					for (int j = 0; j < ((StandardRoom) r).connectionWeight(); j++) {
 						branchable.add(r);
 					}
 				} else {
 					branchable.add(r);
 				}
 			}
-			
+
 			i++;
 		}
 
 		return true;
 	}
-	
-	protected float randomBranchAngle( Room r ){
+
+	protected float randomBranchAngle(Room r) {
 		return Random.Float(360f);
 	}
-	
+
 }

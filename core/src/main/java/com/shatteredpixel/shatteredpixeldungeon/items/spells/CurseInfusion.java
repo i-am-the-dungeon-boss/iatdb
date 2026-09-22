@@ -45,24 +45,25 @@ import com.watabou.noosa.audio.Sample;
 import java.util.ArrayList;
 
 public class CurseInfusion extends InventorySpell {
-	
+
 	{
 		image = ItemSpriteSheet.CURSE_INFUSE;
 
-		talentChance = 1/(float)Recipe.OUT_QUANTITY;
+		talentChance = 1 / (float) Recipe.OUT_QUANTITY;
 	}
 
 	@Override
 	protected boolean usableOnItem(Item item) {
-		return ((item instanceof EquipableItem && item.isUpgradable()) || item instanceof Wand || item instanceof SpiritBow);
+		return ((item instanceof EquipableItem && item.isUpgradable()) || item instanceof Wand
+				|| item instanceof SpiritBow);
 	}
 
 	@Override
 	protected void onItemSelected(Item item) {
-		
+
 		CellEmitter.get(curUser.pos).burst(ShadowParticle.UP, 5);
 		Sample.INSTANCE.play(Assets.Sounds.CURSED);
-		
+
 		item.cursed = true;
 		if (item instanceof Weapon) {
 			Weapon w = (Weapon) item;
@@ -75,12 +76,12 @@ public class CurseInfusion extends InventorySpell {
 				w.enchant(Weapon.Enchantment.randomCurse());
 			}
 			w.curseInfusionBonus = true;
-			if (w instanceof MagesStaff){
+			if (w instanceof MagesStaff) {
 				((MagesStaff) w).updateWand(true);
 			}
-		} else if (item instanceof Armor){
+		} else if (item instanceof Armor) {
 			Armor a = (Armor) item;
-			if (a.glyph != null){
+			if (a.glyph != null) {
 				//if we are freshly applying curse infusion, don't replace an existing curse
 				if (a.hasGoodGlyph() || a.curseInfusionBonus) {
 					a.inscribe(Armor.Glyph.randomCurse(a.glyph.getClass()));
@@ -89,36 +90,36 @@ public class CurseInfusion extends InventorySpell {
 				a.inscribe(Armor.Glyph.randomCurse());
 			}
 			a.curseInfusionBonus = true;
-		} else if (item instanceof Wand){
+		} else if (item instanceof Wand) {
 			((Wand) item).curseInfusionBonus = true;
 			((Wand) item).updateLevel();
-		} else if (item instanceof RingOfMight){
+		} else if (item instanceof RingOfMight) {
 			curUser.updateHT(false);
 		}
 		Badges.validateItemLevelAquired(item);
 		updateQuickslot();
 	}
-	
+
 	@Override
 	public int value() {
-		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (60 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
 
 	@Override
 	public int energyVal() {
-		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));
+		return (int) (12 * (quantity / (float) Recipe.OUT_QUANTITY));
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
 
 		private static final int OUT_QUANTITY = 4;
-		
+
 		{
-			inputs =  new Class[]{ScrollOfRemoveCurse.class, MetalShard.class};
-			inQuantity = new int[]{1, 1};
-			
+			inputs = new Class[] { ScrollOfRemoveCurse.class, MetalShard.class };
+			inQuantity = new int[] { 1, 1 };
+
 			cost = 6;
-			
+
 			output = CurseInfusion.class;
 			outQuantity = OUT_QUANTITY;
 		}

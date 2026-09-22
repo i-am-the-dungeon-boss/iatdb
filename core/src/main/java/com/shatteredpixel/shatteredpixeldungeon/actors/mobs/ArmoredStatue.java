@@ -42,7 +42,7 @@ public class ArmoredStatue extends Statue {
 
 	protected Armor armor;
 
-	public ArmoredStatue(){
+	public ArmoredStatue() {
 		super();
 
 		//double HP
@@ -58,27 +58,27 @@ public class ArmoredStatue extends Statue {
 		armor.inscribe(Armor.Glyph.random());
 	}
 
-	private static final String ARMOR	= "armor";
+	private static final String ARMOR = "armor";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		super.storeInBundle( bundle );
-		bundle.put( ARMOR, armor );
+	public void storeInBundle(Bundle bundle) {
+		super.storeInBundle(bundle);
+		bundle.put(ARMOR, armor);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		armor = (Armor)bundle.get( ARMOR );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		armor = (Armor) bundle.get(ARMOR);
 	}
 
 	@Override
 	public int drRoll() {
-		return super.drRoll() + Random.NormalIntRange( armor.DRMin(), armor.DRMax());
+		return super.drRoll() + Random.NormalIntRange(armor.DRMin(), armor.DRMax());
 	}
 
 	//used in some glyph calculations
-	public Armor armor(){
+	public Armor armor() {
 		return armor;
 	}
 
@@ -90,7 +90,7 @@ public class ArmoredStatue extends Statue {
 
 	@Override
 	public int glyphLevel(Class<? extends Armor.Glyph> cls) {
-		if (armor != null && armor.hasGlyph(cls, this)){
+		if (armor != null && armor.hasGlyph(cls, this)) {
 			return Math.max(super.glyphLevel(cls), armor.buffedLvl());
 		} else {
 			return super.glyphLevel(cls);
@@ -114,16 +114,16 @@ public class ArmoredStatue extends Statue {
 	}
 
 	@Override
-	public void die( Object cause ) {
+	public void die(Object cause) {
 		armor.identify(false);
-		Dungeon.level.drop( armor, pos ).sprite.drop();
-		super.die( cause );
+		Dungeon.level.drop(armor, pos).sprite.drop();
+		super.die(cause);
 	}
 
 	@Override
 	public String description() {
 		String desc = Messages.get(this, "desc");
-		if (weapon != null && armor != null){
+		if (weapon != null && armor != null) {
 			desc += "\n\n" + Messages.get(this, "desc_arm_wep", weapon.name(), armor.name());
 		}
 		return desc;

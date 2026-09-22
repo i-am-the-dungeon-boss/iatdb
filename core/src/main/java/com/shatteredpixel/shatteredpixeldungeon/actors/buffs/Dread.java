@@ -34,7 +34,7 @@ import com.watabou.utils.Bundle;
 
 public class Dread extends Buff {
 
-	protected int left = (int)DURATION;
+	protected int left = (int) DURATION;
 	public int object = 0;
 
 	public static final float DURATION = 20f;
@@ -47,8 +47,8 @@ public class Dread extends Buff {
 	//dread overrides terror
 	@Override
 	public boolean attachTo(Char target) {
-		if (super.attachTo(target)){
-			Buff.detach( target, Terror.class );
+		if (super.attachTo(target)) {
+			Buff.detach(target, Terror.class);
 			return true;
 		} else {
 			return false;
@@ -64,7 +64,7 @@ public class Dread extends Buff {
 
 		if (!Dungeon.level.heroFOV[target.pos]
 				&& Dungeon.level.distance(target.pos, Dungeon.hero.pos) >= 6) {
-			if (target instanceof Mob){
+			if (target instanceof Mob) {
 				((Mob) target).EXP /= 2;
 			}
 			target.destroy();
@@ -72,7 +72,7 @@ public class Dread extends Buff {
 			Dungeon.level.mobs.remove(target);
 		} else {
 			left--;
-			if (left <= 0){
+			if (left <= 0) {
 				detach();
 			}
 		}
@@ -81,25 +81,25 @@ public class Dread extends Buff {
 		return true;
 	}
 
-	public void extend( float duration ) {
+	public void extend(float duration) {
 		left += duration;
 	}
 
-	private static final String LEFT	= "left";
-	private static final String OBJECT    = "object";
+	private static final String LEFT = "left";
+	private static final String OBJECT = "object";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
+	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(LEFT, left);
 		bundle.put(OBJECT, object);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
-		object = bundle.getInt( OBJECT );
-		left = bundle.getInt( LEFT );
+	public void restoreFromBundle(Bundle bundle) {
+		super.restoreFromBundle(bundle);
+		object = bundle.getInt(OBJECT);
+		left = bundle.getInt(LEFT);
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class Dread extends Buff {
 
 	public void recover() {
 		left -= 5;
-		if (left <= 0){
+		if (left <= 0) {
 			detach();
 		}
 	}

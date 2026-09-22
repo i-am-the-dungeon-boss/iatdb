@@ -51,9 +51,9 @@ public class Amulet extends Item {
 	}
 
 	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = super.actions( hero );
-		if (hero.buff(AscensionChallenge.class) != null){
+	public ArrayList<String> actions(Hero hero) {
+		ArrayList<String> actions = super.actions(hero);
+		if (hero.buff(AscensionChallenge.class) != null) {
 			actions.clear();
 		} else {
 			actions.add(AC_END);
@@ -62,25 +62,25 @@ public class Amulet extends Item {
 	}
 
 	@Override
-	public void execute( Hero hero, String action ) {
+	public void execute(Hero hero, String action) {
 
-		super.execute( hero, action );
+		super.execute(hero, action);
 
 		if (action.equals(AC_END)) {
-			showAmuletScene( false );
+			showAmuletScene(false);
 		}
 	}
 
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
-		if (super.doPickUp( hero, pos )) {
+		if (super.doPickUp(hero, pos)) {
 
 			if (!Statistics.amuletObtained) {
 				Statistics.amuletObtained = true;
 				hero.spend(-hero.cooldown());
 
 				//delay with an actor here so pickup behaviour can fully process.
-				Actor.add(new Actor(){
+				Actor.add(new Actor() {
 
 					{
 						actPriority = VFX_PRIO;
@@ -89,7 +89,7 @@ public class Amulet extends Item {
 					@Override
 					protected boolean act() {
 						Actor.remove(this);
-						showAmuletScene( true );
+						showAmuletScene(true);
 						return false;
 					}
 				});
@@ -101,9 +101,9 @@ public class Amulet extends Item {
 		}
 	}
 
-	private void showAmuletScene( boolean showText ) {
+	private void showAmuletScene(boolean showText) {
 		AmuletScene.noText = !showText;
-		Game.switchScene( AmuletScene.class, new Game.SceneChangeCallback() {
+		Game.switchScene(AmuletScene.class, new Game.SceneChangeCallback() {
 			@Override
 			public void beforeCreate() {
 
@@ -137,7 +137,7 @@ public class Amulet extends Item {
 	public String desc() {
 		String desc = super.desc();
 
-		if (owner() == null || owner().buff(AscensionChallenge.class) == null){
+		if (owner() == null || owner().buff(AscensionChallenge.class) == null) {
 			desc += "\n\n" + Messages.get(this, "desc_origins");
 		} else {
 			desc += "\n\n" + Messages.get(this, "desc_ascent");

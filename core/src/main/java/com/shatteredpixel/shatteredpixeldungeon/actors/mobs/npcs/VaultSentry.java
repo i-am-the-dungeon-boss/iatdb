@@ -95,7 +95,7 @@ public class VaultSentry extends NPC {
 				}
 			}
 
-			if (visible && SFXLastPlayed+80 < ShatteredPixelDungeon.realTime) {
+			if (visible && SFXLastPlayed + 80 < ShatteredPixelDungeon.realTime) {
 				Sample.INSTANCE.play(Assets.Sounds.ZAP, 0.5f);
 				SFXLastPlayed = ShatteredPixelDungeon.realTime;
 			}
@@ -106,7 +106,7 @@ public class VaultSentry extends NPC {
 			}
 
 			scansMade++;
-			if (scansMade < scansAfterCooldown){
+			if (scansMade < scansAfterCooldown) {
 				curCooldown = 1;
 			} else {
 				scansMade = 0;
@@ -115,7 +115,7 @@ public class VaultSentry extends NPC {
 
 		}
 
-		if (curCooldown == 1 && giveWarning){
+		if (curCooldown == 1 && giveWarning) {
 			int[] scanDirsNextTurn = scanDirs[scanDirIdx];
 			for (int scanDir : scanDirsNextTurn) {
 				ConeAOE scan = new ConeAOE(
@@ -179,8 +179,8 @@ public class VaultSentry extends NPC {
 		bundle.put(SCAN_LENGTH, scanLength);
 		bundle.put(SCAN_DIR_IDX, scanDirIdx);
 		bundle.put(SCAN_DIRS_LEN, scanDirs.length);
-		for (int i = 0; i < scanDirs.length; i++){
-			bundle.put(SCAN_DIRS+i, scanDirs[i]);
+		for (int i = 0; i < scanDirs.length; i++) {
+			bundle.put(SCAN_DIRS + i, scanDirs[i]);
 		}
 
 		bundle.put(AFTER_SCAN_COOLDOWN, afterScanCooldown);
@@ -197,12 +197,12 @@ public class VaultSentry extends NPC {
 		scanLength = bundle.getFloat(SCAN_LENGTH);
 		scanDirIdx = bundle.getInt(SCAN_DIR_IDX);
 		scanDirs = new int[bundle.getInt(SCAN_DIRS_LEN)][];
-		for (int i = 0; i < scanDirs.length; i++){
-			scanDirs[i] = bundle.getIntArray(SCAN_DIRS+i);
+		for (int i = 0; i < scanDirs.length; i++) {
+			scanDirs[i] = bundle.getIntArray(SCAN_DIRS + i);
 		}
 
 		//3.3.X saves
-		if (bundle.contains(AFTER_SCAN_COOLDOWN)){
+		if (bundle.contains(AFTER_SCAN_COOLDOWN)) {
 			afterScanCooldown = bundle.getInt(AFTER_SCAN_COOLDOWN);
 			curCooldown = bundle.getInt(CUR_COOLDOWN);
 			scansAfterCooldown = bundle.getInt(SCANS);

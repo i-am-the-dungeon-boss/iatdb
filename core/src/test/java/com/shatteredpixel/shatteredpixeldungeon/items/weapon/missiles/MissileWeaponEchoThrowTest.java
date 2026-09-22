@@ -111,6 +111,7 @@ class MissileWeaponEchoThrowTest {
 		Assertions.assertThat(fx.missileSpriteRecycles).isGreaterThan(0);
 		Assertions.assertThat(player.HP).isLessThanOrEqualTo(hpBefore);
 	}
+
 	@Test
 	@DisplayName("Echo-thrown Javelin spends exactly one from the kit and never the kit's turn")
 	void echoThrownJavelinSpendsOne() {

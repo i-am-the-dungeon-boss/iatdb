@@ -28,15 +28,15 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.watabou.noosa.Image;
 
 public class Adrenaline extends FlavourBuff {
-	
+
 	{
 		type = buffType.POSITIVE;
-		
+
 		announced = true;
 	}
-	
-	public static final float DURATION	= 10f;
-	
+
+	public static final float DURATION = 10f;
+
 	@Override
 	public int icon() {
 		return BuffIndicator.UPGRADE;
@@ -51,5 +51,5 @@ public class Adrenaline extends FlavourBuff {
 	public float iconFadePercent() {
 		return Math.max(0, (DURATION - visualcooldown()) / DURATION);
 	}
-	
+
 }

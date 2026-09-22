@@ -454,7 +454,6 @@ public abstract class Wand extends Item {
 		return 1;
 	}
 
-
 	/**
 	 * Hero wand zap — cell already chosen (no CellSelector).
 	 * Echo uses {@link com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoWandAdapter}.
@@ -489,7 +488,7 @@ public abstract class Wand extends Item {
 				Buff.affect(Dungeon.hero, Barrier.class).setShield(shieldToGive);
 				Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE,
 						Integer.toString(shieldToGive), FloatingText.SHIELDING);
-			//metamorphed. Triggers if wand is highest level hero has
+				//metamorphed. Triggers if wand is highest level hero has
 			} else if (user.heroClass != HeroClass.MAGE) {
 				boolean highest = true;
 				for (Item i : user.belongings.getAllItems(Wand.class)) {

@@ -12,9 +12,7 @@ import org.json.JSONObject;
 public final class EchoPlayerAuth {
 
 	public enum SessionResult {
-		OK,
-		USERNAME_TAKEN,
-		FAILED
+		OK, USERNAME_TAKEN, FAILED
 	}
 
 	private EchoPlayerAuth() {

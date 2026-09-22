@@ -8,20 +8,20 @@ import com.shatteredpixel.shatteredpixeldungeon.heroechoes.online.EchoLookupOutc
  */
 public final class EchoReplacementDecider {
 
-    public static final int[] BOSS_DEPTHS = new int[] { 5, 10, 15, 20, 25 };
+	public static final int[] BOSS_DEPTHS = new int[] { 5, 10, 15, 20, 25 };
 
-    private EchoReplacementDecider() {
-    }
+	private EchoReplacementDecider() {
+	}
 
-    public static boolean isBossDepth(int depth) {
-        for (int d : BOSS_DEPTHS) {
-            if (d == depth)
-                return true;
-        }
-        return false;
-    }
+	public static boolean isBossDepth(int depth) {
+		for (int d : BOSS_DEPTHS) {
+			if (d == depth)
+				return true;
+		}
+		return false;
+	}
 
-    public interface EchoLookup {
-        EchoLookupOutcome findEchoForDepth(int depth);
-    }
+	public interface EchoLookup {
+		EchoLookupOutcome findEchoForDepth(int depth);
+	}
 }

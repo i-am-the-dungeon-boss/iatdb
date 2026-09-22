@@ -35,7 +35,7 @@ public class RingExitRoom extends RingRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
+		return new float[] { 0, 1, 0 };
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class RingExitRoom extends RingRoom {
 		return true;
 	}
 
-	protected int centerDecoTiles(){
+	protected int centerDecoTiles() {
 		return Terrain.EMPTY_SP;
 	}
 

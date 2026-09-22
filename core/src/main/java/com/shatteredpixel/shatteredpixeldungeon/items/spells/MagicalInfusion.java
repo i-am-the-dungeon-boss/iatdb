@@ -46,7 +46,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Random;
 
 public class MagicalInfusion extends InventorySpell {
-	
+
 	{
 		image = ItemSpriteSheet.MAGIC_INFUSE;
 
@@ -61,23 +61,23 @@ public class MagicalInfusion extends InventorySpell {
 	}
 
 	@Override
-	protected void onItemSelected( Item item ) {
+	protected void onItemSelected(Item item) {
 
 		GameScene.show(new WndUpgrade(this, item, false));
 
 	}
 
-	public void reShowSelector(){
+	public void reShowSelector() {
 		curItem = this;
 		GameScene.selectItem(itemSelector);
 	}
 
-	public WndBag.ItemSelector getSelector(){
+	public WndBag.ItemSelector getSelector() {
 		curItem = this;
 		return itemSelector;
 	}
 
-	public void useAnimation(){
+	public void useAnimation() {
 		curUser.spend(1f);
 		curUser.busy();
 		(curUser.sprite).operate(curUser.pos);
@@ -91,10 +91,10 @@ public class MagicalInfusion extends InventorySpell {
 		}
 	}
 
-	public Item upgradeItem( Item item ){
+	public Item upgradeItem(Item item) {
 		ScrollOfUpgrade.upgrade(curUser);
 
-		Degrade.detach( curUser, Degrade.class );
+		Degrade.detach(curUser, Degrade.class);
 
 		if (item instanceof Weapon && ((Weapon) item).enchantment != null) {
 			item = ((Weapon) item).upgrade(true);
@@ -104,11 +104,13 @@ public class MagicalInfusion extends InventorySpell {
 			boolean wasCursed = item.cursed;
 			boolean wasCurseInfused = item instanceof Wand && ((Wand) item).curseInfusionBonus;
 			item = item.upgrade();
-			if (wasCursed) item.cursed = true;
-			if (wasCurseInfused) ((Wand) item).curseInfusionBonus = true;
+			if (wasCursed)
+				item.cursed = true;
+			if (wasCurseInfused)
+				((Wand) item).curseInfusionBonus = true;
 		}
 
-		GLog.p( Messages.get(this, "infuse") );
+		GLog.p(Messages.get(this, "infuse"));
 		Badges.validateItemLevelAquired(item);
 
 		Catalog.countUse(item.getClass());
@@ -117,7 +119,7 @@ public class MagicalInfusion extends InventorySpell {
 
 		return item;
 	}
-	
+
 	@Override
 	public int value() {
 		return 60 * quantity;
@@ -127,18 +129,18 @@ public class MagicalInfusion extends InventorySpell {
 	public int energyVal() {
 		return 12 * quantity;
 	}
-	
+
 	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {
-		
+
 		{
-			inputs =  new Class[]{ScrollOfUpgrade.class};
-			inQuantity = new int[]{1};
-			
+			inputs = new Class[] { ScrollOfUpgrade.class };
+			inQuantity = new int[] { 1 };
+
 			cost = 12;
-			
+
 			output = MagicalInfusion.class;
 			outQuantity = 1;
 		}
-		
+
 	}
 }

@@ -103,7 +103,7 @@ class VillageFigurePlacementTest {
 		}
 
 		Assertions.assertThat(reachableAvoiding(level, level.arrivalCell(),
-						level.dungeonEntrance(), blocked))
+				level.dungeonEntrance(), blocked))
 				.as("the dungeon gate is still reachable with every post taken")
 				.isTrue();
 

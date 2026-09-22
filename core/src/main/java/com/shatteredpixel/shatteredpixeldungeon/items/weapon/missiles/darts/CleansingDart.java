@@ -36,7 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class CleansingDart extends TippedDart {
-	
+
 	{
 		image = ItemSpriteSheet.CLEANSING_DART;
 	}
@@ -44,7 +44,7 @@ public class CleansingDart extends TippedDart {
 	@Override
 	public int damageRoll(Char owner) {
 		if (owner instanceof Hero) {
-			if (((Hero) owner).attackTarget().alignment == owner.alignment){
+			if (((Hero) owner).attackTarget().alignment == owner.alignment) {
 				return 0; //does not deal damage to allies
 			}
 		}
@@ -56,27 +56,31 @@ public class CleansingDart extends TippedDart {
 
 		if (processingChargedShot && defender == attacker) {
 			//do nothing to the hero when processing charged shot
-		} else if (attacker.alignment == defender.alignment){
-			PotionOfCleansing.cleanse(defender, PotionOfCleansing.Cleanse.DURATION*2f);
+		} else if (attacker.alignment == defender.alignment) {
+			PotionOfCleansing.cleanse(defender, PotionOfCleansing.Cleanse.DURATION * 2f);
 		} else {
-			for (Buff b : defender.buffs()){
+			for (Buff b : defender.buffs()) {
 				if (!(b instanceof ChampionEnemy)
 						&& b.type == Buff.buffType.POSITIVE
-						&& !(b instanceof Crossbow.ChargedShot)){
+						&& !(b instanceof Crossbow.ChargedShot)) {
 					b.detach();
 				}
 			}
 			//for when cleansed effects were keeping defender alive (e.g. raging brutes)
-			if (!defender.isAlive()){
+			if (!defender.isAlive()) {
 				defender.die(attacker);
 				return super.proc(attacker, defender, damage);
 			}
 			if (defender instanceof Mob) {
 				//need to delay this so damage from the dart doesn't break wandering
-				new FlavourBuff(){
-					{actPriority = VFX_PRIO;}
+				new FlavourBuff() {
+					{
+						actPriority = VFX_PRIO;
+					}
+
 					public boolean act() {
-						if (((Mob) defender).state == ((Mob) defender).HUNTING || ((Mob) defender).state == ((Mob) defender).FLEEING){
+						if (((Mob) defender).state == ((Mob) defender).HUNTING
+								|| ((Mob) defender).state == ((Mob) defender).FLEEING) {
 							((Mob) defender).state = ((Mob) defender).WANDERING;
 						}
 						((Mob) defender).beckon(Dungeon.level.randomDestination(defender));

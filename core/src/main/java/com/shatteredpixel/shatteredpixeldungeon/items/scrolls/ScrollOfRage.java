@@ -46,18 +46,18 @@ public class ScrollOfRage extends Scroll {
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
-			mob.beckon( curUser.pos );
+		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+			mob.beckon(curUser.pos);
 			if (mob.alignment != Char.Alignment.ALLY && Dungeon.level.heroFOV[mob.pos]) {
 				Buff.prolong(mob, Amok.class, 5f);
 			}
 		}
 
-		GLog.w( Messages.get(this, "roar") );
+		GLog.w(Messages.get(this, "roar"));
 		identify();
 
-		curUser.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
-		Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );
+		curUser.sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+		Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
 
 		readAnimation();
 	}

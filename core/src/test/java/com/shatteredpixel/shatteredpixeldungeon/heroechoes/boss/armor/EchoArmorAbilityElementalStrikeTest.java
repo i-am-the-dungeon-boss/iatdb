@@ -49,7 +49,6 @@ class EchoArmorAbilityElementalStrikeTest {
 			this.boss = boss;
 		}
 
-
 		DuelistArmor armorWithMelee() {
 			DuelistArmor armor = new DuelistArmor();
 			armor.charge = 100;
@@ -123,8 +122,7 @@ class EchoArmorAbilityElementalStrikeTest {
 	@DisplayName("Echo ElementalStrike adapter activate fires cone MagicMissile when the body sprite has a parent")
 	void elementalStrikeFiresMagicMissileWhenParentLive() {
 		Fight f = fight();
-		EchoTestSupport.InstantProjectileGroup fx =
-				EchoTestSupport.attachInstantProjectileParent(f.boss);
+		EchoTestSupport.InstantProjectileGroup fx = EchoTestSupport.attachInstantProjectileParent(f.boss);
 		DuelistArmor armor = f.armorWithMelee();
 		f.player.invisible = 1;
 

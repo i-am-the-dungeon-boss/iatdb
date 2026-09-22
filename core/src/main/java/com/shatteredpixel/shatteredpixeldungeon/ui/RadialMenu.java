@@ -50,7 +50,7 @@ public class RadialMenu extends Window {
 	Image[] icons;
 	int selectedIdx = -1;
 
-	public RadialMenu(String title, String desc, String[] optionTexts, Image[] optionIcons){
+	public RadialMenu(String title, String desc, String[] optionTexts, Image[] optionIcons) {
 		super(0, 0, Chrome.get(Chrome.Type.BLANK));
 		remove(shadow);
 
@@ -58,13 +58,13 @@ public class RadialMenu extends Window {
 		resize(Game.width, Game.height);
 
 		slots = optionTexts.length;
-		center = new PointF(width/2, height/2);
+		center = new PointF(width / 2, height / 2);
 		int length = SPDSettings.interfaceSize() == 0 ? 57 : 80;
 
-		selectionArc = new CircleArc(120/slots, size/2 - 1);
+		selectionArc = new CircleArc(120 / slots, size / 2 - 1);
 		selectionArc.color(0xFFFFFF, false);
 		selectionArc.alpha(0.6f);
-		selectionArc.setSweep(1f/slots);
+		selectionArc.setSweep(1f / slots);
 		selectionArc.point(center);
 		selectionArc.visible = false;
 		add(selectionArc);
@@ -78,20 +78,20 @@ public class RadialMenu extends Window {
 		texts = optionTexts;
 		icons = optionIcons;
 
-		for (int i = 0; i < slots; i++){
+		for (int i = 0; i < slots; i++) {
 
-			PointF iconCenter = new PointF().polar((PointF.PI2/slots * i)-PointF.PI/2, length);
+			PointF iconCenter = new PointF().polar((PointF.PI2 / slots * i) - PointF.PI / 2, length);
 			iconCenter.offset(center);
-			optionIcons[i].x = iconCenter.x - optionIcons[i].width()/2f;
-			optionIcons[i].y = iconCenter.y - optionIcons[i].height()/2f;
+			optionIcons[i].x = iconCenter.x - optionIcons[i].width() / 2f;
+			optionIcons[i].y = iconCenter.y - optionIcons[i].height() / 2f;
 			PixelScene.align(optionIcons[i]);
 			optionIcons[i].alpha(0.4f);
 			add(optionIcons[i]);
 
-			ColorBlock sep = new ColorBlock(size/2 - 2, 1, 0xFF000000);
+			ColorBlock sep = new ColorBlock(size / 2 - 2, 1, 0xFF000000);
 			sep.x = center.x;
 			sep.y = center.y;
-			sep.angle = (360f/slots * i) + selectionArc.getSweep()*180 - 90;
+			sep.angle = (360f / slots * i) + selectionArc.getSweep() * 180 - 90;
 			addToFront(sep);
 
 		}
@@ -105,22 +105,22 @@ public class RadialMenu extends Window {
 		descTxt = PixelScene.renderTextBlock(desc, 6);
 		descTxt.align(RenderedTextBlock.CENTER_ALIGN);
 		descTxt.maxWidth(SPDSettings.interfaceSize() == 0 ? 80 : 100);
-		descTxt.setPos(center.x - descTxt.width()/2, center.y - descTxt.height()/4);
+		descTxt.setPos(center.x - descTxt.width() / 2, center.y - descTxt.height() / 4);
 		add(descTxt);
 
 		titleTxt = PixelScene.renderTextBlock(title, 9);
-		titleTxt.setPos(center.x - titleTxt.width()/2f, descTxt.top() - titleTxt.height() - 6);
+		titleTxt.setPos(center.x - titleTxt.width() / 2f, descTxt.top() - titleTxt.height() - 6);
 		PixelScene.align(titleTxt);
 		titleTxt.hardlight(TITLE_COLOR);
 		add(titleTxt);
 
 		Cursor.captureCursor(true);
 
-		Button selector = new Button(){
+		Button selector = new Button() {
 			@Override
 			protected void onClick() {
 				super.onClick();
-				if (selectedIdx != -1){
+				if (selectedIdx != -1) {
 					hide();
 					onSelect(selectedIdx, false);
 				}
@@ -128,7 +128,7 @@ public class RadialMenu extends Window {
 
 			@Override
 			protected boolean onLongClick() {
-				if (selectedIdx != -1){
+				if (selectedIdx != -1) {
 					hide();
 					onSelect(selectedIdx, true);
 				}
@@ -138,7 +138,7 @@ public class RadialMenu extends Window {
 			@Override
 			protected void onRightClick() {
 				super.onRightClick();
-				if (selectedIdx != -1){
+				if (selectedIdx != -1) {
 					hide();
 					onSelect(selectedIdx, true);
 				}
@@ -149,7 +149,8 @@ public class RadialMenu extends Window {
 
 	}
 
-	public void onSelect(int idx, boolean alt){}
+	public void onSelect(int idx, boolean alt) {
+	}
 
 	@Override
 	public void destroy() {
@@ -168,32 +169,34 @@ public class RadialMenu extends Window {
 		PointF movement = Cursor.getCursorDelta();
 		//40% deadzone for controller input here
 		if (Math.abs(ControllerHandler.rightStickPosition.x) >= 0.4f
-				|| Math.abs(ControllerHandler.rightStickPosition.y) >= 0.4f){
+				|| Math.abs(ControllerHandler.rightStickPosition.y) >= 0.4f) {
 			movement.x = ControllerHandler.rightStickPosition.x;
 			movement.y = ControllerHandler.rightStickPosition.y;
 			first = false;
 		} else if (movement.length() != 0 && !first) {
 			mousePos.offset(movement);
-			if (mousePos.length() > PixelScene.defaultZoom*20) {
-				mousePos.invScale(mousePos.length() / (PixelScene.defaultZoom*20));
+			if (mousePos.length() > PixelScene.defaultZoom * 20) {
+				mousePos.invScale(mousePos.length() / (PixelScene.defaultZoom * 20));
 			}
 			movement = mousePos;
 		}
 
 		if (movement.length() != 0) {
-			if (first){
+			if (first) {
 				first = false;
 				return;
 			}
 
 			targetAngle = PointF.angle(movement.x, movement.y) / PointF.G2R + 90;
-			if (targetAngle < 0) targetAngle += 360f;
+			if (targetAngle < 0)
+				targetAngle += 360f;
 
 			selectionArc.visible = true;
-			selectionArc.angle = targetAngle + selectionArc.getSweep()*180;
+			selectionArc.angle = targetAngle + selectionArc.getSweep() * 180;
 
-			int newSelect = (int) Math.round((targetAngle) / (360f/slots));
-			if (newSelect >= slots) newSelect = 0;
+			int newSelect = (int) Math.round((targetAngle) / (360f / slots));
+			if (newSelect >= slots)
+				newSelect = 0;
 
 			if (newSelect != selectedIdx) {
 				selectedIdx = newSelect;
@@ -201,7 +204,7 @@ public class RadialMenu extends Window {
 					if (i == selectedIdx) {
 						icons[i].alpha(1f);
 						titleTxt.text(texts[i]);
-						titleTxt.setPos(center.x - titleTxt.width()/2f, descTxt.top() - titleTxt.height() - 6);
+						titleTxt.setPos(center.x - titleTxt.width() / 2f, descTxt.top() - titleTxt.height() - 6);
 						PixelScene.align(titleTxt);
 					} else {
 						icons[i].alpha(0.4f);
@@ -212,13 +215,17 @@ public class RadialMenu extends Window {
 
 	}
 
-	private static Image getBGTexture(int size, boolean inner){
-		if (size >= 200){
-			if (!inner)  return new Image(Assets.Interfaces.RADIAL_MENU, 0, 0, 200, 200);
-			else        return new Image(Assets.Interfaces.RADIAL_MENU, 340, 0, 120, 120);
+	private static Image getBGTexture(int size, boolean inner) {
+		if (size >= 200) {
+			if (!inner)
+				return new Image(Assets.Interfaces.RADIAL_MENU, 0, 0, 200, 200);
+			else
+				return new Image(Assets.Interfaces.RADIAL_MENU, 340, 0, 120, 120);
 		} else {
-			if (!inner)  return new Image(Assets.Interfaces.RADIAL_MENU, 200, 0, 140, 140);
-			else        return new Image(Assets.Interfaces.RADIAL_MENU, 340, 120, 90, 90);
+			if (!inner)
+				return new Image(Assets.Interfaces.RADIAL_MENU, 200, 0, 140, 140);
+			else
+				return new Image(Assets.Interfaces.RADIAL_MENU, 340, 120, 90, 90);
 		}
 	}
 

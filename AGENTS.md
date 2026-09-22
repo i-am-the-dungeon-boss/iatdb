@@ -39,12 +39,12 @@ default and fails under `-PerrorProneErrors`. Mark nullable members with
 | When                 | Run                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Day-to-day           | Nothing special — match **master** style                                                                                       |
-| Optional mid-work    | `./gradlew :core:spotlessApply`                                                                                                |
+| Format               | `./gradlew spotlessApply` — same step as IDE Save (Spotless Gradle, no ratchet)                                                |
 | Before PR            | `./gradlew :core:spotlessCheck :core:test`                                                                                     |
 | Optional deeper pass | `./gradlew :core:compileJava` (Error Prone warnings), `./gradlew :core:spotbugsMain` → `core/build/reports/spotbugs/main.html` |
 | Strict (opt-in)      | `-PerrorProneErrors` / `-PspotbugsErrors` — do not use as default                                                              |
 
-Do **not** mass-fix repo-wide findings. Prefer issues in code you changed (especially `heroechoes/`). Spotless is trailing whitespace + newline only (`ratchetFrom origin/main`).
+Do **not** mass-fix repo-wide Error Prone / SpotBugs findings. Prefer issues in code you changed (especially `heroechoes/`). Spotless is Eclipse JDT (`config/spotless/eclipse-java.xml` profile `iatdb`), with no ratchet, so IDE Save and `./gradlew spotlessApply` always produce the same result. Save uses extension `richardwillis.vscode-spotless-gradle` (`-PspotlessIdeHook`).
 
 ## Modules
 

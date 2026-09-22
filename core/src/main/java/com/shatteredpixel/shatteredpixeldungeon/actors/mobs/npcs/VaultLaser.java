@@ -67,35 +67,37 @@ public class VaultLaser extends NPC {
 	protected boolean act() {
 
 		curCooldown--;
-		if (curCooldown <= 0){
+		if (curCooldown <= 0) {
 
 			Ballistica beam = new Ballistica(pos, laserDirs[laserDirIdx], Ballistica.STOP_SOLID);
 			boolean visible = false;
-			for (int cell : beam.subPath(1, beam.dist)){
-				if (Dungeon.level.heroFOV[cell]){
+			for (int cell : beam.subPath(1, beam.dist)) {
+				if (Dungeon.level.heroFOV[cell]) {
 					visible = true;
 				}
-				if (Actor.findChar(cell) == Dungeon.hero){
+				if (Actor.findChar(cell) == Dungeon.hero) {
 					Dungeon.hero.sprite.showStatus(CharSprite.NEGATIVE, "!!!");
-					Sample.INSTANCE.play( Assets.Sounds.RAY );
+					Sample.INSTANCE.play(Assets.Sounds.RAY);
 					SFXLastPlayed = ShatteredPixelDungeon.realTime;
 				}
 			}
-			if (visible){
-				sprite.parent.add(new Beam.DeathRay(sprite.center(), DungeonTilemap.raisedTileCenterToWorld(beam.collisionPos)));
-				if (SFXLastPlayed+80 < ShatteredPixelDungeon.realTime) {
+			if (visible) {
+				sprite.parent
+						.add(new Beam.DeathRay(sprite.center(),
+								DungeonTilemap.raisedTileCenterToWorld(beam.collisionPos)));
+				if (SFXLastPlayed + 80 < ShatteredPixelDungeon.realTime) {
 					Sample.INSTANCE.play(Assets.Sounds.RAY, 0.5f);
 					SFXLastPlayed = ShatteredPixelDungeon.realTime;
 				}
 			}
 
 			laserDirIdx++;
-			if (laserDirIdx >= laserDirs.length){
+			if (laserDirIdx >= laserDirs.length) {
 				laserDirIdx = 0;
 			}
 
 			shotsFired++;
-			if (shotsFired < shotsAfterCooldown){
+			if (shotsFired < shotsAfterCooldown) {
 				curCooldown = 1;
 			} else {
 				shotsFired = 0;
@@ -104,10 +106,10 @@ public class VaultLaser extends NPC {
 
 		}
 
-		if (curCooldown == 1 && giveWarning){
+		if (curCooldown == 1 && giveWarning) {
 
 			Ballistica nextBeam = new Ballistica(pos, laserDirs[laserDirIdx], Ballistica.STOP_SOLID);
-			for (int cell : nextBeam.subPath(1, nextBeam.dist)){
+			for (int cell : nextBeam.subPath(1, nextBeam.dist)) {
 				if (Dungeon.level.heroFOV[cell]) {
 					sprite.parent.add(new TargetedCell(cell, 0xFF0000));
 				}
@@ -169,13 +171,13 @@ public class VaultLaser extends NPC {
 		super.restoreFromBundle(bundle);
 		laserDirs = bundle.getIntArray(LASER_DIRS);
 		laserDirIdx = bundle.getInt(LASER_DIR_IDX);
-		if (bundle.contains(AFTER_SHOT_COOLDOWN)){
+		if (bundle.contains(AFTER_SHOT_COOLDOWN)) {
 			afterShotCooldown = bundle.getInt(AFTER_SHOT_COOLDOWN);
 			curCooldown = bundle.getInt(CUR_COOLDOWN);
 			shotsAfterCooldown = bundle.getInt(SHOTS);
 			shotsFired = bundle.getInt(SHOTS_FIRED);
 			giveWarning = bundle.getBoolean(WARNING);
-		//3.3.X saves
+			//3.3.X saves
 		} else {
 			afterShotCooldown = Random.IntRange(3, 7);
 			curCooldown = Random.IntRange(1, afterShotCooldown);

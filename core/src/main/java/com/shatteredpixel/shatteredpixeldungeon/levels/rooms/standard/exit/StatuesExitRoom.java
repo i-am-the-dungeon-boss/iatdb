@@ -36,7 +36,7 @@ public class StatuesExitRoom extends StatuesRoom {
 
 	@Override
 	public float[] sizeCatProbs() {
-		return new float[]{3, 1, 0};
+		return new float[] { 3, 1, 0 };
 	}
 
 	@Override
@@ -50,17 +50,17 @@ public class StatuesExitRoom extends StatuesRoom {
 
 		int exit = level.pointToCell(center());
 
-		if (width() <= 10 && height()<= 10){
+		if (width() <= 10 && height() <= 10) {
 			Painter.fill(level, this, 3, Terrain.EMPTY_SP);
 		}
 
-		for (int i : PathFinder.NEIGHBOURS8){
+		for (int i : PathFinder.NEIGHBOURS8) {
 			if (level.map[exit + i] != Terrain.STATUE_SP) {
 				Painter.set(level, exit + i, Terrain.EMPTY_SP);
 			}
 		}
 
-		Painter.set( level, exit, Terrain.EXIT );
+		Painter.set(level, exit, Terrain.EXIT);
 		level.transitions.add(new LevelTransition(level, exit, LevelTransition.Type.REGULAR_EXIT));
 
 	}

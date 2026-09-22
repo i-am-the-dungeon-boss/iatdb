@@ -41,7 +41,7 @@ import java.util.HashSet;
 
 public abstract class Actor implements Bundlable {
 
-	public static final float TICK	= 1f;
+	public static final float TICK = 1f;
 
 	private float time;
 
@@ -50,12 +50,12 @@ public abstract class Actor implements Bundlable {
 	//default priority values for general actor categories
 	//note that some specific actors pick more specific values
 	//e.g. a buff acting before all normal buffs might have priority BUFF_PRIO + 1
-	protected static final int VFX_PRIO    = 100;   //visual effects take priority
-	protected static final int HERO_PRIO   = 0;     //positive is before hero, negative after
-	protected static final int BLOB_PRIO   = -10;   //blobs act after hero, before mobs
-	protected static final int MOB_PRIO    = -20;   //mobs act between buffs and blobs
-	protected static final int BUFF_PRIO   = -30;   //buffs act last in a turn
-	private static final int   DEFAULT     = -100;  //if no priority is given, act after all else
+	protected static final int VFX_PRIO = 100; //visual effects take priority
+	protected static final int HERO_PRIO = 0; //positive is before hero, negative after
+	protected static final int BLOB_PRIO = -10; //blobs act after hero, before mobs
+	protected static final int MOB_PRIO = -20; //mobs act between buffs and blobs
+	protected static final int BUFF_PRIO = -30; //buffs act last in a turn
+	private static final int DEFAULT = -100; //if no priority is given, act after all else
 
 	//used to determine what order actors act in if their time is equal. Higher values act earlier.
 	protected int actPriority = DEFAULT;
@@ -63,30 +63,30 @@ public abstract class Actor implements Bundlable {
 	protected abstract boolean act();
 
 	//Always spends exactly the specified amount of time, regardless of time-influencing factors
-	protected void spendConstant( float time ){
+	protected void spendConstant(float time) {
 		this.time += time;
 		//if time is very close to a whole number, round to a whole number to fix errors
 		float ex = Math.abs(this.time % 1f);
-		if (ex < .001f){
+		if (ex < .001f) {
 			this.time = Math.round(this.time);
 		}
 	}
 
 	//sends time, but the amount can be influenced
-	protected void spend( float time ) {
-		spendConstant( time );
+	protected void spend(float time) {
+		spendConstant(time);
 	}
 
-	public void spendToWhole(){
-		time = (float)Math.ceil(time);
+	public void spendToWhole() {
+		time = (float) Math.ceil(time);
 	}
 
-	protected void postpone( float time ) {
+	protected void postpone(float time) {
 		if (this.time < now + time) {
 			this.time = now + time;
 			//if time is very close to a whole number, round to a whole number to fix errors
 			float ex = Math.abs(this.time % 1f);
-			if (ex < .001f){
+			if (ex < .001f) {
 				this.time = Math.round(this.time);
 			}
 		}
@@ -98,8 +98,8 @@ public abstract class Actor implements Bundlable {
 
 	public void clearTime() {
 		spendConstant(-Actor.now());
-		if (this instanceof Char){
-			for (Buff b : ((Char) this).buffs()){
+		if (this instanceof Char) {
+			for (Buff b : ((Char) this).buffs()) {
 				b.spendConstant(-Actor.now());
 			}
 		}
@@ -113,24 +113,26 @@ public abstract class Actor implements Bundlable {
 		time = Float.MAX_VALUE;
 	}
 
-	protected void onAdd() {}
+	protected void onAdd() {
+	}
 
-	protected void onRemove() {}
+	protected void onRemove() {
+	}
 
-	private static final String TIME    = "time";
-	private static final String ID      = "id";
+	private static final String TIME = "time";
+	private static final String ID = "id";
 
 	@Override
-	public void storeInBundle( Bundle bundle ) {
-		bundle.put( TIME, time );
-		bundle.put( ID, id );
+	public void storeInBundle(Bundle bundle) {
+		bundle.put(TIME, time);
+		bundle.put(ID, id);
 	}
 
 	@Override
-	public void restoreFromBundle( Bundle bundle ) {
-		time = bundle.getFloat( TIME );
-		int incomingID = bundle.getInt( ID );
-		if (Actor.findById(incomingID) == null){
+	public void restoreFromBundle(Bundle bundle) {
+		time = bundle.getFloat(TIME);
+		int incomingID = bundle.getInt(ID);
+		if (Actor.findById(incomingID) == null) {
 			id = incomingID;
 		} else {
 			id = nextID++;
@@ -158,7 +160,7 @@ public abstract class Actor implements Bundlable {
 
 	private static float now = 0;
 
-	public static float now(){
+	public static float now() {
 		return now;
 	}
 
@@ -174,7 +176,8 @@ public abstract class Actor implements Bundlable {
 
 	public static synchronized void fixTime() {
 
-		if (all.isEmpty()) return;
+		if (all.isEmpty())
+			return;
 
 		float min = Float.MAX_VALUE;
 		for (Actor a : all) {
@@ -185,12 +188,12 @@ public abstract class Actor implements Bundlable {
 
 		//Only pull everything back by whole numbers
 		//So that turns always align with a whole number
-		min = (int)min;
+		min = (int) min;
 		for (Actor a : all) {
 			a.time -= min;
 		}
 
-		if (all.contains( Dungeon.hero ) && countsTowardRunDuration( Dungeon.level, Dungeon.hero )) {
+		if (all.contains(Dungeon.hero) && countsTowardRunDuration(Dungeon.level, Dungeon.hero)) {
 			Statistics.duration += min;
 		}
 		now -= min;
@@ -203,7 +206,7 @@ public abstract class Actor implements Bundlable {
 	 * the ranking duration. The gate lives on the predicate rather than on the
 	 * caller because fixTime is also driven from InterlevelScene and saveAll.
 	 */
-	public static boolean countsTowardRunDuration( Level level, Char hero ) {
+	public static boolean countsTowardRunDuration(Level level, Char hero) {
 		if (hero == null || hero instanceof VillageHero) {
 			return false;
 		}
@@ -212,10 +215,10 @@ public abstract class Actor implements Bundlable {
 
 	public static void init() {
 
-		add( Dungeon.hero );
+		add(Dungeon.hero);
 
 		for (Mob mob : Dungeon.level.mobs) {
-			add( mob );
+			add(mob);
 		}
 
 		//mobs need to remember their targets after every actor is added
@@ -224,7 +227,7 @@ public abstract class Actor implements Bundlable {
 		}
 
 		for (Blob blob : Dungeon.level.blobs.values()) {
-			add( blob );
+			add(blob);
 		}
 
 		current = null;
@@ -232,15 +235,15 @@ public abstract class Actor implements Bundlable {
 
 	private static final String NEXTID = "nextid";
 
-	public static void storeNextID( Bundle bundle){
-		bundle.put( NEXTID, nextID );
+	public static void storeNextID(Bundle bundle) {
+		bundle.put(NEXTID, nextID);
 	}
 
-	public static void restoreNextID( Bundle bundle){
-		nextID = bundle.getInt( NEXTID );
+	public static void restoreNextID(Bundle bundle) {
+		nextID = bundle.getInt(NEXTID);
 	}
 
-	public static void resetNextID(){
+	public static void resetNextID() {
 		nextID = 1;
 	}
 
@@ -250,7 +253,7 @@ public abstract class Actor implements Bundlable {
 		}
 	}
 
-	public static boolean processing(){
+	public static boolean processing() {
 		return current != null;
 	}
 
@@ -276,7 +279,8 @@ public abstract class Actor implements Bundlable {
 
 						//some actors will always go before others if time is equal.
 						if (actor.time < earliest ||
-								actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
+								actor.time == earliest
+										&& (current == null || actor.actPriority > current.actPriority)) {
 							earliest = actor.time;
 							current = actor;
 						}
@@ -285,7 +289,7 @@ public abstract class Actor implements Bundlable {
 				}
 			}
 
-			if  (current != null) {
+			if (current != null) {
 
 				now = current.time;
 				Actor acting = current;
@@ -294,8 +298,8 @@ public abstract class Actor implements Bundlable {
 					// If it's character's turn to act, but its sprite
 					// is moving, wait till the movement is over
 					try {
-						synchronized (((Char)acting).sprite) {
-							if (((Char)acting).sprite.isMoving) {
+						synchronized (((Char) acting).sprite) {
+							if (((Char) acting).sprite.isMoving) {
 								((Char) acting).sprite.wait();
 							}
 						}
@@ -306,7 +310,7 @@ public abstract class Actor implements Bundlable {
 
 				interrupted = interrupted || Thread.interrupted();
 
-				if (interrupted){
+				if (interrupted) {
 					doNext = false;
 					current = null;
 				} else {
@@ -320,12 +324,12 @@ public abstract class Actor implements Bundlable {
 				doNext = false;
 			}
 
-			if (!doNext){
+			if (!doNext) {
 				synchronized (Thread.currentThread()) {
 
 					interrupted = interrupted || Thread.interrupted();
 
-					if (interrupted){
+					if (interrupted) {
 						current = null;
 						interrupted = false;
 					}
@@ -344,72 +348,74 @@ public abstract class Actor implements Bundlable {
 		} while (keepActorThreadAlive);
 	}
 
-	public static void add( Actor actor ) {
-		add( actor, now );
+	public static void add(Actor actor) {
+		add(actor, now);
 	}
 
-	public static void addDelayed( Actor actor, float delay ) {
-		add( actor, now + Math.max(delay, 0) );
+	public static void addDelayed(Actor actor, float delay) {
+		add(actor, now + Math.max(delay, 0));
 	}
 
-	private static synchronized void add( Actor actor, float time ) {
+	private static synchronized void add(Actor actor, float time) {
 
-		if (all.contains( actor )) {
+		if (all.contains(actor)) {
 			return;
 		}
 
-		ids.put( actor.id(),  actor );
+		ids.put(actor.id(), actor);
 
-		all.add( actor );
+		all.add(actor);
 		actor.time += time;
 		actor.onAdd();
 
 		if (actor instanceof Char) {
-			Char ch = (Char)actor;
-			chars.add( ch );
+			Char ch = (Char) actor;
+			chars.add(ch);
 			for (Buff buff : ch.buffs()) {
 				add(buff);
 			}
 		}
 	}
 
-	public static synchronized void remove( Actor actor ) {
+	public static synchronized void remove(Actor actor) {
 
 		if (actor != null) {
-			all.remove( actor );
-			chars.remove( actor );
+			all.remove(actor);
+			chars.remove(actor);
 			actor.onRemove();
 
 			if (actor.id > 0) {
-				ids.remove( actor.id );
+				ids.remove(actor.id);
 			}
 		}
 	}
 
 	//'freezes' a character in time for a specified amount of time
 	//USE CAREFULLY! Manipulating time like this is useful for some gameplay effects but is tricky
-	public static void delayChar( Char ch, float time ){
+	public static void delayChar(Char ch, float time) {
 		ch.spendConstant(time);
-		for (Buff b : ch.buffs()){
+		for (Buff b : ch.buffs()) {
 			b.spendConstant(time);
 		}
 	}
 
-	public static synchronized Char findChar( int pos ) {
-		for (Char ch : chars){
+	public static synchronized Char findChar(int pos) {
+		for (Char ch : chars) {
 			if (ch.pos == pos)
 				return ch;
 		}
 		return null;
 	}
 
-	public static synchronized Actor findById( int id ) {
-		return ids.get( id );
+	public static synchronized Actor findById(int id) {
+		return ids.get(id);
 	}
 
 	public static synchronized HashSet<Actor> all() {
 		return new HashSet<>(all);
 	}
 
-	public static synchronized HashSet<Char> chars() { return new HashSet<>(chars); }
+	public static synchronized HashSet<Char> chars() {
+		return new HashSet<>(chars);
+	}
 }

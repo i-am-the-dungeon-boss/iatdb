@@ -44,13 +44,14 @@ import com.watabou.utils.Callback;
 
 public abstract class FistSprite extends MobSprite {
 
-	private static final float SLAM_TIME	= 0.33f;
+	private static final float SLAM_TIME = 0.33f;
 
 	protected int boltType;
 
 	protected abstract int texOffset();
 
 	private Emitter particles;
+
 	protected abstract Emitter createEmitter();
 
 	public FistSprite() {
@@ -58,31 +59,31 @@ public abstract class FistSprite extends MobSprite {
 
 		int c = texOffset();
 
-		texture( Assets.Sprites.FISTS );
+		texture(Assets.Sprites.FISTS);
 
-		TextureFilm frames = new TextureFilm( texture, 24, 17 );
+		TextureFilm frames = new TextureFilm(texture, 24, 17);
 
-		idle = new Animation( 2, true );
-		idle.frames( frames, c+0, c+0, c+1 );
+		idle = new Animation(2, true);
+		idle.frames(frames, c + 0, c + 0, c + 1);
 
-		run = new Animation( 3, true );
-		run.frames( frames, c+0, c+1 );
+		run = new Animation(3, true);
+		run.frames(frames, c + 0, c + 1);
 
-		attack = new Animation( Math.round(1 / SLAM_TIME), false );
-		attack.frames( frames, c+0 );
+		attack = new Animation(Math.round(1 / SLAM_TIME), false);
+		attack.frames(frames, c + 0);
 
-		zap = new Animation( 8, false );
-		zap.frames( frames, c+0, c+5, c+6 );
+		zap = new Animation(8, false);
+		zap.frames(frames, c + 0, c + 5, c + 6);
 
-		die = new Animation( 10, false );
-		die.frames( frames, c+0, c+2, c+3, c+4 );
+		die = new Animation(10, false);
+		die.frames(frames, c + 0, c + 2, c + 3, c + 4);
 
-		play( idle );
+		play(idle);
 	}
 
 	@Override
-	public void link( Char ch ) {
-		super.link( ch );
+	public void link(Char ch) {
+		super.link(ch);
 
 		if (particles == null) {
 			particles = createEmitter();
@@ -93,7 +94,7 @@ public abstract class FistSprite extends MobSprite {
 	public void update() {
 		super.update();
 
-		if (particles != null){
+		if (particles != null) {
 			particles.visible = visible;
 		}
 	}
@@ -101,7 +102,7 @@ public abstract class FistSprite extends MobSprite {
 	@Override
 	public void die() {
 		super.die();
-		if (particles != null){
+		if (particles != null) {
 			particles.on = false;
 		}
 	}
@@ -109,41 +110,41 @@ public abstract class FistSprite extends MobSprite {
 	@Override
 	public void kill() {
 		super.kill();
-		if (particles != null){
+		if (particles != null) {
 			particles.killAndErase();
 		}
 	}
 
 	@Override
-	public void attack( int cell ) {
-		super.attack( cell );
+	public void attack(int cell) {
+		super.attack(cell);
 
-		jump(ch.pos, ch.pos, 9, SLAM_TIME, null );
+		jump(ch.pos, ch.pos, 9, SLAM_TIME, null);
 	}
 
 	//different bolt, so overrides zap
-	public void zap( int cell ) {
+	public void zap(int cell) {
 
-		super.zap( cell );
+		super.zap(cell);
 
-		MagicMissile.boltFromChar( parent,
+		MagicMissile.boltFromChar(parent,
 				boltType,
 				this,
 				cell,
 				new Callback() {
 					@Override
 					public void call() {
-						((YogFist)ch).onZapComplete();
+						((YogFist) ch).onZapComplete();
 					}
-				} );
-		Sample.INSTANCE.play( Assets.Sounds.ZAP );
+				});
+		Sample.INSTANCE.play(Assets.Sounds.ZAP);
 	}
 
 	@Override
-	public void onComplete( Animation anim ) {
-		super.onComplete( anim );
+	public void onComplete(Animation anim) {
+		super.onComplete(anim);
 		if (anim == attack) {
-			PixelScene.shake( 4, 0.2f );
+			PixelScene.shake(4, 0.2f);
 		} else if (anim == zap) {
 			idle();
 		}
@@ -163,7 +164,7 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour( FlameParticle.FACTORY, 0.06f );
+			emitter.pour(FlameParticle.FACTORY, 0.06f);
 			return emitter;
 		}
 
@@ -188,7 +189,7 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour( LeafParticle.GENERAL, 0.06f );
+			emitter.pour(LeafParticle.GENERAL, 0.06f);
 			return emitter;
 		}
 
@@ -213,7 +214,7 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour(Speck.factory(Speck.TOXIC), 0.25f );
+			emitter.pour(Speck.factory(Speck.TOXIC), 0.25f);
 			return emitter;
 		}
 
@@ -238,7 +239,7 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour(CorrosionParticle.MISSILE, 0.06f );
+			emitter.pour(CorrosionParticle.MISSILE, 0.06f);
 			return emitter;
 		}
 
@@ -263,18 +264,19 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour(SparkParticle.STATIC, 0.06f );
+			emitter.pour(SparkParticle.STATIC, 0.06f);
 			return emitter;
 		}
 
 		@Override
-		public void zap( int cell ) {
-			super.zap( cell, null );
+		public void zap(int cell) {
+			super.zap(cell, null);
 
-			((YogFist)ch).onZapComplete();
-			parent.add( new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell)));
-			Sample.INSTANCE.play( Assets.Sounds.RAY );
+			((YogFist) ch).onZapComplete();
+			parent.add(new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell)));
+			Sample.INSTANCE.play(Assets.Sounds.RAY);
 		}
+
 		@Override
 		public int blood() {
 			return 0xFFFFFFFF;
@@ -296,7 +298,7 @@ public abstract class FistSprite extends MobSprite {
 		@Override
 		protected Emitter createEmitter() {
 			Emitter emitter = emitter();
-			emitter.pour(ShadowParticle.MISSILE, 0.06f );
+			emitter.pour(ShadowParticle.MISSILE, 0.06f);
 			return emitter;
 		}
 

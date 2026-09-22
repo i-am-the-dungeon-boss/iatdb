@@ -37,8 +37,8 @@ public class WndOptions extends Window {
 	protected static final int WIDTH_P = 120;
 	protected static final int WIDTH_L = 144;
 
-	protected static final int MARGIN 		= 2;
-	protected static final int BUTTON_HEIGHT	= 18;
+	protected static final int MARGIN = 2;
+	protected static final int BUTTON_HEIGHT = 18;
 
 	public WndOptions(Image icon, String title, String message, String... options) {
 		super();
@@ -51,13 +51,13 @@ public class WndOptions extends Window {
 			tfTitle.setRect(0, pos, width, 0);
 			add(tfTitle);
 
-			pos = tfTitle.bottom() + 2*MARGIN;
+			pos = tfTitle.bottom() + 2 * MARGIN;
 		}
 
 		layoutBody(pos, message, options);
 	}
-	
-	public WndOptions( String title, String message, String... options ) {
+
+	public WndOptions(String title, String message, String... options) {
 		super();
 
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
@@ -70,46 +70,47 @@ public class WndOptions extends Window {
 			tfTitle.maxWidth(width - MARGIN * 2);
 			add(tfTitle);
 
-			pos = tfTitle.bottom() + 2*MARGIN;
+			pos = tfTitle.bottom() + 2 * MARGIN;
 		}
-		
+
 		layoutBody(pos, message, options);
 	}
 
-	protected void layoutBody(float pos, String message, String... options){
+	protected void layoutBody(float pos, String message, String... options) {
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
 
-		RenderedTextBlock tfMesage = PixelScene.renderTextBlock( 6 );
+		RenderedTextBlock tfMesage = PixelScene.renderTextBlock(6);
 		tfMesage.text(message, width);
-		tfMesage.setPos( 0, pos );
-		add( tfMesage );
+		tfMesage.setPos(0, pos);
+		add(tfMesage);
 
-		pos = tfMesage.bottom() + 2*MARGIN;
+		pos = tfMesage.bottom() + 2 * MARGIN;
 
-		for (int i=0; i < options.length; i++) {
+		for (int i = 0; i < options.length; i++) {
 			final int index = i;
-			RedButton btn = new RedButton( options[i] ) {
+			RedButton btn = new RedButton(options[i]) {
 				@Override
 				protected void onClick() {
 					hide();
-					onSelect( index );
+					onSelect(index);
 				}
 			};
-			if (hasIcon(i)) btn.icon(getIcon(i));
+			if (hasIcon(i))
+				btn.icon(getIcon(i));
 			btn.multiline = true;
-			add( btn );
+			add(btn);
 
 			if (!hasInfo(i)) {
 				btn.setRect(0, pos, width, BUTTON_HEIGHT);
 			} else {
 				btn.setRect(0, pos, width - BUTTON_HEIGHT, BUTTON_HEIGHT);
-				IconButton info = new IconButton(Icons.get(Icons.INFO)){
+				IconButton info = new IconButton(Icons.get(Icons.INFO)) {
 					@Override
 					protected void onClick() {
-						onInfo( index );
+						onInfo(index);
 					}
 				};
-				info.setRect(width-BUTTON_HEIGHT, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
+				info.setRect(width - BUTTON_HEIGHT, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
 				add(info);
 			}
 
@@ -118,26 +119,28 @@ public class WndOptions extends Window {
 			pos += BUTTON_HEIGHT + MARGIN;
 		}
 
-		resize( width, (int)(pos - MARGIN) );
+		resize(width, (int) (pos - MARGIN));
 	}
 
-	protected boolean enabled( int index ){
+	protected boolean enabled(int index) {
 		return true;
 	}
-	
-	protected void onSelect( int index ) {}
 
-	protected boolean hasInfo( int index ) {
+	protected void onSelect(int index) {
+	}
+
+	protected boolean hasInfo(int index) {
 		return false;
 	}
 
-	protected void onInfo( int index ) {}
+	protected void onInfo(int index) {
+	}
 
-	protected boolean hasIcon( int index ) {
+	protected boolean hasIcon(int index) {
 		return false;
 	}
 
-	protected Image getIcon( int index ) {
+	protected Image getIcon(int index) {
 		return null;
 	}
 }

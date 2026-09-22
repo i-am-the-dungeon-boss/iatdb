@@ -37,12 +37,13 @@ public class RingOfSharpshooting extends Ring {
 	}
 
 	public String statsInfo() {
-		if (isIdentified()){
+		if (isIdentified()) {
 			String info = Messages.get(this, "stats",
 					soloBuffedBonus(), Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, soloBonus()) - 1f)));
-			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())){
+			if (isEquippedByOwner() && soloBuffedBonus() != combinedBuffedBonus(owner())) {
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						combinedBuffedBonus(owner()), Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, combinedBonus(owner())) - 1f)));
+						combinedBuffedBonus(owner()),
+						Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, combinedBonus(owner())) - 1f)));
 			}
 			return info;
 		} else {
@@ -52,27 +53,29 @@ public class RingOfSharpshooting extends Ring {
 
 	@Override
 	public String upgradeStat1(int level) {
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Integer.toString(level+1);
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Integer.toString(level + 1);
 	}
 
 	@Override
 	public String upgradeStat2(int level) {
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, level+1)-1f)) + "%";
+		if (cursed && cursedKnown)
+			level = Math.min(-1, level - 3);
+		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.2, level + 1) - 1f)) + "%";
 	}
 
 	@Override
-	protected RingBuff buff( ) {
+	protected RingBuff buff() {
 		return new Aim();
 	}
 
-	public static int levelDamageBonus( Char target ){
+	public static int levelDamageBonus(Char target) {
 		return getBuffedBonus(target, RingOfSharpshooting.Aim.class);
 	}
 
-	public static float durabilityMultiplier( Char target ){
-		return (float)(Math.pow(1.2, getBonus(target, Aim.class)));
+	public static float durabilityMultiplier(Char target) {
+		return (float) (Math.pow(1.2, getBonus(target, Aim.class)));
 	}
 
 	public class Aim extends RingBuff {

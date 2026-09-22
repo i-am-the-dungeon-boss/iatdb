@@ -33,11 +33,11 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class PotionOfMagicalSight extends ExoticPotion {
-	
+
 	{
 		icon = ItemSpriteSheet.Icons.POTION_MAGISIGHT;
 	}
-	
+
 	@Override
 	public void apply(Char ch) {
 		if (!(ch instanceof Hero)) {
@@ -48,7 +48,7 @@ public class PotionOfMagicalSight extends ExoticPotion {
 		Buff.prolong(hero, MagicalSight.class, MagicalSight.DURATION);
 		SpellSprite.show(hero, SpellSprite.VISION);
 		Dungeon.observe();
-		
+
 	}
-	
+
 }

@@ -127,47 +127,24 @@ public class Dungeon {
 	// nicer for bundling/initializing.
 	public static enum LimitedDrops {
 		// limited world drops
-		STRENGTH_POTIONS,
-		UPGRADE_SCROLLS,
-		ARCANE_STYLI,
-		ENCH_STONE,
-		INT_STONE,
-		TRINKET_CATA,
-		LAB_ROOM, // actually a room, but logic is the same
+		STRENGTH_POTIONS, UPGRADE_SCROLLS, ARCANE_STYLI, ENCH_STONE, INT_STONE, TRINKET_CATA, LAB_ROOM, // actually a room, but logic is the same
 
 		// Health potion sources
 		// enemies
-		SWARM_HP,
-		NECRO_HP,
-		BAT_HP,
-		WARLOCK_HP,
+		SWARM_HP, NECRO_HP, BAT_HP, WARLOCK_HP,
 		// Demon spawners are already limited in their spawnrate, no need to limit their
 		// health drops
 		// alchemy
-		COOKING_HP,
-		BLANDFRUIT_SEED,
+		COOKING_HP, BLANDFRUIT_SEED,
 
 		// Other limited enemy drops
-		SLIME_WEP,
-		SKELE_WEP,
-		THEIF_MISC,
-		GUARD_ARM,
-		SHAMAN_WAND,
-		DM200_EQUIP,
-		GOLEM_EQUIP,
+		SLIME_WEP, SKELE_WEP, THEIF_MISC, GUARD_ARM, SHAMAN_WAND, DM200_EQUIP, GOLEM_EQUIP,
 
 		// containers
-		VELVET_POUCH,
-		SCROLL_HOLDER,
-		POTION_BANDOLIER,
-		MAGICAL_HOLSTER,
+		VELVET_POUCH, SCROLL_HOLDER, POTION_BANDOLIER, MAGICAL_HOLSTER,
 
 		// lore documents
-		LORE_SEWERS,
-		LORE_PRISON,
-		LORE_CAVES,
-		LORE_CITY,
-		LORE_HALLS;
+		LORE_SEWERS, LORE_PRISON, LORE_CAVES, LORE_CITY, LORE_HALLS;
 
 		public int count = 0;
 

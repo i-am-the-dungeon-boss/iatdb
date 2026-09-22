@@ -30,8 +30,7 @@ class RemotePlayersDiffTest {
 	@Test
 	@DisplayName("treats a player in the snapshot but not on screen as an arrival")
 	void detectsArrival() {
-		RemotePlayers.Diff diff =
-				RemotePlayers.diff(new HashMap<>(), Collections.singletonList(at("p1", 10)));
+		RemotePlayers.Diff diff = RemotePlayers.diff(new HashMap<>(), Collections.singletonList(at("p1", 10)));
 
 		assertThat(diff.added).containsExactly("p1");
 		assertThat(diff.moved).isEmpty();
@@ -41,8 +40,7 @@ class RemotePlayersDiffTest {
 	@Test
 	@DisplayName("treats a player on screen but absent from the snapshot as a departure")
 	void detectsDeparture() {
-		RemotePlayers.Diff diff =
-				RemotePlayers.diff(onScreen("p1", 10), new ArrayList<WorldPresence>());
+		RemotePlayers.Diff diff = RemotePlayers.diff(onScreen("p1", 10), new ArrayList<WorldPresence>());
 
 		assertThat(diff.removed).containsExactly("p1");
 		assertThat(diff.added).isEmpty();
@@ -51,8 +49,7 @@ class RemotePlayersDiffTest {
 	@Test
 	@DisplayName("treats a changed cell as a move, not a respawn")
 	void detectsMove() {
-		RemotePlayers.Diff diff =
-				RemotePlayers.diff(onScreen("p1", 10), Collections.singletonList(at("p1", 11)));
+		RemotePlayers.Diff diff = RemotePlayers.diff(onScreen("p1", 10), Collections.singletonList(at("p1", 11)));
 
 		assertThat(diff.moved).containsExactly("p1");
 		assertThat(diff.added).isEmpty();
@@ -62,8 +59,7 @@ class RemotePlayersDiffTest {
 	@Test
 	@DisplayName("leaves a stationary player entirely alone")
 	void ignoresStationaryPlayer() {
-		RemotePlayers.Diff diff =
-				RemotePlayers.diff(onScreen("p1", 10), Collections.singletonList(at("p1", 10)));
+		RemotePlayers.Diff diff = RemotePlayers.diff(onScreen("p1", 10), Collections.singletonList(at("p1", 10)));
 
 		assertThat(diff.added).isEmpty();
 		assertThat(diff.moved).isEmpty();
@@ -106,8 +102,7 @@ class RemotePlayersDiffTest {
 	void comparesCellsByValue() {
 		// Cells beyond 127 fall outside Integer's cache; reference comparison
 		// would report a spurious move on every single sync.
-		RemotePlayers.Diff diff =
-				RemotePlayers.diff(onScreen("p1", 5000), Collections.singletonList(at("p1", 5000)));
+		RemotePlayers.Diff diff = RemotePlayers.diff(onScreen("p1", 5000), Collections.singletonList(at("p1", 5000)));
 
 		assertThat(diff.moved).isEmpty();
 	}
@@ -153,8 +148,8 @@ class RemotePlayersDiffTest {
 	@Test
 	@DisplayName("leaves a departed player out of the changes, since despawning takes the tag")
 	void ignoresDepartedTyping() {
-		RemotePlayers.TypingChanges changes =
-				RemotePlayers.typingChanges(showing("p1"), new ArrayList<WorldPresence>());
+		RemotePlayers.TypingChanges changes = RemotePlayers.typingChanges(showing("p1"),
+				new ArrayList<WorldPresence>());
 
 		assertThat(changes.started).isEmpty();
 		assertThat(changes.stopped).isEmpty();

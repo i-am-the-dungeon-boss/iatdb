@@ -48,7 +48,7 @@ public class DesktopPlatformSupport extends PlatformSupport {
 
 	@Override
 	public void updateDisplaySize() {
-		if (previousSizes == null){
+		if (previousSizes == null) {
 			previousSizes = new Point[2];
 			previousSizes[1] = SPDSettings.windowResolution();
 		} else {
@@ -56,7 +56,7 @@ public class DesktopPlatformSupport extends PlatformSupport {
 		}
 		previousSizes[0] = new Point(Game.width, Game.height);
 		if (!SPDSettings.fullscreen()) {
-			SPDSettings.windowResolution( previousSizes[0] );
+			SPDSettings.windowResolution(previousSizes[0]);
 		}
 	}
 
@@ -64,16 +64,17 @@ public class DesktopPlatformSupport extends PlatformSupport {
 
 	@Override
 	public void updateSystemUI() {
-		Gdx.app.postRunnable( new Runnable() {
+		Gdx.app.postRunnable(new Runnable() {
 			@Override
-			public void run () {
-				if (SPDSettings.fullscreen()){
+			public void run() {
+				if (SPDSettings.fullscreen()) {
 					int monitorNum = 0;
-					if (!first){
+					if (!first) {
 						Graphics.Monitor[] monitors = Gdx.graphics.getMonitors();
-						for (int i = 0; i < monitors.length; i++){
-							if (((Lwjgl3Graphics.Lwjgl3Monitor)Gdx.graphics.getMonitor()).getMonitorHandle()
-									== ((Lwjgl3Graphics.Lwjgl3Monitor)monitors[i]).getMonitorHandle()) {
+						for (int i = 0; i < monitors.length; i++) {
+							if (((Lwjgl3Graphics.Lwjgl3Monitor) Gdx.graphics.getMonitor())
+									.getMonitorHandle() == ((Lwjgl3Graphics.Lwjgl3Monitor) monitors[i])
+											.getMonitorHandle()) {
 								monitorNum = i;
 							}
 						}
@@ -89,13 +90,13 @@ public class DesktopPlatformSupport extends PlatformSupport {
 					SPDSettings.fulLScreenMonitor(monitorNum);
 				} else {
 					Point p = SPDSettings.windowResolution();
-					Gdx.graphics.setWindowedMode( p.x, p.y );
+					Gdx.graphics.setWindowedMode(p.x, p.y);
 				}
 				first = false;
 			}
-		} );
+		});
 	}
-	
+
 	@Override
 	public boolean connectedToUnmeteredNetwork() {
 		return true; //no easy way to check this in desktop, just assume user doesn't care
@@ -108,16 +109,16 @@ public class DesktopPlatformSupport extends PlatformSupport {
 	}
 
 	/* FONT SUPPORT */
-	
+
 	//custom pixel font, for use with Latin and Cyrillic languages
 	private static FreeTypeFontGenerator basicFontGenerator;
 	//droid sans fallback, for asian fonts
 	private static FreeTypeFontGenerator asianFontGenerator;
-	
+
 	@Override
 	public void setupFontGenerators(int pageSize, boolean systemfont) {
 		//don't bother doing anything if nothing has changed
-		if (fonts != null && this.pageSize == pageSize && this.systemfont == systemfont){
+		if (fonts != null && this.pageSize == pageSize && this.systemfont == systemfont) {
 			return;
 		}
 		this.pageSize = pageSize;
@@ -127,31 +128,32 @@ public class DesktopPlatformSupport extends PlatformSupport {
 		fonts = new HashMap<>();
 
 		if (systemfont) {
-			basicFontGenerator = asianFontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/droid_sans.ttf"));
+			basicFontGenerator = asianFontGenerator = new FreeTypeFontGenerator(
+					Gdx.files.internal("fonts/droid_sans.ttf"));
 		} else {
 			basicFontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/pixel_font.ttf"));
 			asianFontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/droid_sans.ttf"));
 		}
-		
+
 		fonts.put(basicFontGenerator, new HashMap<>());
 		fonts.put(asianFontGenerator, new HashMap<>());
-		
+
 		packer = new PixmapPacker(pageSize, pageSize, Pixmap.Format.RGBA8888, 1, false);
 	}
-	
+
 	private static Matcher asianMatcher = Pattern.compile("\\p{InHangul_Syllables}|" +
 			"\\p{InCJK_Unified_Ideographs}|\\p{InCJK_Symbols_and_Punctuation}|\\p{InHalfwidth_and_Fullwidth_Forms}|" +
 			"\\p{InHiragana}|\\p{InKatakana}").matcher("");
 
 	@Override
-	protected FreeTypeFontGenerator getGeneratorForString( String input ){
-		if (asianMatcher.reset(input).find()){
+	protected FreeTypeFontGenerator getGeneratorForString(String input) {
+		if (asianMatcher.reset(input).find()) {
 			return asianFontGenerator;
 		} else {
 			return basicFontGenerator;
 		}
 	}
-	
+
 	//splits on newline (for layout), chinese/japanese (for font choice), and '_'/'**' (for highlighting)
 	private Pattern regularsplitter = Pattern.compile(
 			"(?<=\n)|(?=\n)|(?<=_)|(?=_)|(?<=\\*\\*)|(?=\\*\\*)|" +
@@ -159,7 +161,7 @@ public class DesktopPlatformSupport extends PlatformSupport {
 					"(?<=\\p{InKatakana})|(?=\\p{InKatakana})|" +
 					"(?<=\\p{InCJK_Unified_Ideographs})|(?=\\p{InCJK_Unified_Ideographs})|" +
 					"(?<=\\p{InCJK_Symbols_and_Punctuation})|(?=\\p{InCJK_Symbols_and_Punctuation})");
-	
+
 	//additionally splits on spaces, so that each word can be laid out individually
 	private Pattern regularsplitterMultiline = Pattern.compile(
 			"(?<= )|(?= )|(?<=\n)|(?=\n)|(?<=_)|(?=_)|(?<=\\*\\*)|(?=\\*\\*)|" +
@@ -167,7 +169,7 @@ public class DesktopPlatformSupport extends PlatformSupport {
 					"(?<=\\p{InKatakana})|(?=\\p{InKatakana})|" +
 					"(?<=\\p{InCJK_Unified_Ideographs})|(?=\\p{InCJK_Unified_Ideographs})|" +
 					"(?<=\\p{InCJK_Symbols_and_Punctuation})|(?=\\p{InCJK_Symbols_and_Punctuation})");
-	
+
 	@Override
 	public String[] splitforTextBlock(String text, boolean multiline) {
 		if (multiline) {

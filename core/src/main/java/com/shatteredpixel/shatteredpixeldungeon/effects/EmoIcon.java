@@ -38,29 +38,29 @@ public class EmoIcon extends Image {
 	protected float maxSize = 2;
 	protected float timeScale = 1;
 
-	protected boolean growing	= true;
-	
+	protected boolean growing = true;
+
 	protected CharSprite owner;
-	
-	public EmoIcon( CharSprite owner ) {
+
+	public EmoIcon(CharSprite owner) {
 		super();
-		
+
 		this.owner = owner;
-		GameScene.add( this );
+		GameScene.add(this);
 	}
-	
+
 	@Override
 	public void update() {
 		super.update();
 
 		if (visible) {
 			if (growing) {
-				scale.set( Math.min(scale.x + Game.elapsed * timeScale, maxSize ));
+				scale.set(Math.min(scale.x + Game.elapsed * timeScale, maxSize));
 				if (scale.x >= maxSize) {
 					growing = false;
 				}
 			} else {
-				scale.set( Math.max(scale.x - Game.elapsed * timeScale, 1f ));
+				scale.set(Math.max(scale.x - Game.elapsed * timeScale, 1f));
 				if (scale.x <= 1) {
 					growing = true;
 				}
@@ -74,102 +74,102 @@ public class EmoIcon extends Image {
 		}
 	}
 
-	protected PointF centerPoint(){
-		return new PointF(width()/2f, height()/2f);
+	protected PointF centerPoint() {
+		return new PointF(width() / 2f, height() / 2f);
 	};
-	
+
 	public static class Sleep extends EmoIcon {
-		
-		public Sleep( CharSprite owner ) {
-			
-			super( owner );
-			
-			copy( Icons.get( Icons.SLEEP ) );
-			
+
+		public Sleep(CharSprite owner) {
+
+			super(owner);
+
+			copy(Icons.get(Icons.SLEEP));
+
 			maxSize = 1.2f;
 			timeScale = 0.5f;
-			
-			scale.set( Random.Float( 1, maxSize ) );
+
+			scale.set(Random.Float(1, maxSize));
 
 			x = owner.x + owner.width - width / 2;
 			y = owner.y - height;
 		}
 
 		@Override
-		protected PointF centerPoint(){
+		protected PointF centerPoint() {
 			//centered and significantly up
-			return new PointF(width()/2f, 4f+ height()/2f);
+			return new PointF(width() / 2f, 4f + height() / 2f);
 		}
 	}
-	
+
 	public static class Alert extends EmoIcon {
-		
-		public Alert( CharSprite owner ) {
-			
-			super( owner );
-			
-			copy( Icons.get( Icons.ALERT ) );
-			
+
+		public Alert(CharSprite owner) {
+
+			super(owner);
+
+			copy(Icons.get(Icons.ALERT));
+
 			maxSize = 1.3f;
 			timeScale = 2;
-			
-			scale.set( Random.Float( 1, maxSize ) );
+
+			scale.set(Random.Float(1, maxSize));
 
 			x = owner.x + owner.width - width / 2;
 			y = owner.y - height;
 		}
 
 		@Override
-		protected PointF centerPoint(){
+		protected PointF centerPoint() {
 			//up and left, and centers at the bottom-left
-			return new PointF(2.5f + 0.25f*width(), 2.5f + 0.75f*height());
+			return new PointF(2.5f + 0.25f * width(), 2.5f + 0.75f * height());
 		}
 	}
 
 	public static class Investigate extends EmoIcon {
 
-		public Investigate( CharSprite owner ) {
+		public Investigate(CharSprite owner) {
 
-			super( owner );
+			super(owner);
 
-			copy( Icons.get( Icons.INVESTIGATE ) );
+			copy(Icons.get(Icons.INVESTIGATE));
 
 			maxSize = 1.3f;
 			timeScale = 1.5f;
 
-			scale.set( Random.Float( 1, maxSize ) );
+			scale.set(Random.Float(1, maxSize));
 
 			x = owner.x + owner.width - width / 2;
 			y = owner.y - height;
 		}
 
 		@Override
-		protected PointF centerPoint(){
+		protected PointF centerPoint() {
 			//up and left, and centers at the bottom-left
-			return new PointF(2.5f + 0.25f*width(), 2.5f + 0.75f*height());
+			return new PointF(2.5f + 0.25f * width(), 2.5f + 0.75f * height());
 		}
 	}
-	
+
 	public static class Lost extends EmoIcon {
-		
-		public Lost( CharSprite owner ){
-			super( owner );
-			
-			copy( Icons.get( Icons.LOST ) );
-			
+
+		public Lost(CharSprite owner) {
+			super(owner);
+
+			copy(Icons.get(Icons.LOST));
+
 			maxSize = 1.25f;
 			timeScale = 1;
-			
-			scale.set( Random.Float( 1, maxSize ) );
-			
+
+			scale.set(Random.Float(1, maxSize));
+
 			x = owner.x + owner.width - width / 2;
 			y = owner.y - height;
 		}
 
 		@Override
-		protected PointF centerPoint(){
+		protected PointF centerPoint() {
 			//up and left, and centers at the bottom-left
-			return new PointF(2.5f + 0.25f*width(), 2.5f + 0.75f*height());
+			return new PointF(2.5f + 0.25f * width(), 2.5f + 0.75f * height());
 		}
 	}
 
