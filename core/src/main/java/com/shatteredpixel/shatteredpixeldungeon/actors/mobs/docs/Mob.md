@@ -4,8 +4,8 @@ A [`Mob`](../Mob.java) is an AI [`Char`](../../Char.java) with a `state` (sleepi
 
 What this parent is, versus lookalikes in other modules:
 
-| This         | Not this                                                                                                                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| This         | Not this                                                                               |
+| ------------ | -------------------------------------------------------------------------------------- |
 | AI combatant | Player ([`Hero`](../../hero/Hero.java)), friendly shop NPC package ([`npcs`](../npcs)) |
 
 ## Lifecycle
@@ -30,8 +30,8 @@ sequenceDiagram
 
 How other code starts, extends, or strips this parent:
 
-| Call                                                                                                      | If already present | Effect                                                                                                        |
-| --------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Call                                 | If already present | Effect                                                                                                        |
+| ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------- |
 | [`defenseSkill(enemy)`](../Mob.java) | n/a                | `0` if Illuminated+Cleric, or surprised / `paralysed != 0` / ally-vs-hero; else the stored `defenseSkill` int |
 | [`surprisedBy(enemy)`](../Mob.java)  | n/a                | hero attacker + (invisible / `!enemySeen` / not in FOV)                                                       |
 | [`act`](../Mob.java)                 | n/a                | stunned → skip AI                                                                                             |
@@ -43,27 +43,27 @@ How other code starts, extends, or strips this parent:
 
 How children specialize the parent (name one child; do not spec it):
 
-| If it…                 | Kind (subtype of parent)                                                                            | e.g.                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| If it…                 | Kind (subtype of parent)       | e.g.                     |
+| ---------------------- | ------------------------------ | ------------------------ |
 | Standard enemy         | [`Mob`](../Mob.java)           | [`Rat`](../Rat.java)     |
 | Region boss            | [`Mob`](../Mob.java)           | [`Tengu`](../Tengu.java) |
-| Echo kit on a mob body | [`EchoBoss`](../EchoBoss.java) | —                                                                                             |
+| Echo kit on a mob body | [`EchoBoss`](../EchoBoss.java) | —                        |
 
-[`EchoBoss`](../EchoBoss.java) **overrides** `defenseSkill` and never uses this surprise→0 path. It copies `paralysed` onto [`getEchoHero()`](../EchoBoss.java) and calls [`Hero.defenseSkill`](../../hero/Hero.java).
+[`EchoBoss`](../EchoBoss.java) **overrides** `defenseSkill`. While `state == SLEEPING` (spawn sleep or [`MagicalSleep`](../../buffs/MagicalSleep.java)) and [`surprisedBy`](../Mob.java) is true, evasion is **0**. Awake, it copies `paralysed` onto [`getEchoHero()`](../EchoBoss.java) and calls [`Hero.defenseSkill`](../../hero/Hero.java). `surprisedBy` treats `SLEEPING` as a surprise even when the hero is already seen; flail / under-STR still cannot surprise.
 
 ## Integrations
 
 Which other modules talk to this parent, and in which direction:
 
-| Module                                                                                                 | Direction | Parent hook                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`actors.Char`](../../Char.java)          | is-a      | `extends Char`; [`hit`](../../Char.java)                                                                                                                                          |
-| [`actors.buffs`](../../buffs)             | queries   | `paralysed`, Illuminated, AI buffs (Terror / Amok)                                                                                                                                                                                             |
-| [`actors.hero`](../../hero)               | queries   | surprise only vs [`Dungeon.hero`](../../../Dungeon.java); [`EchoBoss`](../EchoBoss.java) delegates evasion to Hero     |
-| [`actors.hero.spells`](../../hero/spells) | queries   | [`GuidingLight.Illuminated`](../../hero/spells/GuidingLight.java) → 0 vs Cleric                                                                                                   |
-| [`levels`](../../../levels)                         | hosts     | spawn, FOV for `surprisedBy`                                                                                                                                                                                                                   |
-| [`heroechoes.policy`](../../../heroechoes/policy)   | applies   | [`EchoRoleExecutor`](../../../heroechoes/policy/EchoRoleExecutor.java) on [`EchoBoss`](../EchoBoss.java) hunting turns |
-| `Bundle`                      | persists  | state, enemy, `defenseSkill` int                                                                                                                                                                                                               |
+| Module                                            | Direction | Parent hook                                                                                                            |
+| ------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [`actors.Char`](../../Char.java)                  | is-a      | `extends Char`; [`hit`](../../Char.java)                                                                               |
+| [`actors.buffs`](../../buffs)                     | queries   | `paralysed`, Illuminated, AI buffs (Terror / Amok)                                                                     |
+| [`actors.hero`](../../hero)                       | queries   | surprise only vs [`Dungeon.hero`](../../../Dungeon.java); [`EchoBoss`](../EchoBoss.java) delegates evasion to Hero     |
+| [`actors.hero.spells`](../../hero/spells)         | queries   | [`GuidingLight.Illuminated`](../../hero/spells/GuidingLight.java) → 0 vs Cleric                                        |
+| [`levels`](../../../levels)                       | hosts     | spawn, FOV for `surprisedBy`                                                                                           |
+| [`heroechoes.policy`](../../../heroechoes/policy) | applies   | [`EchoRoleExecutor`](../../../heroechoes/policy/EchoRoleExecutor.java) on [`EchoBoss`](../EchoBoss.java) hunting turns |
+| `Bundle`                                          | persists  | state, enemy, `defenseSkill` int                                                                                       |
 
 Same map as the table:
 
@@ -92,13 +92,13 @@ flowchart LR
 
 What the player sees versus the parent method that produces it:
 
-| Player                              | Parent API                                                                                                                                                                                                                  |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surprise hit (door / invis)         | [`surprisedBy`](../Mob.java) → `defenseSkill` 0                                                                                                        |
-| Stunned enemy always hit            | `paralysed != 0` → 0                                                                                                                                                                                                        |
-| Guiding Light vs Cleric: always hit | Illuminated branch → 0                                                                                                                                                                                                      |
-| Echo dodge like a hero              | [`EchoBoss.defenseSkill`](../EchoBoss.java) → [`Hero.defenseSkill`](../../hero/Hero.java) |
-| Enemy skips a turn                  | `act` when `paralysed > 0`                                                                                                                                                                                                  |
+| Player                              | Parent API                                                                                                             |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Surprise hit (door / invis)         | [`surprisedBy`](../Mob.java) → `defenseSkill` 0                                                                        |
+| Stunned enemy always hit            | `paralysed != 0` → 0                                                                                                   |
+| Guiding Light vs Cleric: always hit | Illuminated branch → 0                                                                                                 |
+| Echo dodge like a hero              | Awake [`EchoBoss.defenseSkill`](../EchoBoss.java) → [`Hero.defenseSkill`](../../hero/Hero.java). Sleeping → surprise 0 |
+| Enemy skips a turn                  | `act` when `paralysed > 0`                                                                                             |
 
 ## Change without surprises
 

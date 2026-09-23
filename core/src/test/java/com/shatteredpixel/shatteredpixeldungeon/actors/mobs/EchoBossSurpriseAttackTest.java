@@ -3,14 +3,17 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSleep;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Flail;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingHammer;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -242,6 +245,64 @@ class EchoBossSurpriseAttackTest {
 	}
 
 	@Test
+	@DisplayName("sleeping EchoBoss is surprised even when the hero is seen")
+	void sleepingEchoBossIsSurprisedWhenHeroIsSeen() {
+		boss.state = boss.SLEEPING;
+		boss.enemySeen = true;
+		hero.invisible = 0;
+
+		Assertions.assertThat(boss.surprisedBy(hero)).isTrue();
+		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(0);
+		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(0);
+		Assertions.assertThat(Char.hit(hero, boss, false)).isTrue();
+		Assertions.assertThat(FloatingText.getHitReasonIcon(hero, 10f, boss, 0f))
+				.isEqualTo(FloatingText.HIT_SUPR);
+	}
+
+	@Test
+	@DisplayName("thrown hammer surprises a seen sleeping EchoBoss")
+	void thrownHammerSurprisesSleepingEchoBoss() {
+		boss.state = boss.SLEEPING;
+		boss.enemySeen = true;
+		ThrowingHammer hammer = new ThrowingHammer();
+		hammer.identify();
+		hero.belongings.thrownWeapon = hammer;
+		hero.STR = Math.max(hero.STR(), hammer.STRReq());
+
+		Assertions.assertThat(boss.surprisedBy(hero)).isTrue();
+		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(0);
+		Assertions.assertThat(Char.hit(hero, boss, false)).isTrue();
+	}
+
+	@Test
+	@DisplayName("flail does not surprise a sleeping EchoBoss")
+	void flailDoesNotSurpriseSleepingEchoBoss() {
+		boss.state = boss.SLEEPING;
+		Flail flail = new Flail();
+		flail.identify();
+		hero.belongings.weapon = flail;
+		hero.STR = Math.max(hero.STR(), flail.STRReq());
+
+		Assertions.assertThat(boss.surprisedBy(hero)).isFalse();
+		Assertions.assertThat(boss.defenseSkill(hero)).isGreaterThan(0);
+	}
+
+	@Test
+	@DisplayName("magical sleep on the hero is a surprise hit even outside an echo fight")
+	void magicalSleepOnHeroIsSurpriseHit() {
+		Dungeon.resetEchoStateForTests();
+		hero.HP = hero.HT - 1;
+		Buff.affect(hero, MagicalSleep.class);
+
+		Assertions.assertThat(hero.buff(MagicalSleep.class)).isNotNull();
+		Assertions.assertThat(hero.defenseSkill(boss)).isEqualTo(0);
+		Assertions.assertThat(hero.defenseSkill(boss)).isEqualTo(0);
+		Assertions.assertThat(Char.hit(boss, hero, false)).isTrue();
+		Assertions.assertThat(FloatingText.getHitReasonIcon(boss, 10f, hero, 0f))
+				.isEqualTo(FloatingText.HIT_SUPR);
+	}
+
+	@Test
 	@DisplayName("echo kit cannot surprise via Mob.surprisedBy")
 	void echoKitCannotSurpriseViaSurprisedBy() {
 		Hero kit = boss.getEchoHero();
@@ -282,6 +343,7 @@ class EchoBossSurpriseAttackTest {
 		Dungeon.level.updateFieldOfView(boss, boss.fieldOfView);
 		boss.enemySeen = true;
 		boss.enemy = hero;
+		boss.state = boss.HUNTING;
 		hero.invisible = 0;
 	}
 }

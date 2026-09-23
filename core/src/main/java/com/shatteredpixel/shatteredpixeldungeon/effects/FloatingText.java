@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bless;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Daze;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hex;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSleep;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Momentum;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
@@ -326,6 +327,9 @@ public class FloatingText extends RenderedTextBlock {
 			return HIT_BLS;
 		}
 		if (accRoll == Char.INFINITE_ACCURACY && attacker.invisible > 0) {
+			return HIT_SUPR;
+		}
+		if (defRoll == 0 && defender.buff(MagicalSleep.class) != null) {
 			return HIT_SUPR;
 		}
 		if (defRoll == 0 && defender instanceof Mob && ((Mob) defender).surprisedBy(attacker)) {

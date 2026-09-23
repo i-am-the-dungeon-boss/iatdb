@@ -88,6 +88,7 @@ class GuidingLightHitTest {
 	@DisplayName("an Illuminated echo body is a guaranteed hit for the cleric player")
 	void illuminatedEchoBodyCannotEvadeTheCleric() {
 		EchoBoss boss = clericEcho();
+		boss.state = boss.HUNTING;
 		boss.getEchoHero().heroClass = HeroClass.WARRIOR;
 		Hero player = Dungeon.hero;
 		player.heroClass = HeroClass.CLERIC;

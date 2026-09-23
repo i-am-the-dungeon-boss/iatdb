@@ -57,6 +57,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSleep;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Momentum;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy;
@@ -90,6 +91,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Surprise;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GuidingLightHit;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
@@ -595,6 +597,12 @@ public class Hero extends Char {
 
 	@Override
 	public int defenseSkill(Char enemy) {
+
+		// Magical sleep is a surprise: guaranteed hit for any weapon that can surprise.
+		if (buff(MagicalSleep.class) != null
+				&& (enemy == null || enemy.canSurpriseAttack())) {
+			return 0;
+		}
 
 		if (buff(Combo.ParryTracker.class) != null) {
 			if (canAttack(enemy) && !isCharmedBy(enemy)) {
@@ -1653,6 +1661,10 @@ public class Hero extends Char {
 
 	@Override
 	public int defenseProc(Char enemy, int damage) {
+
+		if (buff(MagicalSleep.class) != null && enemy != null && enemy.canSurpriseAttack()) {
+			Surprise.hit(this);
+		}
 
 		if (damage > 0 && subClass == HeroSubClass.BERSERKER) {
 			Berserk berserk = Buff.affect(this, Berserk.class);

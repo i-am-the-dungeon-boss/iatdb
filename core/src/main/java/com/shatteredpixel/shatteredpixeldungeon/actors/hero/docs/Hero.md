@@ -40,15 +40,16 @@ How other code starts, extends, or strips this parent:
 
 [`defenseSkill`](../Hero.java) order (first return wins):
 
-1. [`Combo.ParryTracker`](../../buffs/Combo.java) / [`RoundShield.GuardTracker`](../../../items/weapon/melee/RoundShield.java) → `INFINITE_EVASION`
-2. Liquid Agility 2 tracker → `INFINITE_EVASION` (rank 1 is ×3, not infinite)
-3. Ring + quarterstaff stance multipliers
-4. [`GuidingLight.Illuminated`](../spells/GuidingLight.java) + `attackerIsCleric` → **0**
-5. Echo fight + `paralysed > 0` + no guaranteed-hit tracker → **0** (then attach tracker)
-6. `paralysed > 0` → `evasion / 2`
-7. Echo fight + unseen adjacent door → `evasion / 2` (stacks with stun half)
-8. Armor factor; Stone glyph → **0**
-9. `max(1, round(evasion))` — a live hero never returns 0 except Stone / Illuminated vs Cleric / echo-fight guaranteed hit
+1. [`MagicalSleep`](../../buffs/MagicalSleep.java) + attacker `canSurpriseAttack` (or null attacker) → **0**
+2. [`Combo.ParryTracker`](../../buffs/Combo.java) / [`RoundShield.GuardTracker`](../../../items/weapon/melee/RoundShield.java) → `INFINITE_EVASION`
+3. Liquid Agility 2 tracker → `INFINITE_EVASION` (rank 1 is ×3, not infinite)
+4. Ring + quarterstaff stance multipliers
+5. [`GuidingLight.Illuminated`](../spells/GuidingLight.java) + `attackerIsCleric` → **0**
+6. Echo fight + `paralysed > 0` + no guaranteed-hit tracker → **0** (then attach tracker)
+7. `paralysed > 0` → `evasion / 2`
+8. Echo fight + unseen adjacent door → `evasion / 2` (stacks with stun half)
+9. Armor factor; Stone glyph → **0**
+10. `max(1, round(evasion))` — a live hero never returns 0 except MagicalSleep surprise / Stone / Illuminated vs Cleric / echo-fight guaranteed hit
 
 `attackerIsCleric` is true for a [`Hero`](../Hero.java) or [`EchoBoss`](../../mobs/EchoBoss.java) whose kit class is [`CLERIC`](../HeroClass.java).
 
@@ -114,22 +115,24 @@ flowchart LR
 
 What the player sees versus the parent method that produces it:
 
-| Player                                                            | Parent API                                                                         |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Dodge chance                                                      | [`defenseSkill`](../Hero.java)                                                     |
-| Stun (echo fight): first hit always lands, later hits half        | [`EchoHardStun`](../../../heroechoes/EchoHardStun.java) tracker then `evasion / 2` |
-| Stun (elsewhere): half dodge every hit                            | `paralysed > 0` → `evasion / 2`                                                    |
-| Guiding Light vs Cleric: always hit                               | `Illuminated` + `attackerIsCleric` → 0                                             |
-| Unseen adjacent door in echo fight: half dodge (stacks with stun) | [`EchoHardStun.unseenAdjacentDoor`](../../../heroechoes/EchoHardStun.java)         |
-| Parry / Guard / Liquid Agility 2: cannot be hit                   | early `return INFINITE_EVASION`                                                    |
-| Stone glyph: always hit                                           | armor glyph returns 0                                                              |
-| Skip turn while stunned                                           | `act` when `paralysed > 0`                                                         |
+| Player                                                            | Parent API                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Magical sleep: surprise hit                                       | [`MagicalSleep`](../../buffs/MagicalSleep.java) → `defenseSkill` 0 if the attacker can surprise |
+| Dodge chance                                                      | [`defenseSkill`](../Hero.java)                                                                  |
+| Stun (echo fight): first hit always lands, later hits half        | [`EchoHardStun`](../../../heroechoes/EchoHardStun.java) tracker then `evasion / 2`              |
+| Stun (elsewhere): half dodge every hit                            | `paralysed > 0` → `evasion / 2`                                                                 |
+| Guiding Light vs Cleric: always hit                               | `Illuminated` + `attackerIsCleric` → 0                                                          |
+| Unseen adjacent door in echo fight: half dodge (stacks with stun) | [`EchoHardStun.unseenAdjacentDoor`](../../../heroechoes/EchoHardStun.java)                      |
+| Parry / Guard / Liquid Agility 2: cannot be hit                   | early `return INFINITE_EVASION`                                                                 |
+| Stone glyph: always hit                                           | armor glyph returns 0                                                                           |
+| Skip turn while stunned                                           | `act` when `paralysed > 0`                                                                      |
 
 ## Change without surprises
 
 - [ ] [`EchoBoss`](../../mobs/EchoBoss.java) **shares this method** — a fight-scoped evasion change here also applies to the echo
+- [ ] Magical sleep returns 0 **before** parry / guard — an asleep hero does not keep those windows
 - [ ] Infinite-evasion returns happen **before** Illuminated / paralysed; a later `return 0` must not be placed above them if those windows should still win
 - [ ] Focus is in [`Char.hit`](../../Char.java), not here — `defenseSkill` 0 still loses to Focus
-- [ ] Floor is `max(1, …)` except Stone / Illuminated vs Cleric / echo-fight guaranteed hit — those return 0
+- [ ] Floor is `max(1, …)` except MagicalSleep surprise / Stone / Illuminated vs Cleric / echo-fight guaranteed hit — those return 0
 - [ ] Echo-fight door surprise is **half**, not Mob’s surprise-0; [`Mob.surprisedBy`](../../mobs/Mob.java) is a different method
 - [ ] [`HeroClass.initHero`](../HeroClass.java) grants run-wide known for Healing / Strength / Upgrade for every class — echo kit paths must still not teach via `Item.grantsPlayerKnowledge()`

@@ -71,6 +71,7 @@ class EchoSnapshotRoundTripTest {
 		Assertions.assertThat(echoHero.belongings.armor()).isInstanceOf(PlateArmor.class);
 		Assertions.assertThat(echoHero.belongings.weapon()).isInstanceOf(WornShortsword.class);
 		Assertions.assertThat(echoHero.belongings.getItem(PotionOfHealing.class).quantity()).isEqualTo(2);
+		boss.state = boss.HUNTING;
 		Assertions.assertThat(boss.defenseSkill(hero)).isEqualTo(echoHero.defenseSkill(hero));
 		Assertions.assertThat(EchoBossSprite.armorTierFor(echoHero, loaded))
 				.isEqualTo(((PlateArmor) hero.belongings.armor()).tier);

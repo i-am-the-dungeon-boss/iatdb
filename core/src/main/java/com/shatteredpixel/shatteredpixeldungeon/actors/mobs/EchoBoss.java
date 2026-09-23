@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Surprise;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.action.EchoCombatBuffTransfer;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoHardStun;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.boss.EchoFightRecorder;
@@ -895,7 +896,20 @@ public class EchoBoss extends Mob implements EchoInspectable {
 				&& (GuidingLightHit.isClericFreeHit(enemy) || GuidingLightHit.isClericAlly(enemy))) {
 			return 0;
 		}
+		// Spawn sleep and MagicalSleep (which sets SLEEPING) are a surprise hit.
+		if (state == SLEEPING && surprisedBy(enemy)) {
+			return 0;
+		}
 		return withEchoHeroPosInt(() -> echoHero.defenseSkill(enemy));
+	}
+
+	@Override
+	public boolean surprisedBy(Char enemy, boolean attacking) {
+		if (state == SLEEPING) {
+			return enemy == Dungeon.hero
+					&& (!attacking || enemy.canSurpriseAttack());
+		}
+		return super.surprisedBy(enemy, attacking);
 	}
 
 	@Override
@@ -926,6 +940,9 @@ public class EchoBoss extends Mob implements EchoInspectable {
 
 	@Override
 	public int defenseProc(Char enemy, int damage) {
+		if (state == SLEEPING && surprisedBy(enemy)) {
+			Surprise.hit(this);
+		}
 		return withEchoHeroPosInt(() -> {
 			int dmg = echoHero.defenseProc(enemy, damage);
 			Earthroot.Armor bodyRoot = buff(Earthroot.Armor.class);
