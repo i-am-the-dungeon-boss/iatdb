@@ -90,11 +90,12 @@ flowchart LR
 
 What the player sees versus the parent method that produces it:
 
-| Player                                            | Parent API                                                                                                                                                            |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Echo drinks / throws / swings                     | [`EchoRoleExecutor.execute`](../EchoRoleExecutor.java); shatter potions use [`Potion.drinksByDefault`](../../../items/potions/Potion.java), not the player's handbook |
-| Echo skips stun items while “immune to paralysis” | [`capForEnemy`](../EchoRoleExecutor.java) (gas, frost, flashbang, snap freeze)                                                                                        |
-| Echo fights at all                                | [`Dungeon.isEchoBossActive`](../../../Dungeon.java) (`pendingEcho` + this policy)                                                                                     |
+| Player                                              | Parent API                                                                                                                                                            |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Echo drinks / throws / swings                       | [`EchoRoleExecutor.execute`](../EchoRoleExecutor.java); shatter potions use [`Potion.drinksByDefault`](../../../items/potions/Potion.java), not the player's handbook |
+| Echo skips stun items while “immune to paralysis”   | [`capForEnemy`](../EchoRoleExecutor.java) (gas, frost, flashbang, snap freeze)                                                                                        |
+| Echo skips another Haste/Stamina while already sped | [`virtualRoleFeasible`](../EchoPolicyStatusBuilder.java) unreadies `HASTE`                                                                                            |
+| Echo fights at all                                  | [`Dungeon.isEchoBossActive`](../../../Dungeon.java) (`pendingEcho` + this policy)                                                                                     |
 
 ## Change without surprises
 
@@ -102,4 +103,5 @@ What the player sees versus the parent method that produces it:
 - [ ] [`capForEnemy`](../EchoRoleExecutor.java) strips **SETUP_CC stun items** (gas, frost, flashbang, snap freeze) — a leftover legal item can still keep the role ready
 - [ ] [`fromBundle`](../EchoPolicy.java) throws if `policy_json` is missing — do not invent a hollow playbook
 - [ ] Potion drink vs throw uses [`Potion.drinksByDefault`](../../../items/potions/Potion.java) — player identification must not turn a shatter potion into a drink. `SELF_DRINK` roles (Frost on `CLEANSE_BURN`) still drink
+- [ ] `HASTE` stays unready while `Haste` or `Stamina` is on the boss body — do not rely only on playbook `self_status_none`
 - [ ] Status names are aliases in [`EchoPolicyHazards`](../EchoPolicyHazards.java); `Paralysis.Immunity` must not be sensed as `"immunity"`

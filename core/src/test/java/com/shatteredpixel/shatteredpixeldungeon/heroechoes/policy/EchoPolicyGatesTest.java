@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blocking;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
@@ -104,6 +106,40 @@ class EchoPolicyGatesTest {
 		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
 
 		Assertions.assertThat(status.isRoleReady("SETUP_CC")).isFalse();
+	}
+
+	@Test
+	@DisplayName("HASTE is not ready while the echo already has Haste")
+	void hasteUnreadyWhileHasted() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("HASTE", EchoTestSupport.capability("PotionOfHaste"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste());
+
+		Assertions.assertThat(EchoPolicyStatusBuilder.build(boss, policy).isRoleReady("HASTE")).isTrue();
+
+		Buff.affect(boss, Haste.class, Haste.DURATION);
+
+		Assertions.assertThat(EchoPolicyStatusBuilder.build(boss, policy).isRoleReady("HASTE")).isFalse();
+	}
+
+	@Test
+	@DisplayName("HASTE is not ready while the echo already has Stamina")
+	void hasteUnreadyWhileStamina() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("HASTE", EchoTestSupport.capability("PotionOfHaste", "PotionOfStamina"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste());
+
+		Buff.affect(boss, Stamina.class, Stamina.DURATION);
+
+		Assertions.assertThat(EchoPolicyStatusBuilder.build(boss, policy).isRoleReady("HASTE")).isFalse();
 	}
 
 	@Test

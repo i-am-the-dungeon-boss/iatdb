@@ -7,8 +7,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -344,6 +346,10 @@ public final class EchoPolicyStatusBuilder {
 				// echo already spent is still mostly intact. Gated here rather than in
 				// the stance so reactions and recipes obey it too.
 				return !boss.hasMostlyIntactShield();
+			case HASTE:
+				// Same anti-stack idea: Haste and Stamina are the HASTE role's drinks.
+				// A second bottle while either is still up wastes the kit.
+				return boss.buff(Haste.class) == null && boss.buff(Stamina.class) == null;
 			case MOVE_TO_WATER:
 				return level != null
 						&& nearestTerrainCell(
