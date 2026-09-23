@@ -193,6 +193,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	}
 
 	public void place(int cell) {
+		dropMotion();
 		point(worldToCamera(cell));
 	}
 
@@ -225,6 +226,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 		play(run);
 
+		dropMotion();
 		motion = new PosTweener(this, worldToCamera(to), moveInterval);
 		motion.listener = this;
 		parent.add(motion);
@@ -253,8 +255,21 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	}
 
 	public void interruptMotion() {
-		if (motion != null) {
-			motion.stop(false);
+		dropMotion();
+	}
+
+	/** Kill the walk slide without {@code onMotionComplete}. A later slide must not finish on a tile {@code ch.pos} has left. */
+	private void dropMotion() {
+		synchronized (this) {
+			if (motion == null) {
+				return;
+			}
+			PosTweener dropped = motion;
+			motion = null;
+			isMoving = false;
+			dropped.listener = null;
+			dropped.killAndErase();
+			notifyAll();
 		}
 	}
 
@@ -861,6 +876,8 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 				motion.killAndErase();
 				motion = null;
+				// Slide end is the last pixel write. Land on the tile melee and AI use.
+				place(ch.pos);
 				ch.onMotionComplete();
 
 				GameScene.sortMobSprites();
