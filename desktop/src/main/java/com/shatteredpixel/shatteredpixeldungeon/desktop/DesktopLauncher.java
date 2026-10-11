@@ -68,6 +68,7 @@ public class DesktopLauncher {
 				// No build-baked socket override: this platform reads the project
 				// .env at runtime, so ECHO_WORLD_SOCKET_URL is already in scope.
 				"");
+		Dungeon.demoPackage = EchoBuildConfig.DEMO_PACKAGE;
 
 		String earlyVersion = DesktopLauncher.class.getPackage().getSpecificationVersion();
 		if (earlyVersion == null) {

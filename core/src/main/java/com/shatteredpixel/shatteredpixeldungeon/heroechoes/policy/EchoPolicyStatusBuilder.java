@@ -123,12 +123,14 @@ public final class EchoPolicyStatusBuilder {
 				invulnerable, bigShield, preGateReady,
 				hasStepAwayFrom(boss, enemy, level), boss.disengageTurns(),
 				ownShield > 0, selfHp);
-		if (stance != EchoUntouchable.Stance.NONE) {
-			// Aggregate "attacking this is pointless, but only for now". Derived from
-			// the stance so a playbook can never see it while the echo is fighting on.
+		if (stance == EchoUntouchable.Stance.RUN
+				|| stance == EchoUntouchable.Stance.PREP
+				|| stance == EchoUntouchable.Stance.SHIELD_UP) {
+			// Aggregate "attacking this is pointless, but only for now". FIGHT is
+			// ordinary combat, so the playbook must not see this there.
 			enemyStatuses.add(EchoPolicyHazards.DAMAGE_IMMUNE);
 		}
-		if (stance == EchoUntouchable.Stance.PREP || stance == EchoUntouchable.Stance.FIGHT) {
+		if (stance == EchoUntouchable.Stance.PREP) {
 			selfStatuses.add(EchoPolicyHazards.NO_ESCAPE);
 		}
 
@@ -350,6 +352,10 @@ public final class EchoPolicyStatusBuilder {
 				// Same anti-stack idea: Haste and Stamina are the HASTE role's drinks.
 				// A second bottle while either is still up wastes the kit.
 				return boss.buff(Haste.class) == null && boss.buff(Stamina.class) == null;
+			case CLEANSE_BURN:
+				// Drinking frost shatters Freezing on the echo. Only worth it
+				// while Burning is actually attached.
+				return boss.buff(Burning.class) != null;
 			case MOVE_TO_WATER:
 				return level != null
 						&& nearestTerrainCell(

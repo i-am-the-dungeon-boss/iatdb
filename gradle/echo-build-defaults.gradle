@@ -12,11 +12,19 @@ def escapedKey = (project.ext.echoApiKey ?: '')
 		.replace('\r', '')
 		.replace('\n', '')
 
+def demoPackage = project.hasProperty('demo') ? 'true' : 'false'
+
 tasks.named('processResources').configure {
+	// -Pdemo is not a file input. Without this, a demo bake stays DEMO_PACKAGE=true
+	// on the next desktop:debug that omits the flag.
+	inputs.property("demoPackage", demoPackage)
 	filesMatching('echo-build.properties') {
 		filter { String line ->
 			if (line.startsWith('ECHO_API_KEY=')) {
 				return "ECHO_API_KEY=${escapedKey}"
+			}
+			if (line.startsWith('DEMO_PACKAGE=')) {
+				return "DEMO_PACKAGE=${demoPackage}"
 			}
 			return line
 		}

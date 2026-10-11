@@ -44,14 +44,14 @@ flowchart LR
 
 These existing docs cover risks and fork-specific work that span multiple stages:
 
-| Doc                                                         | Relevance                                                 |
-| ----------------------------------------------------------- | --------------------------------------------------------- |
-| [PENDING-LINKS.md](../PENDING-LINKS.md)                     | Upstream URLs still pointing at Shattered Pixel Dungeon   |
-| [recommended-changes.md](../recommended-changes.md)         | Package ID, icons, credits, Patreon, update/news services |
-| [getting-started-android.md](../getting-started-android.md) | Build, signing, AAB, Play distribution warnings           |
-| [android-signing.md](android-signing.md)                     | Release keystore setup and backup for IATDB               |
-| [prepare-release.md](prepare-release.md)                     | One-command APK + JAR packaging into `dist/`                |
-| [hero-echoes/NAMING.md](../hero-echoes/NAMING.md)           | Product naming: game vs Hero Echoes service               |
+| Doc                                                         | Relevance                                                  |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| [PENDING-LINKS.md](../PENDING-LINKS.md)                     | Upstream URLs still pointing at Shattered Pixel Dungeon    |
+| [recommended-changes.md](../recommended-changes.md)         | Package ID, icons, credits, Patreon, update/news services  |
+| [getting-started-android.md](../getting-started-android.md) | Build, signing, AAB, Play distribution warnings            |
+| [android-signing.md](android-signing.md)                    | Release keystore setup and backup for IATDB                |
+| [prepare-release.md](prepare-release.md)                    | Play AAB + Steam demo zips into `dist/`; GitHub notes only |
+| [hero-echoes/NAMING.md](../hero-echoes/NAMING.md)           | Product naming: game vs Hero Echoes service                |
 
 ## Status
 

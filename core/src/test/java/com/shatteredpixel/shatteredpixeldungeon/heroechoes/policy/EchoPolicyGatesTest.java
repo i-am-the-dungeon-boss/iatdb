@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.heroechoes.policy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Stamina;
 import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
@@ -14,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoBoss;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.EchoTestSupport;
 import com.shatteredpixel.shatteredpixeldungeon.heroechoes.GdxTestExtension;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfSnapFreeze;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
 import org.assertj.core.api.Assertions;
@@ -143,6 +145,26 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
+	@DisplayName("CLEANSE_BURN is ready only while the echo is burning")
+	void cleanseBurnRequiresBurning() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = EchoTestSupport.policyWithCapabilities(new JSONObject()
+				.put("CLEANSE_BURN", EchoTestSupport.capability("PotionOfFrost"))
+				.put("MELEE", EchoTestSupport.capability("*melee")));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 2);
+		giveEchoItem(boss, new PotionOfFrost());
+
+		Assertions.assertThat(EchoPolicyStatusBuilder.build(boss, policy).isRoleReady("CLEANSE_BURN"))
+				.isFalse();
+
+		Buff.affect(boss, Burning.class);
+
+		Assertions.assertThat(EchoPolicyStatusBuilder.build(boss, policy).isRoleReady("CLEANSE_BURN"))
+				.isTrue();
+	}
+
+	@Test
 	@DisplayName("hero Invulnerability unreadies MELEE, RANGED and PAYOFF_AOE")
 	void invulnerabilityHardGatesDamageRoles() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -158,7 +180,7 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
-	@DisplayName("a decaying Barrier unreadies damage roles but leaves escape roles ready")
+	@DisplayName("a decaying Barrier unreadies damage roles and disengage roles")
 	void timedShieldHardGatesDamageRoles() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = blobPolicy();
@@ -169,9 +191,9 @@ class EchoPolicyGatesTest {
 
 		Assertions.assertThat(status.enemyStatuses).contains("temp_shield", "damage_immune");
 		Assertions.assertThat(status.isRoleReady("MELEE")).isFalse();
-		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
-		// Retreating from a shielded hero is disabled (EchoUntouchable.stanceFor),
-		// so the shield window is spent on prep rather than on backing off.
+		// Hitting a Barrier drains it. Leaving KEEP_DISTANCE ready lets the
+		// playbook's untouchable_step kite for the whole window.
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
 		Assertions.assertThat(status.untouchableStance).isNotEqualTo(EchoUntouchable.Stance.RUN);
 	}
 
@@ -380,6 +402,66 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
+	@DisplayName("FIGHT against a Barrier runs the normal playbook, kite included")
+	void fightStanceUsesTheNormalPlaybook() {
+		Hero hero = EchoTestSupport.warriorHero();
+		JSONObject damageImmune = new JSONObject().put("enemy_status", "damage_immune");
+		EchoPolicy policy = EchoPolicy.fromJson(new JSONObject()
+				.put("policy_schema_version", EchoTestSupport.TEST_GAME_VERSION)
+				.put("capabilities", new JSONObject()
+						.put("KEEP_DISTANCE", EchoTestSupport.capability("*move_further"))
+						.put("MELEE", EchoTestSupport.capability("*melee")))
+				.put("reactions", new JSONArray()
+						.put(reaction("untouchable_step", 98, damageImmune, "KEEP_DISTANCE", null))
+						.put(reaction(
+								"kite_step", 73,
+								new JSONObject().put("role_ready", "KEEP_DISTANCE"),
+								"KEEP_DISTANCE", null))
+						.put(reaction("melee_adjacent", 72, new JSONObject(), "MELEE", null)))
+				.put("recipes", new JSONArray())
+				.put("positioning", new JSONObject())
+				.put("matchups", new JSONObject())
+				.put("selection", new JSONObject()
+						.put("order", new JSONArray().put("reactions").put("default"))
+						.put("default_roles", new JSONArray().put("MELEE")))
+				.put("tuning", new JSONObject()));
+		EchoBoss boss = EchoTestSupport.createBossWithPolicy(hero, policy, 5);
+		EchoTestSupport.installEchoBossLevel(hero, boss, 1);
+		Buff.affect(hero, Barrier.class).setShield(20);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+
+		Assertions.assertThat(status.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);
+		Assertions.assertThat(status.enemyStatuses).doesNotContain(EchoPolicyHazards.DAMAGE_IMMUNE);
+		Assertions.assertThat(status.selfStatuses).doesNotContain(EchoPolicyHazards.NO_ESCAPE);
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isTrue();
+		Assertions.assertThat(status.isRoleReady("MELEE")).isTrue();
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isEqualTo("KEEP_DISTANCE");
+	}
+
+	@Test
+	@DisplayName("a big Barrier is fought through even when the playbook still says kite")
+	void bigBarrierDoesNotKite() {
+		Hero hero = EchoTestSupport.warriorHero();
+		EchoPolicy policy = untouchableLadderPolicy();
+		EchoBoss boss = untouchableLadderBoss(hero, policy, false);
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink());
+		giveEchoItem(boss, new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste());
+		Buff.affect(hero, Barrier.class).setShield(10);
+
+		EchoPolicyStatus status = EchoPolicyStatusBuilder.build(boss, policy);
+		EchoPlan choice = EchoPolicyMatcher.choose(policy, status, new java.util.HashMap<>());
+
+		Assertions.assertThat(status.untouchableStance).isNotEqualTo(EchoUntouchable.Stance.RUN);
+		Assertions.assertThat(status.isRoleReady("BLINK")).isFalse();
+		Assertions.assertThat(status.isRoleReady("KEEP_DISTANCE")).isFalse();
+		Assertions.assertThat(choice).isNotNull();
+		Assertions.assertThat(choice.useRole).isNotIn("BLINK", "KEEP_DISTANCE");
+	}
+
+	@Test
 	@DisplayName("invulnerable hero with an open room: matcher chooses the disengage ladder")
 	void untouchableInOpenRoomDisengages() {
 		Hero hero = EchoTestSupport.warriorHero();
@@ -419,19 +501,23 @@ class EchoPolicyGatesTest {
 	}
 
 	@Test
-	@DisplayName("no_escape self status marks the cornered case for the playbook")
-	void noEscapeSelfStatusMarksTheCorneredCase() {
+	@DisplayName("no_escape is the PREP rung; FIGHT is ordinary combat")
+	void noEscapeIsPrepOnly() {
 		Hero hero = EchoTestSupport.warriorHero();
 		EchoPolicy policy = untouchableLadderPolicy();
-		EchoBoss boss = untouchableLadderBoss(hero, policy, true);
 		Buff.affect(hero, Invulnerability.class, 3f);
 
-		EchoPolicyStatus cornered = EchoPolicyStatusBuilder.build(boss, policy);
-		Assertions.assertThat(cornered.selfStatuses).contains(EchoPolicyHazards.NO_ESCAPE);
+		EchoBoss prepping = untouchableLadderBoss(hero, policy, true);
+		giveEchoItem(prepping, new PotionOfSnapFreeze());
+		EchoPolicyStatus prep = EchoPolicyStatusBuilder.build(prepping, policy);
+		Assertions.assertThat(prep.untouchableStance).isEqualTo(EchoUntouchable.Stance.PREP);
+		Assertions.assertThat(prep.selfStatuses).contains(EchoPolicyHazards.NO_ESCAPE);
 
-		EchoBoss open = untouchableLadderBoss(hero, policy, false);
-		Assertions.assertThat(EchoPolicyStatusBuilder.build(open, policy).selfStatuses)
-				.doesNotContain(EchoPolicyHazards.NO_ESCAPE);
+		EchoBoss fighting = untouchableLadderBoss(hero, policy, true);
+		EchoPolicyStatus fight = EchoPolicyStatusBuilder.build(fighting, policy);
+		Assertions.assertThat(fight.untouchableStance).isEqualTo(EchoUntouchable.Stance.FIGHT);
+		Assertions.assertThat(fight.selfStatuses).doesNotContain(EchoPolicyHazards.NO_ESCAPE);
+		Assertions.assertThat(fight.enemyStatuses).doesNotContain(EchoPolicyHazards.DAMAGE_IMMUNE);
 	}
 
 	@Test

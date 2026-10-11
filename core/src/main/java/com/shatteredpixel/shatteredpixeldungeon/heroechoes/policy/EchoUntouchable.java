@@ -258,13 +258,21 @@ public final class EchoUntouchable {
 	}
 
 	/**
-	 * True when {@code stance} forbids {@code role} this turn. Only the two
-	 * disengage rungs gate anything: closing in or holding ground would undo the
-	 * retreat, and damage roles are pointless against the window.
-	 * {@code SHIELD_UP} and {@code FIGHT} gate nothing at all — that is the
-	 * whole point of them.
+	 * True when {@code stance} forbids {@code role} this turn.
+	 * <p>
+	 * {@code RUN} and {@code PREP} unready damage, closing in, and holding —
+	 * those undo a retreat or waste a swing on a window. Disengage is legal
+	 * on {@code RUN}, and on {@code FIGHT}, which is ordinary combat: a kiting
+	 * playbook still kites. {@code SHIELD_UP} and {@code PREP} unready it so a
+	 * stale {@code untouchable_step} cannot kite a Barrier.
 	 */
 	public static boolean gatesRole(Stance stance, String role) {
+		if (stance == null || stance == Stance.NONE || stance == Stance.FIGHT) {
+			return false;
+		}
+		if (EchoRole.isDisengageRole(role)) {
+			return stance != Stance.RUN;
+		}
 		if (stance != Stance.RUN && stance != Stance.PREP) {
 			return false;
 		}

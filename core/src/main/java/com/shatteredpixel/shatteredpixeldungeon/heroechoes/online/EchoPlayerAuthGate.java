@@ -11,12 +11,8 @@ import com.watabou.utils.Strings;
 
 /**
  * UI gate: ensure solo/ranked online play has a player username + session.
- * Optional email may be entered; password / credential linking is not prompted
- * here.
  */
 public final class EchoPlayerAuthGate {
-
-	private static final int EMAIL_MAX_LENGTH = 254;
 
 	private EchoPlayerAuthGate() {
 	}
@@ -26,10 +22,10 @@ public final class EchoPlayerAuthGate {
 	}
 
 	public static void ensureReadyThen(Continuation continuation) {
-		promptForUsername(continuation, null, "");
+		promptForUsername(continuation, null);
 	}
 
-	private static void promptForUsername(Continuation continuation, String fieldError, String emailPrefill) {
+	private static void promptForUsername(Continuation continuation, String fieldError) {
 		if (!EchoOnlineSettings.isConfigured()) {
 			ShatteredPixelDungeon.scene().add(new WndError(Messages.get(TitleScene.class, "auth_offline")));
 			return;
@@ -40,6 +36,8 @@ public final class EchoPlayerAuthGate {
 			return;
 		}
 		String prefill = EchoPlayerAuth.preferredUsername();
+		// Paused email field: Messages.get(TitleScene.class, "auth_email_hint"),
+		// email prefill, EMAIL_MAX_LENGTH 254, and looksLikeEmail before register.
 		Game.scene().add(new WndTextInput(
 				Messages.get(TitleScene.class, "auth_title"),
 				Messages.get(TitleScene.class, "auth_body"),
@@ -49,12 +47,9 @@ public final class EchoPlayerAuthGate {
 				Messages.get(TitleScene.class, "auth_ok"),
 				Messages.get(TitleScene.class, "auth_cancel"),
 				fieldError,
-				Messages.get(TitleScene.class, "auth_email_hint"),
-				emailPrefill != null ? emailPrefill : "",
-				EMAIL_MAX_LENGTH,
 				false) {
 			@Override
-			public void onSelect(boolean positive, String text, String email) {
+			public void onSelect(boolean positive, String text) {
 				if (!positive) {
 					if (EchoPlayerSession.hasSession()) {
 						continuation.proceed();
@@ -62,13 +57,8 @@ public final class EchoPlayerAuthGate {
 					return;
 				}
 				String name = text != null ? text.trim() : "";
-				String linkedEmail = email != null ? email.trim() : "";
 				if (name.isEmpty()) {
-					promptForUsername(continuation, Messages.get(TitleScene.class, "auth_empty"), linkedEmail);
-					return;
-				}
-				if (!linkedEmail.isEmpty() && !looksLikeEmail(linkedEmail)) {
-					promptForUsername(continuation, Messages.get(TitleScene.class, "auth_email_invalid"), linkedEmail);
+					promptForUsername(continuation, Messages.get(TitleScene.class, "auth_empty"));
 					return;
 				}
 				SPDSettings.playerName(name);
@@ -76,12 +66,12 @@ public final class EchoPlayerAuthGate {
 					continuation.proceed();
 					return;
 				}
-				registerThen(name, linkedEmail, continuation);
+				registerThen(name, continuation);
 			}
 		});
 	}
 
-	private static void registerThen(String username, String email, Continuation continuation) {
+	private static void registerThen(String username, Continuation continuation) {
 		new Thread(() -> {
 			EchoPlayerAuth.SessionResult result = EchoPlayerAuth.ensureSession(EchoClient.createDefault(), username);
 			Game.runOnRenderThread(() -> {
@@ -90,7 +80,7 @@ public final class EchoPlayerAuthGate {
 					return;
 				}
 				if (result == EchoPlayerAuth.SessionResult.USERNAME_TAKEN) {
-					promptForUsername(continuation, Messages.get(TitleScene.class, "auth_username_taken"), email);
+					promptForUsername(continuation, Messages.get(TitleScene.class, "auth_username_taken"));
 					return;
 				}
 				ShatteredPixelDungeon.scene().add(
@@ -104,11 +94,4 @@ public final class EchoPlayerAuthGate {
 				.start();
 	}
 
-	static boolean looksLikeEmail(String email) {
-		if (email == null) {
-			return false;
-		}
-		int at = email.indexOf('@');
-		return at > 0 && at < email.length() - 1 && email.indexOf('.', at) > at + 1;
-	}
 }

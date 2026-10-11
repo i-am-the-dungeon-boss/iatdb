@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.ui.Component;
@@ -15,6 +16,11 @@ public class TitleBrandTitle extends Component {
 	/** Horizontal offset for the faux-bold duplicate of “DUNGEON BOSS”. */
 	public static final float BOSS_BOLD_OFFSET_X = 1f;
 
+	/** Second title line. Demo builds append DEMO so the menu name says so. */
+	public static String bossLine() {
+		return Dungeon.demoPackage ? "DUNGEON BOSS DEMO" : "DUNGEON BOSS";
+	}
+
 	private RenderedTextBlock line1;
 	private RenderedTextBlock line2Bold;
 	private RenderedTextBlock line2;
@@ -28,11 +34,11 @@ public class TitleBrandTitle extends Component {
 		add(line1);
 
 		// Pixel font has no bold face — duplicate with a 1px offset for weight.
-		line2Bold = PixelScene.renderTextBlock("DUNGEON BOSS", BOSS_TITLE_SIZE);
+		line2Bold = PixelScene.renderTextBlock(bossLine(), BOSS_TITLE_SIZE);
 		line2Bold.hardlight(0xFFD84D);
 		add(line2Bold);
 
-		line2 = PixelScene.renderTextBlock("DUNGEON BOSS", BOSS_TITLE_SIZE);
+		line2 = PixelScene.renderTextBlock(bossLine(), BOSS_TITLE_SIZE);
 		line2.hardlight(0xFFD84D);
 		add(line2);
 	}

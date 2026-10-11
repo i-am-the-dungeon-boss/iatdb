@@ -23,15 +23,16 @@ import java.nio.file.Paths;
 class ReleaseVercelPromoteWiringTest {
 
 	@Test
-	@DisplayName("release.ps1 promotes hero-echoes Vercel production after gh release create")
+	@DisplayName("release.ps1 promotes hero-echoes Vercel production after the GitHub Release")
 	void releasePromotesVercelAfterGitHubRelease() throws IOException {
 		String source = readSource("scripts/release.ps1");
-		int releaseCreate = source.indexOf("'release', 'create'");
-		// Call site after gh release create (not the earlier dot-source of the .ps1).
-		int promoteCall = source.indexOf("Publish-HeroEchoesVercelProduction `", releaseCreate);
+		int releaseCreate = source.indexOf("Publish-GitHubRelease @");
+		// Call site after the publisher (not the earlier dot-source of the .ps1).
+		int promoteCall = source.indexOf("Publish-HeroEchoesVercelProduction @", releaseCreate);
 
 		Assertions.assertThat(releaseCreate).isGreaterThanOrEqualTo(0);
 		Assertions.assertThat(promoteCall).isGreaterThan(releaseCreate);
+		Assertions.assertThat(readSource("scripts/release/Publish-GitHubRelease.ps1")).contains("'release', 'create'");
 	}
 
 	@Test

@@ -1,0 +1,66 @@
+name: Steam demo
+run-name: Steam demo ${{ inputs.platform }}
+
+# Linux zip is also the SteamOS depot. Manual only — release.ps1 dispatches this
+# for the OS it is not building locally.
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: windows or linux
+        required: true
+        type: choice
+        options:
+          - windows
+          - linux
+
+jobs:
+  steam-demo:
+    runs-on: ${{ inputs.platform == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Require Sentry auth token
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          if [[ -z "${SENTRY_AUTH_TOKEN}" ]]; then
+            echo "Repository secret SENTRY_AUTH_TOKEN is required so Steam demo builds upload source context." >&2
+            echo "Create a token at https://sentry.io/settings/dungeonboss/auth-tokens/ and add it as a GitHub Actions secret." >&2
+            exit 1
+          fi
+
+      - name: Require Echo API key
+        env:
+          ECHO_API_KEY: ${{ secrets.ECHO_API_KEY }}
+        run: |
+          if [[ -z "${ECHO_API_KEY}" ]]; then
+            echo "Repository secret ECHO_API_KEY is required so the Steam demo bakes X-API-Key for Hero Echoes." >&2
+            echo "Set it to the same value as Vercel production ECHO_API_KEY." >&2
+            exit 1
+          fi
+
+      - name: Package Steam demo
+        shell: bash
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: dungeonboss
+          ECHO_API_KEY: ${{ secrets.ECHO_API_KEY }}
+        run: ./gradlew packageSteamDemo -Pdemo --no-daemon
+
+      - name: Upload Steam demo zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: iatdb-${{ inputs.platform }}-steam-demo
+          path: dist/**/*-steam-demo-*.zip
+          if-no-files-found: error

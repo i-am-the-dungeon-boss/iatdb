@@ -32,7 +32,7 @@
 			android:value="${sentryDsn}" />
 		<meta-data
 			android:name="io.sentry.send-default-pii"
-			android:value="true" />
+			android:value="false" />
 		<meta-data
 			android:name="io.sentry.traces.sample-rate"
 			android:value="1.0" />

@@ -45,6 +45,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.PrivacyPolicyLine;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.SupportPrompts;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
@@ -100,6 +101,7 @@ public class TitleScene extends PixelScene {
 	private StyledButton btnAbout;
 
 	private BitmapText version;
+	private PrivacyPolicyLine privacyLine;
 	private IconButton btnFade;
 	private ExitButton btnExit;
 
@@ -390,6 +392,11 @@ public class TitleScene extends PixelScene {
 		btnFade.setRect(btnAreaLeft + (buttonAreaWidth - 16) / 2, camera.main.height - 16 - insets.bottom, 16, 16);
 		add(btnFade);
 
+		privacyLine = new PrivacyPolicyLine(Messages.get(this, "privacy_play"));
+		add(privacyLine);
+		privacyLine.setSize(buttonAreaWidth, 1);
+		privacyLine.setPos(btnAreaLeft, btnFade.top() - privacyLine.height() - 1);
+
 		PointerArea fadeResetter = new PointerArea(0, 0, Camera.main.width, Camera.main.height) {
 			@Override
 			public boolean onSignal(PointerEvent event) {
@@ -541,6 +548,7 @@ public class TitleScene extends PixelScene {
 		btnAbout.alpha(alpha);
 
 		version.alpha(alpha);
+		privacyLine.alpha(alpha);
 		btnFade.icon().alpha(alpha);
 		if (btnExit != null) {
 			btnExit.enable(alpha != 0);

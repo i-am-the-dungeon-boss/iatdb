@@ -60,6 +60,39 @@ public class LevelTransition extends Rect implements Bundlable {
 		this.destType = destType;
 	}
 
+	/**
+	 * Demo-only stair override. Null keeps the normal adjacent depth.
+	 * Depth 5 exit → 26, depth 26 entrance → 5.
+	 */
+	/**
+	 * Stair route for the package that is running now. Floor files keep the depth
+	 * from when they were built, so a demo bake would keep sending a full game
+	 * from 26 back to 5 until this runs.
+	 */
+	public static void applyPackageRoute(LevelTransition transition, int depth, int branch) {
+		if (transition == null || branch != 0) {
+			return;
+		}
+		if (transition.type == Type.REGULAR_EXIT && depth == 5) {
+			transition.destDepth = Dungeon.demoPackage ? 26 : depth + 1;
+		} else if (transition.type == Type.REGULAR_ENTRANCE && depth == 26) {
+			transition.destDepth = Dungeon.demoPackage ? 5 : 25;
+		}
+	}
+
+	public static Integer demoDestDepth(Type type, int depth, int branch) {
+		if (!Dungeon.demoPackage || branch != 0) {
+			return null;
+		}
+		if (type == Type.REGULAR_EXIT && depth == 5) {
+			return 26;
+		}
+		if (type == Type.REGULAR_ENTRANCE && depth == 26) {
+			return 5;
+		}
+		return null;
+	}
+
 	//gives default values for common transition types
 	public LevelTransition(Level level, int cell, Type type) {
 		centerCell = cell;
@@ -83,6 +116,10 @@ public class LevelTransition extends Rect implements Bundlable {
 				destBranch = 0;
 				destType = null;
 				break;
+		}
+		Integer demoDepth = demoDestDepth(type, Dungeon.depth, Dungeon.branch);
+		if (demoDepth != null) {
+			destDepth = demoDepth;
 		}
 	}
 

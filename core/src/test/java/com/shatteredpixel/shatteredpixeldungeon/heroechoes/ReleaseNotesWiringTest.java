@@ -21,13 +21,42 @@ import java.nio.file.Paths;
 class ReleaseNotesWiringTest {
 
 	@Test
-	@DisplayName("release notes tell users to install unsigned IPA with Sideloadly and link its guide")
-	void releaseNotesMentionSideloadlyWithGuideLink() throws IOException {
-		String source = readSource("scripts/release/New-ReleaseNotes.ps1");
+	@DisplayName("release notes link Google Play and Steam instead of sideload artifacts")
+	void releaseNotesLinkStores() throws IOException {
+		String raw = readSource("scripts/release/New-ReleaseNotes.ps1");
+		String source = liveSource(raw);
 
-		Assertions.assertThat(source).contains("Sideloadly");
-		Assertions.assertThat(source).contains("https://sideloadly.io/");
-		Assertions.assertThat(source).contains("unsigned IPA");
+		Assertions.assertThat(source).contains(
+				"https://play.google.com/store/apps/details?id=com.dungeonboss.iatdb");
+		Assertions.assertThat(source).contains("https://store.steampowered.com/app/5020980");
+		Assertions.assertThat(source).doesNotContain("Sideloadly");
+		Assertions.assertThat(source).doesNotContain("unsigned IPA");
+		Assertions.assertThat(raw).contains("Sideloadly");
+	}
+
+	private static String liveSource(String source) {
+		StringBuilder out = new StringBuilder();
+		boolean block = false;
+		for (String line : source.split("\n", -1)) {
+			String trimmed = line.trim();
+			if (block) {
+				if (trimmed.contains("#>")) {
+					block = false;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("<#")) {
+				if (!trimmed.contains("#>")) {
+					block = true;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+				continue;
+			}
+			out.append(line).append('\n');
+		}
+		return out.toString();
 	}
 
 	private static String readSource(String relativePath) throws IOException {

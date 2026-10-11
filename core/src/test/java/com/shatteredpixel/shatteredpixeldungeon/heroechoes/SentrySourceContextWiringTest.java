@@ -107,25 +107,51 @@ class SentrySourceContextWiringTest {
 	}
 
 	@Test
-	@DisplayName("release.ps1 always uploads unsigned iOS IPA with GitHub Release assets")
-	void releaseScriptAlwaysUploadsIosIpa() throws IOException {
-		String source = readSource("scripts/release.ps1");
+	@DisplayName("release.ps1 does not upload an iOS IPA")
+	void releaseScriptDoesNotUploadIosIpa() throws IOException {
+		String raw = readSource("scripts/release/paused.ps1");
+		String live = liveSource(readSource("scripts/release.ps1"));
 
-		Assertions.assertThat(source).contains("Missing unsigned iOS IPA");
-		Assertions.assertThat(source).contains("$assets.Add($iosIpa.FullName)");
-		Assertions.assertThat(source).doesNotContain("if ($iosIpa)");
+		Assertions.assertThat(raw).contains("ios-unsigned.ipa");
+		Assertions.assertThat(live).doesNotContain("ios-unsigned.ipa");
+		Assertions.assertThat(live).doesNotContain("gh release upload");
+	}
+
+	private static String liveSource(String source) {
+		StringBuilder out = new StringBuilder();
+		boolean block = false;
+		for (String line : source.split("\n", -1)) {
+			String trimmed = line.trim();
+			if (block) {
+				if (trimmed.contains("#>")) {
+					block = false;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("<#")) {
+				if (!trimmed.contains("#>")) {
+					block = true;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+				continue;
+			}
+			out.append(line).append('\n');
+		}
+		return out.toString();
 	}
 
 	@Test
-	@DisplayName("release.ps1 resolves fetched IPA from dist path not command output")
-	void releaseScriptResolvesFetchedIpaFromDistPath() throws IOException {
-		String source = readSource("scripts/release.ps1");
-		String common = readSource("scripts/release/_common.ps1");
+	@DisplayName("steam demo CI requires SENTRY_AUTH_TOKEN and builds with -Pdemo")
+	void steamDemoCiRequiresSentryAuthToken() throws IOException {
+		String source = readSource(".github/workflows/steam-demo.yml");
 
-		Assertions.assertThat(source).contains("Complete-UnsignedIosIpaViaActions");
-		Assertions.assertThat(source).contains("Get-UnsignedIosIpaViaActions");
-		Assertions.assertThat(source).doesNotContain("Get-Item -LiteralPath $ipaPath");
-		Assertions.assertThat(common).contains("Out-Host");
+		Assertions.assertThat(source).contains("SENTRY_AUTH_TOKEN");
+		Assertions.assertThat(source).contains("packageSteamDemo");
+		Assertions.assertThat(source).contains("-Pdemo");
+		Assertions.assertThat(source).contains("workflow_dispatch:");
+		Assertions.assertThat(source).doesNotContain("macos");
 	}
 
 	@Test

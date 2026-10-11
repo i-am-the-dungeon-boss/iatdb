@@ -579,6 +579,7 @@ public abstract class Level implements Bundlable {
 		}
 
 		beforeTransition();
+		LevelTransition.applyPackageRoute(transition, Dungeon.depth, Dungeon.branch);
 		InterlevelScene.curTransition = transition;
 		if (transition.type == LevelTransition.Type.REGULAR_EXIT
 				|| transition.type == LevelTransition.Type.BRANCH_EXIT) {

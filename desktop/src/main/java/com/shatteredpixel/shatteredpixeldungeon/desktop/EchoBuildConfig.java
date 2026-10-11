@@ -28,27 +28,29 @@ import java.util.Properties;
  */
 public final class EchoBuildConfig {
 
-	public static final String ECHO_API_KEY = readApiKey();
+	public static final String ECHO_API_KEY = read("ECHO_API_KEY", "");
+	/** True when this desktop build was packaged with {@code -Pdemo}. */
+	public static final boolean DEMO_PACKAGE = "true".equals(read("DEMO_PACKAGE", "false"));
 
 	private EchoBuildConfig() {
 	}
 
-	private static String readApiKey() {
+	private static String read(String key, String fallback) {
 		InputStream in = EchoBuildConfig.class.getResourceAsStream("/echo-build.properties");
 		if (in == null) {
-			return "";
+			return fallback;
 		}
 		try {
 			try {
 				Properties props = new Properties();
 				props.load(in);
-				String value = props.getProperty("ECHO_API_KEY", "");
-				return value != null ? value.trim() : "";
+				String value = props.getProperty(key, fallback);
+				return value != null ? value.trim() : fallback;
 			} finally {
 				in.close();
 			}
 		} catch (IOException e) {
-			return "";
+			return fallback;
 		}
 	}
 }

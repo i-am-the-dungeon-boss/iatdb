@@ -25,10 +25,10 @@ public final class EchoPolicyHazards {
 	public static final String LOS_BLOCKED = "los_blocked";
 	public static final String PATH_BLOCKED = "path_blocked";
 	/**
-	 * The echo wanted to disengage from an untouchable hero and could not — no
-	 * blink landing and no adjacent cell farther from the hero. JSON-visible
-	 * projection of {@link EchoUntouchable.Stance#PREP} /
-	 * {@link EchoUntouchable.Stance#FIGHT}.
+	 * Cornered on {@link EchoUntouchable.Stance#PREP}: no blink landing and no
+	 * adjacent cell farther from the hero, so the window is spent on prep.
+	 * {@link EchoUntouchable.Stance#FIGHT} does not set this — that rung is
+	 * ordinary combat.
 	 */
 	public static final String NO_ESCAPE = "no_escape";
 	/** The echo is carrying its own temporary shield right now. */

@@ -11,13 +11,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * The Support screen is reachable on desktop, Android and iOS because it always
- * offers the Ko-fi link; only the Play tip buttons stay behind billing.
+ * The Support screen is reachable on GitHub desktop and iOS because those
+ * builds offer the Ko-fi link. Android and demo builds ({@code -Pdemo}) hide it.
+ * Only the Play tip buttons stay behind billing.
  */
 class SupportEntryPointsTest {
 
 	@Test
-	@DisplayName("title screen shows the support button on every platform")
+	@DisplayName("desktop launcher hides support on demo builds")
+	void desktopLauncherHidesSupportOnDemo() throws IOException {
+		String launcher = readSource(
+				"desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java");
+		Assertions.assertThat(launcher).contains("Dungeon.demoPackage = EchoBuildConfig.DEMO_PACKAGE");
+		String gradle = readSource("gradle/echo-build-defaults.gradle");
+		Assertions.assertThat(gradle).contains("DEMO_PACKAGE=");
+		Assertions.assertThat(gradle).contains("hasProperty('demo')");
+		Assertions.assertThat(gradle).contains("inputs.property(\"demoPackage\"");
+	}
+
+	@Test
+	@DisplayName("title screen shows the support button when the support scene is enabled")
 	void titleSceneShowsSupportEverywhere() throws IOException {
 		String source = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java");
@@ -26,7 +39,7 @@ class SupportEntryPointsTest {
 	}
 
 	@Test
-	@DisplayName("victory window offers support on every platform")
+	@DisplayName("victory window offers support when the support scene is enabled")
 	void victoryWindowShowsSupportEverywhere() throws IOException {
 		String source = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndVictoryCongrats.java");

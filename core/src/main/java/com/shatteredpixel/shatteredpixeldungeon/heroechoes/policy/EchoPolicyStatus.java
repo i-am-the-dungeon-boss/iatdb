@@ -52,10 +52,10 @@ public final class EchoPolicyStatus {
 	 */
 	public final boolean selfSpeedGtEnemy;
 	/**
-	 * What the echo is doing about a hero it cannot currently hurt. Its
-	 * JSON-visible projections are {@code damage_immune} on the enemy and
-	 * {@link EchoPolicyHazards#NO_ESCAPE} on self, derived in the same place so
-	 * the three cannot drift.
+	 * What the echo is doing about a hero it cannot currently hurt.
+	 * {@code damage_immune} is set for {@code RUN}, {@code PREP}, and
+	 * {@code SHIELD_UP}. {@code no_escape} is set for {@code PREP}.
+	 * {@code FIGHT} publishes neither: that rung is ordinary combat.
 	 */
 	public final EchoUntouchable.Stance untouchableStance;
 

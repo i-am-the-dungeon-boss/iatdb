@@ -2,14 +2,14 @@
 
 ## End-to-end (recommended)
 
-One command runs all unit tests (`gradlew test`), builds binaries, ensures an unsigned iOS IPA is present, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] with APK, JAR, unsigned IPA, `SHA256SUMS.txt`, and generated notes (includes `internal version number: <appVersionCode>`). Failed tests abort the release before packaging.
+One command runs all unit tests (`gradlew test`), builds the store binaries, creates an annotated git tag `v<appVersionName>`, pushes it, and publishes a [GitHub Release][github-releases] whose notes link to Google Play and Steam. Binaries stay in `dist/` for you to upload. Failed tests abort the release before packaging.
 
 ```powershell
-# APK + desktop JAR + native desktop zip (jpackage) + unsigned IPA
+# Play AAB (full game) + Steam demo zip (Windows)
 .\scripts\release.ps1
 ```
 
-`prepareRelease` always runs with `-PwithJpackage` (native desktop zip for this OS; slow; may download a JDK).
+`release.ps1` is the orchestrator. It calls [`Build-PlayAab.ps1`](../../scripts/release/Build-PlayAab.ps1) (`prepareRelease`, no `-Pdemo`), [`Build-SteamDemo.ps1`](../../scripts/release/Build-SteamDemo.ps1) (`packageSteamDemo -Pdemo`), and [`Publish-GitHubRelease.ps1`](../../scripts/release/Publish-GitHubRelease.ps1) (notes only).
 
 | Flag                 | Meaning                                                          |
 | -------------------- | ---------------------------------------------------------------- |
@@ -23,7 +23,7 @@ One command runs all unit tests (`gradlew test`), builds binaries, ensures an un
 | `-SkipVercelPromote` | Skip `vercel promote` for hero-echoes after release              |
 | `-HeroEchoesRoot`    | Path to hero-echoes (default sibling `../hero-echoes`)           |
 
-Requires: `git`, authenticated `gh`, Android SDK + release keystore (same as below). Push your release commit before running so the iOS workflow can build it when you are not on macOS. For Vercel promote: Vercel CLI (`vercel` or `npx vercel`) authenticated, or `VERCEL_TOKEN`.
+Requires: `git`, authenticated `gh`, Android SDK + release keystore (same as below). For Vercel promote: Vercel CLI (`vercel` or `npx vercel`) authenticated, or `VERCEL_TOKEN`.
 
 **Hero Echoes / Vercel:** bump and push `package.json` on hero-echoes `main` before
 or during release prep — builds run, but `github.autoAlias: false` keeps production
@@ -53,51 +53,46 @@ Windows:
 
 ### Output
 
-| File                               | Platform                                             |
-| ---------------------------------- | ---------------------------------------------------- |
-| `iatdb-<version>-android.apk`      | Android (signed with release keystore)               |
-| `iatdb-<version>-desktop.jar`      | Desktop (needs a Java runtime)                       |
-| `iatdb-<version>-ios-unsigned.ipa` | iOS (macOS builds only; unsigned - will not install) |
-| `SHA256SUMS.txt`                   | Hashes + version metadata                            |
+| File                                     | Where                                                         |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| `iatdb-<version>-android.aab`            | Google Play (full game, no `-Pdemo`). Upload in Play Console. |
+| `iatdb-<version>-steam-demo-windows.zip` | Steam demo (`-Pdemo`)                                         |
+| `SHA256SUMS.txt`                         | Hashes + version metadata. Not uploaded to GitHub.            |
 
 Example for `0.0.1`: `dist/0.0.1/`
 
-The unsigned IPA is a **required** GitHub Release asset (same as APK + JAR). On macOS,
-`prepareRelease` builds it locally. On Windows/Linux, Gradle omits it; [`scripts/release.ps1`](../../scripts/release.ps1)
-starts [`.github/workflows/ios-unsigned.yml`](../../.github/workflows/ios-unsigned.yml) **before**
-local tests/`prepareRelease` (reuses a successful or in-progress run for the same commit when
-present), then downloads the artifact after `dist/` is ready (`workflow_dispatch` only — not on
-tag pushes).
-
-### Optional: native desktop package (no Java install)
-
-Slow; downloads a Temurin JDK via the desktop runtime plugin.
+Linux/SteamOS zip is paused. This release builds the Windows demo locally and does not download a Linux zip. GitHub Release notes link to Play and Steam; they do not attach these files.
 
 ```bash
-./gradlew prepareRelease -PwithJpackage
+./gradlew prepareRelease
+./gradlew packageSteamDemo -Pdemo
 ```
 
-Adds `iatdb-<version>-desktop-windows.zip` (or `macos` / `linux`) from `desktop/build/jpackage`.
+`-Pdemo` hides the title-menu Support button and the victory support link, and stops the demo at the sewers boss. `prepareRelease` refuses `-Pdemo`.
+
+### Paused
+
+Kept in [`scripts/release/paused.ps1`](../../scripts/release/paused.ps1), not called: Android APK, desktop JAR, macOS zip, unsigned iOS IPA, and uploading those files to the GitHub Release. Linux/SteamOS zip is paused in [`Build-SteamDemo.ps1`](../../scripts/release/Build-SteamDemo.ps1) (`iatdb-<version>-steam-demo-linux.zip`); [`.github/workflows/steam-demo.yml`](../../.github/workflows/steam-demo.yml) can still build it by hand. iOS workflow [`.github/workflows/ios-unsigned.yml`](../../.github/workflows/ios-unsigned.yml) is still in the repo.
 
 ## Requirements
 
 - Android SDK (`local.properties` `sdk.dir` or `ANDROID_HOME`)
 - [`android/keystore.properties`](android-signing.md) + release keystore
-- JDK for Gradle / desktop JAR
+- JDK for Gradle
 - For e2e publish: [GitHub CLI](https://cli.github.com/) (`gh auth login`)
-- For local IPA in `prepareRelease`: macOS + Xcode
-- For IPA via Actions (Windows release): commit pushed to GitHub
-- **Sentry uploads are mandatory on release:** `prepareRelease`, `assembleRelease`,
-  `:desktop:release`, `:ios:createIPA`, and `release.ps1` all require
+- Linux/SteamOS zip is paused, so this release does not need `steam-demo.yml`
+- **Sentry uploads are mandatory on release:** `prepareRelease`, `packageSteamDemo`, `bundleRelease`,
+  `:desktop:release`, and `release.ps1` all require
   `SENTRY_AUTH_TOKEN` (process env or root `.env`). There is no skip flag.
-  Uploads source context to `android`, `java` (desktop), and `ios`, plus Android ProGuard maps.
+  Uploads source context to `android` and `java` (desktop), plus Android ProGuard maps.
   - Token: https://sentry.io/settings/dungeonboss/auth-tokens/
-  - GitHub Actions secret: `SENTRY_AUTH_TOKEN` (required by `ios-unsigned.yml`)
+  - GitHub Actions secret: `SENTRY_AUTH_TOKEN` (required by `steam-demo.yml`)
 
-## Not included (by design for alpha)
+## Not included (by design for beta)
 
-- Signed iOS / TestFlight
-- Play Store AAB upload
+- Signed iOS / TestFlight (paused)
+- Play Console upload (the AAB is built; you upload it)
+- Steamworks upload (the demo zips are built; you upload them)
 - itch.io mirror (optional later via `butler`)
 
 <!-- Project link refs: keep identical to docs/project-link-refs.md -->

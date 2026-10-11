@@ -28,7 +28,9 @@ import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.PrivacyPolicyLine;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
@@ -47,6 +49,7 @@ public class WndTextInput extends Window {
 
 	protected TextInput textBox;
 	protected TextInput secondaryBox;
+	private CheckBox acceptBox;
 
 	protected RedButton btnCopy;
 	protected RedButton btnPaste;
@@ -59,8 +62,14 @@ public class WndTextInput extends Window {
 	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
 			final boolean multiLine, final String posTxt, final String negTxt,
 			final String errorMessage) {
+		this(title, body, initialValue, maxLength, multiLine, posTxt, negTxt, errorMessage, true);
+	}
+
+	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
+			final boolean multiLine, final String posTxt, final String negTxt,
+			final String errorMessage, final boolean clipboard) {
 		this(title, body, initialValue, maxLength, multiLine, posTxt, negTxt, errorMessage,
-				null, null, 0, false);
+				null, null, 0, false, null, null, clipboard);
 	}
 
 	/**
@@ -70,12 +79,17 @@ public class WndTextInput extends Window {
 	 * @param secondaryMaxLength max length for secondary; &lt;= 0 omits the
 	 *                           secondary box
 	 * @param secondaryPassword  when true, masks secondary input
+	 * @param acceptLabel        checkbox the player must tick before Continue;
+	 *                           null omits it
+	 * @param consentPrefix      text before the privacy-policy link; null omits it
+	 * @param clipboard          copy and paste buttons beside the box
 	 */
 	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
 			final boolean multiLine, final String posTxt, final String negTxt,
 			final String errorMessage,
 			final String secondaryHint, final String secondaryInitial, final int secondaryMaxLength,
-			final boolean secondaryPassword) {
+			final boolean secondaryPassword, final String acceptLabel, final String consentPrefix,
+			final boolean clipboard) {
 		super();
 
 		final int width;
@@ -111,6 +125,9 @@ public class WndTextInput extends Window {
 			@Override
 			public void enterPressed() {
 				// triggers positive action on enter pressed, only with non-multiline though.
+				if (acceptBox != null && !acceptBox.checked()) {
+					return;
+				}
 				onSelect(true, getText(), secondaryText());
 				hide();
 			}
@@ -125,7 +142,9 @@ public class WndTextInput extends Window {
 			@Override
 			public void onClipBoardUpdate() {
 				super.onClipBoardUpdate();
-				btnPaste.enable(Gdx.app.getClipboard().hasContents());
+				if (btnPaste != null) {
+					btnPaste.enable(Gdx.app.getClipboard().hasContents());
+				}
 			}
 		};
 		if (initialValue != null)
@@ -141,64 +160,68 @@ public class WndTextInput extends Window {
 			inputHeight = 16;
 		}
 
-		float textBoxWidth = width - 3 * MARGIN - BUTTON_HEIGHT;
+		float textBoxWidth = clipboard
+				? width - 3 * MARGIN - BUTTON_HEIGHT
+				: width - 2 * MARGIN;
 
 		add(textBox);
 		textBox.setRect(MARGIN, pos, textBoxWidth, inputHeight);
 
-		btnCopy = new RedButton("") {
-			@Override
-			protected void onPointerDown() {
-				super.onPointerDown();
-				PointerEvent.clearKeyboardThisPress = false;
-			}
-
-			@Override
-			protected void onPointerUp() {
-				super.onPointerUp();
-				PointerEvent.clearKeyboardThisPress = false;
-			}
-
-			@Override
-			protected void onClick() {
-				super.onClick();
-				textBox.copyToClipboard();
-			}
-		};
-		btnCopy.icon(Icons.COPY.get());
-		btnCopy.enable(!textBox.getText().isEmpty());
-		add(btnCopy);
-
-		btnPaste = new RedButton("") {
-			@Override
-			protected void onPointerDown() {
-				super.onPointerDown();
-				PointerEvent.clearKeyboardThisPress = false;
-			}
-
-			@Override
-			protected void onPointerUp() {
-				super.onPointerUp();
-				PointerEvent.clearKeyboardThisPress = false;
-			}
-
-			@Override
-			protected void onClick() {
-				super.onClick();
-				if (Gdx.app.getClipboard().hasContents()) {
-					textBox.pasteFromClipboard();
-				} else {
-					enable(false);
+		if (clipboard) {
+			btnCopy = new RedButton("") {
+				@Override
+				protected void onPointerDown() {
+					super.onPointerDown();
+					PointerEvent.clearKeyboardThisPress = false;
 				}
-			}
 
-		};
-		btnPaste.icon(Icons.PASTE.get());
-		btnPaste.enable(Gdx.app.getClipboard().hasContents());
-		add(btnPaste);
+				@Override
+				protected void onPointerUp() {
+					super.onPointerUp();
+					PointerEvent.clearKeyboardThisPress = false;
+				}
 
-		btnCopy.setRect(textBoxWidth + 2 * MARGIN, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
-		btnPaste.setRect(textBoxWidth + 2 * MARGIN, btnCopy.bottom() + MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT);
+				@Override
+				protected void onClick() {
+					super.onClick();
+					textBox.copyToClipboard();
+				}
+			};
+			btnCopy.icon(Icons.COPY.get());
+			btnCopy.enable(!textBox.getText().isEmpty());
+			add(btnCopy);
+
+			btnPaste = new RedButton("") {
+				@Override
+				protected void onPointerDown() {
+					super.onPointerDown();
+					PointerEvent.clearKeyboardThisPress = false;
+				}
+
+				@Override
+				protected void onPointerUp() {
+					super.onPointerUp();
+					PointerEvent.clearKeyboardThisPress = false;
+				}
+
+				@Override
+				protected void onClick() {
+					super.onClick();
+					if (Gdx.app.getClipboard().hasContents()) {
+						textBox.pasteFromClipboard();
+					} else {
+						enable(false);
+					}
+				}
+
+			};
+			btnPaste.icon(Icons.PASTE.get());
+			btnPaste.enable(Gdx.app.getClipboard().hasContents());
+			add(btnPaste);
+
+			btnCopy.setRect(textBoxWidth + 2 * MARGIN, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
+			btnPaste.setRect(textBoxWidth + 2 * MARGIN, btnCopy.bottom() + MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT);
+		}
 
 		pos += inputHeight + MARGIN;
 
@@ -214,6 +237,9 @@ public class WndTextInput extends Window {
 			secondaryBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), false, textSize) {
 				@Override
 				public void enterPressed() {
+					if (acceptBox != null && !acceptBox.checked()) {
+						return;
+					}
 					onSelect(true, textBox.getText(), getText());
 					hide();
 				}
@@ -242,10 +268,32 @@ public class WndTextInput extends Window {
 		final RedButton positiveBtn = new RedButton(posTxt) {
 			@Override
 			protected void onClick() {
+				if (acceptBox != null && !acceptBox.checked()) {
+					return;
+				}
 				onSelect(true, textBox.getText(), secondaryText());
 				hide();
 			}
 		};
+		if (!Strings.isBlank(consentPrefix)) {
+			PrivacyPolicyLine consent = new PrivacyPolicyLine(consentPrefix);
+			add(consent);
+			consent.setRect(0, pos, width, 1);
+			pos = consent.bottom() + MARGIN;
+		}
+		if (!Strings.isBlank(acceptLabel)) {
+			acceptBox = new CheckBox(acceptLabel) {
+				@Override
+				protected void onClick() {
+					super.onClick();
+					positiveBtn.enable(checked());
+				}
+			};
+			acceptBox.setRect(MARGIN, pos, width - 2 * MARGIN, BUTTON_HEIGHT);
+			add(acceptBox);
+			pos += BUTTON_HEIGHT + MARGIN;
+		}
+		positiveBtn.enable(acceptBox == null);
 
 		final RedButton negativeBtn;
 		if (negTxt != null) {

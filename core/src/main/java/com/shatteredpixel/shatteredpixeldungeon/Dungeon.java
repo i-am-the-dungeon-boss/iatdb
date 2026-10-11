@@ -216,6 +216,11 @@ public class Dungeon {
 	public static boolean daily;
 	public static boolean dailyReplay;
 	public static boolean easyMode;
+	/**
+	 * Set by the desktop launcher on demo builds ({@code -Pdemo}). Hides Support
+	 * and routes the sewers-boss exit to floor 26.
+	 */
+	public static boolean demoPackage;
 	public static EchoPlayMode echoPlayMode = EchoPlayMode.SOLO;
 	public static String customSeedText = "";
 	public static long seed;

@@ -167,7 +167,7 @@ public final class SentryCrashReporting {
 				// DSN already comes from classpath; avoid cwd/file discovery.
 				options.setEnableExternalConfiguration(false);
 				options.setTag("platform", platform);
-				options.setSendDefaultPii(true);
+				options.setSendDefaultPii(false);
 				options.setTracesSampleRate(1.0);
 				// Launchers install their own handler that calls reportAndFlush.
 				// Avoid a second handler that can fight RoboVM signal setup.

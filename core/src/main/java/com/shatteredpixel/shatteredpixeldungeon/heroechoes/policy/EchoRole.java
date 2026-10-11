@@ -47,9 +47,9 @@ public enum EchoRole {
 	PURITY(Kind.SELF_DRINK, null, 8),
 	/** Grants armor, not shielding — see {@link #SHIELD_SELF}. */
 	ARCANE_ARMOR(Kind.PLAIN, null, 9), HASTE(Kind.SELF_DRINK, null, 10), FIRE_IMBUE(Kind.PLAIN, null, 11), FROST_IMBUE(
-			Kind.PLAIN, null, 12), TOXIC_IMBUE(Kind.PLAIN, null,
-					13), INVIS(Kind.SELF_DRINK, null,
-							14), STEALTH(Kind.PLAIN, null, 15), LEVITATE(Kind.SELF_DRINK, null, 16),
+			Kind.PLAIN, null, 12), TOXIC_IMBUE(Kind.PLAIN, null, 13),
+	/** Not prep: drinking invisibility does nothing for a cornered window. */
+	INVIS(Kind.SELF_DRINK, null), STEALTH(Kind.PLAIN, null, 14), LEVITATE(Kind.SELF_DRINK, null, 15),
 	/** Potion of Shielding is AC_CHOOSE; this role always means drink it. */
 	SHIELD_SELF(Kind.SELF_DRINK, null),
 	/** Generic "drink whatever this capability resolved to". */

@@ -48,27 +48,42 @@ class ReleaseIpaFetchWiringTest {
 	}
 
 	@Test
-	@DisplayName("release.ps1 starts ios-unsigned Actions before local tests and prepareRelease")
-	void releaseStartsIosActionsBeforeLocalBuild() throws IOException {
-		String source = readSource("scripts/release.ps1");
-		int start = source.indexOf("Start-UnsignedIosIpaViaActions");
-		int tests = source.indexOf("GradleArgs @('test')");
-		int prepare = source.indexOf("'prepareRelease'");
+	@DisplayName("release.ps1 does not start or download the paused iOS IPA")
+	void releaseDoesNotFetchPausedIosIpa() throws IOException {
+		String raw = readSource("scripts/release/paused.ps1");
+		String live = liveSource(readSource("scripts/release.ps1"));
 
-		Assertions.assertThat(start).isGreaterThanOrEqualTo(0);
-		Assertions.assertThat(tests).isGreaterThan(start);
-		Assertions.assertThat(prepare).isGreaterThan(start);
+		Assertions.assertThat(raw).contains("Start-UnsignedIosIpaViaActions");
+		Assertions.assertThat(raw).contains("ios-unsigned.ipa");
+		Assertions.assertThat(live).doesNotContain("Start-UnsignedIosIpaViaActions");
+		Assertions.assertThat(live).doesNotContain("Complete-UnsignedIosIpaViaActions");
+		Assertions.assertThat(live).doesNotContain("Get-UnsignedIosIpaViaActions");
+		Assertions.assertThat(live).doesNotContain("ios-unsigned.ipa");
 	}
 
-	@Test
-	@DisplayName("release.ps1 completes ios-unsigned download after prepareRelease when IPA missing")
-	void releaseCompletesIosDownloadAfterPrepareRelease() throws IOException {
-		String source = readSource("scripts/release.ps1");
-		int prepare = source.indexOf("'prepareRelease'");
-		int complete = source.indexOf("Complete-UnsignedIosIpaViaActions");
-
-		Assertions.assertThat(prepare).isGreaterThanOrEqualTo(0);
-		Assertions.assertThat(complete).isGreaterThan(prepare);
+	private static String liveSource(String source) {
+		StringBuilder out = new StringBuilder();
+		boolean block = false;
+		for (String line : source.split("\n", -1)) {
+			String trimmed = line.trim();
+			if (block) {
+				if (trimmed.contains("#>")) {
+					block = false;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("<#")) {
+				if (!trimmed.contains("#>")) {
+					block = true;
+				}
+				continue;
+			}
+			if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+				continue;
+			}
+			out.append(line).append('\n');
+		}
+		return out.toString();
 	}
 
 	private static String readSource(String relativePath) throws IOException {

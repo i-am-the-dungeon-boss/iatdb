@@ -29,32 +29,39 @@ class EchoPlayerAuthGateTest {
 	}
 
 	@Test
-	@DisplayName("auth prompt includes optional email and never asks for password")
-	void authPromptIncludesOptionalEmailWithoutPassword() throws IOException {
-		String source = readSource(
+	@DisplayName("creating an account does not show the privacy policy")
+	void accountCreationOmitsPrivacyPolicy() throws IOException {
+		String live = liveSource(readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/online/EchoPlayerAuthGate.java"));
+
+		Assertions.assertThat(live).doesNotContain("auth_terms");
+		Assertions.assertThat(live).doesNotContain("privacy_continue");
+	}
+
+	@Test
+	@DisplayName("username prompt has no copy or paste buttons")
+	void usernamePromptHasNoClipboardButtons() throws IOException {
+		String gate = liveSource(readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/online/EchoPlayerAuthGate.java"));
+		String input = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTextInput.java");
+
+		Assertions.assertThat(gate).contains("fieldError,\n\t\t\t\tfalse)");
+		Assertions.assertThat(input).contains("if (clipboard)");
+	}
+
+	@Test
+	@DisplayName("creating an account asks for a username and not an email")
+	void accountCreationDoesNotAskForEmail() throws IOException {
+		String raw = readSource(
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/online/EchoPlayerAuthGate.java");
+		String live = liveSource(raw);
 
-		Assertions.assertThat(source).contains("auth_email_hint");
-		Assertions.assertThat(source).contains("onSelect(boolean positive, String text, String email)");
-		Assertions.assertThat(source).doesNotContain("promptForPassword");
-		Assertions.assertThat(source).doesNotContain("setCredentials");
-		Assertions.assertThat(source).doesNotContain("auth_password");
-	}
-
-	@Test
-	@DisplayName("accepts emails with local part, at-sign, and dotted domain")
-	void looksLikeEmailAcceptsBasicAddresses() {
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("a@b.co")).isTrue();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("hero@example.com")).isTrue();
-	}
-
-	@Test
-	@DisplayName("rejects blank or malformed emails")
-	void looksLikeEmailRejectsInvalid() {
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("not-an-email")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("@missing.local")).isFalse();
-		Assertions.assertThat(EchoPlayerAuthGate.looksLikeEmail("no@tld")).isFalse();
+		Assertions.assertThat(live).doesNotContain("auth_email_hint");
+		Assertions.assertThat(live).doesNotContain("looksLikeEmail");
+		Assertions.assertThat(live).doesNotContain("setCredentials");
+		Assertions.assertThat(raw).contains("auth_email_hint");
+		Assertions.assertThat(raw).contains("looksLikeEmail");
 	}
 
 	@Test
@@ -94,6 +101,19 @@ class EchoPlayerAuthGateTest {
 				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTextInput.java");
 
 		Assertions.assertThat(source).contains("textBox.claimKeyboardFocus()");
+	}
+
+	/** Drops full-line // and # comments so paused email text can stay in the file. */
+	private static String liveSource(String source) {
+		StringBuilder out = new StringBuilder();
+		for (String line : source.split("\n", -1)) {
+			String trimmed = line.trim();
+			if (trimmed.startsWith("//") || trimmed.startsWith("#")) {
+				continue;
+			}
+			out.append(line).append('\n');
+		}
+		return out.toString();
 	}
 
 	private static String readSource(String relativePath) throws IOException {

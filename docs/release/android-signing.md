@@ -25,18 +25,26 @@ Copy both files to offline/password-manager storage you control:
 
 Do **not** commit them, put them in chat, or share the passwords publicly.
 
+## Build a signed release AAB (Google Play)
+
+```bash
+./gradlew prepareRelease
+```
+
+Output: `dist/<version>/iatdb-<version>-android.aab`. Do not pass `-Pdemo`.
+
 ## Build a signed release APK
 
 ```bash
 ./gradlew :android:assembleRelease
 ```
 
-Output under `android/build/outputs/apk/release/`.
+Output under `android/build/outputs/apk/release/`. The release script no longer publishes this.
 
 ## Version identity (related)
 
-| Field | Current | Scheme |
-| --- | --- | --- |
-| `appPackageName` | `com.dungeonboss.iatdb` | Permanent once people install |
-| `appVersionName` | `0.0.3` | `0.0.N` alpha · `0.1.N` beta · `1.0.N` first release |
-| `appVersionCode` | `896` | Integer; bump every published binary |
+| Field            | Current                 | Scheme                                               |
+| ---------------- | ----------------------- | ---------------------------------------------------- |
+| `appPackageName` | `com.dungeonboss.iatdb` | Permanent once people install                        |
+| `appVersionName` | `0.0.3`                 | `0.0.N` alpha · `0.1.N` beta · `1.0.N` first release |
+| `appVersionCode` | `896`                   | Integer; bump every published binary                 |

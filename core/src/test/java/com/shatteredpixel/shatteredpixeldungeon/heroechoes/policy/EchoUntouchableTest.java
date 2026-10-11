@@ -167,15 +167,14 @@ class EchoUntouchableTest {
 	}
 
 	@Test
-	@DisplayName("RUN and PREP gate damage roles plus CLOSE_IN and HOLD, and nothing else")
+	@DisplayName("RUN and PREP gate damage roles; FIGHT disengages only when the normal playbook does")
 	void gateTable() {
 		String[] gated = {
 				"MELEE", "RANGED", "FINISHER", "PAYOFF_AOE", "PATH_THROUGH",
 				"WEAPON_ABILITY", "ARMOR_ABILITY", "CLOSE_IN", "HOLD"
 		};
-		String[] allowed = {
-				"KEEP_DISTANCE", "BLINK", "HEAL", "SETUP_CC", "SHIELD_SELF", "CLEAR_LOS"
-		};
+		String[] allowed = { "HEAL", "SETUP_CC", "SHIELD_SELF", "CLEAR_LOS" };
+		String[] disengage = { "KEEP_DISTANCE", "BLINK" };
 		for (Stance stance : new Stance[] { Stance.RUN, Stance.PREP }) {
 			for (String role : gated) {
 				Assertions.assertThat(EchoUntouchable.gatesRole(stance, role))
@@ -186,11 +185,25 @@ class EchoUntouchableTest {
 						.as(stance + " allows " + role).isFalse();
 			}
 		}
+		for (String role : disengage) {
+			Assertions.assertThat(EchoUntouchable.gatesRole(Stance.RUN, role))
+					.as("RUN allows " + role).isFalse();
+			Assertions.assertThat(EchoUntouchable.gatesRole(Stance.FIGHT, role))
+					.as("FIGHT allows " + role).isFalse();
+			for (Stance stance : new Stance[] { Stance.SHIELD_UP, Stance.PREP }) {
+				Assertions.assertThat(EchoUntouchable.gatesRole(stance, role))
+						.as(stance + " gates " + role).isTrue();
+			}
+		}
 		for (Stance stance : new Stance[] { Stance.NONE, Stance.SHIELD_UP, Stance.FIGHT }) {
 			for (String role : gated) {
 				Assertions.assertThat(EchoUntouchable.gatesRole(stance, role))
 						.as(stance + " allows " + role).isFalse();
 			}
+		}
+		for (String role : disengage) {
+			Assertions.assertThat(EchoUntouchable.gatesRole(Stance.NONE, role))
+					.as("NONE allows " + role).isFalse();
 		}
 	}
 
@@ -215,6 +228,16 @@ class EchoUntouchableTest {
 		Assertions.assertThat(
 				EchoUntouchable.firstReadyPrep(status, ready("KNOCKBACK", "SETUP_CC", "HASTE")))
 				.isNull();
+	}
+
+	@Test
+	@DisplayName("INVIS is not spent as prep even when it is the only ready role")
+	void invisIsNotPrep() {
+		EchoPolicyStatus status = new EchoPolicyStatus.Builder()
+				.rolesReady(ready("INVIS"))
+				.build();
+
+		Assertions.assertThat(EchoUntouchable.firstReadyPrep(status, new HashSet<String>())).isNull();
 	}
 
 	@Test

@@ -26,24 +26,19 @@ It currently builds for **Android**, **desktop**, and **iOS**.
 
 ## Downloads
 
-Alpha and other community builds are published on
-[GitHub Releases][github-releases].
+Store builds go to Google Play (full game) and Steam (Windows demo). Linux/SteamOS zip is paused.
+[GitHub Releases][github-releases] carry the version notes and links to those stores.
 
 Online ranked play and the Hero Echoes service live at the
 [homepage][homepage].
 
-To build and publish a community alpha (tag + GitHub Release):
+To build store artifacts, tag, and publish the GitHub Release notes:
 
 ```powershell
 .\scripts\release.ps1
 ```
 
-Always includes the native desktop zip (`-PwithJpackage`).
-
-Build-only: `./gradlew prepareRelease` → `dist/<version>/` (see [docs/release/prepare-release.md](docs/release/prepare-release.md)).
-
-Store listings (Google Play, etc.) may come later; until then, treat GitHub as
-the only official distribution channel for this fork.
+Build-only: `./gradlew prepareRelease` writes the Play AAB, and `./gradlew packageSteamDemo -Pdemo` writes the Steam demo zip for this OS, both under `dist/<version>/` (see [docs/release/prepare-release.md](docs/release/prepare-release.md)).
 
 ## Source & attribution
 

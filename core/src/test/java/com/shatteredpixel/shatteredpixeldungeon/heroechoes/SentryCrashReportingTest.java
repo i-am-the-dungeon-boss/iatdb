@@ -142,6 +142,31 @@ class SentryCrashReportingTest {
 	}
 
 	@Test
+	@DisplayName("release crash reporting does not send default PII")
+	void releaseCrashReportingDoesNotSendDefaultPii() throws IOException {
+		String init = Files.readString(findRepoFile(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/heroechoes/SentryCrashReporting.java"),
+				StandardCharsets.UTF_8);
+		Assertions.assertThat(init).contains("options.setSendDefaultPii(false)");
+		Assertions.assertThat(init).doesNotContain("setSendDefaultPii(true)");
+
+		String manifest = Files.readString(findRepoFile("android/src/main/AndroidManifest.xml"),
+				StandardCharsets.UTF_8);
+		int name = manifest.indexOf("io.sentry.send-default-pii");
+		Assertions.assertThat(name).isGreaterThanOrEqualTo(0);
+		int value = manifest.indexOf("android:value=", name);
+		Assertions.assertThat(manifest.substring(value, value + "android:value=\"false\"".length()))
+				.isEqualTo("android:value=\"false\"");
+
+		for (String path : new String[] {
+				"desktop/src/main/resources/sentry.properties",
+				"ios/src/main/resources/sentry.properties" }) {
+			String props = Files.readString(findRepoFile(path), StandardCharsets.UTF_8);
+			Assertions.assertThat(props).contains("send-default-pii=false");
+		}
+	}
+
+	@Test
 	@DisplayName("desktop sentry.properties points at the java Sentry project")
 	void desktopSentryPropertiesPointsAtJavaProject() throws IOException {
 		String desktop = Files.readString(findRepoFile("desktop/src/main/resources/sentry.properties"),

@@ -38,6 +38,26 @@ class TitleSceneOnlineOnlyTest {
 	}
 
 	@Test
+	@DisplayName("title menu says playing agrees to the privacy policy link")
+	void titleMenuLinksPrivacyPolicy() throws IOException {
+		String source = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java");
+		String messages = readSource("core/src/main/assets/messages/scenes/scenes.properties");
+		String link = readSource(
+				"core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/PrivacyPolicyLine.java");
+
+		Assertions.assertThat(source).contains("PrivacyPolicyLine");
+		Assertions.assertThat(source).contains("privacy_play");
+		Assertions.assertThat(messages)
+				.contains("scenes.titlescene.privacy_play=By playing this game you agree to the");
+		Assertions.assertThat(messages).contains("scenes.titlescene.privacy_link=privacy policy");
+		Assertions.assertThat(link).contains("openURI");
+		Assertions.assertThat(link).contains("/privacy");
+		Assertions.assertThat(link).contains("renderTextBlock(\".\", 6)");
+		Assertions.assertThat(link).contains("underline.size(link.width(), 1)");
+	}
+
+	@Test
 	@DisplayName("village is the first button in the play row")
 	void villageIsLaidOutFirst() throws IOException {
 		String source = readSource(

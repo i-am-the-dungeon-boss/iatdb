@@ -1,40 +1,31 @@
 #Requires -Version 5.1
 Set-StrictMode -Version Latest
 
+# Paused install notes (sideload artifacts):
+# - **Android:** download the APK and sideload (enable install from unknown sources).
+# - **Desktop JAR:** needs Java 11+ (`java -jar ...`).
+# - **Desktop native zip:** unpack and run; no separate Java install (this host OS only).
+# - **iOS:** install the unsigned IPA with Sideloadly (resigns with your free or paid Apple ID). Follow its guide: https://sideloadly.io/
+
 function Get-ReleaseNoteBody {
     param(
         [string] $VersionName,
         [int] $VersionCode,
         [string] $TagName,
         [string] $CommitSha,
-        [string[]] $AssetNames,
-        [bool] $IncludesJpackage,
         [hashtable] $ProjectLinks
     )
 
     $tick = [char]96
-    $assetLines = ($AssetNames | ForEach-Object { "- $tick$_$tick" }) -join "`n"
-    $desktopInstall = if ($IncludesJpackage) {
-        @"
-- **Desktop JAR:** needs Java 11+ (${tick}java -jar ...${tick}).
-- **Desktop native zip:** unpack and run; no separate Java install (this host OS only).
-"@
-    } else {
-        "- **Desktop:** run the JAR with Java 11+ (${tick}java -jar ...${tick})."
-    }
 
     return @"
 ## $VersionName - I am the Dungeon Boss
 
 Unofficial Shattered Pixel Dungeon fork / mod (GPLv3). Not affiliated with Shattered Pixel or Watabou.
 
-### Install
-- **Android:** download the APK and sideload (enable install from unknown sources).
-$desktopInstall
-- **iOS:** install the unsigned IPA with Sideloadly (resigns with your free or paid Apple ID). Follow its guide: https://sideloadly.io/ (Download → Load IPA → Apple ID → Sideload).
-
-### Artifacts
-$assetLines
+### Play
+- **Google Play** (full game): https://play.google.com/store/apps/details?id=com.dungeonboss.iatdb
+- **Steam** (demo for Windows): https://store.steampowered.com/app/5020980
 
 ### Source
 Tag ${tick}${TagName}${tick} at commit ${tick}${CommitSha}${tick}
@@ -45,7 +36,7 @@ $($ProjectLinks.GithubRepoUrl)/tree/$TagName
 - Email: $($ProjectLinks.DeveloperEmail)
 
 ### Known issues
-- Alpha build - expect bugs; please report crashes with platform + steps.
+- Beta build - expect bugs; please report crashes with platform + steps.
 
 ---
 internal version number: $VersionCode
