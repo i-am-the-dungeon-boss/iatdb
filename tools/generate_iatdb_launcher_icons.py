@@ -6,13 +6,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 icons = Image.open(ROOT / "core/src/main/assets/interfaces/icons.png").convert("RGBA")
-# IatdbIconFrame: X=153, Y=0, W=16, H=16
+# Splash banners still use the 16px brand mark. Launcher icons use the full scene.
 mark = icons.crop((153, 0, 169, 16))
+source = Image.open(ROOT / "tools/iatdb-icon-source.png").convert("RGBA")
 
-BG = (26, 20, 36, 255)  # #1a1424
+BG = (0, 0, 0, 255)
 BLACK = (0, 0, 0, 255)
 TITLE_COLOR = (230, 225, 210, 255)
-FG_PAD_RATIO = 0.18
 
 densities = {
     "ldpi": 36,
@@ -67,21 +67,18 @@ def nearest(img: Image.Image, size: int) -> Image.Image:
 
 
 def app_icon(size: int) -> Image.Image:
+    img = source if source.size == (size, size) else source.resize((size, size), Image.Resampling.LANCZOS)
     canvas = Image.new("RGBA", (size, size), BG)
-    pad = max(1, int(size * FG_PAD_RATIO))
-    inner = max(1, size - 2 * pad)
-    scaled = nearest(mark, inner)
-    canvas.paste(scaled, (pad, pad), scaled)
+    canvas.paste(img, (0, 0), img)
     return canvas
 
 
-def adaptive_foreground(size: int) -> Image.Image:
-    fg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    fg_inner = max(1, int(size * 0.66))
-    scaled_fg = nearest(mark, fg_inner)
-    ox = (size - fg_inner) // 2
-    fg.paste(scaled_fg, (ox, ox), scaled_fg)
-    return fg
+def monochrome_icon(size: int) -> Image.Image:
+    lum = app_icon(size).convert("L")
+    alpha = lum.point(lambda p: 0 if p < 24 else min(255, (p - 24) * 2))
+    white = Image.new("RGBA", (size, size), (255, 255, 255, 255))
+    white.putalpha(alpha)
+    return white
 
 
 def load_pixel_font(size: int) -> ImageFont.FreeTypeFont:
@@ -150,24 +147,15 @@ def generate_android():
 
             app_icon(size).save(folder / "ic_launcher.png")
             Image.new("RGBA", (size, size), BG).save(folder / "ic_launcher_background.png")
-            fg = adaptive_foreground(size)
-            fg.save(folder / "ic_launcher_foreground.png")
-
-            mono = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-            fg_inner = max(1, int(size * 0.66))
-            scaled_fg = nearest(mark, fg_inner)
-            ox = (size - fg_inner) // 2
-            white = Image.new("RGBA", (fg_inner, fg_inner), (255, 255, 255, 255))
-            white.putalpha(scaled_fg.split()[3])
-            mono.paste(white, (ox, ox), white)
-            mono.save(folder / "ic_launcher_monochrome.png")
+            app_icon(size).save(folder / "ic_launcher_foreground.png")
+            monochrome_icon(size).save(folder / "ic_launcher_monochrome.png")
 
 
 def generate_ios():
     icon_dir = ROOT / "ios/assets/Assets.xcassets/AppIcon.appiconset"
     icon_dir.mkdir(parents=True, exist_ok=True)
     for filename, size in ios_app_icons.items():
-        app_icon(size).save(icon_dir / filename)
+        app_icon(size).convert("RGB").save(icon_dir / filename)
 
     for folder, files in ios_banners.items():
         folder.mkdir(parents=True, exist_ok=True)
