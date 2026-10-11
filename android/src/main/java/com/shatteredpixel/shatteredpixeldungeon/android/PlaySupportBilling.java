@@ -15,6 +15,7 @@ import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.shatteredpixel.shatteredpixeldungeon.services.billing.SupportBillingService;
 import com.shatteredpixel.shatteredpixeldungeon.ui.SupportTipProducts;
 import com.watabou.noosa.Game;
@@ -41,6 +42,7 @@ public class PlaySupportBilling extends SupportBillingService implements Purchas
 		client = BillingClient.newBuilder(activity)
 				.setListener(this)
 				.enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+				.enableAutoServiceReconnection()
 				.build();
 		client.startConnection(new BillingClientStateListener() {
 			@Override
@@ -67,7 +69,10 @@ public class PlaySupportBilling extends SupportBillingService implements Purchas
 		}
 		client.queryProductDetailsAsync(
 				QueryProductDetailsParams.newBuilder().setProductList(list).build(),
-				(billingResult, productDetailsList) -> {
+				(BillingResult billingResult, QueryProductDetailsResult result) -> {
+					List<ProductDetails> productDetailsList = result == null
+							? null
+							: result.getProductDetailsList();
 					if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
 							&& productDetailsList != null) {
 						products.clear();

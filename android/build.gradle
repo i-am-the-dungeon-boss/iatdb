@@ -166,7 +166,7 @@ sentry {
 dependencies {
     implementation project(':core')
 
-    implementation 'com.android.billingclient:billing:7.1.1'
+    implementation 'com.android.billingclient:billing:8.0.0'
 
     implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
