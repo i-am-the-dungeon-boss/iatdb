@@ -172,7 +172,8 @@ class ProjectLinksTest {
 	@Test
 	@DisplayName("release.ps1 loads GitHub and email from project-links.properties")
 	void releaseScriptLoadsProjectLinks() throws IOException {
-		String source = readSource("scripts/release.ps1");
+		Assertions.assertThat(readSource("scripts/release.ps1")).contains("Get-ProjectLinks");
+		String source = readSource("scripts/release/_common.ps1");
 		Assertions.assertThat(source).contains("project-links.properties");
 		Assertions.assertThat(source).contains("github.owner.repo");
 		Assertions.assertThat(source).contains("developer.email");
