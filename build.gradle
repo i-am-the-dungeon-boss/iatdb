@@ -35,7 +35,7 @@ allprojects {
 		appVersionName = '0.1.0'
         // Play upload code. Was pinned to Shattered's 896; raised for our own uploads.
         // Also stamped into saves as Game.versionCode.
-        appVersionCode = 897
+        appVersionCode = 898
 
         appJavaCompatibility = JavaVersion.VERSION_11
 
